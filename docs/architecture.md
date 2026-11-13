@@ -1,7 +1,7 @@
 # Architecture
 
 ```
-Assets/apps.builtin.json ─┐
+src/Core/Assets/apps.builtin.json ┐
 %APPDATA%/AiStackprint/apps.json ─┴─> AppCatalog.Load() ──> List<AppDefinition>
                                                         │
  project folders (user picks) ──────────────────────────┤

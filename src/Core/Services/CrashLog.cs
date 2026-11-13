@@ -26,7 +26,7 @@ public static class CrashLog
             Directory.CreateDirectory(folder);
             var info = new FileInfo(Path.Combine(folder, "crash.log"));
             if (info.Exists && info.Length > MaxBytes) info.Delete();   // start over rather than grow without end
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var version = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version;   // the app's version, not Core's
             System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} · {what} · v{version} · {Environment.OSVersion}\n{e}\n\n");
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException) { }   // nowhere to write: nothing more to do while closing

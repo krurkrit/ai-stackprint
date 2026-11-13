@@ -1,0 +1,31 @@
+using AiStackprint.Services;
+using AiStackprint.Ui;
+using Xunit;
+
+namespace AiStackprint.App.Tests;
+
+/// <summary>Theme colors meet WCAG contrast (needs the app: Theme uses Avalonia colors).</summary>
+public class ThemeTests
+{
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Status_colors_read_on_both_backgrounds(bool dark)
+    {
+        var s = Theme.Status(dark);
+        foreach (var c in new[] { s.Error, s.Warning, s.Success })
+            foreach (var bg in new[] { s.Background, s.Main })
+                Assert.True(Contrast.Ratio(c.ToUInt32(), bg.ToUInt32()) >= 4.5, $"{c} on {bg}");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Chart_colors_show_on_the_card(bool dark)
+    {
+        var card = Theme.Status(dark).Background.ToUInt32();
+        var marks = Theme.Series(dark).Concat(Enumerable.Range(0, 4).Select(i => Theme.LevelDefault(dark, i)));
+        foreach (var c in marks)
+            Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");   // WCAG 1.4.11: chart marks need 3:1
+    }
+}

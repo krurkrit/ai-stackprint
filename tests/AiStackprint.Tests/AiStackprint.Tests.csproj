@@ -11,6 +11,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AiStackprint.csproj" />
+    <ProjectReference Include="..\..\src\Core\AiStackprint.Core.csproj" />   <!-- Core only: no UI build for these tests -->
   </ItemGroup>
 </Project>

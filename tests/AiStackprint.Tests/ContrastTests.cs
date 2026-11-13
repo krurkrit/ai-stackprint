@@ -30,26 +30,4 @@ public class ContrastTests
         foreach (var amount in new[] { .15, .28 })
             Assert.True(Contrast.Ratio(text, Contrast.AwayFrom(accent, text, amount)) > before);
     }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void Status_colors_read_on_both_backgrounds(bool dark)
-    {
-        var s = AiStackprint.Ui.Theme.Status(dark);
-        foreach (var c in new[] { s.Error, s.Warning, s.Success })
-            foreach (var bg in new[] { s.Background, s.Main })
-                Assert.True(Contrast.Ratio(c.ToUInt32(), bg.ToUInt32()) >= 4.5, $"{c} on {bg}");
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void Chart_colors_show_on_the_card(bool dark)
-    {
-        var card = AiStackprint.Ui.Theme.Status(dark).Background.ToUInt32();
-        var marks = AiStackprint.Ui.Theme.Series(dark).Concat(Enumerable.Range(0, 4).Select(i => AiStackprint.Ui.Theme.LevelDefault(dark, i)));
-        foreach (var c in marks)
-            Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");   // WCAG 1.4.11: chart marks need 3:1
-    }
 }

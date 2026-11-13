@@ -19,11 +19,14 @@
     <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="AiStackprint.Tests" />   <!-- tests check Theme colors -->
+    <InternalsVisibleTo Include="AiStackprint.App.Tests" />   <!-- tests check Theme colors -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="tests/**" />
-    <None Remove="tests/**" />
+    <!-- Core and the tests are their own projects -->
+    <Compile Remove="tests/**;src/Core/**" />
+    <None Remove="tests/**;src/Core/**" />
+    <EmbeddedResource Remove="src/Core/**" />
+    <ProjectReference Include="src\Core\AiStackprint.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.*" />
@@ -32,11 +35,9 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.*" />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="12.0.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" />   <!-- OpenCode keeps usage in SQLite -->
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\app-icon.ico" LogicalName="app-icon.ico" />   <!-- window/taskbar icon: every size, so Windows picks a sharp one instead of shrinking 256 px -->
-    <EmbeddedResource Include="Assets\apps.builtin.json" LogicalName="apps.builtin.json" />
     <EmbeddedResource Include="Assets\icons.json" LogicalName="icons.json" />
     <EmbeddedResource Include="Assets\logos.json" LogicalName="logos.json" />
   </ItemGroup>
