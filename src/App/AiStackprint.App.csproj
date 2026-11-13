@@ -28,6 +28,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.AvaloniaEdit" />
     <PackageReference Include="AvaloniaEdit.TextMate" />
+    <PackageReference Include="Velopack" />   <!-- installer hooks (install, update, uninstall); packages are built with vpk, see docs/releasing.md -->
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\app-icon.ico" LogicalName="app-icon.ico" />   <!-- window/taskbar icon: every size, so Windows picks a sharp one instead of shrinking 256 px -->

@@ -1,0 +1,69 @@
+# Release: push a tag v<Version> (the <Version> in Directory.Build.props) and this builds the Velopack installers
+# for Windows, Linux and macOS and publishes them as one GitHub release. Runs only on such tags. See docs/releasing.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    strategy:
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64, channel: win }
+          - { os: ubuntu-latest, rid: linux-x64, channel: linux }
+          - { os: macos-latest, rid: osx-arm64, channel: osx }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Tag matches the version
+        shell: pwsh
+        run: |
+          $v = (dotnet msbuild src/App/AiStackprint.App.csproj -getProperty:Version).Trim()
+          if ("v$v" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} does not match <Version> $v in Directory.Build.props" }
+      - name: Test
+        run: dotnet test AiStackprint.slnx -c Release
+      - name: Icon tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+      - name: Icon tools
+        if: runner.os == 'macOS'
+        run: brew install librsvg
+      - run: dotnet tool install -g vpk --version 1.2.161
+      - name: Pack
+        shell: pwsh
+        run: ./build/pack.ps1 -Runtime ${{ matrix.rid }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: releases-${{ matrix.channel }}
+          path: Releases/
+
+  publish:
+    needs: pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the release and upload its files
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet tool install -g vpk --version 1.2.161
+      - uses: actions/download-artifact@v4
+        with:
+          path: packs
+      # One release, three channels; uploaded one after another so they merge instead of racing
+      - name: Upload to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for c in win linux osx; do
+            vpk upload github -o "packs/releases-$c" -c "$c" --repoUrl "${{ github.server_url }}/${{ github.repository }}" \
+              --token "$GH_TOKEN" --tag "${{ github.ref_name }}" --releaseName "AI Stackprint ${{ github.ref_name }}" --merge --publish
+          done
