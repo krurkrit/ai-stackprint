@@ -1,0 +1,51 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using static AiStackprint.Ui.W;
+
+namespace AiStackprint.Ui;
+
+/// <summary>Modal dialogs: confirm, message, and a small form (optional text + one choice).</summary>
+static class Dialogs
+{
+    static Window Shell(string title, Control body, params Button[] buttons)
+    {
+        var w = new Window { Title = title, Width = 480, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
+        foreach (var b in buttons) bar.Children.Add(b);
+        w.Content = new StackPanel { Margin = new Thickness(20), Spacing = 14, Children = { Txt(title, 18, true), body, bar } };
+        return w;
+    }
+
+    public static async Task<bool> Confirm(Window owner, string title, string message, string ok, bool danger = false)
+    {
+        Window? w = null;
+        var yes = danger ? DangerBtn(ok, () => w!.Close(true)) : Btn(ok, () => w!.Close(true), true).With(b => b.IsDefault = true);   // Enter never confirms a destructive action
+        w = Shell(title, Txt(message), Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), yes);
+        return await w.ShowDialog<bool>(owner);
+    }
+
+    public static Task Message(Window owner, string title, string text, bool mono = false)
+    {
+        Window? w = null;
+        Control body = mono ? new ScrollViewer { MaxHeight = 320, Content = Mono(text == "" ? "(no output)" : text) } : Txt(text);
+        w = Shell(title, body, Btn("Close", () => w!.Close(), true).With(b => { b.IsDefault = true; b.IsCancel = true; }));
+        return w.ShowDialog(owner);
+    }
+
+    /// <summary>Asks for an optional text value and one of <paramref name="choices"/>. Returns null on cancel.</summary>
+    public static async Task<(string Text, int Choice)?> Ask(Window owner, string title, string intro, string? textLabel, string choiceLabel, string[] choices, string ok)
+    {
+        Window? w = null;
+        var text = new TextBox { PlaceholderText = textLabel ?? "" };
+        var pick = new ComboBox { ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var body = new StackPanel { Spacing = 8, Children = { Txt(intro, 13, false, Muted) } };
+        if (textLabel != null) body.Children.Add(text);
+        body.Children.Add(Txt(choiceLabel, 12, false, Muted));
+        body.Children.Add(pick);
+        var go = Btn(ok, () => { if (textLabel == null || !string.IsNullOrWhiteSpace(text.Text)) w!.Close(true); }, true);
+        go.IsDefault = true;
+        w = Shell(title, body, Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), go);
+        return await w.ShowDialog<bool>(owner) ? ((text.Text ?? "").Trim(), pick.SelectedIndex) : null;
+    }
+}

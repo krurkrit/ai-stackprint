@@ -1,0 +1,313 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Media;
+
+namespace AiStackprint.Ui;
+
+/// <summary>Small widget factory. Colors are resource keys defined in <see cref="Theme"/>, so light/dark work automatically.</summary>
+static class W
+{
+    // Resource keys (values in Theme)
+    public const string Background = "Ap.Background", Text = "Ap.Text", Muted = "Ap.Muted", Surface = "Ap.Surface", SideKey = "Ap.Side", MainKey = "Ap.Main";
+    public const string Subtle = "Ap.Hover", Selected = "Ap.Selected", BorderKey = "Ap.Divider";
+    public const string Accent = "Ap.Accent", OnAccent = "Ap.OnAccent", Link = "Ap.Link";
+    public const string ErrorKey = "Ap.Error", ErrorFill = "Ap.ErrorFill", OnError = "Ap.OnError", WarningKey = "Ap.Warning", SuccessKey = "Ap.Success";
+    public const string ChartIn = "Ap.ChartIn", ChartOut = "Ap.ChartOut", ChartWrite = "Ap.ChartWrite", ChartRead = "Ap.ChartRead";
+    public const string SuccessText = "Ap.SuccessText", SuccessFill = "Ap.SuccessFill", SelectionKey = "Ap.Selection", HighlightKey = "Ap.Highlight", HighlightRingKey = "Ap.HighlightRing", ScrimKey = "Ap.Scrim";
+
+    static uint Argb(Color c) => c.ToUInt32();
+    /// <summary>WCAG contrast of <paramref name="fg"/> (blended if translucent) on an opaque <paramref name="bg"/>.</summary>
+    public static double ContrastRatio(Color fg, Color bg) => Services.Contrast.Ratio(Argb(fg), Argb(bg));
+    /// <summary>Whichever of two text colors reads better on <paramref name="bg"/>.</summary>
+    public static Color BestText(Color bg, Color a, Color b) => ContrastRatio(a, bg) >= ContrastRatio(b, bg) ? a : b;
+
+    // Appearance (set by Theme.Appearance from Settings). Sizes in code are written for a 14 px base and scaled.
+    public static double Scale { get; set; } = 1;
+    public static FontWeight Body { get; set; } = FontWeight.Normal;
+    public static FontWeight Emphasis { get; set; } = FontWeight.Medium;
+    /// <summary>Headings: one step above emphasis, at least SemiBold.</summary>
+    public static FontWeight Heading => HeadingWeight ?? (Emphasis >= FontWeight.SemiBold ? FontWeight.Bold : FontWeight.SemiBold);
+    public static FontWeight? HeadingWeight { get; set; }
+    public static FontFamily? HeadingFont { get; set; }
+    public static FontWeight MenuWeight { get; set; } = FontWeight.Medium;
+
+    /// <summary>Numbers only (digits and separators): aligned digits in the body font.</summary>
+    static void NumberStyle(TextBlock t, string s)
+    {
+        if (s.Length == 0 || s.Length > 24 || !s.All(c => char.IsDigit(c) || c is ',' or '.' or ' ' or '%' or ':' or '-' or '/')) return;
+        t.FontFeatures = FontFeatureCollection.Parse("tnum");
+    }
+    public static double Size(double px) => Math.Round(px * Scale, 1);
+    /// <summary>Chart color of an app category; unknown categories reuse the palette by a stable hash of the name.</summary>
+    public static string CategoryKey(string category) =>
+        "Ap.Cat." + (Array.IndexOf(Theme.Categories, category) >= 0 ? category : Theme.Categories[category.Aggregate(0, (h, ch) => (h * 31 + ch) & 0x7fffffff) % Theme.Categories.Length]);
+    public static string LevelKey(string level) => "Ap.Level." + level;
+
+    public static T Themed<T>(this T c, AvaloniaProperty p, string key) where T : Control
+    { c.Bind(p, c.GetResourceObservable(key)); return c; }
+
+    public static T With<T>(this T t, Action<T> a) { a(t); return t; }
+
+    /// <summary>Detaches a long-lived control from its old page so a rebuilt page can host it again.</summary>
+    public static T Free<T>(this T c) where T : Control
+    {
+        switch (c.Parent)
+        {
+            case Panel p: p.Children.Remove(c); break;
+            case ContentControl cc: cc.Content = null; break;
+            case Decorator d: d.Child = null; break;
+        }
+        return c;
+    }
+
+    /// <summary>Text at a 14-px-based size; bold = the Emphasis weight.</summary>
+    public static TextBlock Txt(string s, double size = 14, bool bold = false, string key = Text) =>
+        new TextBlock { Text = s, FontSize = Size(size), FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.With(t => NumberStyle(t, s))
+            .Themed(TextBlock.ForegroundProperty, key);
+
+    /// <summary>Like <see cref="Txt"/> but the text can be selected and copied by dragging. Only for text that is not part of a click target.</summary>
+    public static SelectableTextBlock Sel(string s, double size = 14, bool bold = false, string key = Text) =>
+        new SelectableTextBlock { Text = s, FontSize = Size(size), FontWeight = bold ? Heading : Body, TextWrapping = TextWrapping.Wrap }
+            .Themed(TextBlock.ForegroundProperty, key);
+
+    /// <summary>Card titles, names in headers, big numbers: Heading weight.</summary>
+    public static TextBlock Title(string s, double size = 15) =>
+        new TextBlock { Text = s, FontSize = Size(size), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
+            .With(t => { if (HeadingFont != null) t.FontFamily = HeadingFont; NumberStyle(t, s); });
+
+    public static TextBlock Mono(string s, double size = 13) => Txt(s, size).With(t => t.FontFamily = Theme.Mono);
+
+    /// <summary>Set by the main window: navigation for clickable breadcrumb parts.</summary>
+    public static Action<string>? GoAction { get; set; }
+
+    /// <summary>Page title. Back/forward live in the window title bar.</summary>
+    public static Control H1(string s) => Title(s, 24);
+
+    /// <summary>Detail-page title "Parent › Name"; the parent is muted and clickable when <paramref name="go"/> is a view.</summary>
+    public static Control H1(string parent, string? go, string name)
+    {
+        var p = Title(parent, 24).Themed(TextBlock.ForegroundProperty, Muted);
+        if (go != null) { p.Cursor = Hand; p.PointerReleased += (_, _) => GoAction?.Invoke(go); }
+        var sep = Title("›", 24).Themed(TextBlock.ForegroundProperty, Muted);
+        return new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Children = { p, sep, Title(name, 24) } };
+    }
+
+    public static Border Card(Control c) =>
+        new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(18), Child = c }
+            .Themed(Border.BackgroundProperty, Surface);
+
+    /// <summary>Card with a title row (icon, title, count) and optional buttons on the right.</summary>
+    public static Border Section(string icon, string title, Control body, params Control[] actions)
+    {
+        var head = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
+        var btns = Row(actions); DockPanel.SetDock(btns, Dock.Right);
+        head.Children.Add(btns);
+        head.Children.Add(Row(Icon(icon, 18).Themed(TextElement.ForegroundProperty, Accent), Title(title)));
+        return Card(new StackPanel { Children = { head, body } });
+    }
+
+    /// <summary>Scrollable page with the standard margins.</summary>
+    public static ScrollViewer Page(params Control[] children)
+    {
+        var sp = new StackPanel { Spacing = 20, Margin = new Thickness(32, 28) };
+        sp.Children.AddRange(children);
+        return new ScrollViewer { Content = sp };
+    }
+
+    public static Control Dot(string key) =>
+        new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, key);
+
+    /// <summary>Hollow dot: Local level (personal, same color family as Project).</summary>
+    static Control Ring(string key) =>
+        new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), BorderThickness = new Thickness(2), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BorderBrushProperty, key);
+
+    public static Control LevelDot(string level) => level == "Local" ? Ring(LevelKey(level)) : Dot(LevelKey(level));
+
+    /// <summary>Success status as an outlined pill (Snowy Owl report style). Readable in both themes.</summary>
+    public static Control Status(string s) =>
+        new Border { CornerRadius = new CornerRadius(999), BorderThickness = new Thickness(1), Padding = new Thickness(8, 1), HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center, Child = Txt(s, 12, true, SuccessText) }
+            .Themed(Border.BorderBrushProperty, SuccessKey).Themed(Border.BackgroundProperty, SuccessFill);
+
+    public static TextBlock DotText(string s, string key) => WithDot(Dot(key), s, 13).With(t => t.VerticalAlignment = VerticalAlignment.Center);
+
+    /// <summary>
+    /// Dot as the first inline of the text, standing on the baseline, so it lines up with the letters at any font or size.
+    /// A dot beside a TextBlock is centered on the line box, which sits higher than the letters.
+    /// </summary>
+    public static TextBlock WithDot(Control dot, string s, double size, bool bold = false)
+    {
+        var t = Txt("", size, bold).With(x => { x.Text = null; x.TextWrapping = TextWrapping.NoWrap; });
+        dot.Margin = new Thickness(0, 0, 6, 0);
+        t.Inlines ??= new InlineCollection();
+        t.Inlines.Add(new InlineUIContainer(dot) { BaselineAlignment = BaselineAlignment.Baseline });
+        t.Inlines.Add(new Run(s));
+        return t;
+    }
+
+    /// <summary>Level with its dot; tooltip shows the app's own word for it when it differs.</summary>
+    public static Control Level(string level, string? text = null, string? appWord = null)
+    {
+        // One TextBlock: it gets the column width and trims instead of overlapping the next column
+        var t = (LevelDots ? WithDot(LevelDot(level), text ?? level, 13) : Txt(text ?? level, 13).With(x => x.TextWrapping = TextWrapping.NoWrap)).With(x => { x.TextTrimming = TextTrimming.CharacterEllipsis; x.VerticalAlignment = VerticalAlignment.Center; });
+        var word = appWord != null && !appWord.Equals(level, StringComparison.OrdinalIgnoreCase) ? $"\nCalled \"{appWord}\" by this app" : "";
+        ToolTip.SetTip(t, Levels.Describe(level) + word);
+        return t;
+    }
+
+    public static Control Chip(string s, string? dotKey = null)
+    {
+        Control body = dotKey == null || (!LevelDots && dotKey.StartsWith("Ap.Level.")) ? Txt(s, 12, true) : WithDot(dotKey.StartsWith("Ap.Level.") ? LevelDot(dotKey[9..]) : Dot(dotKey), s, 12, true);
+        return new Border { CornerRadius = new CornerRadius(999), Padding = new Thickness(10, 4), Child = body, HorizontalAlignment = HorizontalAlignment.Left }
+            .Themed(Border.BackgroundProperty, Subtle);
+    }
+
+    /// <summary>Vector icon; fills with the inherited foreground so it follows text color, buttons and theme.</summary>
+    public static Control Icon(string name, double size = 18) => Glyph(Icons.Get(name), size);
+
+    static Control Glyph(Icons.Shape[] shapes, double size)
+    {
+        var canvas = new Canvas { Width = 24, Height = 24 };
+        foreach (var s in shapes)
+        {
+            var p = new Avalonia.Controls.Shapes.Path { Data = s.Data, Opacity = s.Opacity };
+            p.Bind(Avalonia.Controls.Shapes.Shape.FillProperty, p.GetObservable(TextElement.ForegroundProperty));
+            canvas.Children.Add(p);
+        }
+        return new Viewbox { Width = size, Height = size, Child = canvas, VerticalAlignment = VerticalAlignment.Center };
+    }
+
+    static Border Tile(Control glyph, double size, string bg = Subtle) =>
+        new Border { Width = size, Height = size, CornerRadius = new CornerRadius(size / 4), Child = glyph, VerticalAlignment = VerticalAlignment.Center }
+            .Themed(Border.BackgroundProperty, bg);
+
+    public static Border IconTile(string icon, double size = 32) => Tile(Icon(icon, size * 0.55).Themed(TextElement.ForegroundProperty, Accent), size, Selected);
+
+    /// <summary>App logo, or its category icon when the app has no logo.</summary>
+    public static Border AppLogo(string? logo, string category, double size = 32) =>
+        Tile(Glyph(Icons.Logo(logo) ?? Icons.Get(Icons.ForCategory(category)), size * 0.6).Themed(TextElement.ForegroundProperty, Text), size);
+
+    /// <summary>Logo + name, vertically centered; used as the first cell of app rows.</summary>
+    public static Control AppName(string? logo, string category, string name, double size = 28) =>
+        Row(AppLogo(logo, category, size), Txt(name, 14, true).With(t => t.VerticalAlignment = VerticalAlignment.Center));
+
+    public static Button Btn(string text, Action a, bool primary = false, string? icon = null)
+    {
+        object content = icon == null ? text : Row(Icon(icon, 16), new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+        var b = new Button { Content = content, MinHeight = 36, Padding = new Thickness(14, 0), VerticalContentAlignment = VerticalAlignment.Center };
+        if (primary) b.Classes.Add("accent");
+        b.Click += (_, _) => a();
+        return b;
+    }
+
+    /// <summary>Button for destructive actions (Snowy Owl error pair).</summary>
+    public static Button DangerBtn(string text, Action a, string? icon = null) =>
+        Btn(text, a, false, icon).Themed(Button.BackgroundProperty, ErrorFill).Themed(Button.ForegroundProperty, OnError);
+
+    /// <summary>Small transparent icon-only button with a tooltip.</summary>
+    public static Button IconBtn(string icon, string tip, Action a, string key = Muted)
+    {
+        var b = new Button { Content = Icon(icon, 16).Themed(TextElement.ForegroundProperty, key), Padding = new Thickness(8), Background = Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
+        ToolTip.SetTip(b, tip);
+        b.Click += (_, _) => a();
+        return b;
+    }
+
+    /// <summary>Pill-shaped filter buttons; the selected one uses the accent style.</summary>
+    public static Control Pills(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
+    {
+        // Spacing on the panel, not a margin on each button: one line is exactly 32 px, so a label beside it lines up
+        var wrap = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
+        foreach (var (label, value) in opts)
+        {
+            var b = new Button { Content = label, MinHeight = 32, CornerRadius = new CornerRadius(16) };
+            if (value == current) b.Classes.Add("accent");
+            b.Click += (_, _) => pick(value);
+            wrap.Children.Add(b);
+        }
+        return wrap;
+    }
+
+    public static Control Row(params Control[] c)
+    {
+        var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        foreach (var x in c)
+            if (!x.IsSet(Layoutable.VerticalAlignmentProperty)) x.VerticalAlignment = VerticalAlignment.Center;   // a label lines up with the control beside it
+        sp.Children.AddRange(c);
+        return sp;
+    }
+
+    /// <summary>A filter row: muted label in a fixed-width column, so the controls of stacked filter rows line up.</summary>
+    public static Control FilterRow(string label, params Control[] c) => Row(c.Prepend(Txt(label, 13, false, Muted).With(t => t.Width = 80)).ToArray());
+
+    /// <summary>Drops unchecked values no longer offered; with fewer than two offered, or all of them unchecked, none (nothing left to undo it).</summary>
+    public static void KeepOffered(HashSet<string> off, ICollection<string> offered)
+    {
+        off.IntersectWith(offered);
+        if (offered.Count < 2 || off.Count >= offered.Count) off.Clear();
+    }
+
+    /// <summary>Check box text with a muted count after it.</summary>
+    public static Control Counted(Control label, int n) => Row(label, Txt(n.ToString("N0"), 13, false, Muted));
+
+    /// <summary>Search field: text and icon centered vertically. 40 px tall on list pages; pass 0 to match a row of 32-px controls.</summary>
+    public static TextBox SearchBox(string placeholder, double minHeight = 40) => new()
+    {
+        PlaceholderText = placeholder, MinHeight = minHeight, VerticalContentAlignment = VerticalAlignment.Center,
+        InnerLeftContent = Icon("search", 16).Themed(TextElement.ForegroundProperty, Muted).With(i => { i.Margin = new Thickness(10, 0, 0, 0); i.VerticalAlignment = VerticalAlignment.Center; })
+    };
+
+    /// <summary>
+    /// One check box per value; <paramref name="off"/> holds the unchecked values (empty = all checked).
+    /// The last checked box cannot be unchecked: none would hide everything.
+    /// </summary>
+    public static Control Checks(IReadOnlyList<(Control Label, string Value)> opts, HashSet<string> off, Action changed)
+    {
+        var wrap = new WrapPanel { ItemSpacing = 16, LineSpacing = 6 };
+        foreach (var (label, value) in opts)
+        {
+            var cb = new CheckBox { Content = label, IsChecked = !off.Contains(value), MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
+            cb.IsCheckedChanged += (_, _) =>
+            {
+                if (cb.IsChecked == true) { if (!off.Remove(value)) return; }
+                else if (opts.Count(o => !off.Contains(o.Value)) <= 1) { cb.IsChecked = true; return; }
+                else off.Add(value);
+                changed();
+            };
+            wrap.Children.Add(cb);
+        }
+        return wrap;
+    }
+
+    static int _radioGroups;
+
+    /// <summary>One choice among <paramref name="opts"/> as radio buttons.</summary>
+    public static Control Radios(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
+    {
+        var wrap = new WrapPanel { ItemSpacing = 16, LineSpacing = 6 };
+        string group = "r" + ++_radioGroups;
+        foreach (var (label, value) in opts)
+        {
+            var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
+            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != current) pick(value); };
+            wrap.Children.Add(rb);
+        }
+        return wrap;
+    }
+
+    /// <summary>A single check box with a change callback.</summary>
+    public static CheckBox Check(string label, bool on, Action<bool> set)
+    {
+        var cb = new CheckBox { Content = label, IsChecked = on, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
+        cb.IsCheckedChanged += (_, _) => set(cb.IsChecked == true);
+        return cb;
+    }
+
+    /// <summary>Level dots are shown only where the design asks for them (dashboard bars, legend, Levels help).</summary>
+    public static bool LevelDots { get; set; } = false;
+
+    public static readonly Cursor Hand = new(StandardCursorType.Hand);
+}
