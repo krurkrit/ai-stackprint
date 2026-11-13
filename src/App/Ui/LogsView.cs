@@ -6,7 +6,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
 
@@ -17,7 +16,7 @@ namespace AiStackprint.Ui;
 /// The selected app's log folders are watched while the page is open: new, removed and renamed files update the list,
 /// and a file that grows gets its size and time updated in place.
 /// </summary>
-class LogsView(Ctx x)
+partial class LogsView(Ctx x)
 {
     string? _app;
     LogFile? _file;
@@ -128,85 +127,6 @@ class LogsView(Ctx x)
         });
         _table.Content = Table.Build(new[] { new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40") }, rows,
             "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
-    }
-
-    /// <summary>Watches the selected app's log folders. Stops when another app is chosen or the page closes.</summary>
-    void Watch(AppDefinition? def)
-    {
-        if (def?.Id == _watching && _watcher != null)
-        {
-            return;
-        }
-
-        _watcher?.Dispose(); _watcher = null; _watching = def?.Id;
-        if (def == null)
-        {
-            return;
-        }
-
-        _watcher = new LogFolderWatcher(LogReader.Roots(def, x.S.Projects), _files.FirstOrDefault()?.Path);   // _files is newest first
-        _watcher.Changed += b => Dispatcher.UIThread.Post(() => OnChanged(def, b));
-    }
-
-    /// <summary>
-    /// Files were added, removed or renamed: find the list again. Otherwise update the rows that changed in place
-    /// (size and time), so the list does not jump. The open file reloads or offers "New lines".
-    /// </summary>
-    void OnChanged(AppDefinition def, LogFolderWatcher.Batch b)
-    {
-        if (_watching != def.Id)
-        {
-            return;
-        }
-
-        var open = _file is { } f ? (f.Path, f.Size, f.Modified) : default;
-        var paths = b.Paths.Select(p => p.EndsWith("-wal", StringComparison.OrdinalIgnoreCase) ? p[..^4] : p).ToHashSet(StringComparer.OrdinalIgnoreCase);   // SQLite writes land in the -wal file
-        bool relist = b.Structure;
-        if (!relist)
-        {
-            foreach (var p in paths)
-            {
-                int i = _files.FindIndex(lf => string.Equals(lf.Path, p, StringComparison.OrdinalIgnoreCase));
-                if (i < 0)
-                {
-                    continue;
-                }
-
-                if (LogReader.Restat(_files[i]) is { } now)
-                {
-                    _files[i] = now;
-                }
-                else
-                {
-                    relist = true;
-                }
-            }
-        }
-
-        if (relist)
-        {
-            Relist(def);
-        }
-        else
-        {
-            _files = _files.OrderByDescending(lf => lf.Modified).ToList();
-            if (_file != null)
-            {
-                _file = _files.FirstOrDefault(lf => lf.Path == _file.Path);
-            }
-        }
-        if (_viewer.Follow && _files.FirstOrDefault() is { } newest)
-        {
-            _file = newest;   // a new file takes over while following
-        }
-
-        FillTable(def);
-        _summary.Update(_files);
-        if (_file?.Path != open.Path) { x.Go("Logs:" + def.Id); return; }   // the open file is gone: show the newest
-        if (_file != null && (_file.Path, _file.Size, _file.Modified) != open)
-        {
-            _viewer.FileChanged();
-        }
     }
 
     /// <summary>F5 on the Logs page: find the files again and re-read the open one.</summary>
