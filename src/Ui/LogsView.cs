@@ -88,12 +88,12 @@ class LogsView(Ctx x)
             check.IsCheckedChanged += (_, _) => { if (check.IsChecked == true) _checked.Add(f.Path); else _checked.Remove(f.Path); };
             return new TableRow(new Control[]
             {
-                check, Table.NameDesc(Path.GetFileName(f.Path), Path.GetDirectoryName(f.Path) ?? ""), Txt(f.Label, 13),
+                check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path)),   // type on the second line: the name needs the width
                 Txt(LogViewer.Size(f.Size), 13), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), 13),
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete(new() { f }))
             }, () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) _viewer.Follow = false; x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });
-        _table.Content = Table.Build(new[] { new Col("", "32"), new Col("File", "2.4*"), new Col("Type", ".8*"), new Col("Size", ".7*", true), new Col("Modified", "1.1*"), new Col("", "40") }, rows,
+        _table.Content = Table.Build(new[] { new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40") }, rows,
             "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
     }
 

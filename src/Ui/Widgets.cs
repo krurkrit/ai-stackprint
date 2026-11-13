@@ -102,10 +102,14 @@ static class W
     /// <summary>Card with a title row (icon, title, count) and optional buttons on the right.</summary>
     public static Border Section(string icon, string title, Control body, params Control[] actions)
     {
-        var head = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
-        var btns = Row(actions); DockPanel.SetDock(btns, Dock.Right);
-        head.Children.Add(btns);
-        head.Children.Add(Row(Icon(icon, 18).Themed(TextElement.ForegroundProperty, Accent), Title(title)));
+        // Title keeps its width; the actions wrap onto more lines (right-aligned) when the card is narrow, instead of running over the title
+        var head = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(0, 0, 0, 10) };
+        var name = Row(Icon(icon, 18).Themed(TextElement.ForegroundProperty, Accent), Title(title)).With(r => { r.VerticalAlignment = VerticalAlignment.Top; r.Margin = new Thickness(0, 6, 16, 0); });
+        var btns = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right, ItemSpacing = 8, LineSpacing = 8, VerticalAlignment = VerticalAlignment.Top };
+        btns.Children.AddRange(actions);
+        Grid.SetColumn(btns, 1);
+        head.Children.Add(name); head.Children.Add(btns);
+        if (actions.Length == 0) name.Margin = new Thickness(0);
         return Card(new StackPanel { Children = { head, body } });
     }
 
@@ -191,8 +195,13 @@ static class W
         Tile(Glyph(Icons.Logo(logo) ?? Icons.Get(Icons.ForCategory(category)), size * 0.6).Themed(TextElement.ForegroundProperty, Text), size);
 
     /// <summary>Logo + name, vertically centered; used as the first cell of app rows.</summary>
-    public static Control AppName(string? logo, string category, string name, double size = 28) =>
-        Row(AppLogo(logo, category, size), Txt(name, 14, true).With(t => t.VerticalAlignment = VerticalAlignment.Center));
+    /// <summary>Logo and name. The name wraps inside its column (a horizontal StackPanel gave it unlimited width, so it ran into the next column).</summary>
+    public static Control AppName(string? logo, string category, string name, double size = 28)
+    {
+        var icon = AppLogo(logo, category, size).With(l => { l.Margin = new Thickness(0, 0, 8, 0); l.VerticalAlignment = VerticalAlignment.Center; });
+        DockPanel.SetDock(icon, Dock.Left);
+        return new DockPanel { Children = { icon, Txt(name, 14, true).With(t => t.VerticalAlignment = VerticalAlignment.Center) } };
+    }
 
     public static Button Btn(string text, Action a, bool primary = false, string? icon = null)
     {

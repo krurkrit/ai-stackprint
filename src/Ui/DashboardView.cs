@@ -68,7 +68,9 @@ static class DashboardView
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 28, HorizontalAlignment = HorizontalAlignment.Center };
         legend.MinWidth = 180;
         body.Children.Add(pie); body.Children.Add(legend.With(l => Grid.SetColumn(l, 1)));
-        var card = Section("apps", "AI apps by category", new Border { Padding = new Thickness(0, 12), Child = body });
+        // Scales down (never up) when the card is narrower than donut + legend, instead of the legend running under the next cards
+        var fit = new Viewbox { Stretch = Avalonia.Media.Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = body };
+        var card = Section("apps", "AI apps by category", new Border { Padding = new Thickness(0, 12), Child = fit });
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();
         return card;
