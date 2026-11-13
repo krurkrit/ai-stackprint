@@ -1,7 +1,7 @@
 # AI Stackprint
 Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project / User / System). Avalonia 12 + .NET 10, free (MIT).
 
-`dotnet run`. See `AGENTS.md` for contributor rules and `docs/` for architecture and adding apps.
+`dotnet run --project src/App` (needs the .NET 10 SDK). See `AGENTS.md` for contributor rules and `docs/` for architecture and adding apps.
 
 Colors follow the Snowy Owl design system. The UI font is Inter when installed (falls back to Noto Sans, then the system font): install it from https://rsms.me/inter/.
 

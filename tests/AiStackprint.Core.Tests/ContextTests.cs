@@ -1,7 +1,7 @@
 using AiStackprint.Services;
 using Xunit;
 
-namespace AiStackprint.Tests;
+namespace AiStackprint.Core.Tests;
 
 [Collection("Environment")]   // sets CODEX_HOME / CLAUDE_CONFIG_DIR
 public class ContextTests : IDisposable

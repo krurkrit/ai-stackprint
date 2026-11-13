@@ -6,19 +6,20 @@ Source of truth for AI coding agents (Codex, Claude Code, others). `CLAUDE.md` i
 AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAML) that inventories AI apps, orchestrators, plugins, skills, config files and logs on this machine, by level (Project / Local / User / System).
 
 ## Commands
-- Run: `dotnet run`
-- Build: `dotnet build`
-- Publish: `dotnet publish -c Release -r <win-x64|linux-x64|osx-arm64> --self-contained false`
-- Test: `dotnet test tests/AiStackprint.Tests` (xunit, services; builds Core only) and `dotnet test tests/AiStackprint.App.Tests` (UI code such as `Theme`). If you add logic to `src/Core/Services`, add tests for it.
+- Run: `dotnet run --project src/App`
+- Build: `dotnet build` (the solution `AiStackprint.slnx`: all projects)
+- Publish: `dotnet publish src/App -c Release -r <win-x64|linux-x64|osx-arm64> --self-contained false`
+- Test: `dotnet test` (all), or `dotnet test tests/AiStackprint.Core.Tests` (services; builds Core only, no UI). If you add logic to `src/Core/Services`, add tests for it.
+- SDK: .NET 10 (LTS), pinned in `global.json`. Package versions are set once in `Directory.Packages.props` (exact versions; projects list packages without versions). Shared build settings: `Directory.Build.props`.
 
 ## Layout
-- Two projects: `AiStackprint.csproj` (the app: `src/Ui`, `src/Program.cs`, icons) references `src/Core/AiStackprint.Core.csproj` (models and services, no Avalonia). Services must not depend on UI code; the build enforces it.
+- `src/App/AiStackprint.App.csproj` (the app, builds `AiStackprint.exe`: `Ui`, `Program.cs`, `Assets`) references `src/Core/AiStackprint.Core.csproj` (models and services, no Avalonia). Services must not depend on UI code; the build enforces it.
 - `src/Core/Assets/apps.builtin.json`: built-in app definitions (data, embedded resource in Core)
-- `Assets/icons.json`, `Assets/logos.json`: UI icons and app logos as path data (embedded); see `docs/architecture.md`
+- `src/App/Assets/icons.json`, `src/App/Assets/logos.json`: UI icons and app logos as path data (embedded); see `docs/architecture.md`
 - `src/Core/Models`: records and definition classes
 - `src/Core/Services`: `AppCatalog` (built-in + user `apps.json`), `SettingsStore` (`settings.json`), `Scanner` (generic, read-only), `PluginReaders` (per-format), `SkillManager` (add/remove skills), `PluginManager` (runs the app's plugin CLI), `LogReader` (finds and tails log files), `LogParsers` (session logs → readable steps), `LogSearch`, `LogSummary`, `LogFolderWatcher` (watches an app's log folders), `LogTrash` (deletes logs to Recycle Bin/Trash), `ConfigEditor` (validated, backed-up saves of config files), `Contrast` (WCAG ratios), `SkillDoc` (front matter, links), `SkillCheck` + `Health` (checks), `ContextBudget` + `ContextRules` (what each app loads into context per project), `LimitsService` + `LimitProviders` (live plan and limits), `ScanDiff` (changes since the last scan), `CrashLog` (crash.log)
-- `src/Ui`: `MainWindow` (nav + routing; `.Nav`: history, shortcuts, limits timer; `.TitleBar`: custom title bar: name, back/forward; F11 full screen), `CommandPalette` (Ctrl+K), `DashboardView`, `AppsView`, `AppDetailView` (+ `UsageCard`, `LimitsView`), `AppActions`, `LibraryView` (plugins/skills page) + `ItemBrowser` (list, filters, bottom panel) + `DetailPanel` + `FileView`, `ProjectView` (+ `ContextSection`), `HealthView`, `LogsView`, `LogViewer`, `LogSummaryCard`, `ReadableLog`, `Levels` (order + explanations), `SettingsView`, `AppearanceSection`, `ColorSettings`, `CodeView` (the only AvaloniaEdit user), `ConfigPanel`, `Dialogs`, `AddAppDialog`, `Table`, `W` (widget helpers), `Busy` (the one loading indicator), `MemoryTrim` (debounced GC after a page or the last code view closes), `Toast`, `Theme` (colors + fonts), `Icons`, `Ctx`
-- `tests/AiStackprint.Tests`: xunit tests for Core; `tests/AiStackprint.App.Tests`: tests for UI code (both excluded from the app build)
+- `src/App/Ui`: `MainWindow` (nav + routing; `.Nav`: history, shortcuts, limits timer; `.TitleBar`: custom title bar: name, back/forward; F11 full screen), `CommandPalette` (Ctrl+K), `DashboardView`, `AppsView`, `AppDetailView` (+ `UsageCard`, `LimitsView`), `AppActions`, `LibraryView` (plugins/skills page) + `ItemBrowser` (list, filters, bottom panel) + `DetailPanel` + `FileView`, `ProjectView` (+ `ContextSection`), `HealthView`, `LogsView`, `LogViewer`, `LogSummaryCard`, `ReadableLog`, `Levels` (order + explanations), `SettingsView`, `AppearanceSection`, `ColorSettings`, `CodeView` (the only AvaloniaEdit user), `ConfigPanel`, `Dialogs`, `AddAppDialog`, `Table`, `W` (widget helpers), `Busy` (the one loading indicator), `MemoryTrim` (debounced GC after a page or the last code view closes), `Toast`, `Theme` (colors + fonts), `Icons`, `Ctx`
+- `tests/AiStackprint.Core.Tests`: xunit tests for Core; `tests/AiStackprint.App.Tests`: tests for UI code
 - `docs/`: architecture and how-to guides
 - `docs/decisions.md`: agreed product and UI decisions; read before UI work
 

@@ -2,7 +2,7 @@ using AiStackprint.Models;
 using AiStackprint.Services;
 using Xunit;
 
-namespace AiStackprint.Tests;
+namespace AiStackprint.Core.Tests;
 
 public class LogToolsTests : IDisposable
 {

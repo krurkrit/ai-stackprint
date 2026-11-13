@@ -1,16 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- The desktop app: UI (Avalonia), icons and logos. Scanning and parsing live in Core. -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>AiStackprint</AssemblyName>
+    <AssemblyName>AiStackprint</AssemblyName>   <!-- exe name stays AiStackprint -->
     <RootNamespace>AiStackprint</RootNamespace>
     <AssemblyTitle>AI Stackprint</AssemblyTitle>   <!-- name Task Manager shows -->
     <Product>AI Stackprint</Product>
     <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>   <!-- exe and taskbar icon -->
-    <!-- Lower memory and faster start: no ICU load, no background GC thread, trim idle heap -->
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Lower memory and faster start: no background GC thread, trim idle heap (no ICU: Directory.Build.props) -->
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <TieredPGO>false</TieredPGO>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
@@ -22,19 +19,15 @@
     <InternalsVisibleTo Include="AiStackprint.App.Tests" />   <!-- tests check Theme colors -->
   </ItemGroup>
   <ItemGroup>
-    <!-- Core and the tests are their own projects -->
-    <Compile Remove="tests/**;src/Core/**" />
-    <None Remove="tests/**;src/Core/**" />
-    <EmbeddedResource Remove="src/Core/**" />
-    <ProjectReference Include="src\Core\AiStackprint.Core.csproj" />
+    <ProjectReference Include="..\Core\AiStackprint.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.*" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.*" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.*" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.*" />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
-    <PackageReference Include="AvaloniaEdit.TextMate" Version="12.0.0" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\app-icon.ico" LogicalName="app-icon.ico" />   <!-- window/taskbar icon: every size, so Windows picks a sharp one instead of shrinking 256 px -->

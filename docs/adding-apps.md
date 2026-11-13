@@ -40,7 +40,7 @@ Three ways, easiest first.
 - `layout`: `skill-folders` (default, folders containing `SKILL.md`) or `flat-md` (`*.md` files).
 - An app is "installed" when any `detect` folder exists.
 - `category`: `agent`, `orchestrator`, `editor`, `chat`, `runtime`, `shared` or `custom`.
-- `logo`: optional key from `Assets/logos.json`. Without it the category icon is shown.
+- `logo`: optional key from `src/App/Assets/logos.json`. Without it the category icon is shown.
 - `configs`: instruction, settings or MCP files (or rules folders) the app reads. `kind`: `instructions`, `settings` or `mcp`. Project paths are relative to each project folder. Shown on the app page with a read-only preview.
 - `pluginCommands`: the app's own CLI for installing/removing plugins. Each item is one argument; `{plugin}` and `{scope}` (`user`, `project`, `local`) are filled in. Project scopes run in the project folder. Without it, plugins are listed but not managed.
 - Skills are added to the first non-bundled `skill-folders` root at User level, or the first project root for a project.

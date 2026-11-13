@@ -1,0 +1,10 @@
+<Project>
+  <!-- Settings shared by every project in the solution -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>   <!-- .NET 10 LTS (supported to Nov 2028); Avalonia 12 recommends it -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

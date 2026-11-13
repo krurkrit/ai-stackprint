@@ -3,7 +3,7 @@ using AiStackprint.Services;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
-namespace AiStackprint.Tests;
+namespace AiStackprint.Core.Tests;
 
 public class UsageTests
 {

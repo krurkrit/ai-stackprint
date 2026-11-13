@@ -1,17 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Models and services: scanning, parsing, checks and file changes. No UI: Avalonia is not referenced here, so services cannot depend on it. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AiStackprint</RootNamespace>
-    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="AiStackprint.Tests" />
+    <InternalsVisibleTo Include="AiStackprint.Core.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" />   <!-- OpenCode keeps usage in SQLite -->
+    <PackageReference Include="Microsoft.Data.Sqlite" />   <!-- OpenCode keeps usage in SQLite -->
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\apps.builtin.json" LogicalName="apps.builtin.json" />

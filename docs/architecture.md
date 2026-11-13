@@ -26,7 +26,7 @@ src/Core/Assets/apps.builtin.json ┐
 | New app or orchestrator | JSON entry, or "Add app" in the UI |
 | New skill layout | `ScanRoot.Layout` value handled in `Scanner.ReadRoot` |
 | New plugin manifest | `IPluginReader` implementation + register |
-| New screen | class in `src/Ui`, add a nav button in `MainWindow` |
+| New screen | class in `src/App/Ui`, add a nav button in `MainWindow` |
 
 ## Screens
 - Dashboard, AI apps (list), app page (`App:<id>`), Plugins, Skills, project page (`Project:<path>`), Health, Settings. `MainWindow.Go` routes and keeps back/forward history (Alt+←/→, mouse back/forward, and ← → buttons in the custom title bar, after the app name; F11 toggles full screen, no maximize button); views get a `Ctx`. The top bar shows where you are (the list part is clickable) and Search (Ctrl+K: pages, apps, projects, skills, plugins, actions). F5 rescans (on the Logs page: re-reads the files); Esc closes the bottom panel.
@@ -87,7 +87,7 @@ Settings › Appearance: font family (installed fonts), base size 12–18, body 
 - Theme: System (default, follows the OS), Light or Dark; saved in `settings.json`.
 
 ## Icons
-- `Assets/icons.json`: UI icons (Fluent UI System Icons, 24 regular). `Assets/logos.json`: app logos (LobeHub Icons, Simple Icons). Both embedded.
+- `src/App/Assets/icons.json`: UI icons (Fluent UI System Icons, 24 regular). `src/App/Assets/logos.json`: app logos (LobeHub Icons, Simple Icons). Both embedded.
 - Format: `{ "name": [ { "d": "<path data>", "o": <opacity, optional> } ] }` on a 24x24 grid; a leading `F1 ` means nonzero fill.
 - `W.Icon(name)` and `W.AppLogo(logo, category)` render them in the inherited text color, so they follow the theme. Monochrome by design (no brand hex).
 - The sidebar collapses to an icon rail (toggle at the top); collapsed items show tooltips.

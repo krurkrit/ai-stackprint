@@ -2,7 +2,7 @@ using AiStackprint.Models;
 using AiStackprint.Services;
 using Xunit;
 
-namespace AiStackprint.Tests;
+namespace AiStackprint.Core.Tests;
 
 [Collection("Environment")]
 public class LimitsTests : IDisposable
