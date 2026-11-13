@@ -118,8 +118,9 @@ class ItemBrowser
         _shown.Text = shown.Count == _items.Count ? $"{_items.Count:N0}" : $"{shown.Count:N0} of {_items.Count:N0}";
 
         var cols = _kind == "Plugin"
-            ? new[] { new Col("Plugin", "2*"), new Col("App", "1.3*"), new Col("Level", "1.1*"), new Col("Version", ".7*"), new Col("Path", "3*"), new Col("", "112") }
-            : new[] { new Col("Skill", "2.2*"), new Col("App", "1.3*"), new Col("Level", "1.1*"), new Col("Invoked by", ".9*"), new Col("Path", "3*"), new Col("", "112") };
+            // minimums fit the narrowest window (900 px): Path gives way first
+            ? new[] { new Col("Plugin", "2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Version", ".7*", Min: 56), new Col("Path", "3*"), new Col("", "112") }
+            : new[] { new Col("Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112") };
         _table.Content = Table.Build(cols, _filter.Rows(shown, Row, cols.Length, Fill),
             _items.Count == 0 ? $"No {(_kind == "Plugin" ? "plugins" : "skills")} found." : "Nothing matches. Clear the search or filters.");
     }
@@ -150,7 +151,8 @@ class ItemBrowser
         var parts = path.TrimEnd(sep).Split(sep);
         int keep = parts.Length >= 2 && parts[^1].Equals("SKILL.md", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
         var head = string.Join(sep, parts[..^keep]) + (parts.Length > keep ? sep.ToString() : "");
-        var tb = new TextBlock { FontFamily = Ui.Theme.Mono, FontSize = Size(12), TextWrapping = Avalonia.Media.TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, W.Text);
+        var tb = new TextBlock { FontFamily = Ui.Theme.Mono, FontSize = Size(12), TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            MaxLines = 4, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis }   /* a squeezed column (narrow window) would otherwise wrap a letter per line; the tooltip has the full path */.Themed(TextBlock.ForegroundProperty, W.Text);
         tb.Inlines = new InlineCollection
         {
             new Run(head).With(r => r.Bind(TextElement.ForegroundProperty, tb.GetResourceObservable(Muted))),

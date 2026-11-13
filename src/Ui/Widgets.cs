@@ -196,11 +196,15 @@ static class W
 
     /// <summary>Logo + name, vertically centered; used as the first cell of app rows.</summary>
     /// <summary>Logo and name. The name wraps inside its column (a horizontal StackPanel gave it unlimited width, so it ran into the next column).</summary>
-    public static Control AppName(string? logo, string category, string name, double size = 28)
+    public static Control AppName(string? logo, string category, string name, double size = 28) =>
+        Beside(AppLogo(logo, category, size), Txt(name, 14, true).With(t => t.VerticalAlignment = VerticalAlignment.Center));
+
+    /// <summary>Icon with text beside it that wraps in the space left. Use instead of <see cref="Row"/> when the text may not fit: a Row gives it unlimited width, so it runs past or is cut off.</summary>
+    public static Control Beside(Control icon, Control text)
     {
-        var icon = AppLogo(logo, category, size).With(l => { l.Margin = new Thickness(0, 0, 8, 0); l.VerticalAlignment = VerticalAlignment.Center; });
+        icon.Margin = new Thickness(0, 0, 8, 0); icon.VerticalAlignment = VerticalAlignment.Center;
         DockPanel.SetDock(icon, Dock.Left);
-        return new DockPanel { Children = { icon, Txt(name, 14, true).With(t => t.VerticalAlignment = VerticalAlignment.Center) } };
+        return new DockPanel { Children = { icon, text } };
     }
 
     public static Button Btn(string text, Action a, bool primary = false, string? icon = null)
@@ -250,7 +254,15 @@ static class W
     }
 
     /// <summary>A filter row: muted label in a fixed-width column, so the controls of stacked filter rows line up.</summary>
-    public static Control FilterRow(string label, params Control[] c) => Row(c.Prepend(Txt(label, 13, false, Muted).With(t => t.Width = 80)).ToArray());
+    /// <summary>Label, then the options; options wrap onto more lines in a narrow window instead of running off the edge.</summary>
+    public static Control FilterRow(string label, params Control[] c)
+    {
+        var name = Txt(label, 13, false, Muted).With(t => { t.Width = 80; t.VerticalAlignment = VerticalAlignment.Center; });
+        DockPanel.SetDock(name, Dock.Left);
+        var opts = new WrapPanel { ItemSpacing = 8, LineSpacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        foreach (var x in c) { x.VerticalAlignment = VerticalAlignment.Center; opts.Children.Add(x); }
+        return new DockPanel { Children = { name, opts } };
+    }
 
     /// <summary>Drops unchecked values no longer offered; with fewer than two offered, or all of them unchecked, none (nothing left to undo it).</summary>
     public static void KeepOffered(HashSet<string> off, ICollection<string> offered)

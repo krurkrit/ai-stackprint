@@ -81,6 +81,7 @@ class AppsView(Ctx x)
             cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", 14).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
                 _byCat ? Icon(Icons.ForCategory(first.Category), 16) : new Panel(), Title(name, 14),
                 Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", 13, false, Muted));
+            Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
             for (int c = 1; c < cols; c++) cells[c] = new Panel();
             yield return new TableRow(cells, () => { if (!_collapsed.Remove(key)) _collapsed.Add(key); Fill(); });
             if (open) foreach (var a in g) yield return Row(a);

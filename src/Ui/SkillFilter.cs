@@ -80,6 +80,7 @@ class SkillFilter
             bool open = !_collapsed.Contains(g.Key); string key = g.Key;
             var cells = new Control[cols];
             cells[0] = Row(Txt(open ? "▾" : "▸", 13, false, Muted), Title(g.Key, 14), Txt(g.Count().ToString("N0"), 13, false, Muted));
+            Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
             for (int c = 1; c < cols; c++) cells[c] = new Panel();
             yield return new TableRow(cells, () => { if (!_collapsed.Remove(key)) _collapsed.Add(key); changed(); });
             if (open) foreach (var i in g) yield return row(i);

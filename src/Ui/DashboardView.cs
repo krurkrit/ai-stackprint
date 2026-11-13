@@ -188,13 +188,13 @@ static class DashboardView
                 grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(n, GridUnitType.Star)));
                 grid.Children.Add(new Border().Themed(Border.BackgroundProperty, key).With(b => Grid.SetColumn(b, col++)));
             }
-            if (n > 0) legend.Children.Add(DotText($"{label} {n}", key).With(d => d.Margin = new Thickness(0, 0, 14, 0)));
+            if (n > 0) legend.Children.Add(DotText($"{label} {n}", key).With(d => { d.Margin = new Thickness(0, 0, 14, 0); d.TextWrapping = TextWrapping.Wrap; }));   // a narrow tile wraps instead of cutting off the count
         }
         if (col == 0) grid.Children.Add(new Border().Themed(Border.BackgroundProperty, BorderKey));
         var card = Card(new StackPanel
         {
             Spacing = 10,
-            Children = { Row(IconTile(icon), Txt(title, 13, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center)),
+            Children = { Beside(IconTile(icon), Txt(title, 13, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center)),
                 Title(big, 32).With(t => { t.FontFeatures = Tabular; t.HorizontalAlignment = HorizontalAlignment.Right; }),
                 new Border { CornerRadius = new CornerRadius(5), ClipToBounds = true, Child = grid }, legend }
         });
