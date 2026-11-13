@@ -18,9 +18,9 @@ class LogsView(Ctx x)
     LogFile? _file;
     List<LogFile> _files = new();
     readonly HashSet<string> _checked = new();
-    readonly LogViewer _viewer = new(x);
-    readonly LogSummaryCard _summary = new();
-    readonly ContentControl _table = new();
+    LogViewer _viewer = new(x);
+    LogSummaryCard _summary = new();
+    ContentControl _table = new();
     LogFolderWatcher? _watcher;
     string? _watching;   // app whose folders are watched
 
@@ -147,12 +147,19 @@ class LogsView(Ctx x)
         _viewer.Reload();
     }
 
-    /// <summary>Leaving the Logs page: stop watching and drop everything held for it (file list, viewer, summary).</summary>
+    /// <summary>
+    /// Leaving the Logs page: stop watching and drop everything held for it (file list, viewer, summary).
+    /// The viewer, summary and table are replaced, not just emptied: Avalonia's render tree of a control that is cleared
+    /// while the page detaches keeps its old children, so a reused container kept the last log (and every code block's grammar) alive.
+    /// Only the choices carry over: Conversation/Raw, Follow newest and the summary range.
+    /// </summary>
     public void Release()
     {
         Watch(null);
         _viewer.Release(); _summary.Release();
-        _table.Content = null;
+        _viewer = new LogViewer(x) { Readable = _viewer.Readable, Follow = _viewer.Follow };
+        _summary = new LogSummaryCard { Days = _summary.Days };
+        _table.Content = null; _table = new ContentControl();
         _files = new(); _checked.Clear(); _file = null;
     }
 

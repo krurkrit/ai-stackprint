@@ -17,15 +17,22 @@ namespace AiStackprint.Ui;
 class CodeView : Border
 {
     static RegistryOptions? _registry;
+    static SharedGrammars? _shared;
     static RegistryOptions Registry => _registry ??= new RegistryOptions(ThemeName.LightPlus);
-    static int _live;   // attached views; the grammars are dropped when the last one goes
-    bool _counted, _disposed;
+    /// <summary>Every view's highlighter reads grammars through this, so each grammar is parsed once, not once per view (Markdown and shell embed dozens of languages: ~15 MB each).</summary>
+    static SharedGrammars Shared => _shared ??= new SharedGrammars(Registry);
+    static int _live;   // installed highlighters; the grammars are dropped when the last one goes
+    bool _disposed;
 
-    /// <summary>true = the owner disposes it (a view that is detached and attached again, like the log viewer's). Default: disposed when it leaves the screen.</summary>
+    /// <summary>
+    /// true = keep highlighting while detached until the owner calls <see cref="Dispose"/> (the log viewer's raw view, which is re-attached on every page rebuild).
+    /// Default: the highlighter and its grammars are released when the view leaves the screen and set up again if it comes back.
+    /// </summary>
     public bool KeepOnDetach { get; init; }
 
     readonly TextEditor _editor;
-    readonly TextMate.Installation _textMate;
+    readonly string? _scope;
+    TextMate.Installation? _textMate;   // only while on screen: a highlighter holds its own compiled copy of the grammar (~15 MB for Markdown or shell)
 
     /// <summary>AvaloniaEdit's control templates; add once to Application.Styles.</summary>
     public static IStyle EditorStyles() => new StyleInclude(new Uri("avares://AiStackprint/")) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") };
@@ -48,12 +55,10 @@ class CodeView : Border
             foreach (var m in _editor.TextArea.LeftMargins.OfType<LineNumberMargin>())
                 m.Margin = new Thickness(10, 0, 8, 0);   // space from the edge and from the text
         if (compact) MaxHeight = 420;
-        _textMate = _editor.InstallTextMate(Registry);
-        if (Language(path) is { } lang) _textMate.SetGrammar(Registry.GetScopeByLanguageId(lang.Id));
-        ApplyTheme();
+        _scope = Language(path) is { } lang ? Registry.GetScopeByLanguageId(lang.Id) : null;
         ActualThemeVariantChanged += (_, _) => ApplyTheme();
-        AttachedToVisualTree += (_, _) => { if (!_counted && !_disposed) { _counted = true; _live++; } };
-        DetachedFromVisualTree += (_, _) => { if (!KeepOnDetach) Dispose(); };
+        AttachedToVisualTree += (_, _) => Install();
+        DetachedFromVisualTree += (_, _) => { if (!KeepOnDetach) Uninstall(); };
         Child = _editor;
     }
 
@@ -64,16 +69,41 @@ class CodeView : Border
         return Registry.GetLanguageByExtension(ext);
     }
 
-    void ApplyTheme() { if (!_disposed) _textMate.SetTheme(Registry.LoadTheme(ActualThemeVariant == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus)); }
+    void ApplyTheme() => _textMate?.SetTheme(Registry.LoadTheme(ActualThemeVariant == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus));
 
-    /// <summary>Releases the highlighter and, with the last view, the loaded grammars. Safe to call twice.</summary>
+    void Install()
+    {
+        if (_disposed || _textMate != null) return;
+        _textMate = _editor.InstallTextMate(Shared);
+        if (_scope != null) _textMate.SetGrammar(_scope);
+        _live++;
+        ApplyTheme();
+    }
+
+    void Uninstall()
+    {
+        if (_textMate == null) return;
+        _textMate.Dispose(); _textMate = null;
+        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; }
+    }
+
+    /// <summary>Releases the highlighter for good and, with the last view, the loaded grammars. Safe to call twice.</summary>
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
         _flashTimer?.Stop();
-        _textMate.Dispose();
-        if (_counted && --_live <= 0) { _live = 0; _registry = null; }
+        Uninstall();
+    }
+
+    /// <summary>Grammar source shared by all views: parsed grammars are kept and handed to each highlighter (TextMate copies before compiling, so sharing is safe).</summary>
+    sealed class SharedGrammars(RegistryOptions inner) : TextMateSharp.Registry.IRegistryOptions
+    {
+        readonly System.Collections.Concurrent.ConcurrentDictionary<string, TextMateSharp.Internal.Types.IRawGrammar> _grammars = new();
+        public TextMateSharp.Internal.Types.IRawGrammar GetGrammar(string scopeName) => _grammars.GetOrAdd(scopeName, inner.GetGrammar);
+        public TextMateSharp.Themes.IRawTheme GetTheme(string scopeName) => inner.GetTheme(scopeName);
+        public ICollection<string> GetInjections(string scopeName) => inner.GetInjections(scopeName);
+        public TextMateSharp.Themes.IRawTheme GetDefaultTheme() => inner.GetDefaultTheme();
     }
 
     Flasher? _flash;

@@ -11,6 +11,8 @@ class LogSummaryCard
 {
     readonly ContentControl _body = new();
     int _days = 7;
+    /// <summary>Range shown: 7, 30 or 0 (all). Kept when the Logs page replaces the card.</summary>
+    public int Days { get => _days; init => _days = value; }
     CancellationTokenSource? _cts;
     IReadOnlyList<LogFile> _files = Array.Empty<LogFile>();
 
