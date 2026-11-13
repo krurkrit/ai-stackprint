@@ -65,8 +65,8 @@ public record LogFile(string App, string Label, string Path, long Size, DateTime
 /// <summary>Argument lists for the app's own plugin CLI. Tokens: {plugin}, {scope}. Run without a shell.</summary>
 public class PluginCommands
 {
-    public List<string> Install { get; set; } = new();
-    public List<string> Remove { get; set; } = new();
+    public List<string> Install { get; set; } = [];
+    public List<string> Remove { get; set; } = [];
 }
 
 public enum AppOrigin { BuiltIn, Custom, Override }
@@ -78,15 +78,15 @@ public class AppDefinition
     public string Name { get; set; } = "";
     public string Category { get; set; } = "agent";  // agent | orchestrator | editor | chat | runtime | shared | custom
     public string? Logo { get; set; }                         // key in Assets/logos.json; null = category icon
-    public List<string> Detect { get; set; } = new();        // any existing folder => installed
-    public List<ScanRoot> Roots { get; set; } = new();        // user/system-level locations
-    public List<ScanRoot> ProjectRoots { get; set; } = new(); // paths relative to a project folder
-    public List<ConfigFile> Configs { get; set; } = new();
+    public List<string> Detect { get; set; } = [];        // any existing folder => installed
+    public List<ScanRoot> Roots { get; set; } = [];        // user/system-level locations
+    public List<ScanRoot> ProjectRoots { get; set; } = []; // paths relative to a project folder
+    public List<ConfigFile> Configs { get; set; } = [];
     public string? PluginFormat { get; set; }                 // key of an IPluginReader
     public string? PluginManifest { get; set; }
     public PluginCommands? PluginCommands { get; set; }
-    public List<LogSource> Logs { get; set; } = new();
-    public List<LogSource> Usage { get; set; } = new();       // usage-only sources (an app's database): Usage card, not the Logs page
+    public List<LogSource> Logs { get; set; } = [];
+    public List<LogSource> Usage { get; set; } = [];       // usage-only sources (an app's database): Usage card, not the Logs page
     public string? Context { get; set; }                       // IContextRule id: what the app loads into context in a project (claude, codex, gemini, copilot, cursor)
     public string? Limits { get; set; }                        // ILimitProvider id: live plan and usage limits from the app's saved sign-in
     public string? Notes { get; set; }
@@ -96,7 +96,7 @@ public class AppDefinition
 /// <summary>User preferences, saved to settings.json next to apps.json.</summary>
 public class Settings
 {
-    public List<string> HiddenApps { get; set; } = new();
+    public List<string> HiddenApps { get; set; } = [];
     public bool HideNotInstalled { get; set; }
     public string Theme { get; set; } = "System";      // System | Light | Dark
     public string FontFamily { get; set; } = "Inter";
@@ -112,7 +112,7 @@ public class Settings
     public bool LogLineNumbers { get; set; }            // logs only; the config editor always shows them
     public int FadeSeconds { get; set; } = 10;         // new log lines/steps stay highlighted and fade out over this many seconds; 0 = off
     public int LimitsRefreshMinutes { get; set; } = 1; // live usage limits: at most one call per app per this many minutes (min 1)
-    public List<string> LimitsEnabled { get; set; } = new();   // app ids whose saved sign-in may be used to ask the provider for limits (opt-in)
+    public List<string> LimitsEnabled { get; set; } = [];   // app ids whose saved sign-in may be used to ask the provider for limits (opt-in)
     public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
     public ThemeColors Light { get; set; } = new();
     public ThemeColors Dark { get; set; } = new();
@@ -130,13 +130,13 @@ public class ThemeColors
 
 public class AppState
 {
-    public List<AppDefinition> Defs { get; set; } = new();
+    public List<AppDefinition> Defs { get; set; } = [];
     public Settings Settings { get; set; } = new();
-    public List<string> Projects { get; } = new();
-    public List<Item> Items { get; set; } = new();
-    public List<AppInfo> Apps { get; set; } = new();
-    public Services.ScanChanges Changes { get; set; } = new(new(), null);   // since the scan before this one (saved between runs)
-    public List<Services.HealthIssue> Health { get; set; } = new();                 // checks of the last scan
+    public List<string> Projects { get; } = [];
+    public List<Item> Items { get; set; } = [];
+    public List<AppInfo> Apps { get; set; } = [];
+    public Services.ScanChanges Changes { get; set; } = new([], null);   // since the scan before this one (saved between runs)
+    public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan
 
     public AppDefinition? Def(string id) => Defs.FirstOrDefault(d => d.Id == id);
 }

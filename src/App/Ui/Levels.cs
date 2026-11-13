@@ -8,11 +8,11 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Levels in priority order (highest first), their explanations, and the ⓘ pop-up that shows them.</summary>
-static class Levels
+internal static class Levels
 {
-    public static readonly string[] Order = { "System", "Local", "Project", "User" };
+    public static readonly string[] Order = ["System", "Local", "Project", "User"];
 
-    public static int Rank(string level) { int i = Array.IndexOf(Order, level); return i < 0 ? Order.Length : i; }
+    public static int Rank(string level) { var i = Array.IndexOf(Order, level); return i < 0 ? Order.Length : i; }
 
     public static readonly Dictionary<string, (string Where, string Who, string Note)> Info = new()
     {

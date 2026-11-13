@@ -30,7 +30,7 @@ public class ContrastTests
     [InlineData(0xFFFD7E14u, 0xFF141517u)]   // dark accent (orange), dark text: hover goes lighter
     public void Hover_shade_keeps_text_readable(uint accent, uint text)
     {
-        double before = Contrast.Ratio(text, accent);
+        var before = Contrast.Ratio(text, accent);
         foreach (var amount in new[] { .15, .28 })
         {
             Assert.True(Contrast.Ratio(text, Contrast.AwayFrom(accent, text, amount)) > before);

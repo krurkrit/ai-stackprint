@@ -24,18 +24,18 @@ public static class AgentTimelines
         }
 
         // One lane per agent id; without ids, one lane per unbroken run of sub-agent steps
-        var lanes = new List<List<LogEntry>>(); var byAgent = new Dictionary<string, int>(); int run = -1; bool prevSub = false;
+        var lanes = new List<List<LogEntry>>(); var byAgent = new Dictionary<string, int>(); var run = -1; var prevSub = false;
         foreach (var e in timed)
         {
             if (!e.SubAgent) { prevSub = false; continue; }
             int idx;
             if (!string.IsNullOrEmpty(e.Agent))
             {
-                if (!byAgent.TryGetValue(e.Agent, out idx)) { idx = lanes.Count; byAgent[e.Agent] = idx; lanes.Add(new()); }
+                if (!byAgent.TryGetValue(e.Agent, out idx)) { idx = lanes.Count; byAgent[e.Agent] = idx; lanes.Add([]); }
             }
             else
             {
-                if (!prevSub || run < 0) { run = lanes.Count; lanes.Add(new()); }
+                if (!prevSub || run < 0) { run = lanes.Count; lanes.Add([]); }
                 idx = run;
             }
             lanes[idx].Add(e);
@@ -46,7 +46,7 @@ public static class AgentTimelines
         var tasks = main.Where(e => e.Role == "tool" && e.Tool is "Task" or "Agent").ToList();
         var used = new HashSet<LogEntry>();
         var result = new List<AgentLane>();
-        int n = 0;
+        var n = 0;
         foreach (var steps in lanes.OrderBy(l => l.Min(e => e.Time)))
         {
             DateTime start = steps.Min(e => e.Time)!.Value, end = steps.Max(e => e.Time)!.Value;
@@ -74,6 +74,6 @@ public static class AgentTimelines
                 waits.Add((l.Start, l.End));
             }
         }
-        return new(timed[0].Time!.Value, timed[^1].Time!.Value, result.Take(MaxLanes).ToList(), waits, result.Count);
+        return new(timed[0].Time!.Value, timed[^1].Time!.Value, [.. result.Take(MaxLanes)], waits, result.Count);
     }
 }

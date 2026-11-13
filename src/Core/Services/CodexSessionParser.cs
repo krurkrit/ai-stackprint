@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace AiStackprint.Services;
 
 /// <summary>Codex: ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl ({timestamp, type, payload}).</summary>
-class CodexSessionParser : ILogParser
+internal class CodexSessionParser : ILogParser
 {
     public string Format => "codex-session";
 
@@ -29,7 +29,7 @@ class CodexSessionParser : ILogParser
                         case "message":
                             var text = LogParsers.Text(p.Get("content"));
                             var role = p.Str("role");
-                            bool context = role is "developer" or "system" || text.TrimStart().StartsWith("<environment_context>") || text.TrimStart().StartsWith("<user_instructions>");
+                            var context = role is "developer" or "system" || text.TrimStart().StartsWith("<environment_context>") || text.TrimStart().StartsWith("<user_instructions>");
                             if (text.Trim() != "")
                             {
                                 list.Add(new(context ? "system" : role == "assistant" ? "assistant" : "user", text, time, false));
@@ -128,7 +128,7 @@ class CodexSessionParser : ILogParser
                     continue;
                 }
 
-                int minutes = (int)w.Num("window_minutes");
+                var minutes = (int)w.Num("window_minutes");
                 var reset = DateTimeOffset.FromUnixTimeSeconds(w.Num("resets_at")).LocalDateTime;
                 yield return new(time, minutes == 300 ? "5-hour" : minutes == 10080 ? "Weekly" : $"{minutes}-minute", w.Get("used_percent").GetDouble(), minutes, reset);
             }

@@ -10,10 +10,10 @@ namespace AiStackprint.Core.Tests;
 
 public class SkillManagerTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    string MakeSkill(string parent, string name)
+    private string MakeSkill(string parent, string name)
     {
         var d = Path.Combine(parent, name);
         Directory.CreateDirectory(Path.Combine(d, "refs"));
@@ -22,7 +22,7 @@ public class SkillManagerTests : IDisposable
         return d;
     }
 
-    static Item Skill(string path, string level = "User", string? plugin = null) =>
+    private static Item Skill(string path, string level = "User", string? plugin = null) =>
         new("Skill", "s", "", "App", level, path) { Plugin = plugin };
 
     [Fact]

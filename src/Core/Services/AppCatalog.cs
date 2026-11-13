@@ -22,7 +22,7 @@ public static class AppCatalog
         AllowTrailingCommas = true
     };
 
-    static string AppData => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    private static string AppData => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     public static string Folder => Path.Combine(AppData, "AiStackprint");
 
     /// <summary>
@@ -48,7 +48,7 @@ public static class AppCatalog
         var defs = new List<AppDefinition>();
         using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("apps.builtin.json")!)
         {
-            defs.AddRange(JsonSerializer.Deserialize<List<AppDefinition>>(s, _opt) ?? new());
+            defs.AddRange(JsonSerializer.Deserialize<List<AppDefinition>>(s, _opt) ?? []);
         }
 
         foreach (var u in ReadUser())
@@ -80,9 +80,9 @@ public static class AppCatalog
         File.WriteAllText(UserFile, JsonSerializer.Serialize(all, _opt));
     }
 
-    static List<AppDefinition> ReadUser()
+    private static List<AppDefinition> ReadUser()
     {
-        try { return File.Exists(UserFile) ? JsonSerializer.Deserialize<List<AppDefinition>>(File.ReadAllText(UserFile), _opt) ?? new() : new(); }
-        catch (Exception e) when (e is JsonException or IOException) { return new(); }
+        try { return File.Exists(UserFile) ? JsonSerializer.Deserialize<List<AppDefinition>>(File.ReadAllText(UserFile), _opt) ?? [] : []; }
+        catch (Exception e) when (e is JsonException or IOException) { return []; }
     }
 }

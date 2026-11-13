@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace AiStackprint.Services;
 
 /// <summary>Claude Code: ~/.claude/projects/&lt;project&gt;/&lt;session&gt;.jsonl (sub-agent steps have isSidechain: true).</summary>
-class ClaudeSessionParser : ILogParser
+internal class ClaudeSessionParser : ILogParser
 {
     public string Format => "claude-session";
 
@@ -15,13 +15,13 @@ class ClaudeSessionParser : ILogParser
         var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0;
         var seen = new HashSet<string>();   // a streamed reply is written on several lines with the same id and usage: count it once
         var calls = new Dictionary<string, (string Tool, string? File)>();   // tool_use id -> name, file type it touched
-        int start = 0; string agent = "";
-        void Tag() { if (agent != "") { for (int k = start; k < list.Count; k++) { list[k] = list[k] with { Agent = agent }; } } start = list.Count; }   // sub-agent id on the steps of the previous line
+        var start = 0; var agent = "";
+        void Tag() { if (agent != "") { for (var k = start; k < list.Count; k++) { list[k] = list[k] with { Agent = agent }; } } start = list.Count; }   // sub-agent id on the steps of the previous line
         foreach (var e in LogParsers.Json(lines))
         {
             Tag(); agent = e.Str("agentId");
             var type = e.Str("type"); var time = e.Time();
-            bool sub = e.Get("isSidechain").ValueKind == JsonValueKind.True;
+            var sub = e.Get("isSidechain").ValueKind == JsonValueKind.True;
             if (type == "summary") { list.Add(new("system", "Summary: " + e.Str("summary"), time, sub)); continue; }
             if (type is not ("user" or "assistant"))
             {

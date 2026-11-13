@@ -23,7 +23,7 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
         using (var r = new StreamReader(fs))
         {
             var buf = new char[MaxBytes];
-            int n = r.ReadBlock(buf, 0, buf.Length);
+            var n = r.ReadBlock(buf, 0, buf.Length);
             text = new string(buf, 0, n);
         }
         return Parse(text);
@@ -33,13 +33,13 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     {
         text = text.Replace("\r\n", "\n");
         var lines = text.Split('\n');
-        int count = text.EndsWith('\n') ? lines.Length - 1 : lines.Length;
+        var count = text.EndsWith('\n') ? lines.Length - 1 : lines.Length;
         if (lines.Length == 0 || lines[0].Trim() != "---")
         {
             return new(new Dictionary<string, string>(), text, count, false, false);
         }
 
-        int end = Array.FindIndex(lines, 1, l => l.Trim() == "---");
+        var end = Array.FindIndex(lines, 1, l => l.Trim() == "---");
         if (end < 0)
         {
             return new(new Dictionary<string, string>(), text, count, true, false);
@@ -49,14 +49,14 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     }
 
     /// <summary>Small YAML subset: key: value, block scalars (| and >), nested maps one level down, and "- item" lists.</summary>
-    static Dictionary<string, string> ParseFront(string[] lines)
+    private static Dictionary<string, string> ParseFront(string[] lines)
     {
         var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        string? key = null, parent = null; bool block = false;
+        string? key = null, parent = null; var block = false;
         foreach (var raw in lines)
         {
             if (raw.Trim() == "" || raw.TrimStart().StartsWith('#')) { if (block && key != null) { d[key] += "\n"; } continue; }
-            bool indented = char.IsWhiteSpace(raw[0]);
+            var indented = char.IsWhiteSpace(raw[0]);
             var t = raw.Trim();
             if (indented && block && key != null) { d[key] = (d[key] + " " + t).Trim(); continue; }
             if (t.StartsWith("- ") && key != null && (indented || parent == key)) { d[key] = d[key] == "" ? Clean(t[2..]) : d[key] + ", " + Clean(t[2..]); continue; }
@@ -94,14 +94,14 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
         return d;
     }
 
-    static string Clean(string s) => s.Trim().Trim('"', '\'').Trim();
+    private static string Clean(string s) => s.Trim().Trim('"', '\'').Trim();
 
     [GeneratedRegex(@"^([A-Za-z0-9_.-]+)\s*:(.*)$")] private static partial Regex KeyLine();
     [GeneratedRegex(@"!?\[[^\]\n]*\]\(([^)\s]+)(?:\s+""[^""]*"")?\)")] private static partial Regex LinkTarget();
 
     /// <summary>Targets of Markdown links and images, in order, without duplicates.</summary>
     public static List<string> Links(string md) =>
-        LinkTarget().Matches(md).Select(m => m.Groups[1].Value).Distinct().ToList();
+        [.. LinkTarget().Matches(md).Select(m => m.Groups[1].Value).Distinct()];
 
     /// <summary>True for links that leave the app (web, mail).</summary>
     public static bool IsExternal(string link) => Uri.TryCreate(link, UriKind.Absolute, out var u) && u.Scheme is "http" or "https" or "mailto";
@@ -154,6 +154,6 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
                 break;
             }
         }
-        return res.OrderBy(f => f.Item1.Count(c => c == Path.DirectorySeparatorChar)).ThenBy(f => f.Item1, StringComparer.OrdinalIgnoreCase).ToList();
+        return [.. res.OrderBy(f => f.Item1.Count(c => c == Path.DirectorySeparatorChar)).ThenBy(f => f.Item1, StringComparer.OrdinalIgnoreCase)];
     }
 }

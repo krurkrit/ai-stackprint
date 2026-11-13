@@ -18,10 +18,10 @@ public static class ScanDiff
 {
     public static string File => Path.Combine(AppCatalog.Folder, "last-scan.json");
 
-    record Entry(string Kind, string Name, string App, string Path, long Stamp);
-    record Snapshot(DateTime Time, List<Entry> Items);
+    private record Entry(string Kind, string Name, string App, string Path, long Stamp);
+    private record Snapshot(DateTime Time, List<Entry> Items);
 
-    static long Stamp(Item i)
+    private static long Stamp(Item i)
     {
         if (i.Kind != "Config")
         {

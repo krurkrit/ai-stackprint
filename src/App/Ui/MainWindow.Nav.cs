@@ -13,32 +13,32 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Back/forward history, keyboard and mouse shortcuts, and the limits refresh timer.</summary>
-partial class MainWindow
+internal partial class MainWindow
 {
-    readonly Stack<string> _back = new(), _forward = new();
-    readonly Panel _overlay = new();
-    readonly CommandPalette _palette;
+    private readonly Stack<string> _back = new(), _forward = new();
+    private readonly Panel _overlay = new();
+    private readonly CommandPalette _palette;
 
-    void Back() { if (_back.Count == 0) { return; } _forward.Push(_view); Show(_back.Pop()); }
-    void Forward() { if (_forward.Count == 0) { return; } _back.Push(_view); Show(_forward.Pop()); }
+    private void Back() { if (_back.Count == 0) { return; } _forward.Push(_view); Show(_back.Pop()); }
+    private void Forward() { if (_forward.Count == 0) { return; } _back.Push(_view); Show(_forward.Pop()); }
 
-    static readonly (string Mode, string Icon, string Tip)[] _themes =
-        { ("System", "desktop", "Follow the system theme"), ("Light", "weather_sunny", "Light theme"), ("Dark", "weather_moon", "Dark theme") };
+    private static readonly (string Mode, string Icon, string Tip)[] _themes =
+        [("System", "desktop", "Follow the system theme"), ("Light", "weather_sunny", "Light theme"), ("Dark", "weather_moon", "Dark theme")];
 
     /// <summary>System / sun / moon switch. Open: three segments, the active one highlighted. Collapsed: one button that cycles.</summary>
-    Control ThemeSwitch()
+    private Control ThemeSwitch()
     {
         var cur = _s.Settings.Theme;
         if (!_navOpen)
         {
-            int i = Math.Max(0, Array.FindIndex(_themes, t => t.Mode == cur));
+            var i = Math.Max(0, Array.FindIndex(_themes, t => t.Mode == cur));
             var next = _themes[(i + 1) % _themes.Length];
             return NavBtn(_themes[i].Icon, $"{_themes[i].Tip} (click: {next.Mode.ToLowerInvariant()})", () => SetTheme(next.Mode));
         }
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = 4 };
-        for (int i = 0; i < _themes.Length; i++)
+        for (var i = 0; i < _themes.Length; i++)
         {
-            var t = _themes[i]; bool on = t.Mode == cur;
+            var t = _themes[i]; var on = t.Mode == cur;
             var b = new Button
             {
                 Content = Icon(t.Icon, 18),
@@ -48,10 +48,10 @@ partial class MainWindow
                 Background = Brushes.Transparent
             };
             HoverStyle(b);
-            b.Themed(Button.ForegroundProperty, on ? Accent : Muted);
+            b.Themed(ForegroundProperty, on ? Accent : Muted);
             if (on)
             {
-                b.Themed(Button.BackgroundProperty, Surface);
+                b.Themed(BackgroundProperty, Surface);
             }
 
             ToolTip.SetTip(b, t.Tip);
@@ -62,18 +62,18 @@ partial class MainWindow
         return g;
     }
 
-    void SetTheme(string mode)
+    private void SetTheme(string mode)
     {
         _s.Settings.Theme = mode;
         SettingsStore.Save(_s.Settings);
         Restyle();
     }
 
-    void Keys()
+    private void Keys()
     {
         AddHandler(KeyDownEvent, (_, e) =>
         {
-            bool ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+            var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
             if (ctrl && e.Key == Key.K) { _palette.Open(); e.Handled = true; }
             else if (e.Key == Key.F11) { ToggleFullScreen(); e.Handled = true; }
             else if (e.Key == Key.F5)
@@ -108,7 +108,7 @@ partial class MainWindow
     /// Asks for limits of the shown, installed apps that have a provider; the service decides whether a call is due (refresh interval, at most once a minute).
     /// Paused while the window is minimized.
     /// </summary>
-    void Limits()
+    private void Limits()
     {
         _x.Limits.Updated += _ => Dispatcher.UIThread.Post(() => LimitsChanged?.Invoke());
         var timer = new DispatcherTimer(TimeSpan.FromSeconds(20), DispatcherPriority.Background, (_, _) => RequestLimits());
@@ -119,7 +119,7 @@ partial class MainWindow
     /// <summary>Raised on the UI thread when any app's limits change; the page showing them refreshes its card.</summary>
     public static event Action? LimitsChanged;
 
-    void RequestLimits()
+    private void RequestLimits()
     {
         if (WindowState == WindowState.Minimized || !_scanned)
         {

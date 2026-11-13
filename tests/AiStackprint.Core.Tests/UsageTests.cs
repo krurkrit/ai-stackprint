@@ -12,14 +12,14 @@ namespace AiStackprint.Core.Tests;
 
 public class UsageTests
 {
-    static readonly string[] _claudeLines =
-    {
+    private static readonly string[] _claudeLines =
+    [
         """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","cwd":"C:\\Work\\app-one","requestId":"r1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":20,"cache_read_input_tokens":1000,"cache_creation_input_tokens":300},"content":[{"type":"text","text":"a"}]}}""",
         """{"type":"assistant","timestamp":"2026-11-11T05:00:01Z","cwd":"C:\\Work\\app-one","requestId":"r1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":20,"cache_read_input_tokens":1000,"cache_creation_input_tokens":300},"content":[{"type":"tool_use","id":"t","name":"Bash","input":{"command":"ls"}}]}}""",
         """{"type":"assistant","isSidechain":true,"timestamp":"2026-11-11T05:01:00Z","cwd":"/home/x/app-one","message":{"id":"m2","model":"claude-sonnet-5-5","usage":{"input_tokens":1,"output_tokens":2},"content":[{"type":"text","text":"b"}]}}""",
         """{"type":"assistant","timestamp":"2026-11-11T05:02:00Z","message":{"id":"m3","model":"<synthetic>","usage":{"input_tokens":9,"output_tokens":9},"content":[]}}""",
         "not json"
-    };
+    ];
 
     [Fact]
     public void Claude_usage_counts_a_streamed_message_once_and_reads_cache_tokens()
@@ -82,13 +82,13 @@ public class UsageTests
             File.WriteAllLines(path, _claudeLines);
             var info = new FileInfo(path);
             var file = new LogFile("claude", "Sessions", path, info.Length, info.LastWriteTime, null, "claude-session");
-            var all = UsageStats.Compute(new[] { file }, DateTime.MinValue);
+            var all = UsageStats.Compute([file], DateTime.MinValue);
             Assert.Equal(1, all.Sessions); Assert.Equal(1, all.Files);
             Assert.Equal(1330L, all.Buckets.Where(b => b.Model == "claude-opus-5-5").Sum(b => b.Input + b.Output + b.CacheRead + b.CacheWrite));
             Assert.Equal(2, all.Buckets.Sum(b => b.Messages));
-            var future = UsageStats.Compute(new[] { file }, DateTime.Now.AddDays(2));
+            var future = UsageStats.Compute([file], DateTime.Now.AddDays(2));
             Assert.Empty(future.Buckets);
-            var none = UsageStats.Compute(new[] { file with { Format = null } }, DateTime.MinValue);
+            var none = UsageStats.Compute([file with { Format = null }], DateTime.MinValue);
             Assert.Equal(0, none.Files);
         }
         finally { Directory.Delete(dir, true); }

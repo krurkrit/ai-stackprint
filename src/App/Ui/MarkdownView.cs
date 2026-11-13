@@ -14,7 +14,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Renders chat Markdown (see <see cref="MarkdownLite"/>) as selectable text. <see cref="Render"/> leaves code fences to the caller; <see cref="Document"/> handles them.</summary>
-static class MarkdownView
+internal static class MarkdownView
 {
     /// <param name="link">When set, links are clickable and call it with their target; otherwise they show the target after the text.</param>
     public static Control Render(string md, Action<string>? link = null)
@@ -40,7 +40,7 @@ static class MarkdownView
         return sp;
     }
 
-    static Control Block(MdBlock b, Action<string>? link)
+    private static Control Block(MdBlock b, Action<string>? link)
     {
         switch (b.Kind)
         {
@@ -59,21 +59,21 @@ static class MarkdownView
             case MdKind.Rule:
                 return new Border { Height = 1, Margin = new Thickness(0, 4) }.Themed(Border.BackgroundProperty, BorderKey);
             case MdKind.Table when b.Rows is { Count: > 0 } rows:
-                int n = rows.Max(r => r.Count);
+                var n = rows.Max(r => r.Count);
                 var cols = Enumerable.Range(0, n).Select(i => new Col(i < rows[0].Count ? Strip(rows[0][i]) : "", "1*")).ToArray();
-                return Table.Build(cols, rows.Skip(1).Select(r => new TableRow(Enumerable.Range(0, n).Select(i => (Control)Rich(i < r.Count ? r[i] : "", 13, Body, link)).ToArray())));
+                return Table.Build(cols, rows.Skip(1).Select(r => new TableRow([.. Enumerable.Range(0, n).Select(i => (Control)Rich(i < r.Count ? r[i] : "", 13, Body, link))])));
             default:
                 return Rich(b.Text, 14, Body, link);
         }
     }
 
-    static string Strip(string s) => string.Concat(MarkdownLite.Spans(s).Select(x => x.Text));
+    private static string Strip(string s) => string.Concat(MarkdownLite.Spans(s).Select(x => x.Text));
 
     /// <summary>Selectable block with bold / italic / code / link runs. Built when shown, so link color follows the theme.</summary>
-    static SelectableTextBlock Rich(string md, double size, FontWeight weight, Action<string>? onLink)
+    private static SelectableTextBlock Rich(string md, double size, FontWeight weight, Action<string>? onLink)
     {
-        var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = Size(size), FontWeight = weight }.Themed(SelectableTextBlock.ForegroundProperty, W.Text);
-        bool built = false;
+        var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = Size(size), FontWeight = weight }.Themed(TextBlock.ForegroundProperty, Text);
+        var built = false;
         tb.AttachedToVisualTree += (_, _) =>
         {
             if (built)
@@ -83,9 +83,9 @@ static class MarkdownView
 
             built = true;
             IBrush? link = tb.TryFindResource(Link, tb.ActualThemeVariant, out var o) ? o as IBrush : null;
-            tb.Inlines ??= new InlineCollection();
+            tb.Inlines ??= [];
             var links = new List<(int Start, int Length, string Url)>();
-            int at = 0;
+            var at = 0;
             foreach (var s in MarkdownLite.Spans(md))
             {
                 // Clickable links show their label only; the target is in the tooltip
@@ -101,7 +101,7 @@ static class MarkdownView
                     run.FontStyle = FontStyle.Italic;
                 }
 
-                if (s.Code) { run.FontFamily = Ui.Theme.Mono; run.FontSize = Ui.Theme.MonoSize; }
+                if (s.Code) { run.FontFamily = Theme.Mono; run.FontSize = Theme.MonoSize; }
                 if (s.Url != null) { run.TextDecorations = TextDecorations.Underline; if (link != null) { run.Foreground = link; } links.Add((at, text.Length, s.Url)); }
                 tb.Inlines.Add(run);
                 at += text.Length;
@@ -118,7 +118,7 @@ static class MarkdownView
     /// Links inside selectable text: the text block takes the mouse for selecting, so a click is found from the character under the pointer.
     /// A drag that selects text does not follow the link.
     /// </summary>
-    static void Clickable(SelectableTextBlock tb, List<(int Start, int Length, string Url)> links, Action<string> onLink)
+    private static void Clickable(SelectableTextBlock tb, List<(int Start, int Length, string Url)> links, Action<string> onLink)
     {
         string? At(Avalonia.Input.PointerEventArgs e)
         {
@@ -129,7 +129,7 @@ static class MarkdownView
                 return null;
             }
 
-            int i = hit.TextPosition;
+            var i = hit.TextPosition;
             return links.FirstOrDefault(l => i >= l.Start && i < l.Start + l.Length).Url;
         }
         tb.PointerMoved += (_, e) =>

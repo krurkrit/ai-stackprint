@@ -9,7 +9,7 @@ namespace AiStackprint.Core.Tests;
 
 public class PluginManagerTests
 {
-    static readonly string[] _template = { "claude", "plugin", "install", "{plugin}", "--scope", "{scope}" };
+    private static readonly string[] _template = ["claude", "plugin", "install", "{plugin}", "--scope", "{scope}"];
 
     [Fact]
     public void Build_fills_tokens()

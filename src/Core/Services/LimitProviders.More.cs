@@ -51,7 +51,7 @@ public class CopilotLimits : ILimitProvider
         return null;
     }
 
-    static string? Token(JsonElement v) => v.ValueKind == JsonValueKind.String ? v.GetString() : v.OptStr("token") ?? v.OptStr("value") ?? v.OptStr("oauth_token");
+    private static string? Token(JsonElement v) => v.ValueKind == JsonValueKind.String ? v.GetString() : v.OptStr("token") ?? v.OptStr("value") ?? v.OptStr("oauth_token");
 
     public async Task<LimitSnapshot> Fetch(HttpClient http, Credential c, CancellationToken ct)
     {
@@ -101,7 +101,7 @@ public class CursorLimits : ILimitProvider
     public string Id => "cursor";
     public string Host => "cursor.com";
 
-    static string Db(string home) =>
+    private static string Db(string home) =>
         OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cursor", "User", "globalStorage", "state.vscdb")
         : OperatingSystem.IsMacOS() ? Path.Combine(home, "Library", "Application Support", "Cursor", "User", "globalStorage", "state.vscdb")
         : Path.Combine(home, ".config", "Cursor", "User", "globalStorage", "state.vscdb");
@@ -184,5 +184,5 @@ public class CursorLimits : ILimitProvider
         return new(plan == null ? null : LimitProviders.Cap(plan), list, now, list.Count == 0 ? "Cursor's reply had no usage figures this app recognizes." : null);
     }
 
-    static string Name(string key) => LimitProviders.Cap(System.Text.RegularExpressions.Regex.Replace(key, "(?<=[a-z])([A-Z])", " $1").ToLowerInvariant());
+    private static string Name(string key) => LimitProviders.Cap(System.Text.RegularExpressions.Regex.Replace(key, "(?<=[a-z])([A-Z])", " $1").ToLowerInvariant());
 }

@@ -13,7 +13,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Appearance › Colors: accent, hover and selection for Light and Dark. Hex box + Snowy Owl swatches, reset, contrast hint.</summary>
-static class ColorSettings
+internal static class ColorSettings
 {
     public static Control Build(Settings st, Action<Action> change)
     {
@@ -31,12 +31,12 @@ static class ColorSettings
         foreach (var r in rows)
         {
             g.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            int row = g.RowDefinitions.Count - 1;
+            var row = g.RowDefinitions.Count - 1;
             var label = new StackPanel { Children = { Txt(r.Label, 14, false, Muted), Txt(r.Hint, 11, false, Muted) } };
             Grid.SetRow(label, row); g.Children.Add(label);
-            for (int t = 0; t < 2; t++)
+            for (var t = 0; t < 2; t++)
             {
-                bool dark = t == 1;
+                var dark = t == 1;
                 var colors = dark ? st.Dark : st.Light;
                 var cell = Editor(r.Get(colors), Default(dark, r.Which), dark, r.Which, v => change(() => r.Set(colors, v)));
                 Grid.SetRow(cell, row); Grid.SetColumn(cell, t + 1); g.Children.Add(cell);
@@ -46,7 +46,7 @@ static class ColorSettings
         return new StackPanel { Spacing = 12, Children = { g, reset } };
     }
 
-    static Color Default(bool dark, int which)
+    private static Color Default(bool dark, int which)
     {
         if (which >= 3)
         {
@@ -56,23 +56,23 @@ static class ColorSettings
         var d = Theme.Defaults(dark); return which switch { 0 => d.Accent, 1 => d.Hover, _ => d.Selection };
     }
 
-    static string Hex(Color c) => c.A == 255 ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+    private static string Hex(Color c) => c.A == 255 ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
 
     /// <summary>[swatch: opens the picker][#RRGGBB][opacity %][↺] plus a contrast note. Opacity is its own 0–100% setting; the stored value is #RRGGBB or #AARRGGBB.</summary>
-    static Control Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
+    private static Control Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
     {
         var current = Theme.ParseHex(value) ?? fallback;
         var box = new TextBox { Text = value == null ? "" : Rgb(current), PlaceholderText = Rgb(fallback), Width = 110, FontFamily = Theme.Mono };
         var opacity = new NumericUpDown { Minimum = 0, Maximum = 100, Increment = 5, FormatString = "0", Width = 110, Value = (decimal)Math.Round(current.A / 255.0 * 100) };
         ToolTip.SetTip(opacity, "Opacity, 0 to 100 %");
-        int defaultPct = (int)Math.Round(fallback.A / 255.0 * 100);
+        var defaultPct = (int)Math.Round(fallback.A / 255.0 * 100);
 
         void Commit()
         {
             var t = (box.Text ?? "").Trim();
             Color? rgb = t == "" ? null : Theme.ParseHex(t.StartsWith('#') ? t : "#" + t);
             if (t != "" && rgb == null) { box.Text = value == null ? "" : Rgb(current); return; }   // invalid hex: put the old value back
-            int pct = (int)Math.Clamp(opacity.Value ?? defaultPct, 0, 100);
+            var pct = (int)Math.Clamp(opacity.Value ?? defaultPct, 0, 100);
             if (rgb == null && pct == defaultPct) { if (value != null) { set(null); } return; }
             var c = rgb ?? fallback;
             var next = Hex(Color.FromArgb((byte)Math.Round(pct * 2.55), c.R, c.G, c.B));
@@ -98,7 +98,7 @@ static class ColorSettings
         var flyout = new Flyout { Content = new StackPanel { Children = { view, swatches } } };
         flyout.Closed += (_, _) => { box.Text = Rgb(view.Color); Commit(); };   // committed on close: each change rebuilds the page, which would close the picker
         var preview = new Button { Width = 32, Height = 32, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), Background = new SolidColorBrush(current), Flyout = flyout }
-            .Themed(Button.BorderBrushProperty, BorderKey);
+            .Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey);
         ToolTip.SetTip(preview, "Pick a color");
         var reset = IconBtn("arrow_reset", "Reset to Snowy Owl default", () => set(null));
         reset.IsEnabled = value != null;
@@ -112,13 +112,13 @@ static class ColorSettings
         return sp;
     }
 
-    static string Rgb(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+    private static string Rgb(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 
     /// <summary>Contrast against what the color is used with; a hint below Snowy Owl's 7.1:1, never a block.</summary>
-    static string? Note(Color c, bool dark, int which)
+    private static string? Note(Color c, bool dark, int which)
     {
         var d = Theme.Defaults(dark);
-        double ratio = which switch
+        var ratio = which switch
         {
             0 => Math.Max(ContrastRatio(Theme.AccentTexts.Light, c), ContrastRatio(Theme.AccentTexts.Dark, c)),   // button text on the accent (the app picks the better one)
             2 => ContrastRatio(d.Text, Color.FromUInt32(Services.Contrast.Blend(c.ToUInt32(), d.Background.ToUInt32()))),   // text on top of the selection

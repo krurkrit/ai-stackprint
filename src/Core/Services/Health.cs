@@ -36,7 +36,7 @@ public static class Health
 
         // Claude Code keeps names and descriptions of the skills the agent may load in context, within a budget (1% of the window, 8,000 characters when it cannot tell)
         var listed = items.Where(i => i.Kind == "Skill" && i.App == "claude-code" && i.Invokers.Contains("Agent")).DistinctBy(i => i.Name).ToList();
-        int chars = SkillCheck.ClaudeListing(listed.Select(i => (i.Name, i.Description)));
+        var chars = SkillCheck.ClaudeListing(listed.Select(i => (i.Name, i.Description)));
         if (chars > SkillCheck.ClaudeListingFallback)
         {
             res.Add(new("Skills", "Claude Code skill list", "claude-code", new($"{listed.Count} skills the agent can load use about {chars:N0} characters of names and descriptions. " +
@@ -65,5 +65,5 @@ public static class Health
         return res;
     }
 
-    static int Rank(string level) { int i = Array.IndexOf(new[] { "System", "Local", "Project", "User" }, level); return i < 0 ? 9 : i; }
+    private static int Rank(string level) { var i = Array.IndexOf(["System", "Local", "Project", "User"], level); return i < 0 ? 9 : i; }
 }

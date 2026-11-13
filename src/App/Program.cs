@@ -7,7 +7,7 @@ using Avalonia;
 
 namespace AiStackprint;
 
-static class Program
+internal static class Program
 {
     [STAThread]
     public static int Main(string[] args)

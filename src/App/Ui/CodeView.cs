@@ -19,15 +19,15 @@ namespace AiStackprint.Ui;
 /// Text area with syntax highlighting (AvaloniaEdit + TextMate grammars, both MIT).
 /// The only file that touches AvaloniaEdit; the rest of the UI uses this class.
 /// </summary>
-class CodeView : Border
+internal class CodeView : Border
 {
-    static RegistryOptions? _registry;
-    static SharedGrammars? _shared;
-    static RegistryOptions Registry => _registry ??= new RegistryOptions(ThemeName.LightPlus);
+    private static RegistryOptions? _registry;
+    private static SharedGrammars? _shared;
+    private static RegistryOptions Registry => _registry ??= new RegistryOptions(ThemeName.LightPlus);
     /// <summary>Every view's highlighter reads grammars through this, so each grammar is parsed once, not once per view (Markdown and shell embed dozens of languages: ~15 MB each).</summary>
-    static SharedGrammars Shared => _shared ??= new SharedGrammars(Registry);
-    static int _live;   // installed highlighters; the grammars are dropped when the last one goes
-    bool _disposed;
+    private static SharedGrammars Shared => _shared ??= new SharedGrammars(Registry);
+    private static int _live;   // installed highlighters; the grammars are dropped when the last one goes
+    private bool _disposed;
 
     /// <summary>
     /// true = keep highlighting while detached until the owner calls <see cref="Dispose"/> (the log viewer's raw view, which is re-attached on every page rebuild).
@@ -35,9 +35,9 @@ class CodeView : Border
     /// </summary>
     public bool KeepOnDetach { get; init; }
 
-    readonly TextEditor _editor;
-    readonly string? _scope;
-    TextMate.Installation? _textMate;   // only while on screen: a highlighter holds its own compiled copy of the grammar (~15 MB for Markdown or shell)
+    private readonly TextEditor _editor;
+    private readonly string? _scope;
+    private TextMate.Installation? _textMate;   // only while on screen: a highlighter holds its own compiled copy of the grammar (~15 MB for Markdown or shell)
 
     /// <summary>AvaloniaEdit's control templates; add once to Application.Styles.</summary>
     public static IStyle EditorStyles() => new StyleInclude(new Uri("avares://AiStackprint/")) { Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml") };
@@ -58,7 +58,7 @@ class CodeView : Border
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = compact ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto,
             Padding = new Thickness(lineNumbers ? 0 : 8, 4, 4, 4)
-        }.Themed(TextEditor.BackgroundProperty, W.Background).Themed(TextEditor.ForegroundProperty, W.Text);
+        }.Themed(TemplatedControl.BackgroundProperty, W.Background).Themed(TemplatedControl.ForegroundProperty, W.Text);
         _editor.TextArea.Themed(TextArea.SelectionBrushProperty, W.SelectionKey);
         _editor.TextArea.SelectionForeground = null;   // keep syntax colors readable inside the selection
         if (lineNumbers)
@@ -82,15 +82,15 @@ class CodeView : Border
     }
 
     /// <summary>Grammar for a file. TOML has no bundled grammar, so it uses INI; JSON lines use JSON; .txt logs use the log grammar.</summary>
-    static Language? Language(string path)
+    private static Language? Language(string path)
     {
         var ext = Path.GetExtension(path).ToLowerInvariant() switch { ".toml" => ".ini", ".jsonl" => ".json", ".txt" => ".log", "" => ".md", var e => e };
         return Registry.GetLanguageByExtension(ext);
     }
 
-    void ApplyTheme() => _textMate?.SetTheme(Registry.LoadTheme(ActualThemeVariant == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus));
+    private void ApplyTheme() => _textMate?.SetTheme(Registry.LoadTheme(ActualThemeVariant == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus));
 
-    void Install()
+    private void Install()
     {
         if (_disposed || _textMate != null)
         {
@@ -107,7 +107,7 @@ class CodeView : Border
         ApplyTheme();
     }
 
-    void Uninstall()
+    private void Uninstall()
     {
         if (_textMate == null)
         {
@@ -132,17 +132,17 @@ class CodeView : Border
     }
 
     /// <summary>Grammar source shared by all views: parsed grammars are kept and handed to each highlighter (TextMate copies before compiling, so sharing is safe).</summary>
-    sealed class SharedGrammars(RegistryOptions inner) : TextMateSharp.Registry.IRegistryOptions
+    private sealed class SharedGrammars(RegistryOptions inner) : TextMateSharp.Registry.IRegistryOptions
     {
-        readonly System.Collections.Concurrent.ConcurrentDictionary<string, TextMateSharp.Internal.Types.IRawGrammar> _grammars = new();
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, TextMateSharp.Internal.Types.IRawGrammar> _grammars = new();
         public TextMateSharp.Internal.Types.IRawGrammar GetGrammar(string scopeName) => _grammars.GetOrAdd(scopeName, inner.GetGrammar);
         public TextMateSharp.Themes.IRawTheme GetTheme(string scopeName) => inner.GetTheme(scopeName);
         public ICollection<string> GetInjections(string scopeName) => inner.GetInjections(scopeName);
         public TextMateSharp.Themes.IRawTheme GetDefaultTheme() => inner.GetDefaultTheme();
     }
 
-    Flasher? _flash;
-    Avalonia.Threading.DispatcherTimer? _flashTimer;
+    private Flasher? _flash;
+    private Avalonia.Threading.DispatcherTimer? _flashTimer;
 
     /// <summary>Tints lines from <paramref name="fromLine"/> (1-based) to the end and fades the tint out over <paramref name="seconds"/>.</summary>
     public void Flash(int fromLine, double seconds)
@@ -168,10 +168,10 @@ class CodeView : Border
     }
 
     /// <summary>Draws the fading tint behind the flashed lines.</summary>
-    sealed class Flasher : AvaloniaEdit.Rendering.IBackgroundRenderer
+    private sealed class Flasher : AvaloniaEdit.Rendering.IBackgroundRenderer
     {
         public int From; public DateTime Start; public double Seconds; public Avalonia.Media.IBrush? Brush;
-        double Progress => (DateTime.UtcNow - Start).TotalSeconds / Seconds;
+        private double Progress => (DateTime.UtcNow - Start).TotalSeconds / Seconds;
         public bool Done => Seconds <= 0 || Progress >= 1;
         public AvaloniaEdit.Rendering.KnownLayer Layer => AvaloniaEdit.Rendering.KnownLayer.Background;
 
@@ -210,7 +210,7 @@ class CodeView : Border
         }
 
         var l = doc.GetLineByNumber(Math.Clamp(line, 1, doc.LineCount));
-        int start = l.Offset + Math.Clamp(column, 0, l.Length);
+        var start = l.Offset + Math.Clamp(column, 0, l.Length);
         _editor.Select(start, Math.Clamp(length, 0, l.Offset + l.Length - start));
         _editor.ScrollTo(l.LineNumber, column);
     }

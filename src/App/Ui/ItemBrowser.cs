@@ -18,21 +18,21 @@ namespace AiStackprint.Ui;
 /// and a resizable bottom panel for the selected row. Used by the Skills and Plugins pages and the project page.
 /// Keeps its search, filters and selection while the app runs.
 /// </summary>
-class ItemBrowser
+internal class ItemBrowser
 {
-    readonly Ctx _x;
-    readonly string _kind;
-    readonly TextBox _search = SearchBox("Search name, description, path or author");
-    readonly ComboBox _app = new() { MinWidth = 200, MinHeight = 32 };
-    readonly SkillFilter _filter = new();
-    readonly DetailPanel _panel;
-    readonly ContentControl _table = new();
-    readonly TextBlock _shown = Txt("", 13, false, Muted);
-    string _appId = "", _q = "";
-    Item? _sel;
-    bool _building, _max;
-    List<Item> _items = new();
-    Grid? _grid;
+    private readonly Ctx _x;
+    private readonly string _kind;
+    private readonly TextBox _search = SearchBox("Search name, description, path or author");
+    private readonly ComboBox _app = new() { MinWidth = 200, MinHeight = 32 };
+    private readonly SkillFilter _filter = new();
+    private readonly DetailPanel _panel;
+    private readonly ContentControl _table = new();
+    private readonly TextBlock _shown = Txt("", 13, false, Muted);
+    private string _appId = "", _q = "";
+    private Item? _sel;
+    private bool _building, _max;
+    private List<Item> _items = [];
+    private Grid? _grid;
 
     public ItemBrowser(Ctx ctx, string kind)
     {
@@ -85,7 +85,7 @@ class ItemBrowser
         Fill();
 
         var g = _grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto,0") };
-        _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = 6 }.Themed(GridSplitter.BackgroundProperty, BorderKey);
+        _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = 6 }.Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, BorderKey);
         ToolTip.SetTip(_splitter, "Drag to resize · double-click to maximize or restore");
         _splitter.DragCompleted += (_, _) => { if (!_max) { _x.S.Settings.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); SettingsStore.Save(_x.S.Settings); } };
         _splitter.DoubleTapped += (_, _) => { _max = !_max; Layout(); };
@@ -97,11 +97,11 @@ class ItemBrowser
         return g;
     }
 
-    GridSplitter? _splitter;
-    Border? _bottom;
+    private GridSplitter? _splitter;
+    private Border? _bottom;
 
     /// <summary>Opens, switches or closes the panel in place, so the list keeps its scroll position.</summary>
-    void ShowPanel()
+    private void ShowPanel()
     {
         if (_bottom == null || _splitter == null)
         {
@@ -113,28 +113,28 @@ class ItemBrowser
         Layout();
     }
 
-    void Layout()
+    private void Layout()
     {
         if (_grid == null)
         {
             return;
         }
 
-        bool open = _sel != null;
+        var open = _sel != null;
         _grid.RowDefinitions[0].Height = open && _max ? new GridLength(0) : GridLength.Star;
         _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, 160, 2000));
     }
 
-    void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }
+    private void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }
 
-    void Pick(Item i) { _sel = _sel != null && Same(i, _sel) ? null : i; if (_sel == null) { _max = false; } ShowPanel(); Fill(); }
+    private void Pick(Item i) { _sel = _sel != null && Same(i, _sel) ? null : i; if (_sel == null) { _max = false; } ShowPanel(); Fill(); }
 
     /// <summary>The same skill or plugin across scans. Records compare lists by reference, so a rescan would make every item look new.</summary>
     public static bool Same(Item a, Item b) => a.Kind == b.Kind && a.App == b.App && a.Level == b.Level && a.Name == b.Name && a.Path == b.Path && a.Project == b.Project;
 
-    record AppOption(string Id, string Name) { public override string ToString() => Name; }
+    private record AppOption(string Id, string Name) { public override string ToString() => Name; }
 
-    void Fill()
+    private void Fill()
     {
         var shown = _items.Where(i => (_appId == "" || i.App == _appId) && _filter.Match(i) &&
             (_q.Length == 0 || $"{i.Name} {i.Description} {i.Path} {i.Author}".Contains(_q, StringComparison.OrdinalIgnoreCase)))
@@ -144,22 +144,22 @@ class ItemBrowser
         var cols = _kind == "Plugin"
             // minimums fit the narrowest window (900 px): Path gives way first
             ? new[] { new Col("Plugin", "2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Version", ".7*", Min: 56), new Col("Path", "3*"), new Col("", "112") }
-            : new[] { new Col("Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112") };
+            : [new Col("Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112")];
         _table.Content = Table.Build(cols, _filter.Rows(shown, Row, cols.Length, Fill),
             _items.Count == 0 ? $"No {(_kind == "Plugin" ? "plugins" : "skills")} found." : "Nothing matches. Clear the search or filters.");
     }
 
-    TableRow Row(Item i) => new(new Control[]
-    {
+    private TableRow Row(Item i) => new(
+    [
         Table.NameDesc(i.Name, i.Description),
         DetailPanel.AppLink(_x, i.App, i.Source),
         AppDetailView.LevelCell(i),
         _kind == "Plugin" ? Txt(i.Version ?? "", 13) : AppDetailView.InvokeCell(i),
         PathCell(i.Path),
         Actions(i)
-    }, () => Pick(i), _sel != null && Same(i, _sel));
+    ], () => Pick(i), _sel != null && Same(i, _sel));
 
-    Control Actions(Item i)
+    private Control Actions(Item i)
     {
         var sp = (StackPanel)W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(_x.Owner, i.Path)));
         sp.Spacing = 0;
@@ -180,21 +180,21 @@ class ItemBrowser
     {
         var sep = Path.DirectorySeparatorChar;
         var parts = path.TrimEnd(sep).Split(sep);
-        int keep = parts.Length >= 2 && parts[^1].Equals("SKILL.md", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
+        var keep = parts.Length >= 2 && parts[^1].Equals("SKILL.md", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
         var head = string.Join(sep, parts[..^keep]) + (parts.Length > keep ? sep.ToString() : "");
         var tb = new TextBlock
         {
-            FontFamily = Ui.Theme.Mono,
+            FontFamily = Theme.Mono,
             FontSize = Size(12),
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             MaxLines = 4,
             TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
-        }   /* a squeezed column (narrow window) would otherwise wrap a letter per line; the tooltip has the full path */.Themed(TextBlock.ForegroundProperty, W.Text);
-        tb.Inlines = new InlineCollection
-        {
+        }   /* a squeezed column (narrow window) would otherwise wrap a letter per line; the tooltip has the full path */.Themed(TextBlock.ForegroundProperty, Text);
+        tb.Inlines =
+        [
             new Run(head).With(r => r.Bind(TextElement.ForegroundProperty, tb.GetResourceObservable(Muted))),
             new Run(string.Join(sep, parts[^keep..])) { FontWeight = Emphasis }
-        };
+        ];
         ToolTip.SetTip(tb, path);
         return tb;
     }

@@ -11,9 +11,9 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Donut chart: one slice per value, colored by resource key, with a big number in the middle. Zero values get no slice.</summary>
-static class PieChart
+internal static class PieChart
 {
-    const double Size = 240, Outer = 112, Inner = 70;
+    private const double Size = 240, Outer = 112, Inner = 70;
 
     public static Control Build(IReadOnlyList<(double Value, string Key)> slices, string center, string caption)
     {
@@ -28,7 +28,7 @@ static class PieChart
             double at = 0;
             foreach (var (value, key) in slices.Where(s => s.Value > 0))
             {
-                double sweep = value / total * 360;
+                var sweep = value / total * 360;
                 canvas.Children.Add(Slice(c, at, Math.Min(at + sweep, at + 359.99), key));
                 at += sweep;
             }
@@ -40,10 +40,10 @@ static class PieChart
     }
 
     /// <summary>Ring segment from <paramref name="a0"/> to <paramref name="a1"/> degrees (0 = top, clockwise); a card-colored edge leaves a gap between slices.</summary>
-    static Control Slice(double c, double a0, double a1, string key)
+    private static Control Slice(double c, double a0, double a1, string key)
     {
-        Point P(double r, double deg) { double a = (deg - 90) * Math.PI / 180; return new Point(c + r * Math.Cos(a), c + r * Math.Sin(a)); }
-        bool large = a1 - a0 > 180;
+        Point P(double r, double deg) { var a = (deg - 90) * Math.PI / 180; return new Point(c + r * Math.Cos(a), c + r * Math.Sin(a)); }
+        var large = a1 - a0 > 180;
         var g = new StreamGeometry();
         using (var ctx = g.Open())
         {

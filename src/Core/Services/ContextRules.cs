@@ -12,7 +12,7 @@ namespace AiStackprint.Services;
 /// the user file and rules, managed policy, @imports (four hops), auto memory (first 200 lines or 25 KB) at launch; CLAUDE.md in sub-folders on demand;
 /// rules with paths: front matter only for matching files. Warns above 40,000 characters.
 /// </summary>
-class ClaudeContext : IContextRule
+internal class ClaudeContext : IContextRule
 {
     public string Id => "claude";
     public const int WarnChars = 40_000, MaxHops = 4, MemoryLines = 200, MemoryBytes = 25 * 1024;
@@ -52,7 +52,7 @@ class ClaudeContext : IContextRule
         }
         Rules(Path.Combine(project, ".claude", "rules"), "Project rule");
         Memory(Path.Combine(claudeHome, "projects", Regex.Replace(start, "[^A-Za-z0-9]", "-"), "memory", "MEMORY.md"));
-        foreach (var f in Below(start, new[] { "CLAUDE.md", "CLAUDE.local.md" }))
+        foreach (var f in Below(start, ["CLAUDE.md", "CLAUDE.local.md"]))
         {
             Add(f, LoadWhen.OnDemand, "When Claude reads files in that folder");
         }
@@ -92,7 +92,7 @@ class ClaudeContext : IContextRule
         }
     }
 
-    static bool PathOk(string p) => Path.IsPathRooted(p) && (OperatingSystem.IsWindows() ? p.Contains(':') : !p.Contains(':'));
+    private static bool PathOk(string p) => Path.IsPathRooted(p) && (OperatingSystem.IsWindows() ? p.Contains(':') : !p.Contains(':'));
 }
 
 /// <summary>
@@ -100,7 +100,7 @@ class ClaudeContext : IContextRule
 /// (nearest .git) down to the start folder: AGENTS.override.md, AGENTS.md, then project_doc_fallback_filenames. Empty files are skipped.
 /// Project files stop at project_doc_max_bytes (32 KiB by default) without a warning.
 /// </summary>
-class CodexContext : IContextRule
+internal class CodexContext : IContextRule
 {
     public string Id => "codex";
     public const int DefaultMaxBytes = 32 * 1024;
@@ -109,9 +109,9 @@ class CodexContext : IContextRule
     {
         var codexHome = Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } c ? c : Path.Combine(home, ".codex");
         var config = ReadText(Path.Combine(codexHome, "config.toml"));
-        long max = Regex.Match(config, @"(?m)^\s*project_doc_max_bytes\s*=\s*(\d+)") is { Success: true } m && long.TryParse(m.Groups[1].Value, out var n) ? n : DefaultMaxBytes;
+        var max = Regex.Match(config, @"(?m)^\s*project_doc_max_bytes\s*=\s*(\d+)") is { Success: true } m && long.TryParse(m.Groups[1].Value, out var n) ? n : DefaultMaxBytes;
         var fallbacks = Regex.Match(config, @"(?m)^\s*project_doc_fallback_filenames\s*=\s*\[(.*?)\]") is { Success: true } f
-            ? Regex.Matches(f.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : new List<string>();
+            ? Regex.Matches(f.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : [];
         var files = new List<ContextFile>(); var findings = new List<Finding>();
 
         var global = new[] { "AGENTS.override.md", "AGENTS.md" }.Select(n => Path.Combine(codexHome, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
@@ -120,7 +120,7 @@ class CodexContext : IContextRule
             files.Add(Measure(global, LoadWhen.Always, null, "Global · not counted in project_doc_max_bytes") with { Counted = false });
         }
 
-        var root = RootOf(start, new[] { ".git" }) ?? start;
+        var root = RootOf(start, [".git"]) ?? start;
         long used = 0;
         foreach (var dir in Chain(root, start))
         {
@@ -131,7 +131,7 @@ class CodexContext : IContextRule
             }
 
             var cf = Measure(pick, LoadWhen.Always, null, Path.GetFileName(pick) == "AGENTS.override.md" ? "Override: AGENTS.md here is skipped" : null);
-            long left = Math.Max(0, max - used);
+            var left = Math.Max(0, max - used);
             if (cf.Bytes > left)
             {
                 cf = cf with { Kept = left, Note = left == 0 ? "Not loaded: over project_doc_max_bytes" : $"Cut after {left:N0} bytes" };
@@ -144,5 +144,5 @@ class CodexContext : IContextRule
         return new ContextReport(Id, "bytes", max, $"project_doc_max_bytes = {max:N0} (config.toml); the global AGENTS.md is not counted.", files, findings);
     }
 
-    static string Rel(string p, string root) => Path.GetRelativePath(root, p);
+    private static string Rel(string p, string root) => Path.GetRelativePath(root, p);
 }

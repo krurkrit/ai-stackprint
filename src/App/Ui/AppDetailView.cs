@@ -12,12 +12,12 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>One app: status, instruction/settings files with preview, plugins and skills with add/remove.</summary>
-class AppDetailView(Ctx x)
+internal class AppDetailView(Ctx x)
 {
-    string? _preview;   // config file shown in the viewer/editor (click a row)
-    readonly UsageCard.Prefs _usage = new();
-    readonly SkillFilter _skillFilter = new();
-    string? _skillsApp;   // app the skill filters belong to: reset when another app opens
+    private string? _preview;   // config file shown in the viewer/editor (click a row)
+    private readonly UsageCard.Prefs _usage = new();
+    private readonly SkillFilter _skillFilter = new();
+    private string? _skillsApp;   // app the skill filters belong to: reset when another app opens
 
     public Control Build(string appId)
     {
@@ -50,9 +50,9 @@ class AppDetailView(Ctx x)
         return Txt(label, 13).With(t => ToolTip.SetTip(t, tip));
     }
 
-    Control Header(AppDefinition d, AppInfo? info)
+    private Control Header(AppDefinition d, AppInfo? info)
     {
-        bool installed = info?.Installed == true;
+        var installed = info?.Installed == true;
         var chips = Row(Chip(d.Category),
             installed ? Status("Installed") : Chip("Not found", BorderKey),
             Chip(d.Origin switch { AppOrigin.Custom => "Custom app", AppOrigin.Override => "Customised in apps.json", _ => "Built-in" }));
@@ -95,20 +95,20 @@ class AppDetailView(Ctx x)
     }
 
     /// <summary>Usage card for apps whose session logs have a usage parser; nothing for the others.</summary>
-    Control Usage(AppDefinition d) => UsageCard.Supports(d) ? new UsageCard(x, d, _usage).Build() : new Panel();
+    private Control Usage(AppDefinition d) => UsageCard.Supports(d) ? new UsageCard(x, d, _usage).Build() : new Panel();
 
-    Control Configs(List<Item> items)
+    private Control Configs(List<Item> items)
     {
         var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Description).ThenBy(i => Levels.Rank(i.Level)).ToList();
-        var rows = cfg.Select(i => new TableRow(new Control[]
-        {
+        var rows = cfg.Select(i => new TableRow(
+        [
             Txt(i.Name, 14, true), Txt(i.Description, 13), LevelCell(i), Mono(i.Path, 12),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
-        }, () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
+        ], () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
         var body = new StackPanel
         {
             Spacing = 12,
-            Children = { Table.Build(new[] { new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112") }, rows,
+            Children = { Table.Build([new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112")], rows,
             "No instruction or settings files found. Add project folders to see project files.") }
         };
         if (_preview != null && cfg.Any(i => i.Path == _preview))
@@ -119,7 +119,7 @@ class AppDetailView(Ctx x)
         return Section("document", "Instructions & settings", body);
     }
 
-    Control Plugins(AppDefinition d, List<Item> items)
+    private Control Plugins(AppDefinition d, List<Item> items)
     {
         var plugins = items.Where(i => i.Kind == "Plugin").OrderBy(i => i.Name).ToList();
         if (d.PluginManifest == null && plugins.Count == 0)
@@ -127,38 +127,38 @@ class AppDetailView(Ctx x)
             return new Panel();
         }
 
-        bool manage = d.PluginCommands != null;
-        var rows = plugins.Select(p => new TableRow(new Control[]
-        {
+        var manage = d.PluginCommands != null;
+        var rows = plugins.Select(p => new TableRow(
+        [
             Table.NameDesc(p.Name, p.Description == "" ? p.Path : p.Description, true), LevelCell(p), Txt(p.Version ?? "", 13),
             Txt(items.Count(i => i.Plugin == p.Name && i.Kind == "Skill").ToString()),
-            W.Row(IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, p.Path)), manage ? IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(x, d, p)) : new Panel())
-        }, () => x.Open(p)));
+            Row(IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, p.Path)), manage ? IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(x, d, p)) : new Panel())
+        ], () => x.Open(p)));
         var cols = new[] { new Col("Plugin", "3*"), new Col("Level", "1.2*"), new Col("Version", "1*"), new Col("Skills", ".6*", true), new Col("", "80") };
         return Section("puzzle_piece", $"Plugins · {plugins.Count}", Table.Build(cols, rows, "No plugins installed."),
-            manage ? new[] { Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add") } : Array.Empty<Control>());
+            manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : Array.Empty<Control>());
     }
 
-    Control Skills(AppDefinition d, List<Item> items)
+    private Control Skills(AppDefinition d, List<Item> items)
     {
         if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); }
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => Levels.Rank(i.Level)).ThenBy(i => i.Name).ToList();
-        TableRow Row(Item s) => new(new Control[]
-        {
+        TableRow Row(Item s) => new(
+        [
             Table.NameDesc(s.Name, s.Description), LevelCell(s), InvokeCell(s), Txt(From(s), 13, false, Muted),
             W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(s.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, s.Path)),
                 SkillManager.CannotRemove(s) == null ? IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, s)) : new Panel())
-        }, () => x.Open(s));
+        ], () => x.Open(s));
         var cols = new[] { new Col("Skill", "2.6*"), new Col("Level", "1.3*"), new Col("Invoked by", "1*"), new Col("From", ".9*"), new Col("", "112") };
         var body = new ContentControl();
         void Fill()   // re-renders only this section, so the Usage card above is not recalculated
         {
             var filters = _skillFilter.Controls(skills, skill: true, Fill);
-            var table = Table.Build(cols, _skillFilter.Rows(skills.Where(_skillFilter.Match).ToList(), Row, cols.Length, Fill), skills.Count == 0 ? "No skills found." : "No skills match these filters.");
+            var table = Table.Build(cols, _skillFilter.Rows([.. skills.Where(_skillFilter.Match)], Row, cols.Length, Fill), skills.Count == 0 ? "No skills found." : "No skills match these filters.");
             body.Content = skills.Count == 0 ? table : new StackPanel { Spacing = 14, Children = { filters, table } };
         }
         Fill();
-        var add = AppActions.CanAddSkill(x, d) ? new[] { Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add") } : Array.Empty<Control>();
+        var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();
         return Section("sparkle", $"Skills · {skills.Count}", body, add);
     }
 }

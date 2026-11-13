@@ -9,7 +9,7 @@ using Avalonia.Media;
 
 namespace AiStackprint.Ui;
 
-static partial class W
+internal static partial class W
 {
     public static Button Btn(string text, Action a, bool primary = false, string? icon = null)
     {
@@ -26,7 +26,7 @@ static partial class W
 
     /// <summary>Button for destructive actions (Snowy Owl error pair).</summary>
     public static Button DangerBtn(string text, Action a, string? icon = null) =>
-        Btn(text, a, false, icon).Themed(Button.BackgroundProperty, ErrorFill).Themed(Button.ForegroundProperty, OnError);
+        Btn(text, a, false, icon).Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, ErrorFill).Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, OnError);
 
     /// <summary>Small transparent icon-only button with a tooltip.</summary>
     public static Button IconBtn(string icon, string tip, Action a, string key = Muted)
@@ -136,13 +136,13 @@ static partial class W
         return wrap;
     }
 
-    static int _radioGroups;
+    private static int _radioGroups;
 
     /// <summary>One choice among <paramref name="opts"/> as radio buttons.</summary>
     public static Control Radios(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
     {
         var wrap = new WrapPanel { ItemSpacing = 16, LineSpacing = 6 };
-        string group = "r" + ++_radioGroups;
+        var group = "r" + ++_radioGroups;
         foreach (var (label, value) in opts)
         {
             var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };

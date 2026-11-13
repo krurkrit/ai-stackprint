@@ -13,15 +13,15 @@ namespace AiStackprint.Ui;
 /// Level check boxes for skills and plugins; for skills also Invoked by (one choice: All, Agent only, User only, Agent and User), source and grouping.
 /// Shared by the Skills and Plugins pages and an app's Skills section. Only values present are offered; a filter with one value is left out.
 /// </summary>
-class SkillFilter
+internal class SkillFilter
 {
-    readonly HashSet<string> _offLevels = new();   // unchecked levels; empty = all checked
-    string _invoked = "", _from = "";   // "" = all
-    bool _byInvoked, _byFrom;                  // Group by check boxes
-    readonly HashSet<string> _collapsed = new();
-    readonly ComboBox _fromBox = new() { MinWidth = 160 };
-    bool _building;
-    Action _changed = () => { };
+    private readonly HashSet<string> _offLevels = [];   // unchecked levels; empty = all checked
+    private string _invoked = "", _from = "";   // "" = all
+    private bool _byInvoked, _byFrom;                  // Group by check boxes
+    private readonly HashSet<string> _collapsed = [];
+    private readonly ComboBox _fromBox = new() { MinWidth = 160 };
+    private bool _building;
+    private Action _changed = () => { };
 
     public SkillFilter() =>
         _fromBox.SelectionChanged += (_, _) => { if (!_building) { _from = (_fromBox.SelectedItem as Opt)?.Id ?? ""; _changed(); } };
@@ -37,8 +37,8 @@ class SkillFilter
     {
         _changed = changed;
         var levels = Levels.Order.Where(l => items.Any(s => s.Level == l)).ToList();
-        var invoked = skill ? new[] { "Agent only", "User only", "Agent and User" }.Where(v => items.Any(s => SkillMatch.Label(s) == v)).ToList() : new();
-        var froms = skill ? items.Select(AppDetailView.From).Distinct().OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList() : new();
+        var invoked = skill ? new[] { "Agent only", "User only", "Agent and User" }.Where(v => items.Any(s => SkillMatch.Label(s) == v)).ToList() : [];
+        var froms = skill ? items.Select(AppDetailView.From).Distinct().OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList() : [];
         // Values no longer offered would hide items with no control left to undo it
         KeepOffered(_offLevels, levels);
         if (invoked.Count < 2 || !invoked.Contains(_invoked))
@@ -97,7 +97,7 @@ class SkillFilter
 
         if (by.Count > 0)
         {
-            sp.Children.Add(FilterRow("Group by", by.ToArray()));
+            sp.Children.Add(FilterRow("Group by", [.. by]));
         }
 
         return sp;
@@ -110,11 +110,11 @@ class SkillFilter
         string Key(Item i) => _byInvoked && _byFrom ? $"{InvokeLabel(i)} · {AppDetailView.From(i)}" : _byInvoked ? InvokeLabel(i) : AppDetailView.From(i);
         foreach (var g in items.GroupBy(Key).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
         {
-            bool open = !_collapsed.Contains(g.Key); string key = g.Key;
+            var open = !_collapsed.Contains(g.Key); var key = g.Key;
             var cells = new Control[cols];
             cells[0] = Row(Txt(open ? "▾" : "▸", 13, false, Muted), Title(g.Key, 14), Txt(g.Count().ToString("N0"), 13, false, Muted));
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
-            for (int c = 1; c < cols; c++)
+            for (var c = 1; c < cols; c++)
             {
                 cells[c] = new Panel();
             }
@@ -130,7 +130,7 @@ class SkillFilter
         }
     }
 
-    static string InvokeLabel(Item i) => SkillMatch.Label(i);
+    private static string InvokeLabel(Item i) => SkillMatch.Label(i);
 
-    record Opt(string Id, string Name) { public override string ToString() => Name; }
+    private record Opt(string Id, string Name) { public override string ToString() => Name; }
 }

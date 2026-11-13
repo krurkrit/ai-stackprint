@@ -17,11 +17,11 @@ namespace AiStackprint.Ui;
 /// The one loading indicator: a turning arc in the accent color. <see cref="Loading"/> appears only after 300 ms,
 /// so quick work never flashes it. It turns only while on screen.
 /// </summary>
-static class Busy
+internal static class Busy
 {
-    const int DelayMs = 300;
+    private const int DelayMs = 300;
 
-    static readonly Animation _turn = new()
+    private static readonly Animation _turn = new()
     {
         Duration = TimeSpan.FromSeconds(0.9),
         Children =
@@ -32,7 +32,7 @@ static class Busy
     };
 
     /// <summary>Looping animations cannot use RunAsync, so one turn is run again until the spinner leaves the screen.</summary>
-    static async Task Spin(Animatable v, CancellationToken ct)
+    private static async Task Spin(Animatable v, CancellationToken ct)
     {
         try
         {

@@ -9,10 +9,10 @@ using Avalonia.Platform.Storage;
 namespace AiStackprint.Ui;
 
 /// <summary>User-confirmed changes from the app detail page. Every action asks first, then rescans.</summary>
-static class AppActions
+internal static class AppActions
 {
     /// <summary>Where a new skill can go: (label, level, project). User level first, then each project folder.</summary>
-    static List<(string Label, string Root)> Targets(Ctx x, AppDefinition d)
+    private static List<(string Label, string Root)> Targets(Ctx x, AppDefinition d)
     {
         var t = new List<(string, string)>();
         if (SkillManager.TargetRoot(d, "User", null) is { } u)
@@ -39,7 +39,7 @@ static class AppActions
         var apps = x.S.Defs.Where(d => x.Info(d.Id) != null && (project == null ? CanAddSkill(x, d) : SkillManager.TargetRoot(d, "Project", project) != null))
             .OrderByDescending(d => x.Info(d.Id)!.Installed).ThenBy(d => d.Name).ToList();
         if (apps.Count == 0) { await Dialogs.Message(x.Owner, "Add skill", "No shown app has a skills folder for this."); return; }
-        var ans = await Dialogs.Ask(x.Owner, "Add skill", "Which app should get the skill?", null, "App", apps.Select(d => d.Name).ToArray(), "Next");
+        var ans = await Dialogs.Ask(x.Owner, "Add skill", "Which app should get the skill?", null, "App", [.. apps.Select(d => d.Name)], "Next");
         if (ans is not { } a)
         {
             return;
@@ -52,7 +52,7 @@ static class AppActions
     {
         var apps = x.S.Defs.Where(d => d.PluginCommands != null && x.Info(d.Id) != null).ToList();
         if (apps.Count == 1) { AddPlugin(x, apps[0]); return; }
-        var ans = await Dialogs.Ask(x.Owner, "Add plugin", "Which app should get the plugin?", null, "App", apps.Select(d => d.Name).ToArray(), "Next");
+        var ans = await Dialogs.Ask(x.Owner, "Add plugin", "Which app should get the plugin?", null, "App", [.. apps.Select(d => d.Name)], "Next");
         if (ans is { } a)
         {
             AddPlugin(x, apps[a.Choice]);
@@ -70,11 +70,11 @@ static class AppActions
         var targets = Targets(x, d);
         if (project != null && SkillManager.TargetRoot(d, "Project", project) is { } pr)
         {
-            targets = new() { ($"Project: {Ctx.ProjectName(project)}  ({pr})", pr) };
+            targets = [($"Project: {Ctx.ProjectName(project)}  ({pr})", pr)];
         }
 
         var ans = await Dialogs.Ask(x.Owner, $"Add skill to {d.Name}", $"Copies \"{Path.GetFileName(src.TrimEnd('/', '\\'))}\" into the chosen skills folder. The original stays where it is.",
-            null, "Install to", targets.Select(t => t.Label).ToArray(), "Add skill");
+            null, "Install to", [.. targets.Select(t => t.Label)], "Add skill");
         if (ans is not { } a)
         {
             return;
@@ -104,7 +104,7 @@ static class AppActions
         }
 
         var ans = await Dialogs.Ask(x.Owner, $"Add plugin to {d.Name}", $"Runs the app's own CLI: {string.Join(' ', d.PluginCommands!.Install)}",
-            "name@marketplace", "Scope", scopes.Select(s => s.Label).ToArray(), "Install");
+            "name@marketplace", "Scope", [.. scopes.Select(s => s.Label)], "Install");
         if (ans is not { } a)
         {
             return;
@@ -130,7 +130,7 @@ static class AppActions
 
     public static async void RemoveApp(Ctx x, AppDefinition d)
     {
-        bool reset = d.Origin == AppOrigin.Override;
+        var reset = d.Origin == AppOrigin.Override;
         if (!await Dialogs.Confirm(x.Owner, reset ? $"Reset {d.Name}?" : $"Remove {d.Name}?",
                 reset ? "Deletes your apps.json entry so the built-in definition is used again." : "Deletes the app from apps.json. Its files on disk are not touched.",
                 reset ? "Reset" : "Remove", true))
@@ -153,7 +153,7 @@ static class AppActions
         x.Rescan();
     }
 
-    static async Task Try(Ctx x, string title, Func<string> act, bool back = false)
+    private static async Task Try(Ctx x, string title, Func<string> act, bool back = false)
     {
         try
         {
@@ -175,7 +175,7 @@ static class AppActions
         x.Rescan();
     }
 
-    static async Task Run(Ctx x, string title, Func<Task<(int Code, string Output)>> act)
+    private static async Task Run(Ctx x, string title, Func<Task<(int Code, string Output)>> act)
     {
         try
         {

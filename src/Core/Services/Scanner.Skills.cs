@@ -31,7 +31,7 @@ public static partial class Scanner
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
-    static void Walk(string dir, int depth, string source, string level, List<Item> rows)
+    private static void Walk(string dir, int depth, string source, string level, List<Item> rows)
     {
         try
         {
@@ -58,9 +58,9 @@ public static partial class Scanner
     }
 
     /// <summary>Reads name, description and invocation flags from the SKILL.md front matter.</summary>
-    static Item ReadSkill(string file, string source, string level)
+    private static Item ReadSkill(string file, string source, string level)
     {
-        string name = Path.GetFileName(file).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase)
+        var name = Path.GetFileName(file).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase)
             ? Path.GetFileName(Path.GetDirectoryName(file)!) : Path.GetFileNameWithoutExtension(file);
         string desc = "", block = "";
         string? author = null;
@@ -70,7 +70,7 @@ public static partial class Scanner
             var lines = File.ReadLines(file).Take(40).ToList();
             if (lines.Count > 0 && lines[0].Trim() == "---")
             {
-                for (int i = 1; i < lines.Count && lines[i].Trim() != "---"; i++)
+                for (var i = 1; i < lines.Count && lines[i].Trim() != "---"; i++)
                 {
                     var l = lines[i];
                     if (l.Length > 0 && !char.IsWhiteSpace(l[0]) && l.Contains(':'))
@@ -118,5 +118,5 @@ public static partial class Scanner
         return new Item("Skill", name, desc, source, level, file) { Invokers = invokers, Author = author };
     }
 
-    static string Clean(string s) => s.Trim().Trim('"', '\'');
+    private static string Clean(string s) => s.Trim().Trim('"', '\'');
 }

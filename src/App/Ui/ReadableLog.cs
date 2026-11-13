@@ -15,18 +15,18 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>A parsed session shown as a conversation. Code in replies, tool inputs and tool results is syntax highlighted.</summary>
-partial class ReadableLog
+internal partial class ReadableLog
 {
     public const int MaxSteps = 400;
-    readonly Dictionary<LogEntry, Control> _controls = new();
-    readonly Dictionary<LogEntry, Panel> _holders = new();   // each step's slot: the fading highlight is laid over it
-    readonly ScrollViewer _scroll = new();
+    private readonly Dictionary<LogEntry, Control> _controls = [];
+    private readonly Dictionary<LogEntry, Panel> _holders = [];   // each step's slot: the fading highlight is laid over it
+    private readonly ScrollViewer _scroll = new();
     public Control Root => _scroll;
     public List<LogEntry> Steps { get; }
 
     public ReadableLog(Session s, bool toEnd)
     {
-        Steps = s.Entries.TakeLast(MaxSteps).ToList();
+        Steps = [.. s.Entries.TakeLast(MaxSteps)];
         var list = new StackPanel { Spacing = 8, Margin = new Thickness(14) };
         list.Children.Add(Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
@@ -93,11 +93,11 @@ partial class ReadableLog
     {
         if (previousLast == null)
         {
-            return new();
+            return [];
         }
 
-        int i = Steps.LastIndexOf(previousLast);
-        return i < 0 ? new() : Steps.Skip(i + 1).ToList();
+        var i = Steps.LastIndexOf(previousLast);
+        return i < 0 ? [] : [.. Steps.Skip(i + 1)];
     }
 
     /// <summary>Tints the given steps and fades the tint out over <paramref name="seconds"/>.</summary>
@@ -125,7 +125,7 @@ partial class ReadableLog
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    b.Transitions = new Avalonia.Animation.Transitions { new Avalonia.Animation.DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromSeconds(seconds), Easing = new Avalonia.Animation.Easings.CubicEaseIn() } };
+                    b.Transitions = [new Avalonia.Animation.DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromSeconds(seconds), Easing = new Avalonia.Animation.Easings.CubicEaseIn() }];
                     b.Opacity = 0;
                 }, DispatcherPriority.Background);
             }
@@ -134,7 +134,7 @@ partial class ReadableLog
         }
     }
 
-    static Control Summary(Session s)
+    private static Control Summary(Session s)
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
@@ -164,16 +164,16 @@ partial class ReadableLog
     }
 
     /// <summary>Conversation text in the body font at the Code &amp; logs size (<paramref name="delta"/> px smaller or larger).</summary>
-    static TextBlock L(string s, bool bold = false, string key = W.Text, double delta = 0) =>
-        new TextBlock { Text = s, FontSize = Ui.Theme.MonoSize + delta, FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, key);
+    private static TextBlock L(string s, bool bold = false, string key = Text, double delta = 0) =>
+        new TextBlock { Text = s, FontSize = Theme.MonoSize + delta, FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, key);
 
-    static Control LogChip(string s) =>
+    private static Control LogChip(string s) =>
         new Border { CornerRadius = new CornerRadius(999), Padding = new Thickness(10, 4), Child = L(s, true), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 8, 8) }
             .Themed(Border.BackgroundProperty, Subtle);
 
     public static string Plural(int n, string word) => $"{n:N0} {word}{(n == 1 ? "" : "s")}";
 
-    static Control Step(LogEntry e) => e.Role switch
+    private static Control Step(LogEntry e) => e.Role switch
     {
         "user" => Message("person", "You", e, Selected, mine: true),
         "assistant" => Message("bot", "Assistant", e, Surface),
@@ -184,7 +184,7 @@ partial class ReadableLog
     };
 
     /// <param name="mine">Your own message: indented 20 px from the left; the assistant's keeps 20 px free on the right. Both read left to right.</param>
-    static Control Message(string icon, string who, LogEntry e, string bg, bool mine = false)
+    private static Control Message(string icon, string who, LogEntry e, string bg, bool mine = false)
     {
         var time = L(e.Time?.ToString("HH:mm:ss") ?? "", false, Muted, -1).With(t => t.VerticalAlignment = VerticalAlignment.Center);
         var head = Row(Icon(icon, 16).Themed(TextElement.ForegroundProperty, Accent), L(who, true), time);

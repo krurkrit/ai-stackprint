@@ -31,7 +31,7 @@ public static class LogReader
                 Collect(PathUtil.Expand(s.Path), s, d.Id, null, found);
             }
         }
-        return found.DistinctBy(f => f.Path).OrderByDescending(f => f.Modified).Take(MaxFiles).ToList();
+        return [.. found.DistinctBy(f => f.Path).OrderByDescending(f => f.Modified).Take(MaxFiles)];
     }
 
     /// <summary>Folders to watch for an app's logs: (folder, file pattern, include sub-folders). A source that is one file watches its folder for that name.</summary>
@@ -63,7 +63,7 @@ public static class LogReader
                 Add(PathUtil.Expand(s.Path), s);
             }
         }
-        return roots.Distinct().ToList();
+        return [.. roots.Distinct()];
     }
 
     /// <summary>Current size and time of one listed file (same rules as <see cref="Find"/>, so a SQLite -wal counts); null when it is gone.</summary>
@@ -74,7 +74,7 @@ public static class LogReader
         return found.FirstOrDefault();
     }
 
-    static void Collect(string path, LogSource s, string app, string? project, List<LogFile> found)
+    private static void Collect(string path, LogSource s, string app, string? project, List<LogFile> found)
     {
         try
         {
@@ -94,7 +94,7 @@ public static class LogReader
 
         void Add(FileInfo f)
         {
-            long size = f.Length; var time = f.LastWriteTime;
+            var size = f.Length; var time = f.LastWriteTime;
             if (f.Extension == ".db" && new FileInfo(f.FullName + "-wal") is { Exists: true } wal)
             {
                 size += wal.Length; if (wal.LastWriteTime > time)
@@ -110,7 +110,7 @@ public static class LogReader
     public static (string Text, bool Truncated) Tail(string path, int maxBytes = 256 * 1024)
     {
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        long start = Math.Max(0, fs.Length - maxBytes);
+        var start = Math.Max(0, fs.Length - maxBytes);
         fs.Seek(start, SeekOrigin.Begin);
         var buf = new byte[fs.Length - start];
         int n = 0, r;
@@ -119,8 +119,8 @@ public static class LogReader
             n += r;
         }
 
-        int from = 0;
-        if (start > 0) { int nl = Array.IndexOf(buf, (byte)'\n', 0, n); from = nl < 0 ? 0 : nl + 1; }   // drop the partial first line
+        var from = 0;
+        if (start > 0) { var nl = Array.IndexOf(buf, (byte)'\n', 0, n); from = nl < 0 ? 0 : nl + 1; }   // drop the partial first line
         return (Encoding.UTF8.GetString(buf, from, n - from), start > 0);
     }
 

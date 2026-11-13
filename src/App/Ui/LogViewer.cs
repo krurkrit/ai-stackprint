@@ -15,22 +15,22 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Read-only viewer for one log file: Raw (highlighted text) or Conversation (sessions), search with a results list and jump-to-line.</summary>
-partial class LogViewer
+internal partial class LogViewer
 {
-    readonly Ctx _x;
-    readonly TextBox _query = SearchBox("Search this file", 0).With(t => t.MinWidth = 200);
-    readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(8, 4) }, _regex = new() { Content = ".*", Padding = new Thickness(8, 4) }, _only = new() { Content = "Only matching", Padding = new Thickness(8, 4) };
-    readonly ContentControl _view = new(), _results = new();
-    readonly TextBlock _status = Txt("", 12, false, Muted);
-    readonly Button _newer;        // "New lines": the file grew while Follow is off
-    LogFile? _file;
-    CodeView? _code;
-    ReadableLog? _readable;
-    string _raw = "";
-    long _firstLine = 1;           // file line number of the first line in the raw view
-    long _readSize;                // file size when it was last read: what grew after it is highlighted
-    bool _window;                  // raw view shows a window around a search hit instead of the tail
-    CancellationTokenSource? _search;
+    private readonly Ctx _x;
+    private readonly TextBox _query = SearchBox("Search this file", 0).With(t => t.MinWidth = 200);
+    private readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(8, 4) }, _regex = new() { Content = ".*", Padding = new Thickness(8, 4) }, _only = new() { Content = "Only matching", Padding = new Thickness(8, 4) };
+    private readonly ContentControl _view = new(), _results = new();
+    private readonly TextBlock _status = Txt("", 12, false, Muted);
+    private readonly Button _newer;        // "New lines": the file grew while Follow is off
+    private LogFile? _file;
+    private CodeView? _code;
+    private ReadableLog? _readable;
+    private string _raw = "";
+    private long _firstLine = 1;           // file line number of the first line in the raw view
+    private long _readSize;                // file size when it was last read: what grew after it is highlighted
+    private bool _window;                  // raw view shows a window around a search hit instead of the tail
+    private CancellationTokenSource? _search;
     public bool Readable { get; set; } = true;
     public bool Follow { get; set; }
 
@@ -51,8 +51,8 @@ partial class LogViewer
             .With(b => { b.IsVisible = false; b.HorizontalAlignment = HorizontalAlignment.Right; b.VerticalAlignment = VerticalAlignment.Bottom; b.Margin = new Thickness(0, 0, 18, 14); ToolTip.SetTip(b, "The file grew: show the newest lines"); });
     }
 
-    bool CanRead => _file != null && LogParsers.Find(_file.Format) != null;
-    bool ShowReadable => Readable && CanRead;
+    private bool CanRead => _file != null && LogParsers.Find(_file.Format) != null;
+    private bool ShowReadable => Readable && CanRead;
 
     public Control Build(LogFile? f, Action rebuild)
     {
@@ -89,10 +89,10 @@ partial class LogViewer
         return Card(dock);
     }
 
-    const int ReadableBytes = 8 << 20, RawBytes = 256 * 1024;
+    private const int ReadableBytes = 8 << 20, RawBytes = 256 * 1024;
 
     /// <summary>Highlight time for new content, from Settings (0 = off).</summary>
-    double FadeSeconds => Math.Clamp(_x.S.Settings.FadeSeconds, 0, 60);
+    private double FadeSeconds => Math.Clamp(_x.S.Settings.FadeSeconds, 0, 60);
 
     /// <summary>Re-reads the file. Raw: last 256 KB (or the window around a search hit). Conversation: up to 8 MB parsed.</summary>
     /// <param name="update">The file grew while open: highlight what is new.</param>
@@ -105,8 +105,8 @@ partial class LogViewer
 
         _newer.IsVisible = false;
         var lastStep = update ? _readable?.Steps.LastOrDefault() : null;
-        long before = update ? _readSize : -1;
-        int newLines = 0;
+        var before = update ? _readSize : -1;
+        var newLines = 0;
         try
         {
             if (_window && !Follow) { Render(false); return; }
@@ -150,11 +150,11 @@ partial class LogViewer
     }
 
     /// <summary>Whole lines in the last <paramref name="grewBy"/> bytes of the shown text.</summary>
-    static int NewLines(string text, long grewBy)
+    private static int NewLines(string text, long grewBy)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(text);
         int from = (int)Math.Max(0, bytes.Length - grewBy), n = 0;
-        for (int i = from; i < bytes.Length; i++)
+        for (var i = from; i < bytes.Length; i++)
         {
             if (bytes[i] == (byte)'\n')
             {
@@ -197,7 +197,7 @@ partial class LogViewer
         }
     }
 
-    void Render(bool toEnd)
+    private void Render(bool toEnd)
     {
         if (ShowReadable) { _view.Content = _readable?.Root; return; }
         _code ??= new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true };

@@ -10,8 +10,8 @@ namespace AiStackprint.Core.Tests;
 [Collection("Environment")]   // sets CODEX_HOME / CLAUDE_CONFIG_DIR
 public class ContextTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
-    readonly string _home, _project;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
+    private readonly string _home, _project;
 
     public ContextTests()
     {
@@ -27,7 +27,7 @@ public class ContextTests : IDisposable
         Directory.Delete(_tmp, true);
     }
 
-    string Write(string dir, string rel, string text)
+    private string Write(string dir, string rel, string text)
     {
         var p = Path.Combine(dir, rel.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
@@ -87,7 +87,7 @@ public class ContextTests : IDisposable
         var r = ContextBudget.Find("codex")!.Read(_project, start, _home);
         Assert.Equal("bytes", r.Unit);
         Assert.Equal(32 * 1024, r.Limit);
-        Assert.Equal(new[] { "AGENTS.md", "AGENTS.md", "AGENTS.override.md", "TEAM.md" }, r.Files.Select(f => Path.GetFileName(f.Path)));
+        Assert.Equal(["AGENTS.md", "AGENTS.md", "AGENTS.override.md", "TEAM.md"], r.Files.Select(f => Path.GetFileName(f.Path)));
         Assert.False(r.Files[0].Counted);
         Assert.Equal(32 * 1024 - 20_000, r.Files[2].Kept);
         Assert.Equal(0, r.Files[3].Kept);

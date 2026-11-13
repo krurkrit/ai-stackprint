@@ -15,7 +15,7 @@ public class GeminiLimits : ILimitProvider
 {
     public string Id => "gemini";
     public string Host => "cloudcode-pa.googleapis.com";
-    const string Api = "https://cloudcode-pa.googleapis.com/v1internal:";
+    private const string Api = "https://cloudcode-pa.googleapis.com/v1internal:";
 
     public Credential? Credential(string home)
     {
@@ -40,14 +40,14 @@ public class GeminiLimits : ILimitProvider
         var plan = tier.OptStr("name") ?? tier.OptStr("id");
         if (project == null)
         {
-            return new(plan, new(), DateTime.Now, "No Google Cloud project for quota.");
+            return new(plan, [], DateTime.Now, "No Google Cloud project for quota.");
         }
 
         var quota = await Post(http, c, "retrieveUserQuota", JsonSerializer.Serialize(new { project }), ct).ConfigureAwait(false);
         return Parse(quota, DateTime.Now) with { Plan = plan };
     }
 
-    static async Task<string> Post(HttpClient http, Credential c, string method, string body, CancellationToken ct)
+    private static async Task<string> Post(HttpClient http, Credential c, string method, string body, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Post, Api + method) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", c.Token);
@@ -70,6 +70,6 @@ public class GeminiLimits : ILimitProvider
             }
         }
 
-        return new(null, windows.DistinctBy(w => w.Name).ToList(), now);
+        return new(null, [.. windows.DistinctBy(w => w.Name)], now);
     }
 }

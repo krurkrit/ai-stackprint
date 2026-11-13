@@ -11,7 +11,7 @@ using Avalonia.Media;
 namespace AiStackprint.Ui;
 
 /// <summary>Small widget factory. Colors are resource keys defined in <see cref="Theme"/>, so light/dark work automatically.</summary>
-static partial class W
+internal static partial class W
 {
     // Resource keys (values in Theme)
     public const string Background = "Ap.Background", Text = "Ap.Text", Muted = "Ap.Muted", Surface = "Ap.Surface", SideKey = "Ap.Side", MainKey = "Ap.Main";
@@ -21,7 +21,7 @@ static partial class W
     public const string ChartIn = "Ap.ChartIn", ChartOut = "Ap.ChartOut", ChartWrite = "Ap.ChartWrite", ChartRead = "Ap.ChartRead";
     public const string SuccessText = "Ap.SuccessText", SuccessFill = "Ap.SuccessFill", SelectionKey = "Ap.Selection", HighlightKey = "Ap.Highlight", HighlightRingKey = "Ap.HighlightRing", ScrimKey = "Ap.Scrim";
 
-    static uint Argb(Color c) => c.ToUInt32();
+    private static uint Argb(Color c) => c.ToUInt32();
     /// <summary>WCAG contrast of <paramref name="fg"/> (blended if translucent) on an opaque <paramref name="bg"/>.</summary>
     public static double ContrastRatio(Color fg, Color bg) => Services.Contrast.Ratio(Argb(fg), Argb(bg));
     /// <summary>Whichever of two text colors reads better on <paramref name="bg"/>.</summary>
@@ -38,7 +38,7 @@ static partial class W
     public static FontWeight MenuWeight { get; set; } = FontWeight.Medium;
 
     /// <summary>Numbers only (digits and separators): aligned digits in the body font.</summary>
-    static void NumberStyle(TextBlock t, string s)
+    private static void NumberStyle(TextBlock t, string s)
     {
         if (s.Length == 0 || s.Length > 24 || !s.All(c => char.IsDigit(c) || c is ',' or '.' or ' ' or '%' or ':' or '-' or '/'))
         {
@@ -136,7 +136,7 @@ static partial class W
         new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, key);
 
     /// <summary>Hollow dot: Local level (personal, same color family as Project).</summary>
-    static Control Ring(string key) =>
+    private static Control Ring(string key) =>
         new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), BorderThickness = new Thickness(2), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BorderBrushProperty, key);
 
     public static Control LevelDot(string level) => level == "Local" ? Ring(LevelKey(level)) : Dot(LevelKey(level));
@@ -164,7 +164,7 @@ static partial class W
     {
         var t = Txt("", size, bold).With(x => { x.Text = null; x.TextWrapping = TextWrapping.NoWrap; });
         dot.Margin = new Thickness(0, 0, 6, 0);
-        t.Inlines ??= new InlineCollection();
+        t.Inlines ??= [];
         t.Inlines.Add(new InlineUIContainer(dot) { BaselineAlignment = BaselineAlignment.Baseline });
         t.Inlines.Add(new Run(s));
         return t;
@@ -190,7 +190,7 @@ static partial class W
     /// <summary>Vector icon; fills with the inherited foreground so it follows text color, buttons and theme.</summary>
     public static Control Icon(string name, double size = 18) => Glyph(Icons.Get(name), size);
 
-    static Control Glyph(Icons.Shape[] shapes, double size)
+    private static Control Glyph(Icons.Shape[] shapes, double size)
     {
         var canvas = new Canvas { Width = 24, Height = 24 };
         foreach (var s in shapes)
@@ -202,7 +202,7 @@ static partial class W
         return new Viewbox { Width = size, Height = size, Child = canvas, VerticalAlignment = VerticalAlignment.Center };
     }
 
-    static Border Tile(Control glyph, double size, string bg = Subtle) =>
+    private static Border Tile(Control glyph, double size, string bg = Subtle) =>
         new Border { Width = size, Height = size, CornerRadius = new CornerRadius(size / 4), Child = glyph, VerticalAlignment = VerticalAlignment.Center }
             .Themed(Border.BackgroundProperty, bg);
 

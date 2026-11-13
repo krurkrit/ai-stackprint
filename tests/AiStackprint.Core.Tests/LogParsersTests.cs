@@ -22,7 +22,7 @@ public class LogParsersTests
             "not json"
         };
         var s = LogParsers.Find("claude-session")!.Parse(lines);
-        Assert.Equal(new[] { "user", "thinking", "assistant", "tool", "result", "assistant" }, s.Entries.Select(e => e.Role));
+        Assert.Equal(["user", "thinking", "assistant", "tool", "result", "assistant"], s.Entries.Select(e => e.Role));
         Assert.Equal("Bash", s.Entries[3].Tool);
         Assert.Equal("dotnet build", s.Entries[3].Text);
         Assert.Equal("Build succeeded.", s.Entries[4].Text);
@@ -47,7 +47,7 @@ public class LogParsersTests
             """{"timestamp":"2026-11-11T05:00:06Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"One file."}]}}"""
         };
         var s = LogParsers.Find("codex-session")!.Parse(lines);
-        Assert.Equal(new[] { "system", "user", "tool", "result", "assistant" }, s.Entries.Select(e => e.Role));
+        Assert.Equal(["system", "user", "tool", "result", "assistant"], s.Entries.Select(e => e.Role));
         Assert.Equal("bash -lc ls", s.Entries[2].Text);
         Assert.Equal(80, s.InputTokens);
         Assert.Equal(9, s.OutputTokens);

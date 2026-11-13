@@ -12,9 +12,9 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-partial class LogViewer
+internal partial class LogViewer
 {
-    Regex? Pattern()
+    private Regex? Pattern()
     {
         if (string.IsNullOrEmpty(_query.Text))
         {
@@ -25,10 +25,10 @@ partial class LogViewer
         catch (ArgumentException) { return null; }
     }
 
-    readonly List<SearchHit> _hits = new();
+    private readonly List<SearchHit> _hits = [];
 
     /// <summary>Raw: searches the whole file in the background. Conversation: searches the steps. Results go in the side panel.</summary>
-    async void Search()
+    private async void Search()
     {
         _search?.Cancel();
         _hits.Clear();
@@ -36,7 +36,7 @@ partial class LogViewer
         if (p == null || _file == null) { _results.Content = string.IsNullOrEmpty(_query.Text) ? null : Panel(Txt("Invalid pattern.", 12, false, Muted)); if (_only.IsChecked == true) { Render(false); } return; }
         if (ShowReadable)
         {
-            var steps = _readable?.Steps.Where(e => p.IsMatch($"{e.Tool} {e.Text} {e.Detail}")).ToList() ?? new();
+            var steps = _readable?.Steps.Where(e => p.IsMatch($"{e.Tool} {e.Text} {e.Detail}")).ToList() ?? [];
             _results.Content = Panel(Txt(ReadableLog.Plural(steps.Count, "step"), 12, true),
                 steps.Take(500).Select(e => Hit($"{e.Time:HH:mm:ss} {e.Role}", Snip(e.Text), () => _readable!.Reveal(e))));
             return;
@@ -65,14 +65,14 @@ partial class LogViewer
     }
 
     /// <summary>Scrolls the raw view to a hit; loads the part of the file around it when it is outside what is shown.</summary>
-    void Jump(SearchHit h)
+    private void Jump(SearchHit h)
     {
         if (_code == null || _file == null)
         {
             return;
         }
 
-        long lastShown = _firstLine + _raw.Count(c => c == '\n');
+        var lastShown = _firstLine + _raw.Count(c => c == '\n');
         if (_only.IsChecked == true) { _only.IsChecked = false; Render(false); }
         if (h.Line < _firstLine || h.Line > lastShown)
         {
@@ -86,9 +86,9 @@ partial class LogViewer
         Dispatcher.UIThread.Post(() => _code.Reveal(line, h.Column, h.Length), DispatcherPriority.Background);
     }
 
-    static string Snip(string s) { var l = s.Replace('\n', ' ').Trim(); return l.Length > 140 ? l[..140] + "…" : l; }
+    private static string Snip(string s) { var l = s.Replace('\n', ' ').Trim(); return l.Length > 140 ? l[..140] + "…" : l; }
 
-    static Control Panel(Control head, IEnumerable<Control>? rows = null)
+    private static Control Panel(Control head, IEnumerable<Control>? rows = null)
     {
         var sp = new StackPanel { Spacing = 2, Children = { head.With(h => h.Margin = new Thickness(4, 0, 0, 6)) } };
         if (rows != null)
@@ -99,7 +99,7 @@ partial class LogViewer
         return new Border { Width = 300, CornerRadius = new CornerRadius(6), Padding = new Thickness(6), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
     }
 
-    static Control Hit(string where, string text, Action go)
+    private static Control Hit(string where, string text, Action go)
     {
         var b = new Border
         {
@@ -109,8 +109,8 @@ partial class LogViewer
             Background = Avalonia.Media.Brushes.Transparent,
             Child = new StackPanel
             {
-                Children = { Txt(where, 12, false, Accent).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; }),
-                Txt(text, 12).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
+                Children = { Txt(where, 12, false, Accent).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; }),
+                Txt(text, 12).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
             }
         };
         b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);

@@ -46,12 +46,12 @@ public class LimitHttpException(HttpStatusCode code, TimeSpan? retryAfter) : Htt
 /// </summary>
 public sealed class LimitsService(Func<Settings> settings)
 {
-    static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
     public static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(1);
 
-    class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
-    readonly Dictionary<string, Entry> _cache = new();
-    readonly object _lock = new();
+    private class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
+    private readonly Dictionary<string, Entry> _cache = [];
+    private readonly object _lock = new();
 
     /// <summary>Raised (on a worker thread) with the app id when its status changes.</summary>
     public event Action<string>? Updated;
@@ -103,10 +103,10 @@ public sealed class LimitsService(Func<Settings> settings)
             e.Status = e.Status with { Busy = true };
         }
         Updated?.Invoke(d.Id);
-        _ = Task.Run(() => Refresh(p, d, projects.ToList(), e));
+        _ = Task.Run(() => Refresh(p, d, [.. projects], e));
     }
 
-    async Task Refresh(ILimitProvider p, AppDefinition d, List<string> projects, Entry e)
+    private async Task Refresh(ILimitProvider p, AppDefinition d, List<string> projects, Entry e)
     {
         var old = e.Status.Data;
         LimitStatus next;
@@ -120,7 +120,7 @@ public sealed class LimitsService(Func<Settings> settings)
             {
                 next = new(logs != null ? LimitState.Ok : LimitState.Off, logs, old, logs == null ? "Live limits are off for this app." : null, false);
             }
-            else if (p.Credential(Services.PathUtil.Home) is not { } c)
+            else if (p.Credential(PathUtil.Home) is not { } c)
             {
                 next = new(LimitState.NoSignIn, logs, old, "No saved sign-in was found in a file (it may be in the system keychain).", false);
             }
@@ -164,7 +164,7 @@ public sealed class LimitsService(Func<Settings> settings)
         Updated?.Invoke(d.Id);
     }
 
-    static string ShortMessage(Exception ex) => ex switch
+    private static string ShortMessage(Exception ex) => ex switch
     {
         TaskCanceledException => "The provider did not answer in time.",
         HttpRequestException h when h.StatusCode != null => $"The provider answered {(int)h.StatusCode}.",
@@ -172,7 +172,7 @@ public sealed class LimitsService(Func<Settings> settings)
         _ => "Could not read the reply: " + ex.Message
     };
 
-    static DateTime Stamp(string file) { try { return File.GetLastWriteTimeUtc(file); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return default; } }
+    private static DateTime Stamp(string file) { try { return File.GetLastWriteTimeUtc(file); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return default; } }
 
     /// <summary>When a window reaches 100 % at the pace between two readings; null when not rising or it resets first.</summary>
     public static DateTime? FullAt(LimitWindow before, DateTime beforeAt, LimitWindow now, DateTime nowAt)

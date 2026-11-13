@@ -18,7 +18,7 @@ public static class LogTrash
 
     /// <summary>Files older than <paramref name="days"/> days.</summary>
     public static List<LogFile> OlderThan(IEnumerable<LogFile> files, int days, DateTime? now = null) =>
-        files.Where(f => (now ?? DateTime.Now) - f.Modified > TimeSpan.FromDays(days)).ToList();
+        [.. files.Where(f => (now ?? DateTime.Now) - f.Modified > TimeSpan.FromDays(days))];
 
     /// <summary>Moves each file to the bin. Refuses paths not in <paramref name="allowed"/>. Returns (moved, failed with reason).</summary>
     public static (List<string> Moved, List<(string Path, string Reason)> Failed) Delete(IEnumerable<string> paths, IEnumerable<LogFile> allowed, string? trashRoot = null)
@@ -35,7 +35,7 @@ public static class LogTrash
         return (moved, failed);
     }
 
-    static void ToTrash(string path, string? trashRoot)
+    private static void ToTrash(string path, string? trashRoot)
     {
         if (trashRoot == null && OperatingSystem.IsWindows())
         {
@@ -60,10 +60,10 @@ public static class LogTrash
     }
 
     /// <summary>folder/name, or folder/name.2, .3 … when taken.</summary>
-    static string Unique(string folder, string name)
+    private static string Unique(string folder, string name)
     {
         var p = Path.Combine(folder, name);
-        for (int i = 2; File.Exists(p) || Directory.Exists(p); i++)
+        for (var i = 2; File.Exists(p) || Directory.Exists(p); i++)
         {
             p = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)}.{i}{Path.GetExtension(name)}");
         }

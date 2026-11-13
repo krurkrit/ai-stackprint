@@ -8,7 +8,7 @@ namespace AiStackprint.Services;
 /// <summary>Generic, read-only scanner. App-specific knowledge lives in AppDefinition data and IPluginReader classes, not here.</summary>
 public static partial class Scanner
 {
-    static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase)
         { "node_modules", ".git", "bin", "obj", ".venv", "venv", "__pycache__" };
 
     /// <summary>How deep "nested" project roots and files are searched below the project folder.</summary>
@@ -67,7 +67,7 @@ public static partial class Scanner
                 }
             }
         }
-        return new ScanResult(rows.DistinctBy(i => (i.Kind, i.Name, i.Source, i.Level, i.Path)).ToList(), apps);
+        return new ScanResult([.. rows.DistinctBy(i => (i.Kind, i.Name, i.Source, i.Level, i.Path))], apps);
     }
 
     /// <summary>project/rel, plus sub-folder/rel for every sub-folder up to <see cref="NestedDepth"/> when nested (monorepos).</summary>
@@ -91,7 +91,7 @@ public static partial class Scanner
     }
 
     /// <summary>Sub-folders of a project, skipping hidden and build/dependency folders.</summary>
-    static IEnumerable<string> SubFolders(string root, int depth)
+    private static IEnumerable<string> SubFolders(string root, int depth)
     {
         if (depth == 0)
         {
@@ -120,15 +120,15 @@ public static partial class Scanner
     /// <summary>Runs <paramref name="read"/> and rewrites the rows it appended.</summary>
     public static void Tagged(List<Item> rows, Action read, Func<Item, Item> tag)
     {
-        int start = rows.Count;
+        var start = rows.Count;
         read();
-        for (int i = start; i < rows.Count; i++)
+        for (var i = start; i < rows.Count; i++)
         {
             rows[i] = tag(rows[i]);
         }
     }
 
-    static void AddConfig(List<Item> rows, AppDefinition d, ConfigFile c, string path, string? project)
+    private static void AddConfig(List<Item> rows, AppDefinition d, ConfigFile c, string path, string? project)
     {
         if (!File.Exists(path) && !Directory.Exists(path))
         {

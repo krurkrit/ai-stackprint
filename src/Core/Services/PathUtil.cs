@@ -15,10 +15,10 @@ public static class PathUtil
         p = Environment.ExpandEnvironmentVariables(p);
         if (p == "~" || p.StartsWith("~/") || p.StartsWith("~\\"))
         {
-            p = System.IO.Path.Combine(Home, p[1..].TrimStart('/', '\\'));
+            p = Path.Combine(Home, p[1..].TrimStart('/', '\\'));
         }
 
-        return p.Replace('/', System.IO.Path.DirectorySeparatorChar);
+        return p.Replace('/', Path.DirectorySeparatorChar);
     }
 
     public static bool OsMatches(string? os) => os?.ToLowerInvariant() switch
@@ -50,7 +50,7 @@ public static class PathUtil
 
     public static void OpenFolder(string path)
     {
-        var dir = File.Exists(path) ? System.IO.Path.GetDirectoryName(path)! : path;
+        var dir = File.Exists(path) ? Path.GetDirectoryName(path)! : path;
         try
         {
             if (OperatingSystem.IsWindows())

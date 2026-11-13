@@ -25,7 +25,7 @@ public static partial class SkillCheck
     public static List<Finding> Check(string path, SkillDoc doc)
     {
         var f = new List<Finding>();
-        bool skillMd = Path.GetFileName(path).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase);
+        var skillMd = Path.GetFileName(path).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase);
         var root = Path.GetDirectoryName(path) ?? "";
         if (skillMd)
         {
@@ -86,7 +86,7 @@ public static partial class SkillCheck
     }
 
     /// <summary>Broken links, links that leave the folder and (from SKILL.md) references that link on to further files.</summary>
-    static IEnumerable<Finding> LinkFindings(string root, string file, string md, bool nested)
+    private static IEnumerable<Finding> LinkFindings(string root, string file, string md, bool nested)
     {
         foreach (var link in SkillDoc.Links(md))
         {
@@ -104,7 +104,7 @@ public static partial class SkillCheck
             }
 
             List<string> further;
-            try { further = SkillDoc.Links(SkillDoc.Read(full).Body).Where(l => SkillDoc.Resolve(root, full, l) is { } p && p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)).ToList(); }
+            try { further = [.. SkillDoc.Links(SkillDoc.Read(full).Body).Where(l => SkillDoc.Resolve(root, full, l) is { } p && p.EndsWith(".md", StringComparison.OrdinalIgnoreCase))]; }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { continue; }
             if (further.Count > 0)
             {

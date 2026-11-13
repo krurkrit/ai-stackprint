@@ -14,13 +14,13 @@ public sealed class LogFolderWatcher : IDisposable
     /// <param name="Structure">A file or folder was created, deleted or renamed.</param>
     public record Batch(IReadOnlyCollection<string> Paths, bool Structure);
 
-    readonly List<FileSystemWatcher> _watchers = new();
-    readonly Timer _debounce, _poll;
-    readonly object _lock = new();
-    readonly HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
-    readonly string? _newest;
-    (long Size, long Ticks) _stamp;
-    bool _structure, _pending;
+    private readonly List<FileSystemWatcher> _watchers = [];
+    private readonly Timer _debounce, _poll;
+    private readonly object _lock = new();
+    private readonly HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string? _newest;
+    private (long Size, long Ticks) _stamp;
+    private bool _structure, _pending;
 
     public event Action<Batch>? Changed;
     public TimeSpan Quiet { get; init; } = TimeSpan.FromMilliseconds(250);
@@ -56,7 +56,7 @@ public sealed class LogFolderWatcher : IDisposable
         _poll = new Timer(_ => Poll(), null, every, every);
     }
 
-    void Kick(string path, bool structure)
+    private void Kick(string path, bool structure)
     {
         lock (_lock)
         {
@@ -73,7 +73,7 @@ public sealed class LogFolderWatcher : IDisposable
         catch (ObjectDisposedException) { }   // stopped while an event was in flight
     }
 
-    void Flush()
+    private void Flush()
     {
         Batch b;
         lock (_lock)
@@ -84,7 +84,7 @@ public sealed class LogFolderWatcher : IDisposable
         Changed?.Invoke(b);
     }
 
-    void Poll()
+    private void Poll()
     {
         if (_newest == null)
         {
@@ -95,7 +95,7 @@ public sealed class LogFolderWatcher : IDisposable
         if (now != _stamp) { _stamp = now; Kick(_newest, now.Size < 0); }
     }
 
-    (long Size, long Ticks) Stamp()
+    private (long Size, long Ticks) Stamp()
     {
         if (_newest == null)
         {

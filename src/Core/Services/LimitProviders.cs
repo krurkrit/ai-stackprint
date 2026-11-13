@@ -14,7 +14,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class LimitProviders
 {
-    public static readonly ILimitProvider[] All = { new ClaudeLimits(), new CodexLimits(), new CopilotLimits(), new CursorLimits(), new GeminiLimits() };
+    public static readonly ILimitProvider[] All = [new ClaudeLimits(), new CodexLimits(), new CopilotLimits(), new CursorLimits(), new GeminiLimits()];
     public static ILimitProvider? Find(string? id) => id == null ? null : All.FirstOrDefault(p => p.Id == id);
 
     internal static readonly JsonDocumentOptions _lenient = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
@@ -172,7 +172,7 @@ public class CodexLimits : ILimitProvider
         }
 
         var latest = samples.GroupBy(s => s.Name).Select(g => g.MaxBy(s => s.Time)!).OrderBy(s => s.WindowMinutes).ToList();
-        return new(null, latest.Select(s => new LimitWindow(s.Name, s.ResetsAt < DateTime.Now ? 0 : s.UsedPercent, s.ResetsAt)).ToList(), latest.Max(s => s.Time), null, true);
+        return new(null, [.. latest.Select(s => new LimitWindow(s.Name, s.ResetsAt < DateTime.Now ? 0 : s.UsedPercent, s.ResetsAt))], latest.Max(s => s.Time), null, true);
     }
 
     public async Task<LimitSnapshot> Fetch(HttpClient http, Credential c, CancellationToken ct)
@@ -198,7 +198,7 @@ public class CodexLimits : ILimitProvider
             {
                 if (e.OptNum("used_percent") is { } pct)
                 {
-                    double minutes = e.OptNum("limit_window_seconds") is { } s ? s / 60 : e.OptNum("window_minutes") ?? 0;
+                    var minutes = e.OptNum("limit_window_seconds") is { } s ? s / 60 : e.OptNum("window_minutes") ?? 0;
                     var reset = LimitProviders.Time(e, "reset_at") ?? LimitProviders.Time(e, "resets_at") ?? (e.OptNum("reset_after_seconds") is { } after ? now.AddSeconds(after) : null);
                     windows.Add(new(minutes switch { 300 => "5-hour", 10080 => "Weekly", > 0 => $"{minutes:0}-minute", _ => "Limit" }, pct, reset));
                 }

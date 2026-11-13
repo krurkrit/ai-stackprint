@@ -12,13 +12,13 @@ namespace AiStackprint.Ui;
 /// Flat list of apps with search, status and category filters, grouped by category with collapsible headings (kept while the app runs).
 /// Clicking a row opens the app detail page.
 /// </summary>
-class AppsView(Ctx x)
+internal class AppsView(Ctx x)
 {
-    readonly HashSet<string> _offCats = new(), _offStatus = new(), _collapsed = new();   // unchecked categories and statuses; collapsed headings
-    string _q = "";
-    bool _byCat = true, _byStatus;                                  // Group by check boxes
-    readonly TextBox _search = SearchBox("Search apps");
-    readonly ContentControl _table = new(), _filters = new();
+    private readonly HashSet<string> _offCats = [], _offStatus = [], _collapsed = [];   // unchecked categories and statuses; collapsed headings
+    private string _q = "";
+    private bool _byCat = true, _byStatus;                                  // Group by check boxes
+    private readonly TextBox _search = SearchBox("Search apps");
+    private readonly ContentControl _table = new(), _filters = new();
 
     public Control Build()
     {
@@ -32,14 +32,14 @@ class AppsView(Ctx x)
         return Page(head, _search.Free(), _filters.Free(), Card(_table.Free()));
     }
 
-    void OnSearch(object? s, TextChangedEventArgs e) { _q = _search.Text ?? ""; Fill(); }
+    private void OnSearch(object? s, TextChangedEventArgs e) { _q = _search.Text ?? ""; Fill(); }
 
-    void Fill()
+    private void Fill()
     {
         var cats = x.ShownApps.Select(a => a.Category).Distinct().Order().ToList();
         KeepOffered(_offCats, cats);
         var found = x.ShownApps.Where(a => _q == "" || a.Name.Contains(_q, StringComparison.OrdinalIgnoreCase)).ToList();
-        int inst = found.Count(a => a.Installed);
+        var inst = found.Count(a => a.Installed);
         var statuses = new List<string>();
         if (inst > 0)
         {
@@ -58,7 +58,7 @@ class AppsView(Ctx x)
         var f = new StackPanel { Spacing = 10 };
         if (statuses.Count > 1)
         {
-            f.Children.Add(FilterRow("Status", Checks(new (Control, string)[] { (Counted(Txt("Installed", 14), inst), "Installed"), (Counted(Txt("Not found", 14), found.Count - inst), "Not found") }, _offStatus, Fill)));
+            f.Children.Add(FilterRow("Status", Checks([(Counted(Txt("Installed", 14), inst), "Installed"), (Counted(Txt("Not found", 14), found.Count - inst), "Not found")], _offStatus, Fill)));
         }
 
         if (cats.Count > 1)
@@ -72,7 +72,7 @@ class AppsView(Ctx x)
             groupRow.Add(Btn("Expand all", () => { _collapsed.Clear(); Fill(); }, false, "chevron_down").With(b => b.MinHeight = 32));
             groupRow.Add(Btn("Collapse all", () => { _collapsed.UnionWith(Keys(x.ShownApps)); Fill(); }, false, "chevron_right").With(b => b.MinHeight = 32));
         }
-        f.Children.Add(FilterRow("Group by", groupRow.ToArray()));
+        f.Children.Add(FilterRow("Group by", [.. groupRow]));
         _filters.Content = f;
 
         var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
@@ -80,26 +80,26 @@ class AppsView(Ctx x)
         _table.Content = Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters.");
     }
 
-    IEnumerable<TableRow> Rows(List<Models.AppInfo> apps, int cols)
+    private IEnumerable<TableRow> Rows(List<Models.AppInfo> apps, int cols)
     {
-        TableRow Row(Models.AppInfo a) => new(new Control[]
-        {
+        TableRow Row(Models.AppInfo a) => new(
+        [
             AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) { n.Opacity = 0.6; } }), Txt(Cap(a.Category), 13, false, Muted),
             a.Installed ? Status("Installed") : Txt("Not found", 13, false, Muted),
             Count(a.Id, "Plugin", a.Installed), Count(a.Id, "Skill", a.Installed), Count(a.Id, "Config", a.Installed)
-        }, () => x.Go("App:" + a.Id));
+        ], () => x.Go("App:" + a.Id));
         if (!_byCat && !_byStatus) { foreach (var a in apps) { yield return Row(a); } yield break; }
         foreach (var g in apps.GroupBy(Key).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
-            bool open = !_collapsed.Contains(g.Key); string key = g.Key;
+            var open = !_collapsed.Contains(g.Key); var key = g.Key;
             var first = g.First();
-            string name = _byCat ? Plural(first.Category) + (_byStatus ? " · " + StatusName(first) : "") : StatusName(first);
+            var name = _byCat ? Plural(first.Category) + (_byStatus ? " · " + StatusName(first) : "") : StatusName(first);
             var cells = new Control[cols];
             cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", 14).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
                 _byCat ? Icon(Icons.ForCategory(first.Category), 16) : new Panel(), Title(name, 14),
                 Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", 13, false, Muted));
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
-            for (int c = 1; c < cols; c++)
+            for (var c = 1; c < cols; c++)
             {
                 cells[c] = new Panel();
             }
@@ -115,18 +115,18 @@ class AppsView(Ctx x)
         }
     }
 
-    static string StatusName(Models.AppInfo a) => a.Installed ? "Installed" : "Not found";
-    string Key(Models.AppInfo a) => (_byCat ? a.Category : "") + "|" + (_byStatus ? (a.Installed ? "0" : "1") : "");
-    IEnumerable<string> Keys(IEnumerable<Models.AppInfo> apps) => apps.Select(Key).Distinct();
+    private static string StatusName(Models.AppInfo a) => a.Installed ? "Installed" : "Not found";
+    private string Key(Models.AppInfo a) => (_byCat ? a.Category : "") + "|" + (_byStatus ? (a.Installed ? "0" : "1") : "");
+    private IEnumerable<string> Keys(IEnumerable<Models.AppInfo> apps) => apps.Select(Key).Distinct();
 
-    Control Count(string id, string kind, bool installed)
+    private Control Count(string id, string kind, bool installed)
     {
-        int n = x.Count(id, kind);
+        var n = x.Count(id, kind);
         return Txt(n == 0 && !installed ? "-" : n.ToString());
     }
 
     public static string Cap(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
 
     /// <summary>Category as a filter label: "Agents", "Editors"; names without a plural stay as they are.</summary>
-    static string Plural(string c) => c switch { "shared" or "custom" => Cap(c), "chat" => "Chat apps", _ => Cap(c) + "s" };
+    private static string Plural(string c) => c switch { "shared" or "custom" => Cap(c), "chat" => "Chat apps", _ => Cap(c) + "s" };
 }

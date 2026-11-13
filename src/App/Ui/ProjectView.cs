@@ -15,15 +15,15 @@ namespace AiStackprint.Ui;
 /// Everything that applies inside one project folder: what each app loads into context there (with limits), the instruction files,
 /// and its own skills plus user- and system-level ones in the same list as the Skills page (filters, bottom panel).
 /// </summary>
-class ProjectView(Ctx x, Action<string> removeProject)
+internal class ProjectView(Ctx x, Action<string> removeProject)
 {
-    static readonly string[] _order = Levels.Order;
-    readonly ItemBrowser _browser = new(x, "Skill");
-    readonly ContextSection _context = new(x);
-    string? _project;   // project the list state belongs to: reset when another opens
+    private static readonly string[] _order = Levels.Order;
+    private readonly ItemBrowser _browser = new(x, "Skill");
+    private readonly ContextSection _context = new(x);
+    private string? _project;   // project the list state belongs to: reset when another opens
 
     /// <summary>Rows that take effect in <paramref name="project"/>: rows from that project, or rows not tied to any project.</summary>
-    static bool Applies(Item i, string project) => i.Project == project || (i.Project == null && !Scanner.InProject(i.Level));
+    private static bool Applies(Item i, string project) => i.Project == project || (i.Project == null && !Scanner.InProject(i.Level));
 
     public Control Build(string project)
     {
@@ -52,19 +52,19 @@ class ProjectView(Ctx x, Action<string> removeProject)
     }
 
     /// <summary>Instruction/settings files read in this project, one row per file with every app that reads it.</summary>
-    static Control Configs(List<Item> all)
+    private static Control Configs(List<Item> all)
     {
         var rows = all.Where(i => i.Kind == "Config").GroupBy(i => i.Path)
             .OrderBy(g => Array.IndexOf(_order, g.First().Level)).ThenBy(g => g.First().Name)
             .Select(g =>
             {
                 var i = g.First();
-                return new TableRow(new Control[]
-                {
+                return new TableRow(
+                [
                     Txt(i.Name, 14, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), 13), Txt(i.Description, 13),
                     AppDetailView.LevelCell(i), Mono(i.Path, 12),
                     IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path))
-                });
+                ]);
             });
         var cols = new[] { new Col("File", "1.2*"), new Col("Read by", "1.4*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "2.6*"), new Col("", "40") };
         return Section("document", "Instructions & settings", Table.Build(cols, rows, "No instruction or settings files apply."));

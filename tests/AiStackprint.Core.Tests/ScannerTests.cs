@@ -10,10 +10,10 @@ namespace AiStackprint.Core.Tests;
 
 public class ScannerTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    void Skill(string dir, string name, string extra = "")
+    private void Skill(string dir, string name, string extra = "")
     {
         Directory.CreateDirectory(Path.Combine(dir, name));
         File.WriteAllText(Path.Combine(dir, name, "SKILL.md"), $"---\nname: {name}\ndescription: d\n{extra}---\nbody\n");
@@ -52,9 +52,9 @@ public class ScannerTests : IDisposable
             Configs = { new ConfigFile { Path = "RULES.md", Level = "Project", Nested = true }, new ConfigFile { Path = "LOCAL.md", Level = "Local" } }
         };
         File.WriteAllText(Path.Combine(proj, "LOCAL.md"), "l");
-        var items = Scanner.Collect(new[] { d }, new[] { proj }).Items;
+        var items = Scanner.Collect([d], [proj]).Items;
         var skills = items.Where(i => i.Kind == "Skill").ToList();
-        Assert.Equal(new[] { "api-skill", "root-skill" }, skills.Select(s => s.Name).Order());
+        Assert.Equal(["api-skill", "root-skill"], skills.Select(s => s.Name).Order());
         Assert.All(skills, s => { Assert.Equal(proj, s.Project); Assert.Equal("REPO", s.LevelLabel); });
         Assert.Equal(2, items.Count(i => i.Kind == "Config" && i.Name == "RULES.md"));
         var local = Assert.Single(items, i => i.Name == "LOCAL.md");
@@ -74,7 +74,7 @@ public class ScannerTests : IDisposable
             Name = "Codex",
             Roots = { new ScanRoot { Path = home }, new ScanRoot { Path = Path.Combine(home, ".system"), Bundled = true } }
         };
-        var skills = Scanner.Collect(new[] { d }, Array.Empty<string>()).Items.Where(i => i.Kind == "Skill").ToList();
+        var skills = Scanner.Collect([d], Array.Empty<string>()).Items.Where(i => i.Kind == "Skill").ToList();
         Assert.True(Assert.Single(skills, s => s.Name == "skill-creator").Bundled);
         Assert.False(Assert.Single(skills, s => s.Name == "mine").Bundled);
         Assert.NotNull(SkillManager.CannotRemove(skills.First(s => s.Bundled)));

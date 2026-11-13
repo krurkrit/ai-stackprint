@@ -14,7 +14,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Plan and live limits: a card on the app page and a strip on the dashboard. The last reading stays on screen while a refresh runs.</summary>
-static class LimitsView
+internal static class LimitsView
 {
     public static bool Has(AppDefinition d) => LimitProviders.Find(d.Limits) != null;
 
@@ -65,10 +65,10 @@ static class LimitsView
         return card;
     }
 
-    static Control Body(Ctx x, AppDefinition d, bool compact)
+    private static Control Body(Ctx x, AppDefinition d, bool compact)
     {
         var st = x.Limits.Status(d.Id);
-        bool on = x.Limits.Enabled(d.Id);
+        var on = x.Limits.Enabled(d.Id);
         var sp = new StackPanel { Spacing = compact ? 6 : 10 };
         if (st.Data == null)
         {
@@ -94,7 +94,7 @@ static class LimitsView
 
             if (head.Count > 0)
             {
-                sp.Children.Add(Row(head.ToArray()));
+                sp.Children.Add(Row([.. head]));
             }
 
             foreach (var w in s.Windows)
@@ -124,12 +124,12 @@ static class LimitsView
         return sp;
     }
 
-    const string AccentKeyForPlan = Accent;
+    private const string AccentKeyForPlan = Accent;
 
     /// <summary>One window: name, percent used, reset, and when it fills at the current pace.</summary>
-    static Control Window(LimitWindow w, LimitSnapshot? prev, LimitSnapshot now, bool compact)
+    private static Control Window(LimitWindow w, LimitSnapshot? prev, LimitSnapshot now, bool compact)
     {
-        double pct = Math.Clamp(w.UsedPercent, 0, 100);
+        var pct = Math.Clamp(w.UsedPercent, 0, 100);
         var bar = new Grid { Height = compact ? 6 : 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(pct, 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
         bar.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
         bar.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
@@ -142,7 +142,7 @@ static class LimitsView
         return new StackPanel { Spacing = 3, Children = { Row(Txt(w.Name, 13, true), Txt(text, 12, false, Muted)), bar } };
     }
 
-    static string Reset(DateTime t)
+    private static string Reset(DateTime t)
     {
         var left = t - DateTime.Now;
         if (left <= TimeSpan.Zero)
@@ -198,7 +198,7 @@ static class LimitsView
                 if (sw.IsChecked == true && !st.LimitsEnabled.Contains(d.Id)) { sw.IsChecked = false; Consent(x, d); return; }
                 if (sw.IsChecked != true) { st.LimitsEnabled.Remove(d.Id); SettingsStore.Save(st); }
             };
-            return new TableRow(new Control[] { AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, 13, false, Muted), sw });
+            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, 13, false, Muted), sw]);
         });
         return Section("data_pie", "Usage limits", new StackPanel
         {
@@ -207,7 +207,7 @@ static class LimitsView
         {
             Txt("Plan and limits from each app's own sign-in, asked from the provider the app uses. Off until you turn it on per app. Codex limits also come from its session log without any call.", 13, false, Muted),
             Row(Txt("Refresh every", 14, false, Muted), every, Txt("minutes (at least 1); pages show the last reading in between", 12, false, Muted)),
-            Table.Build(new[] { new Col("App", "2*"), new Col("Asks", "1.4*"), new Col("Live limits", "1*") }, rows)
+            Table.Build([new Col("App", "2*"), new Col("Asks", "1.4*"), new Col("Live limits", "1*")], rows)
         }
         });
     }

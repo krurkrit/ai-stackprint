@@ -20,7 +20,7 @@ public static partial class ContextBlocks
 
     public static List<Part> Split(string text)
     {
-        var parts = new List<Part>(); int at = 0;
+        var parts = new List<Part>(); var at = 0;
         foreach (Match m in Block().Matches(text))
         {
             if (m.Index > at && text[at..m.Index].Trim() != "")

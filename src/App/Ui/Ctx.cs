@@ -9,7 +9,7 @@ using Avalonia.Controls;
 namespace AiStackprint.Ui;
 
 /// <summary>What every view needs: state, navigation, rescan and the owner window for dialogs.</summary>
-class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
+internal class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
 {
     public AppState S { get; } = s;
     public Window Owner { get; } = owner;
@@ -32,8 +32,8 @@ class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
     public LimitsService Limits { get; init; } = null!;
 
     public AppInfo? Info(string appId) => S.Apps.FirstOrDefault(a => a.Id == appId);
-    List<Item>? _countsFor;
-    Dictionary<(string, string), int> _counts = new();
+    private List<Item>? _countsFor;
+    private Dictionary<(string, string), int> _counts = [];
     /// <summary>Items per app and kind; counted once per scan, not once per call.</summary>
     public int Count(string appId, string kind)
     {

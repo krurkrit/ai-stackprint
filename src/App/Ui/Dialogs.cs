@@ -10,9 +10,9 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Modal dialogs: confirm, message, and a small form (optional text + one choice).</summary>
-static class Dialogs
+internal static class Dialogs
 {
-    static Window Shell(string title, Control body, params Button[] buttons)
+    private static Window Shell(string title, Control body, params Button[] buttons)
     {
         var w = new Window { Title = title, Width = 480, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };

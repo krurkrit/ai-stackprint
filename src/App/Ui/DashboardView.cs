@@ -17,9 +17,9 @@ namespace AiStackprint.Ui;
 /// Overview: tiles that open their page, live limits, skills and plugins by app and by author (a bar opens the list filtered to it),
 /// and what changed since the scan before. The full app list is on the AI apps page.
 /// </summary>
-static class DashboardView
+internal static class DashboardView
 {
-    const int TopAuthors = 10;
+    private const int TopAuthors = 10;
 
     public static Control Build(Ctx x, Action addProject)
     {
@@ -43,7 +43,7 @@ static class DashboardView
         var radar = Categories(apps, () => x.Go("Apps"));
         Grid.SetRowSpan(radar, 2); Grid.SetColumnSpan(radar, 2);   // 2 x 2 tiles on the left; the four tiles fill the right
         tiles.Children.Add(radar);
-        for (int i = 0; i < cards.Length; i++) { Grid.SetColumn(cards[i], 2 + i % 2); Grid.SetRow(cards[i], i / 2); tiles.Children.Add(cards[i]); }
+        for (var i = 0; i < cards.Length; i++) { Grid.SetColumn(cards[i], 2 + i % 2); Grid.SetRow(cards[i], i / 2); tiles.Children.Add(cards[i]); }
 
         var charts = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = 16 };
         var left = new StackPanel { Spacing = 16, Children = { Section("sparkle", "Skills by app", ByApp(x, "Skill")), Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")) } };
@@ -54,15 +54,15 @@ static class DashboardView
     }
 
     /// <summary>Installed apps by category as a donut, with a legend that also lists categories with nothing installed ("0 of 3").</summary>
-    static Control Categories(List<AppInfo> apps, Action open)
+    private static Control Categories(List<AppInfo> apps, Action open)
     {
         var cats = apps.GroupBy(a => a.Category).OrderByDescending(g => g.Count(a => a.Installed)).ThenBy(g => g.Key).ToList();
-        int inst = apps.Count(a => a.Installed);
+        var inst = apps.Count(a => a.Installed);
         var pie = PieChart.Build(cats.Select(g => ((double)g.Count(a => a.Installed), CategoryKey(g.Key))).ToList(), inst.ToString("N0"), "installed");
         var legend = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
         foreach (var g in cats)
         {
-            int n = g.Count(a => a.Installed);
+            var n = g.Count(a => a.Installed);
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 10 };
             row.Children.Add(Dot(CategoryKey(g.Key)));
             row.Children.Add(Txt(AppsView.Cap(g.Key), 13, n > 0, n > 0 ? Text : Muted).With(t => Grid.SetColumn(t, 1)));
@@ -73,28 +73,27 @@ static class DashboardView
         legend.MinWidth = 180;
         body.Children.Add(pie); body.Children.Add(legend.With(l => Grid.SetColumn(l, 1)));
         // Scales down (never up) when the card is narrower than donut + legend, instead of the legend running under the next cards
-        var fit = new Viewbox { Stretch = Avalonia.Media.Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = body };
+        var fit = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = body };
         var card = Section("apps", "AI apps by category", new Border { Padding = new Thickness(0, 12), Child = fit });
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();
         return card;
     }
 
-    static int Count(Ctx x, string kind) => x.S.Items.Count(i => i.Kind == kind);
+    private static int Count(Ctx x, string kind) => x.S.Items.Count(i => i.Kind == kind);
 
-    static (string, int, string)[] ByLevel(Ctx x, string kind) =>
-        Levels.Order.Select(l => (l, x.S.Items.Count(i => i.Kind == kind && i.Level == l), LevelKey(l))).ToArray();
+    private static (string, int, string)[] ByLevel(Ctx x, string kind) =>
+        [.. Levels.Order.Select(l => (l, x.S.Items.Count(i => i.Kind == kind && i.Level == l), LevelKey(l)))];
 
     /// <summary>Skills by who can start them, as on the Skills page (without the "All" choice).</summary>
-    static (string, int, string)[] ByInvoked(Ctx x)
+    private static (string, int, string)[] ByInvoked(Ctx x)
     {
         var skills = x.S.Items.Where(i => i.Kind == "Skill").ToList();
-        return new[] { ("Agent only", ChartIn), ("User only", ChartOut), ("Agent and User", ChartRead) }
-            .Select(t => (t.Item1, skills.Count(i => SkillMatch.Label(i) == t.Item1), t.Item2)).ToArray();
+        return [.. new[] { ("Agent only", ChartIn), ("User only", ChartOut), ("Agent and User", ChartRead) }.Select(t => (t.Item1, skills.Count(i => SkillMatch.Label(i) == t.Item1), t.Item2))];
     }
 
     /// <summary>One bar per app, stacked by level (highest first); click opens the list for that app.</summary>
-    static Control ByApp(Ctx x, string kind)
+    private static Control ByApp(Ctx x, string kind)
     {
         var groups = x.S.Items.Where(i => i.Kind == kind).GroupBy(i => i.App).OrderByDescending(g => g.Count()).ToList();
         if (groups.Count == 0)
@@ -102,7 +101,7 @@ static class DashboardView
             return Txt(kind == "Skill" ? "No skills found." : "No plugins found.", 13, false, Muted);
         }
 
-        int max = groups.Max(g => g.Count());
+        var max = groups.Max(g => g.Count());
         var sp = new StackPanel { Spacing = 8 };
         foreach (var g in groups)
         {
@@ -119,7 +118,7 @@ static class DashboardView
     /// Top authors of skills and plugins (stacked: skills, plugins), the rest as "Other". The author is the plugin manifest's author, the skill's author or
     /// metadata.author, else the plugin's marketplace; skills with none are "Local" (yours) or the app's name when they ship with it.
     /// </summary>
-    static Control ByAuthor(Ctx x)
+    private static Control ByAuthor(Ctx x)
     {
         var items = x.S.Items.Where(i => i.Kind is "Skill" or "Plugin").ToList();
         var pluginAuthor = items.Where(i => i.Kind == "Plugin" && i.Author != null).GroupBy(i => (i.App, i.Name)).ToDictionary(g => g.Key, g => g.First().Author!);
@@ -137,11 +136,11 @@ static class DashboardView
             top.Add(("Other", groups.Skip(TopAuthors).Sum(g => g.Count(i => i.Kind == "Skill")), groups.Skip(TopAuthors).Sum(g => g.Count(i => i.Kind == "Plugin")), true));
         }
 
-        int max = top.Max(t => t.Skills + t.Plugins);
+        var max = top.Max(t => t.Skills + t.Plugins);
         var sp = new StackPanel { Spacing = 8 };
         foreach (var t in top)
         {
-            sp.Children.Add(Bar(Txt(t.Name, 13, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), new[] { (t.Skills, ChartIn), (t.Plugins, ChartOut) }, t.Skills + t.Plugins, max,
+            sp.Children.Add(Bar(Txt(t.Name, 13, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(t.Skills, ChartIn), (t.Plugins, ChartOut)], t.Skills + t.Plugins, max,
                 t.Other ? null : () => x.Browse(t.Skills >= t.Plugins ? "Skill" : "Plugin", null, t.Name), $"{t.Name}\nSkills: {t.Skills}\nPlugins: {t.Plugins}"));
         }
 
@@ -150,10 +149,10 @@ static class DashboardView
     }
 
     /// <summary>Label | stacked bar scaled to the largest row | count. Clickable when <paramref name="open"/> is set.</summary>
-    static Control Bar(Control label, (int N, string Key)[] segs, int total, int max, Action? open, string tip)
+    private static Control Bar(Control label, (int N, string Key)[] segs, int total, int max, Action? open, string tip)
     {
         var bar = new Grid { Height = 12, ColumnSpacing = 1, VerticalAlignment = VerticalAlignment.Center };
-        int col = 0;
+        var col = 0;
         foreach (var (n, key) in segs.Where(s => s.N > 0))
         {
             bar.ColumnDefinitions.Add(new ColumnDefinition(n, GridUnitType.Star));
@@ -182,7 +181,7 @@ static class DashboardView
     }
 
     /// <summary>Skills, plugins and config files added, removed or edited since the scan before (saved between runs).</summary>
-    static Control Recent(Ctx x)
+    private static Control Recent(Ctx x)
     {
         var c = x.S.Changes;
         var title = c.Since is { } since ? $"Changed since {(since.Date == DateTime.Today ? since.ToString("HH:mm") : since.ToString("yyyy-MM-dd HH:mm"))}" : "Changes";
@@ -197,12 +196,12 @@ static class DashboardView
         }
         else
         {
-            var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(new Control[]
-            {
+            var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(
+            [
                 Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, 13, false, Muted),
                 Txt(ch.Name, 13, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, 13, false, Muted)
-            }, ch.What == "Removed" ? null : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
-            body = new StackPanel { Spacing = 6, Children = { Table.Build(new[] { new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*") }, rows) } };
+            ], ch.What == "Removed" ? null : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
+            body = new StackPanel { Spacing = 6, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*")], rows) } };
             if (c.Changes.Count > 12)
             {
                 ((StackPanel)body).Children.Add(Txt($"… and {c.Changes.Count - 12} more", 12, false, Muted));
@@ -211,11 +210,11 @@ static class DashboardView
         return Section("arrow_sync", title, body);
     }
 
-    static Control Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)
+    private static Control Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)
     {
         var grid = new Grid { Height = 10, ColumnSpacing = 2 };
         var legend = new WrapPanel();
-        int col = 0;
+        var col = 0;
         foreach (var (label, n, key) in segs)
         {
             if (n > 0)
@@ -246,5 +245,5 @@ static class DashboardView
     }
 
     /// <summary>Tabular figures: numbers line up.</summary>
-    static readonly FontFeatureCollection _tabular = new() { FontFeature.Parse("tnum") };
+    private static readonly FontFeatureCollection _tabular = [FontFeature.Parse("tnum")];
 }

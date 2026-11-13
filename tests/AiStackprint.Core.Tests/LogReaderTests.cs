@@ -10,10 +10,10 @@ namespace AiStackprint.Core.Tests;
 
 public class LogReaderTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    string Write(string rel, string text, DateTime when)
+    private string Write(string rel, string text, DateTime when)
     {
         var f = Path.Combine(_tmp, rel);
         Directory.CreateDirectory(Path.GetDirectoryName(f)!);
@@ -31,7 +31,7 @@ public class LogReaderTests : IDisposable
         Write("logs/notes.txt", "x", new DateTime(2026, 4, 1));
         var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = Path.Combine(_tmp, "logs"), Depth = 1 } } };
         var found = LogReader.Find(d, Array.Empty<string>());
-        Assert.Equal(new[] { "b.log", "a.log" }, found.Select(f => Path.GetFileName(f.Path)));
+        Assert.Equal(["b.log", "a.log"], found.Select(f => Path.GetFileName(f.Path)));
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class LogReaderTests : IDisposable
     {
         Write("p1/.app/logs/run.log", "r", DateTime.Now);
         var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = ".app/logs", Level = "Project" } } };
-        var f = Assert.Single(LogReader.Find(d, new[] { Path.Combine(_tmp, "p1"), Path.Combine(_tmp, "p2") }));
+        var f = Assert.Single(LogReader.Find(d, [Path.Combine(_tmp, "p1"), Path.Combine(_tmp, "p2")]));
         Assert.Equal(Path.Combine(_tmp, "p1"), f.Project);
     }
 

@@ -17,15 +17,15 @@ namespace AiStackprint.Ui;
 /// Bottom panel for one skill or plugin: everything known about it on the left, its files on the right.
 /// SKILL.md (or a plugin's README) is rendered; links to files inside the folder open here, with Back; links that leave the folder ask first.
 /// </summary>
-partial class DetailPanel(Ctx x)
+internal partial class DetailPanel(Ctx x)
 {
-    Item? _item;
-    string? _file;                                 // file shown; null = the item's main file
-    readonly Stack<string?> _back = new();
-    string _tab = "Content";                       // Content | Files
-    bool _raw;
-    readonly ContentControl _host = new();
-    Action _close = () => { };
+    private Item? _item;
+    private string? _file;                                 // file shown; null = the item's main file
+    private readonly Stack<string?> _back = new();
+    private string _tab = "Content";                       // Content | Files
+    private bool _raw;
+    private readonly ContentControl _host = new();
+    private Action _close = () => { };
 
     public Control Build(Item item, Action close)
     {
@@ -36,16 +36,16 @@ partial class DetailPanel(Ctx x)
         return _host;
     }
 
-    Item It => _item!;
-    string Root => It.Kind == "Plugin" ? It.Path : Path.GetDirectoryName(It.Path) ?? It.Path;
+    private Item It => _item!;
+    private string Root => It.Kind == "Plugin" ? It.Path : Path.GetDirectoryName(It.Path) ?? It.Path;
 
     /// <summary>Skill: its .md. Plugin: README.md, else its manifest.</summary>
-    string? MainFile => It.Kind != "Plugin" ? It.Path
+    private string? MainFile => It.Kind != "Plugin" ? It.Path
         : new[] { "README.md", "readme.md", Path.Combine(".claude-plugin", "plugin.json") }.Select(f => Path.Combine(Root, f)).FirstOrDefault(File.Exists);
 
-    string? Current => _file ?? MainFile;
+    private string? Current => _file ?? MainFile;
 
-    void Render()
+    private void Render()
     {
         var head = Header();
         DockPanel.SetDock(head, Dock.Top);
@@ -57,7 +57,7 @@ partial class DetailPanel(Ctx x)
         _host.Content = new DockPanel { Margin = new Thickness(32, 12, 32, 16), Children = { head, grid } };
     }
 
-    Control Header()
+    private Control Header()
     {
         var d = x.S.Def(It.App);
         var chips = new WrapPanel { ItemSpacing = 6, LineSpacing = 6, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
@@ -80,7 +80,7 @@ partial class DetailPanel(Ctx x)
         return dock;
     }
 
-    Action? RemoveAction()
+    private Action? RemoveAction()
     {
         if (It.Kind == "Skill" && SkillManager.CannotRemove(It) == null)
         {
@@ -96,7 +96,7 @@ partial class DetailPanel(Ctx x)
     }
 
     /// <summary>Left column: description, where it is, who can start it, front matter, size, checks.</summary>
-    Control Meta()
+    private Control Meta()
     {
         var sp = new StackPanel { Spacing = 12 };
         SkillDoc? doc = null;
@@ -115,7 +115,7 @@ partial class DetailPanel(Ctx x)
         void Add(string k, Control v)
         {
             kv.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            int r = kv.RowDefinitions.Count - 1;
+            var r = kv.RowDefinitions.Count - 1;
             var a = Txt(k, 13, false, Muted);
             Grid.SetRow(a, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
             kv.Children.Add(a); kv.Children.Add(v);
@@ -139,7 +139,7 @@ partial class DetailPanel(Ctx x)
             }
         }
 
-        Add("Path", Sel(It.Path, 12).With(t => t.FontFamily = Ui.Theme.Mono));
+        Add("Path", Sel(It.Path, 12).With(t => t.FontFamily = Theme.Mono));
         if (doc != null)
         {
             var chars = doc.Body.Length;
@@ -154,7 +154,7 @@ partial class DetailPanel(Ctx x)
         }
 
         var dup = x.S.Items.Where(i => i.Kind == It.Kind && i.Name == It.Name && !ItemBrowser.Same(i, It)).Select(i => $"{i.Level} ({i.Source})").Distinct().ToList();
-        var findings = doc != null ? SkillCheck.Check(It.Path, doc) : new();
+        var findings = doc != null ? SkillCheck.Check(It.Path, doc) : [];
         if (dup.Count > 0)
         {
             findings.Insert(0, new Finding("Same name also at: " + string.Join(", ", dup), false));
@@ -169,17 +169,17 @@ partial class DetailPanel(Ctx x)
     }
 
     /// <summary>Front matter key as a label: "metadata.version" → "Version", "allowed-tools" → "Allowed tools".</summary>
-    static string Label(string key)
+    private static string Label(string key)
     {
         var k = key[(key.LastIndexOf('.') + 1)..].Replace('-', ' ').Replace('_', ' ');
         return k.Length == 0 ? key : char.ToUpperInvariant(k[0]) + k[1..];
     }
 
     /// <summary>What a plugin brings, from its folder. Hooks and MCP servers run programs on this computer, so they are flagged.</summary>
-    Control PluginParts()
+    private Control PluginParts()
     {
         int Count(string dir, string pattern) { var p = Path.Combine(Root, dir); return Directory.Exists(p) ? Directory.EnumerateFiles(p, pattern, SearchOption.AllDirectories).Count() : 0; }
-        int skills = x.S.Items.Count(i => i.Kind == "Skill" && i.Plugin == It.Name && i.App == It.App);
+        var skills = x.S.Items.Count(i => i.Kind == "Skill" && i.Plugin == It.Name && i.App == It.App);
         bool hooks = File.Exists(Path.Combine(Root, "hooks", "hooks.json")), mcp = File.Exists(Path.Combine(Root, ".mcp.json"));
         var parts = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
         foreach (var (label, n) in new[] { ("skills", skills), ("commands", Count("commands", "*.md")), ("agents", Count("agents", "*.md")) })
@@ -203,7 +203,7 @@ partial class DetailPanel(Ctx x)
         return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = 6, Children = { Txt("Contains", 13, false, Muted), parts } };
     }
 
-    static Control Findings(List<Finding> f)
+    private static Control Findings(List<Finding> f)
     {
         var sp = new StackPanel { Spacing = 6, Children = { Txt("Checks", 13, false, Muted) } };
         foreach (var x in f)

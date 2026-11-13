@@ -10,12 +10,12 @@ namespace AiStackprint.Core.Tests;
 
 public class SkillMatchTests
 {
-    static Item Skill(string level, params string[] invokers) => new("Skill", "s", "", "App", level, "p") { Invokers = invokers };
-    static readonly Item _agentOnly = Skill("User", "Agent"), _userOnly = Skill("User", "User"), _both = Skill("User", "Agent", "User");
-    static readonly HashSet<string> _none = new();
+    private static Item Skill(string level, params string[] invokers) => new("Skill", "s", "", "App", level, "p") { Invokers = invokers };
+    private static readonly Item _agentOnly = Skill("User", "Agent"), _userOnly = Skill("User", "User"), _both = Skill("User", "Agent", "User");
+    private static readonly HashSet<string> _none = [];
 
-    static string[] Shown(string invoked) =>
-        new[] { _agentOnly, _userOnly, _both }.Where(i => SkillMatch.Shows(i, _none, invoked, "")).Select(SkillMatch.Label).ToArray();
+    private static string[] Shown(string invoked) =>
+        [.. new[] { _agentOnly, _userOnly, _both }.Where(i => SkillMatch.Shows(i, _none, invoked, "")).Select(SkillMatch.Label)];
 
     [Fact]
     public void Invoked_by_is_one_choice_matched_exactly()

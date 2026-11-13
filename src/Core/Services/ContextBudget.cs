@@ -39,10 +39,10 @@ public interface IContextRule
 /// <summary>Helpers shared by the rules: file sizes, @imports, folder walks. Read-only.</summary>
 public static partial class ContextBudget
 {
-    public static readonly IContextRule[] Rules = { new ClaudeContext(), new CodexContext(), new GeminiContext(), new CopilotContext(), new CursorContext() };
+    public static readonly IContextRule[] Rules = [new ClaudeContext(), new CodexContext(), new GeminiContext(), new CopilotContext(), new CursorContext()];
     public static IContextRule? Find(string? id) => id == null ? null : Rules.FirstOrDefault(r => r.Id == id);
 
-    static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
+    private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
 
     public static ContextFile Measure(string path, LoadWhen load, string? via = null, string? note = null)
     {
@@ -70,7 +70,7 @@ public static partial class ContextBudget
             list.Add(d.FullName);
             if (Same(d.FullName, top)) { list.Reverse(); return list; }
         }
-        return new() { start };
+        return [start];
     }
 
     /// <summary>Folders from the file system root down to <paramref name="start"/>.</summary>
@@ -110,7 +110,7 @@ public static partial class ContextBudget
         }
 
         List<string> dirs;
-        try { dirs = Directory.EnumerateDirectories(start).ToList(); }
+        try { dirs = [.. Directory.EnumerateDirectories(start)]; }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { yield break; }
         foreach (var d in dirs.Order(StringComparer.OrdinalIgnoreCase))
         {
@@ -136,7 +136,7 @@ public static partial class ContextBudget
 
     /// <summary>Markdown files under a folder (any depth), sorted.</summary>
     public static List<string> FilesIn(string dir, string pattern) =>
-        Directory.Exists(dir) ? Directory.EnumerateFiles(dir, pattern, new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).Order(StringComparer.OrdinalIgnoreCase).ToList() : new();
+        Directory.Exists(dir) ? [.. Directory.EnumerateFiles(dir, pattern, new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).Order(StringComparer.OrdinalIgnoreCase)] : [];
 
     public static bool Same(string a, string b) =>
         string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
@@ -156,8 +156,8 @@ public static partial class ContextBudget
     public static List<string> Imports(string md)
     {
         var plain = CodeSpan().Replace(Fenced().Replace(md, ""), "");
-        return ImportToken().Matches(plain).Select(m => m.Groups[1].Value.TrimEnd('.', ',', ';', ':', '!', '?').Replace("\\ ", " "))
-            .Where(p => p.Length > 0).Distinct().ToList();
+        return [.. ImportToken().Matches(plain).Select(m => m.Groups[1].Value.TrimEnd('.', ',', ';', ':', '!', '?').Replace("\\ ", " "))
+            .Where(p => p.Length > 0).Distinct()];
     }
 
     /// <summary>An import's target: ~ is the home folder; relative paths are relative to the importing file.</summary>
@@ -182,7 +182,7 @@ public static partial class ContextBudget
             if (!File.Exists(target)) { findings.Add(new($"{name} imports @{imp}, which does not exist.")); continue; }
             if (hop > maxHops) { findings.Add(new($"{name} imports @{imp} more than {maxHops} hops deep; it is not loaded.")); continue; }
             if (!seen.Add(Path.GetFullPath(target))) { findings.Add(new($"@{imp} is imported more than once (or in a loop); it loads once.", false)); continue; }
-            string? note = project != null && Inside(file, project) && !Inside(target, project) ? "Outside the project: asks before loading the first time" : null;
+            var note = project != null && Inside(file, project) && !Inside(target, project) ? "Outside the project: asks before loading the first time" : null;
             files.Add(Measure(target, LoadWhen.Imported, file, note));
             AddImports(target, home, project, maxHops, files, findings, seen, hop + 1);
         }

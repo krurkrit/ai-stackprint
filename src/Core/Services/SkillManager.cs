@@ -60,7 +60,7 @@ public static class SkillManager
             throw new InvalidOperationException(why);
         }
 
-        bool folder = Path.GetFileName(skill.Path).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase);
+        var folder = Path.GetFileName(skill.Path).Equals("SKILL.md", StringComparison.OrdinalIgnoreCase);
         var src = folder ? Path.GetDirectoryName(skill.Path)! : skill.Path;
         var dest = Path.Combine(backupRoot ?? BackupRoot, DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"), Path.GetFileName(src));
         Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
@@ -76,7 +76,7 @@ public static class SkillManager
         return dest;
     }
 
-    static void MoveDir(string src, string dest)
+    private static void MoveDir(string src, string dest)
     {
         try { Directory.Move(src, dest); }
         catch (IOException) when (Path.GetPathRoot(src) != Path.GetPathRoot(dest))
@@ -86,7 +86,7 @@ public static class SkillManager
         }
     }
 
-    static void CopyDir(string src, string dest)
+    private static void CopyDir(string src, string dest)
     {
         Directory.CreateDirectory(dest);
         foreach (var f in Directory.EnumerateFiles(src))

@@ -13,7 +13,7 @@ public class ConversationTests
     public void Injected_blocks_are_split_from_the_text_around_them()
     {
         var parts = ContextBlocks.Split("Hello\n<INSTRUCTIONS>\nbe nice\n</INSTRUCTIONS>\nthen\n<!-- pstack:models:begin -->\nm1\n<!-- pstack:models:end -->");
-        Assert.Equal(new string?[] { null, "INSTRUCTIONS", null, "pstack:models" }, parts.Select(p => p.Label));
+        Assert.Equal([null, "INSTRUCTIONS", null, "pstack:models"], parts.Select(p => p.Label));
         Assert.Equal("be nice", parts[1].Text);
         Assert.Equal("m1", parts[3].Text);
     }
@@ -30,7 +30,7 @@ public class ConversationTests
     public void Markdown_blocks_and_spans_are_read()
     {
         var b = MarkdownLite.Blocks("# Title\n\ntext line\nmore\n\n- one\n  - nested\n1. first\n\n> quote\n\n---\n\n| a | b |\n|---|---|\n| 1 | 2 |");
-        Assert.Equal(new[] { MdKind.Heading, MdKind.Paragraph, MdKind.Bullet, MdKind.Bullet, MdKind.Number, MdKind.Quote, MdKind.Rule, MdKind.Table }, b.Select(v => v.Kind));
+        Assert.Equal([MdKind.Heading, MdKind.Paragraph, MdKind.Bullet, MdKind.Bullet, MdKind.Number, MdKind.Quote, MdKind.Rule, MdKind.Table], b.Select(v => v.Kind));
         Assert.Equal(1, b[3].Level);
         Assert.Equal("1", b[4].Num);
         Assert.Equal(2, b[7].Rows!.Count);
@@ -42,7 +42,7 @@ public class ConversationTests
         Assert.Contains(s, v => v.Url == "http://u" && v.Text == "x (http://u)");
     }
 
-    static DateTime T(int s) => new DateTime(2026, 11, 11, 10, 0, 0, DateTimeKind.Local).AddSeconds(s);
+    private static DateTime T(int s) => new DateTime(2026, 11, 11, 10, 0, 0, DateTimeKind.Local).AddSeconds(s);
 
     [Fact]
     public void Agent_timeline_gives_each_agent_a_lane_with_fork_and_merge()
@@ -74,7 +74,7 @@ public class ConversationTests
         };
         var p = LogParsers.Find("codex-session")!;
         var l = p.Limits(lines).ToList();
-        Assert.Equal(new[] { "5-hour", "Weekly" }, l.Select(v => v.Name));
+        Assert.Equal(["5-hour", "Weekly"], l.Select(v => v.Name));
         Assert.Equal(12.5, l[0].UsedPercent);
         var u = p.Usage(lines).Single();
         Assert.Equal((50L, 40L, 10L), (u.Input, u.CacheRead, u.CacheWrite));

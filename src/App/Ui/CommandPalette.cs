@@ -15,15 +15,15 @@ namespace AiStackprint.Ui;
 /// Ctrl+K: type to find a page, app, project, skill or plugin, or an action (Rescan, Add project…). ↑↓ choose, Enter opens, Esc closes.
 /// Drawn over the window; clicking outside closes it.
 /// </summary>
-class CommandPalette(Ctx x, Panel layer, Action<string> go)
+internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
 {
-    record Entry(string Icon, string Title, string Sub, Action Run);
+    private record Entry(string Icon, string Title, string Sub, Action Run);
 
-    readonly TextBox _box = SearchBox("Go to an app, skill, plugin, project or action", 44);
-    readonly StackPanel _list = new() { Spacing = 2 };
-    List<Entry> _all = new(), _shown = new();
-    int _pick;
-    bool _wired;
+    private readonly TextBox _box = SearchBox("Go to an app, skill, plugin, project or action", 44);
+    private readonly StackPanel _list = new() { Spacing = 2 };
+    private List<Entry> _all = [], _shown = [];
+    private int _pick;
+    private bool _wired;
     public bool IsOpen => layer.Children.Count > 0;
 
     public void Open()
@@ -59,7 +59,7 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
 
     public void Close() => layer.Children.Clear();
 
-    List<Entry> Entries()
+    private List<Entry> Entries()
     {
         var e = new List<Entry>
         {
@@ -91,17 +91,17 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
         return e;
     }
 
-    void Filter()
+    private void Filter()
     {
         var q = (_box.Text ?? "").Trim();
-        _shown = (q == "" ? _all.Take(12) : _all.Where(e => e.Title.Contains(q, StringComparison.OrdinalIgnoreCase) || e.Sub.Contains(q, StringComparison.OrdinalIgnoreCase))
+        _shown = [.. (q == "" ? _all.Take(12) : _all.Where(e => e.Title.Contains(q, StringComparison.OrdinalIgnoreCase) || e.Sub.Contains(q, StringComparison.OrdinalIgnoreCase))
             .OrderBy(e => e.Title.StartsWith(q, StringComparison.OrdinalIgnoreCase) ? 0 : e.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ? 1 : 2)
-            .ThenBy(e => e.Sub == "Page" || e.Sub == "Action" ? 0 : 1).Take(40)).ToList();
+            .ThenBy(e => e.Sub == "Page" || e.Sub == "Action" ? 0 : 1).Take(40))];
         _pick = Math.Clamp(_pick, 0, Math.Max(0, _shown.Count - 1));
         _list.Children.Clear();
-        for (int i = 0; i < _shown.Count; i++)
+        for (var i = 0; i < _shown.Count; i++)
         {
-            var en = _shown[i]; int at = i;
+            var en = _shown[i]; var at = i;
             var row = new Border
             {
                 CornerRadius = new CornerRadius(6),
@@ -124,7 +124,7 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
         }
     }
 
-    void Keys(object? s, KeyEventArgs e)
+    private void Keys(object? s, KeyEventArgs e)
     {
         if (e.Key == Key.Down) { _pick = Math.Min(_pick + 1, _shown.Count - 1); Filter(); e.Handled = true; }
         else if (e.Key == Key.Up) { _pick = Math.Max(_pick - 1, 0); Filter(); e.Handled = true; }
@@ -132,7 +132,7 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
         else if (e.Key == Key.Escape) { Close(); e.Handled = true; }
     }
 
-    void Run()
+    private void Run()
     {
         if (_pick < 0 || _pick >= _shown.Count)
         {

@@ -31,7 +31,7 @@ public static partial class MarkdownLite
         var res = new List<MdBlock>(); var para = new List<string>();
         void Flush() { if (para.Count > 0) { res.Add(new(MdKind.Paragraph, string.Join("\n", para))); para.Clear(); } }
         var lines = md.Replace("\r\n", "\n").Split('\n');
-        for (int i = 0; i < lines.Length; i++)
+        for (var i = 0; i < lines.Length; i++)
         {
             var l = lines[i]; var t = l.Trim();
             if (t == "") { Flush(); continue; }
@@ -73,11 +73,11 @@ public static partial class MarkdownLite
         return res;
     }
 
-    static List<string> Cells(string row) => row.Trim('|').Split('|').Select(c => c.Trim()).ToList();
+    private static List<string> Cells(string row) => [.. row.Trim('|').Split('|').Select(c => c.Trim())];
 
     public static List<MdSpan> Spans(string text)
     {
-        var res = new List<MdSpan>(); int at = 0;
+        var res = new List<MdSpan>(); var at = 0;
         foreach (Match m in InlineToken().Matches(text))
         {
             if (m.Index > at)

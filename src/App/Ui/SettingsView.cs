@@ -11,7 +11,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Preferences: appearance, and which apps are shown. Hidden apps are not scanned and do not appear anywhere else.</summary>
-class SettingsView(Ctx x)
+internal class SettingsView(Ctx x)
 {
     public Control Build()
     {
@@ -21,7 +21,7 @@ class SettingsView(Ctx x)
 
         var rows = x.S.Defs.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).Select(d =>
         {
-            bool hidden = st.HiddenApps.Contains(d.Id);
+            var hidden = st.HiddenApps.Contains(d.Id);
             var info = x.Info(d.Id);
             var shown = new ToggleSwitch { IsChecked = !hidden, OnContent = "Shown", OffContent = "Hidden" };
             shown.IsCheckedChanged += (_, _) => Save(() =>
@@ -34,9 +34,9 @@ class SettingsView(Ctx x)
             });
             Control status = hidden ? Txt("Not scanned", 13, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", 13, false, Muted);
             var origin = d.Origin switch { AppOrigin.Custom => "Custom", AppOrigin.Override => "Customised", _ => "Built-in" };
-            return new TableRow(new Control[] { AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), 13, false, Muted), Txt(origin, 13, false, Muted), status, shown });
+            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), 13, false, Muted), Txt(origin, 13, false, Muted), status, shown]);
         });
-        var table = Table.Build(new[] { new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*") }, rows);
+        var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);
 
         return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x),
             Section("eye_off", "App visibility", new StackPanel
@@ -48,7 +48,7 @@ class SettingsView(Ctx x)
             }));
     }
 
-    void Save(Action change)
+    private void Save(Action change)
     {
         change();
         SettingsStore.Save(x.S.Settings);

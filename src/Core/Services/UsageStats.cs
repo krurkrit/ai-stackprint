@@ -31,13 +31,13 @@ public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bo
 /// <summary>Usage per app from session logs. Buckets per file are cached by path + size + time, so re-opening is instant and the cache stays small.</summary>
 public static class UsageStats
 {
-    static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> _cache = new();
+    private static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> _cache = new();
 
     /// <param name="since">Only usage from this day on; DateTime.MinValue = all.</param>
     public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct = default)
     {
         var first = DateOnly.FromDateTime(since);
-        var all = new List<UsageBucket>(); int sessions = 0, withParser = 0; bool capped = false;
+        var all = new List<UsageBucket>(); int sessions = 0, withParser = 0; var capped = false;
         foreach (var f in files)
         {
             ct.ThrowIfCancellationRequested();
@@ -73,7 +73,7 @@ public static class UsageStats
         return new(all, sessions, withParser, capped);
     }
 
-    static readonly ConcurrentDictionary<(string, long, long), List<UsageEvent>> _events = new();
+    private static readonly ConcurrentDictionary<(string, long, long), List<UsageEvent>> _events = new();
 
     /// <summary>Use in the last 5 hours and 7 days (exact, from event times), the current 5-hour block, and the latest limit readings.</summary>
     public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct = default)
@@ -91,7 +91,7 @@ public static class UsageStats
             try
             {
                 var parser = LogParsers.Find(f.Format)!;
-                var list = _events.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => parser.UsageFile(f.Path).Where(e => e.Time >= now.AddDays(-8)).ToList());
+                var list = _events.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => [.. parser.UsageFile(f.Path).Where(e => e.Time >= now.AddDays(-8))]);
                 events.AddRange(list.Where(e => e.Time >= now.AddDays(-7)));
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
@@ -124,13 +124,13 @@ public static class UsageStats
             blockStart = null;
         }
 
-        return new(limits.GroupBy(l => l.Name).Select(g => g.MaxBy(l => l.Time)!).OrderBy(l => l.WindowMinutes).ToList(),
+        return new([.. limits.GroupBy(l => l.Name).Select(g => g.MaxBy(l => l.Time)!).OrderBy(l => l.WindowMinutes)],
             Sum(events.Where(e => e.Time >= now.AddHours(-5))), Sum(events), blockStart, block);
     }
 
     public static WindowUse Sum(IEnumerable<UsageEvent> events)
     {
-        long tokens = 0, reads = 0; int n = 0; decimal cost = 0; bool priced = false;
+        long tokens = 0, reads = 0; var n = 0; decimal cost = 0; var priced = false;
         foreach (var e in events)
         {
             tokens += e.Input + e.Output + e.CacheWrite; reads += e.CacheRead; n++;
@@ -140,8 +140,7 @@ public static class UsageStats
     }
 
     public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events) =>
-        events.GroupBy(e => (Day: DateOnly.FromDateTime(e.Time), e.Model, e.Project))
+        [.. events.GroupBy(e => (Day: DateOnly.FromDateTime(e.Time), e.Model, e.Project))
             .Select(g => new UsageBucket(g.Key.Day, g.Key.Model, g.Key.Project, g.Sum(e => e.Input), g.Sum(e => e.Output), g.Sum(e => e.CacheRead), g.Sum(e => e.CacheWrite),
-                g.Sum(e => e.Reasoning), g.Count(), g.Count(e => e.SubAgent), g.All(e => e.Cost != null) ? g.Sum(e => e.Cost!.Value) : null))   // app cost only when it covers the whole bucket, else prices.json
-            .ToList();
+                g.Sum(e => e.Reasoning), g.Count(), g.Count(e => e.SubAgent), g.All(e => e.Cost != null) ? g.Sum(e => e.Cost!.Value) : null))];
 }

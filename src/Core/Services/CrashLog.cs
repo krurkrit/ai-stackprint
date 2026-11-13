@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class CrashLog
 {
-    const long MaxBytes = 256 * 1024;
+    private const long MaxBytes = 256 * 1024;
     public static string File => Path.Combine(AppCatalog.Folder, "crash.log");
 
     public static void Install()

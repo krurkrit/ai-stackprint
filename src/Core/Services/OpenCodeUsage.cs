@@ -12,13 +12,13 @@ namespace AiStackprint.Services;
 /// <c>message</c>, and one per session in <c>session_v2</c>, where newer versions keep no per-message tokens.
 /// OpenCode's output excludes reasoning, so reasoning is added to it. Its cost is used only above 0: it writes 0 when it has no price.
 /// </summary>
-class OpenCodeUsage : ILogParser
+internal class OpenCodeUsage : ILogParser
 {
     public string Format => "opencode-db";
     public bool WholeFile => true;
 
     /// <summary>Listed as a usage source only, never on the Logs page.</summary>
-    public Session Parse(IEnumerable<string> lines) => LogParsers.Build(new(), new(), 0, 0);
+    public Session Parse(IEnumerable<string> lines) => LogParsers.Build([], [], 0, 0);
 
     public IEnumerable<UsageEvent> UsageFile(string path)
     {
@@ -80,7 +80,7 @@ class OpenCodeUsage : ILogParser
                             continue;   // also in the old table: already counted per message
                         }
 
-                        string model = "";
+                        var model = "";
                         if (!r.IsDBNull(3))
                         {
                             try { using var d = JsonDocument.Parse(r.GetString(3)); model = d.RootElement.Str("id"); }
@@ -96,16 +96,16 @@ class OpenCodeUsage : ILogParser
         return list;
     }
 
-    static SqliteDataReader Query(SqliteConnection db, string sql)
+    private static SqliteDataReader Query(SqliteConnection db, string sql)
     {
         var cmd = db.CreateCommand();   // not disposed here: that would finalize the statement under the open reader
         cmd.CommandText = sql;
         return cmd.ExecuteReader();
     }
 
-    static long L(SqliteDataReader r, int i) => r.IsDBNull(i) ? 0 : r.GetInt64(i);
+    private static long L(SqliteDataReader r, int i) => r.IsDBNull(i) ? 0 : r.GetInt64(i);
 
-    static void Add(List<UsageEvent> list, long ms, string model, string cwd, long input, long output, long reasoning, long read, long write, double cost, bool sub)
+    private static void Add(List<UsageEvent> list, long ms, string model, string cwd, long input, long output, long reasoning, long read, long write, double cost, bool sub)
     {
         if (input + output + reasoning + read + write <= 0)
         {

@@ -9,16 +9,16 @@ using Avalonia.Platform.Storage;
 
 namespace AiStackprint.Ui;
 
-partial class MainWindow
+internal partial class MainWindow
 {
     /// <summary>Re-applies Appearance settings and rebuilds the UI so sizes and weights take effect.</summary>
-    void Restyle()
+    private void Restyle()
     {
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         Refresh();
     }
 
-    void Refresh()
+    private void Refresh()
     {
         if (!_scanned)
         {
@@ -28,8 +28,8 @@ partial class MainWindow
         RefreshNav();
         UpdateHistoryButtons();
         _x.Escape = null;
-        bool inLogs = _view == "Logs" || _view.StartsWith("Logs:");
-        bool leftLogs = _wasLogs && !inLogs;
+        var inLogs = _view == "Logs" || _view.StartsWith("Logs:");
+        var leftLogs = _wasLogs && !inLogs;
         _wasLogs = inLogs;
         if (leftLogs)
         {
@@ -53,7 +53,7 @@ partial class MainWindow
         MemoryTrim.Request();   // the page that was just replaced
     }
 
-    async void AddProject()
+    private async void AddProject()
     {
         var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Project folder" });
         if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p || _s.Projects.Contains(p))
@@ -66,14 +66,14 @@ partial class MainWindow
         Scan();
     }
 
-    void RemoveProject(string p)
+    private void RemoveProject(string p)
     {
         _s.Projects.Remove(p);
         _view = "Dashboard";
         Scan();
     }
 
-    async void AddApp()
+    private async void AddApp()
     {
         var def = await new AddAppDialog().ShowDialog<AppDefinition?>(this);
         if (def == null)
@@ -87,7 +87,7 @@ partial class MainWindow
         Scan();
     }
 
-    async void Scan()
+    private async void Scan()
     {
         if (_scanning)
         {
@@ -100,7 +100,7 @@ partial class MainWindow
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
         (_s.Changes, _s.Health) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File), Health.Compute(items)));
-        bool first = !_scanned;
+        var first = !_scanned;
         _scanning = false; _scanned = true;
         Refresh();
         RequestLimits();

@@ -34,7 +34,7 @@ public interface ILogParser
 
 public static class LogParsers
 {
-    static readonly ILogParser[] _all = { new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage() };
+    private static readonly ILogParser[] _all = [new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage()];
     public static ILogParser? Find(string? format) => format == null ? null : _all.FirstOrDefault(p => p.Format == format);
 
     /// <summary>Each line as JSON; lines that are not JSON (or cut off) are skipped.</summary>
@@ -90,12 +90,12 @@ public static class LogParsers
     internal static string ProjectName(string cwd)
     {
         var t = cwd.TrimEnd('/', '\\');
-        return t == "" ? "(unknown)" : t[(t.LastIndexOfAny(new[] { '/', '\\' }) + 1)..];
+        return t == "" ? "(unknown)" : t[(t.LastIndexOfAny(['/', '\\']) + 1)..];
     }
 
     internal static string Cut(string s, int max) => s.Length <= max ? s : s[..max] + "…";
 
-    static readonly string[] _shells = { "bash", "shell", "local_shell", "exec_command", "run_command", "powershell" };
+    private static readonly string[] _shells = ["bash", "shell", "local_shell", "exec_command", "run_command", "powershell"];
 
     /// <summary>A tool call step with its full input and a highlighting hint (shell for commands, JSON otherwise).</summary>
     internal static LogEntry ToolCall(string name, JsonElement input, DateTime? time, bool sub)
@@ -105,15 +105,15 @@ public static class LogParsers
             try { using var d = JsonDocument.Parse(input.GetString()!); input = d.RootElement.Clone(); }
             catch (JsonException) { return new("tool", Cut(input.GetString()!, 300), time, sub, name, ".txt", input.GetString()); }
         }
-        bool shell = _shells.Contains(name.ToLowerInvariant());
+        var shell = _shells.Contains(name.ToLowerInvariant());
         var cmd = input.Get("command");
-        string detail = shell && cmd.ValueKind != JsonValueKind.Undefined
+        var detail = shell && cmd.ValueKind != JsonValueKind.Undefined
             ? (cmd.ValueKind == JsonValueKind.Array ? string.Join(" ", cmd.EnumerateArray().Select(x => x.ToString())) : cmd.ToString())
             : input.ValueKind == JsonValueKind.Undefined ? "" : JsonSerializer.Serialize(input, _pretty);
         return new("tool", Summary(input), time, sub, name, shell ? ".sh" : ".json", detail);
     }
 
-    static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     /// <summary>Highlighting hint for tool output: the file type a Read returned, else JSON or diff when the text looks like it.</summary>
     internal static string? Detect(string text, string? fileHint)

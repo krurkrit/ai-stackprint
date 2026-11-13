@@ -12,12 +12,12 @@ namespace AiStackprint.Ui;
 /// Vector icons on a 24x24 grid, loaded from embedded JSON.
 /// icons.json: Fluent UI System Icons (MIT). logos.json: LobeHub Icons (MIT) and Simple Icons (CC0); brand logos are trademarks of their owners.
 /// </summary>
-static class Icons
+internal static class Icons
 {
     public record Part(string D, double? O);
     public record Shape(Geometry Data, double Opacity);
 
-    static readonly Dictionary<string, Shape[]> _ui = Load("icons.json"), _logos = Load("logos.json");
+    private static readonly Dictionary<string, Shape[]> _ui = Load("icons.json"), _logos = Load("logos.json");
 
     /// <summary>UI icon by name (file name without _24_regular). Throws on unknown names: a typo is a bug.</summary>
     public static Shape[] Get(string name) => _ui[name];
@@ -35,7 +35,7 @@ static class Icons
         _ => "wrench"
     };
 
-    static Dictionary<string, Shape[]> Load(string resource)
+    private static Dictionary<string, Shape[]> Load(string resource)
     {
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource)!;
         var raw = JsonSerializer.Deserialize<Dictionary<string, Part[]>>(s, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;

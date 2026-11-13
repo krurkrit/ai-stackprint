@@ -14,14 +14,14 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Settings › Appearance: font family, base size, weights, log font and colors (the theme is switched in the side menu). Changes apply at once and are saved.</summary>
-static class AppearanceSection
+internal static class AppearanceSection
 {
     /// <summary>One list for Body and Emphasis weight.</summary>
-    static readonly (string Label, int Value)[] _weights =
-        { ("Light (300)", 300), ("Regular (400)", 400), ("Medium (500)", 500), ("SemiBold (600)", 600), ("Bold (700)", 700) };
+    private static readonly (string Label, int Value)[] _weights =
+        [("Light (300)", 300), ("Regular (400)", 400), ("Medium (500)", 500), ("SemiBold (600)", 600), ("Bold (700)", 700)];
 
     /// <summary>Typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
-    static NumericUpDown SizeBox(double value, int min, int max, Action<double> set)
+    private static NumericUpDown SizeBox(double value, int min, int max, Action<double> set)
     {
         var box = new NumericUpDown { Minimum = min, Maximum = max, Increment = 1, FormatString = "0", MinWidth = 120, Value = (decimal)Math.Clamp(Math.Round(value), min, max) };
         box.ValueChanged += (_, e) =>
@@ -53,7 +53,7 @@ static class AppearanceSection
         void Add(string label, Control c, string? hint = null)
         {
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            int r = grid.RowDefinitions.Count - 1;
+            var r = grid.RowDefinitions.Count - 1;
             var l = Txt(label, 14, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
             Control v = hint == null ? c : Row(c, Txt(hint, 12, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
             Grid.SetRow(l, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
@@ -71,7 +71,7 @@ static class AppearanceSection
         var headWeights = labels.Prepend("Automatic").ToList();
         Add("Weight", Combo(headWeights, st.HeadingWeight == 0 ? "Automatic" : WLabel(st.HeadingWeight, 600), l => Change(() => st.HeadingWeight = l == "Automatic" ? 0 : WValue(l))), "Sizes scale with Body");
         Group("Code & logs");
-        Add("Font family", FontCombo(monos.Concat(monoKnown).Distinct(StringComparer.OrdinalIgnoreCase).ToList(), "JetBrains Mono", st.LogFontFamily, f => Change(() => st.LogFontFamily = f), installedOnly: installed), "Logs and the config editor");
+        Add("Font family", FontCombo([.. monos.Concat(monoKnown).Distinct(StringComparer.OrdinalIgnoreCase)], "JetBrains Mono", st.LogFontFamily, f => Change(() => st.LogFontFamily = f), installedOnly: installed), "Logs and the config editor");
         Add("Font size", SizeBox(st.LogFontSize, 10, 18, n => Change(() => st.LogFontSize = n)), "10 to 18 px");
         Add("Weight", Combo(labels, WLabel(st.LogFontWeight, 400), l => Change(() => st.LogFontWeight = WValue(l))));
         var lines = new ToggleSwitch { IsChecked = st.LogLineNumbers, OnContent = "Shown", OffContent = "Hidden" };
@@ -112,10 +112,10 @@ static class AppearanceSection
         return Section("text_font", "Appearance", new StackPanel { Spacing = 16, Children = { grid, preview, colors } }, reset);
     }
 
-    const string NotInstalled = " (not installed)";
+    private const string NotInstalled = " (not installed)";
 
     /// <summary>Font list; the chosen font and any listed font that is not installed are marked "(not installed)".</summary>
-    static ComboBox FontCombo(List<string> fonts, string fallback, string current, Action<string> pick, string? first = null, List<string>? installedOnly = null)
+    private static ComboBox FontCombo(List<string> fonts, string fallback, string current, Action<string> pick, string? first = null, List<string>? installedOnly = null)
     {
         var have = installedOnly ?? fonts;
         bool Has(string f) => f == first || have.Contains(f, StringComparer.OrdinalIgnoreCase);

@@ -16,14 +16,14 @@ namespace AiStackprint.Ui;
 /// Project page: for each app with a context rule, the instruction files it loads in this project, in order, when (at launch, on demand,
 /// for matching files), their size and the running total against the app's limit, with warnings. Click a file to read it here; @imports are listed under it.
 /// </summary>
-class ContextSection(Ctx x)
+internal class ContextSection(Ctx x)
 {
-    string? _project, _start, _preview;
-    object? _scan;   // the scan the cached reports belong to: a rescan reads the files again
-    readonly ContentControl _host = new();
-    List<(AppDefinitionRef App, ContextReport Report)>? _last;
+    private string? _project, _start, _preview;
+    private object? _scan;   // the scan the cached reports belong to: a rescan reads the files again
+    private readonly ContentControl _host = new();
+    private List<(AppDefinitionRef App, ContextReport Report)>? _last;
 
-    record AppDefinitionRef(string Id, string Name, string? Logo, string Category);
+    private record AppDefinitionRef(string Id, string Name, string? Logo, string Category);
 
     public Control Build(string project)
     {
@@ -50,10 +50,10 @@ class ContextSection(Ctx x)
         var pick = Btn(ContextBudget.Same(start, project) ? "Start in…" : "Start in: " + Path.GetRelativePath(project, start), () => PickStart(project), false, "folder_open");
         ToolTip.SetTip(pick, "Which files load depends on the folder a session starts in. Pick a folder inside the project.");
         var reset = ContextBudget.Same(start, project) ? null : IconBtn("dismiss", "Start in the project folder", () => { _start = project; _last = null; x.Refresh(); });
-        return Section("brain_circuit", "Loaded into context", _host.Free(), reset == null ? new Control[] { pick } : new Control[] { pick, reset });
+        return Section("brain_circuit", "Loaded into context", _host.Free(), reset == null ? [pick] : [pick, reset]);
     }
 
-    async void PickStart(string project)
+    private async void PickStart(string project)
     {
         var start = await x.Owner.StorageProvider.TryGetFolderFromPathAsync(project);
         var r = await x.Owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Session starts in", SuggestedStartLocation = start });
@@ -67,7 +67,7 @@ class ContextSection(Ctx x)
         x.Refresh();
     }
 
-    Control Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
+    private Control Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
     {
         var sp = new StackPanel { Spacing = 22 };
         foreach (var (app, r) in reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true))
@@ -83,11 +83,11 @@ class ContextSection(Ctx x)
         return sp;
     }
 
-    Control App(AppDefinitionRef app, ContextReport r)
+    private Control App(AppDefinitionRef app, ContextReport r)
     {
         var sp = new StackPanel { Spacing = 10 };
-        int launch = r.Files.Count(f => f.Load is LoadWhen.Always or LoadWhen.Imported);
-        long total = r.AlwaysTotal;
+        var launch = r.Files.Count(f => f.Load is LoadWhen.Always or LoadWhen.Imported);
+        var total = r.AlwaysTotal;
         sp.Children.Add(Row(AppName(app.Logo, app.Category, app.Name, 24),
             Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens", 13, false, Muted)));
         if (r.Limit is { } limit && r.Files.Count > 0)
@@ -108,26 +108,26 @@ class ContextSection(Ctx x)
         long running = 0;
         var rows = r.Files.Select(f =>
         {
-            bool counted = f.Counted && f.Load is LoadWhen.Always or LoadWhen.Imported;
+            var counted = f.Counted && f.Load is LoadWhen.Always or LoadWhen.Imported;
             if (counted)
             {
                 running += r.Measure(f);
             }
 
-            var name = Txt(Show(f.Path), 13, true).With(t => { t.FontFamily = Ui.Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
+            var name = Txt(Show(f.Path), 13, true).With(t => { t.FontFamily = Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
             if (f.Via != null)
             {
                 ToolTip.SetTip(name, "Imported by " + f.Via);
             }
 
-            return new TableRow(new Control[]
-            {
+            return new TableRow(
+            [
                 name, Txt(Label(f.Load), 13), Txt($"{(r.Unit == "bytes" ? f.Bytes : f.Chars):N0}", 13), Txt($"{f.Tokens:N0}", 13, false, Muted),
                 Txt(counted ? $"{running:N0}" : "", 13, false, r.Limit is { } l && running > l && counted ? ErrorKey : Muted), Txt(f.Note ?? "", 12, false, Muted)
-            }, () => { _preview = _preview == f.Path ? null : f.Path; if (_last != null) { _host.Content = Show(_last); } }, _preview == f.Path);
+            ], () => { _preview = _preview == f.Path ? null : f.Path; if (_last != null) { _host.Content = Show(_last); } }, _preview == f.Path);
         }).ToList();
-        sp.Children.Add(Table.Build(new[] { new Col("File", "2.4*"), new Col("Loads", "1.1*"), new Col(r.Unit == "bytes" ? "Bytes" : "Characters", ".8*", true),
-            new Col("≈Tokens", ".7*", true), new Col("Running total", ".9*", true), new Col("Note", "1.8*") }, rows));
+        sp.Children.Add(Table.Build([ new Col("File", "2.4*"), new Col("Loads", "1.1*"), new Col(r.Unit == "bytes" ? "Bytes" : "Characters", ".8*", true),
+            new Col("≈Tokens", ".7*", true), new Col("Running total", ".9*", true), new Col("Note", "1.8*") ], rows));
         if (_preview != null && r.Files.Any(f => f.Path == _preview))
         {
             sp.Children.Add(Preview(_preview));
@@ -136,7 +136,7 @@ class ContextSection(Ctx x)
         return sp;
     }
 
-    static string Label(LoadWhen w) => w switch
+    private static string Label(LoadWhen w) => w switch
     {
         LoadWhen.Always => "At launch",
         LoadWhen.Imported => "At launch (import)",
@@ -148,21 +148,21 @@ class ContextSection(Ctx x)
     };
 
     /// <summary>Use of the limit: accent up to 75 %, warning to 100 %, error over it.</summary>
-    static Control Bar(long used, long limit, ContextReport r)
+    private static Control Bar(long used, long limit, ContextReport r)
     {
-        double pct = limit == 0 ? 0 : 100.0 * used / limit;
+        var pct = limit == 0 ? 0 : 100.0 * used / limit;
         var g = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(Math.Min(pct, 100), 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
         g.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct > 100 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
         g.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
         return new StackPanel { Spacing = 4, Children = { g, Txt($"{pct:0}% of {limit:N0} {r.Unit}. {r.LimitNote}", 12, false, Muted) } };
     }
 
-    string Show(string path) =>
+    private string Show(string path) =>
         _project != null && ContextBudget.Inside(path, _project) ? Path.GetRelativePath(_project, path)
         : ContextBudget.Inside(path, PathUtil.Home) ? "~" + Path.DirectorySeparatorChar + Path.GetRelativePath(PathUtil.Home, path) : path;
 
     /// <summary>The clicked file, rendered; its links open in the same preview.</summary>
-    Control Preview(string path)
+    private Control Preview(string path)
     {
         var view = FileView.Show(path, false, link =>
         {
@@ -179,7 +179,7 @@ class ContextSection(Ctx x)
                 }
             }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { }
-        }, out bool scrolls);
+        }, out var scrolls);
         Control body = scrolls ? new ScrollViewer { Content = view, MaxHeight = 420 } : view.With(v => v.Height = 380);
         return new Border
         {
@@ -190,7 +190,7 @@ class ContextSection(Ctx x)
                 Spacing = 8,
                 Children =
         {
-            Row(Txt(Show(path), 13, true).With(t => t.FontFamily = Ui.Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
+            Row(Txt(Show(path), 13, true).With(t => t.FontFamily = Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
             body
         }
             }

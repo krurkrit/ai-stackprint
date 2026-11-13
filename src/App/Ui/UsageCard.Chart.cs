@@ -11,10 +11,10 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-partial class UsageCard
+internal partial class UsageCard
 {
     /// <summary>Per-day bars, stacked by token type (or one bar of cost). At most the last 90 days; gaps are empty days.</summary>
-    Control Chart(List<UsageBucket> b, bool cost, bool priced, bool reads, bool writes, out Control legend)
+    private Control Chart(List<UsageBucket> b, bool cost, bool priced, bool reads, bool writes, out Control legend)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         var first = prefs.Days == 0 ? b.Min(v => v.Day) : DateOnly.FromDateTime(_since);
@@ -24,11 +24,11 @@ partial class UsageCard
         }
 
         var byDay = b.Where(v => v.Day >= first).GroupBy(v => v.Day).ToDictionary(g => g.Key, g => g.ToList());
-        var keep = cost ? new[] { true } : new[] { true, true, writes, reads };
-        var keys = (cost ? new[] { Accent } : new[] { ChartIn, ChartOut, ChartWrite, ChartRead }).Where((_, k) => keep[k]).ToArray();
-        var names = (cost ? new[] { "Estimated cost" } : new[] { "Input", "Output", "Cache write", "Cache read" }).Where((_, k) => keep[k]).ToArray();
+        var keep = cost ? new[] { true } : [true, true, writes, reads];
+        var keys = (cost ? new[] { Accent } : [ChartIn, ChartOut, ChartWrite, ChartRead]).Where((_, k) => keep[k]).ToArray();
+        var names = (cost ? new[] { "Estimated cost" } : ["Input", "Output", "Cache write", "Cache read"]).Where((_, k) => keep[k]).ToArray();
         legend = new WrapPanel { Children = { } };
-        for (int k = 0; k < names.Length; k++)
+        for (var k = 0; k < names.Length; k++)
         {
             ((WrapPanel)legend).Children.Add(DotText(names[k], keys[k]).With(s => s.Margin = new Thickness(0, 0, 14, 0)));
         }
@@ -36,13 +36,13 @@ partial class UsageCard
         var bars = new List<(DateOnly Day, double[] Parts, string Tip)>();
         for (var d = first; d <= today; d = d.AddDays(1))
         {
-            var list = byDay.GetValueOrDefault(d) ?? new();
+            var list = byDay.GetValueOrDefault(d) ?? [];
             long i = list.Sum(v => v.Input), o = list.Sum(v => v.Output), w = list.Sum(v => v.CacheWrite), c = list.Sum(v => v.CacheRead);
-            decimal money = list.Sum(v => Pricing.Cost(v) ?? 0m);
-            var parts = (cost ? new[] { (double)money } : new double[] { i, o, w, c }).Where((_, k) => keep[k]).ToArray();
+            var money = list.Sum(v => Pricing.Cost(v) ?? 0m);
+            var parts = (cost ? new[] { (double)money } : [i, o, w, c]).Where((_, k) => keep[k]).ToArray();
             bars.Add((d, parts, $"{d:yyyy-MM-dd}\nInput {Fmt(i)} · Output {Fmt(o)}\n" + (writes ? $"Cache write {Fmt(w)} · " : "") + $"Cache read {Fmt(c)}" + (priced ? $"\nEst. cost {Money(money)}" : "")));
         }
-        double max = bars.Max(v => v.Parts.Sum());
+        var max = bars.Max(v => v.Parts.Sum());
         if (max <= 0)
         {
             return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", 13, false, Muted);
@@ -50,13 +50,13 @@ partial class UsageCard
 
         const double barHeight = 140;
         var grid = new Grid { ColumnSpacing = 3, Height = barHeight + 22, Margin = new Thickness(0, 6, 0, 0) };
-        int step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
-        for (int i = 0; i < bars.Count; i++)
+        var step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
+        for (var i = 0; i < bars.Count; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = 28 };
-            for (int j = bars[i].Parts.Length - 1; j >= 0; j--)
+            for (var j = bars[i].Parts.Length - 1; j >= 0; j--)
             {
                 if (bars[i].Parts[j] > 0)
                 {
@@ -75,7 +75,7 @@ partial class UsageCard
     }
 
     /// <summary>Limits the app reports (Codex) and use in the last 5 hours / 7 days / current 5-hour block (all apps with usage logs).</summary>
-    Control Limits()
+    private Control Limits()
     {
         var live = _live;
         if (live == null)
@@ -85,13 +85,13 @@ partial class UsageCard
 
         var sp = new StackPanel { Spacing = 8 };
         // Apps with live limits show them in the Plan & limits card above
-        var limits = LimitsView.Has(def) ? new List<LimitSample>() : live.Limits;
+        var limits = LimitsView.Has(def) ? [] : live.Limits;
         sp.Children.Add(Title(limits.Count > 0 ? "Limits" : "Recent use", 14));
         foreach (var l in limits)
         {
-            bool stale = l.ResetsAt < DateTime.Now;   // window already reset: the reading is old
-            double pct = stale ? 0 : Math.Clamp(l.UsedPercent, 0, 100);
-            var bar = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions() };
+            var stale = l.ResetsAt < DateTime.Now;   // window already reset: the reading is old
+            var pct = stale ? 0 : Math.Clamp(l.UsedPercent, 0, 100);
+            var bar = new Grid { Height = 8, ColumnDefinitions = [] };
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(pct, 0.001), GridUnitType.Star));
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(100 - pct, 0.001), GridUnitType.Star));
             var fill = new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent);
@@ -128,11 +128,11 @@ partial class UsageCard
         return sp;
     }
 
-    static string Reset(DateTime t) => t.Date == DateTime.Today ? t.ToString("HH:mm") : t.ToString("ddd HH:mm");
+    private static string Reset(DateTime t) => t.Date == DateTime.Today ? t.ToString("HH:mm") : t.ToString("ddd HH:mm");
 
-    static decimal? CostOf(IEnumerable<UsageBucket> g)
+    private static decimal? CostOf(IEnumerable<UsageBucket> g)
     {
-        decimal sum = 0; bool any = false;
+        decimal sum = 0; var any = false;
         foreach (var v in g)
         {
             if (Pricing.Cost(v) is { } c) { sum += c; any = true; }
@@ -141,7 +141,7 @@ partial class UsageCard
         return any ? sum : null;
     }
 
-    static Border Stat(string label, string value) =>
+    private static Border Stat(string label, string value) =>
         new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(14, 10), MinWidth = 110, Child = new StackPanel { Spacing = 2, Children = { Title(value, 18), Txt(label, 12, false, Muted) } } }
             .Themed(Border.BackgroundProperty, Subtle);
 

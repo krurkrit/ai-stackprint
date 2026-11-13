@@ -50,7 +50,7 @@ public static class LogSearch
     }
 
     /// <summary>Up to 160 characters around the match.</summary>
-    static string Snippet(string line, int at, int len)
+    private static string Snippet(string line, int at, int len)
     {
         if (line.Length <= 160)
         {
@@ -93,13 +93,13 @@ public static class LogSearch
         var buf = new byte[64 * 1024]; long count = 0, left = offset;
         while (left > 0)
         {
-            int n = fs.Read(buf, 0, (int)Math.Min(buf.Length, left));
+            var n = fs.Read(buf, 0, (int)Math.Min(buf.Length, left));
             if (n <= 0)
             {
                 break;
             }
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 if (buf[i] == (byte)'\n')
                 {

@@ -13,7 +13,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Short confirmations ("Path copied") at the bottom right; they fade out on their own. MainWindow sets the host.</summary>
-static class Toast
+internal static class Toast
 {
     public static StackPanel? Host { get; set; }
 
@@ -31,7 +31,7 @@ static class Toast
             Padding = new Thickness(14, 10),
             HorizontalAlignment = HorizontalAlignment.Right,
             Child = Row(Icon(icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, 13)),
-            Transitions = new Transitions { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(400) } }
+            Transitions = [new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(400) }]
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         Host.Children.Add(t);
         while (Host.Children.Count > 3)

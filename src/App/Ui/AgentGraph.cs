@@ -16,11 +16,11 @@ namespace AiStackprint.Ui;
 /// A thin line runs from where the main session started the agent (branch) to the agent's bar, and from the bar to where the main session picked the result up (merge).
 /// The main bar changes color while at least one sub-agent runs (the main session waits or works alongside).
 /// </summary>
-static class AgentGraph
+internal static class AgentGraph
 {
     public static Control Build(AgentTimeline t)
     {
-        double total = Math.Max(1, (t.End - t.Start).TotalSeconds);
+        var total = Math.Max(1, (t.End - t.Start).TotalSeconds);
         double F(DateTime d) => Math.Clamp((d - t.Start).TotalSeconds / total, 0, 1);
 
         var rows = new StackPanel { Spacing = 5 };
@@ -94,7 +94,7 @@ static class AgentGraph
         return Section("flow", "Sub-agents", new StackPanel { Spacing = 8, Children = { rows, axis, legend } });
     }
 
-    static Control Lane(string label, Control bar)
+    private static Control Lane(string label, Control bar)
     {
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("150,*"), ColumnSpacing = 8 };
         var t = Txt(label, 12, false, Muted).With(x => { x.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; x.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; x.VerticalAlignment = VerticalAlignment.Center; });

@@ -12,20 +12,20 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Summary of one app's logs for 7 days / 30 days / all. Session totals are computed in the background.</summary>
-class LogSummaryCard
+internal class LogSummaryCard
 {
-    readonly ContentControl _body = new();
-    int _days = 7;
+    private readonly ContentControl _body = new();
+    private int _days = 7;
     /// <summary>Range shown: 7, 30 or 0 (all). Kept when the Logs page replaces the card.</summary>
     public int Days { get => _days; init => _days = value; }
-    CancellationTokenSource? _cts;
-    IReadOnlyList<LogFile> _files = Array.Empty<LogFile>();
+    private CancellationTokenSource? _cts;
+    private IReadOnlyList<LogFile> _files = Array.Empty<LogFile>();
 
     public Control Build(IReadOnlyList<LogFile> files)
     {
         _files = files;
         var range = new ContentControl();
-        void Pills() => range.Content = W.Pills(new[] { ("7 days", "7"), ("30 days", "30"), ("All", "0") }, _days.ToString(), v => { _days = int.Parse(v); Pills(); Refresh(); });
+        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], _days.ToString(), v => { _days = int.Parse(v); Pills(); Refresh(); });
         Pills();
         Refresh();
         return Section("data_pie", "Summary", _body.Free(), range);
@@ -37,7 +37,7 @@ class LogSummaryCard
     /// <summary>Recomputes, e.g. after the watcher saw new files.</summary>
     public void Update(IReadOnlyList<LogFile> files) { _files = files; Refresh(); }
 
-    async void Refresh()
+    private async void Refresh()
     {
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
@@ -58,7 +58,7 @@ class LogSummaryCard
         catch (OperationCanceledException) { }
     }
 
-    static Control Show(LogStats s)
+    private static Control Show(LogStats s)
     {
         var w = new WrapPanel();
         void Add(string t, string? key = null) => w.Children.Add(Chip(t, key).With(c => c.Margin = new Thickness(0, 0, 8, 8)));

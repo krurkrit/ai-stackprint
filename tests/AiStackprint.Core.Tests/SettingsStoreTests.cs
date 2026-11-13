@@ -18,7 +18,7 @@ public class SettingsStoreTests
         var s = SettingsStore.Load(file);
         Assert.True(s.HideNotInstalled);
         Assert.Equal(new[] { "warp" }, s.HiddenApps);
-        var visible = SettingsStore.Visible(new[] { new AppDefinition { Id = "warp" }, new AppDefinition { Id = "zed" } }, s);
+        var visible = SettingsStore.Visible([new AppDefinition { Id = "warp" }, new AppDefinition { Id = "zed" }], s);
         Assert.Equal("zed", Assert.Single(visible).Id);
     }
 

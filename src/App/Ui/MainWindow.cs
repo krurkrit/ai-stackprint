@@ -16,22 +16,22 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-partial class MainWindow : Window
+internal partial class MainWindow : Window
 {
-    const double OpenWidth = 240, ClosedWidth = 64;
-    readonly AppState _s = new();
-    readonly Border _side;
-    readonly ContentControl _body = new();
-    readonly Ctx _x;
-    readonly LibraryView _skills, _plugins;
-    readonly AppsView _apps;
-    readonly HealthView _health;
-    readonly AppDetailView _detail;
-    readonly ProjectView _project;
-    readonly SettingsView _settings;
-    readonly LogsView _logs;
-    string _view = "Dashboard";
-    bool _navOpen = true, _wasLogs, _scanning, _scanned;
+    private const double OpenWidth = 240, ClosedWidth = 64;
+    private readonly AppState _s = new();
+    private readonly Border _side;
+    private readonly ContentControl _body = new();
+    private readonly Ctx _x;
+    private readonly LibraryView _skills, _plugins;
+    private readonly AppsView _apps;
+    private readonly HealthView _health;
+    private readonly AppDetailView _detail;
+    private readonly ProjectView _project;
+    private readonly SettingsView _settings;
+    private readonly LogsView _logs;
+    private string _view = "Dashboard";
+    private bool _navOpen = true, _wasLogs, _scanning, _scanned;
 
     public MainWindow()
     {
@@ -57,7 +57,7 @@ partial class MainWindow : Window
             Width = OpenWidth,
             ClipToBounds = true,
             Padding = new Thickness(10, 12),
-            Transitions = new Transitions { new DoubleTransition { Property = WidthProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() } }
+            Transitions = [new DoubleTransition { Property = WidthProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }]
         }.Themed(Border.BackgroundProperty, SideKey);
         var main = new DockPanel();
         main.Children.Add(_body);
@@ -81,7 +81,7 @@ partial class MainWindow : Window
         Opened += (_, _) => { _s.Defs = AppCatalog.Load(); Scan(); };
     }
 
-    void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
+    private void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
     {
         if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Right || e.Source is not TextBlock { Text.Length: > 0 } tb || tb is SelectableTextBlock)
         {
@@ -95,9 +95,9 @@ partial class MainWindow : Window
     }
 
     /// <summary>Sidebar row: icon + label when open, icon with tooltip when collapsed.</summary>
-    Button NavBtn(string icon, string text, Action a, bool active = false, bool iconOnly = false)
+    private Button NavBtn(string icon, string text, Action a, bool active = false, bool iconOnly = false)
     {
-        bool full = _navOpen && !iconOnly;
+        var full = _navOpen && !iconOnly;
         var glyph = Icon(icon, 20);
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { glyph } };
         if (full)
@@ -118,7 +118,7 @@ partial class MainWindow : Window
         };
         if (active)
         {
-            b.Themed(Button.BackgroundProperty, Surface).Themed(Button.ForegroundProperty, Accent);
+            b.Themed(BackgroundProperty, Surface).Themed(ForegroundProperty, Accent);
             b.CornerRadius = new CornerRadius(8);
         }
         HoverStyle(b);
@@ -132,7 +132,7 @@ partial class MainWindow : Window
     }
 
     /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own hover and pressed colors.</summary>
-    static void HoverStyle(Button b)
+    private static void HoverStyle(Button b)
     {
         b.CornerRadius = new CornerRadius(8);
         var app = Application.Current!;
@@ -155,18 +155,18 @@ partial class MainWindow : Window
         }
     }
 
-    Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
+    private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
 
     /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
-    void Go(string view)
+    private void Go(string view)
     {
         if (view != _view) { _back.Push(_view); _forward.Clear(); }
         Show(view);
     }
 
-    void Show(string view)
+    private void Show(string view)
     {
-        bool rescan = _view == "Settings" && view != "Settings" && _x.SettingsChanged;
+        var rescan = _view == "Settings" && view != "Settings" && _x.SettingsChanged;
         _view = view;
         if (rescan) { _x.SettingsChanged = false; Scan(); }
         else
@@ -176,14 +176,14 @@ partial class MainWindow : Window
     }
 
     /// <summary>Skills or Plugins page filtered to an app and/or a search text.</summary>
-    void Browse(string kind, string? app, string? query)
+    private void Browse(string kind, string? app, string? query)
     {
         (kind == "Plugin" ? _plugins : _skills).Filter(app, query);
         Go(kind);
     }
 
     /// <summary>Opens a skill or plugin on its page with the panel showing it.</summary>
-    void OpenItem(Item i)
+    private void OpenItem(Item i)
     {
         if (i.Kind == "Plugin") { _plugins.Select(i); Go("Plugin"); }
         else if (i.Kind == "Skill") { _skills.Select(i); Go("Skill"); }
@@ -193,11 +193,11 @@ partial class MainWindow : Window
         }
     }
 
-    Control Section(string title) => _navOpen
+    private Control Section(string title) => _navOpen
         ? Txt(title, 11, false, Muted).With(t => t.Margin = new Thickness(12, 16, 0, 4))
         : new Border { Height = 1, Margin = new Thickness(8, 12) }.Themed(Border.BackgroundProperty, BorderKey);
 
-    void RefreshNav()
+    private void RefreshNav()
     {
         var head = new StackPanel { Orientation = _navOpen ? Orientation.Horizontal : Orientation.Vertical, Spacing = 8, Margin = new Thickness(0, 0, 0, 12) };
         var toggle = NavBtn("navigation", _navOpen ? "Collapse menu" : "Expand menu", () => { _navOpen = !_navOpen; _side.Width = _navOpen ? OpenWidth : ClosedWidth; RefreshNav(); }, iconOnly: true);
@@ -205,7 +205,7 @@ partial class MainWindow : Window
         head.Children.Add(toggle);
         if (_navOpen)
         {
-            var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = 36; b.Width = 160; b.Themed(Button.BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
+            var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = 36; b.Width = 160; b.Themed(BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
             head.Children.Add(box);
         }
         else
@@ -219,7 +219,7 @@ partial class MainWindow : Window
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));
-        int warnings = _s.Health.Count(h => h.Finding.Warning);
+        var warnings = _s.Health.Count(h => h.Finding.Warning);
         nav.Children.Add(Go("warning", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
         nav.Children.Add(Section("PROJECTS"));
         foreach (var p in _s.Projects)

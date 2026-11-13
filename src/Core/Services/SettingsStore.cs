@@ -28,5 +28,5 @@ public static class SettingsStore
 
     /// <summary>Apps to scan: everything except the ones hidden in settings.</summary>
     public static List<AppDefinition> Visible(IEnumerable<AppDefinition> defs, Settings s) =>
-        defs.Where(d => !s.HiddenApps.Contains(d.Id)).ToList();
+        [.. defs.Where(d => !s.HiddenApps.Contains(d.Id))];
 }

@@ -16,12 +16,12 @@ public interface IPluginReader
 
 public static class PluginReaders
 {
-    static readonly IPluginReader[] _all = { new ClaudePluginReader() };
+    private static readonly IPluginReader[] _all = [new ClaudePluginReader()];
     public static IPluginReader? Find(string? format) => format == null ? null : _all.FirstOrDefault(r => r.Format == format);
 }
 
 /// <summary>~/.claude/plugins/installed_plugins.json: { "plugins": { "name@market": [ { scope, version, installPath } ] } }</summary>
-class ClaudePluginReader : IPluginReader
+internal class ClaudePluginReader : IPluginReader
 {
     public string Format => "claude";
 
@@ -42,14 +42,14 @@ class ClaudePluginReader : IPluginReader
 
             foreach (var p in ps.EnumerateObject())
             {
-                var entries = p.Value.ValueKind == JsonValueKind.Array ? p.Value.EnumerateArray().ToList() : new() { p.Value };
+                var entries = p.Value.ValueKind == JsonValueKind.Array ? p.Value.EnumerateArray().ToList() : [p.Value];
                 foreach (var e in entries)
                 {
                     string Str(string k) => e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
                     var path = Str("installPath");
                     var scope = Str("scope") is "" ? "user" : Str("scope");
                     var level = scope switch { "project" => "Project", "local" => "Local", "managed" => "System", _ => "User" };
-                    string? project = Str("projectPath") is "" ? null : Str("projectPath");
+                    var project = Str("projectPath") is "" ? null : Str("projectPath");
                     var (desc, author) = Manifest(path);
                     rows.Add(new Item("Plugin", p.Name, desc, app.Name, level, path)
                     { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name) });
@@ -78,7 +78,7 @@ class ClaudePluginReader : IPluginReader
             using var doc = JsonDocument.Parse(File.ReadAllText(f), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
             var r = doc.RootElement;
             var desc = r.TryGetProperty("description", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString()! : "";
-            string? author = r.TryGetProperty("author", out var a) ? a.ValueKind switch
+            var author = r.TryGetProperty("author", out var a) ? a.ValueKind switch
             {
                 JsonValueKind.String => a.GetString(),
                 JsonValueKind.Object when a.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String => n.GetString(),
@@ -90,5 +90,5 @@ class ClaudePluginReader : IPluginReader
     }
 
     /// <summary>The marketplace part of name@marketplace: the owner when the manifest names no author.</summary>
-    static string? Market(string id) => id.Contains('@') ? id[(id.IndexOf('@') + 1)..] : null;
+    private static string? Market(string id) => id.Contains('@') ? id[(id.IndexOf('@') + 1)..] : null;
 }

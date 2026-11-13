@@ -12,15 +12,15 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Config file viewer: read-only with highlighting; Edit → Save (validate, conflict check, backup) or Cancel. Folders show their entries.</summary>
-class ConfigPanel : StackPanel
+internal class ConfigPanel : StackPanel
 {
-    readonly Ctx _x;
-    readonly string _path;
-    readonly CodeView? _code;
-    readonly StackPanel _bar = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    readonly TextBlock _status = Txt("", 12, false, Muted).With(t => { t.VerticalAlignment = VerticalAlignment.Center; t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; });
-    ConfigEditor.Stamp? _stamp;
-    string _original = "";
+    private readonly Ctx _x;
+    private readonly string _path;
+    private readonly CodeView? _code;
+    private readonly StackPanel _bar = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    private readonly TextBlock _status = Txt("", 12, false, Muted).With(t => { t.VerticalAlignment = VerticalAlignment.Center; t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; });
+    private ConfigEditor.Stamp? _stamp;
+    private string _original = "";
 
     public ConfigPanel(Ctx x, string path)
     {
@@ -41,13 +41,13 @@ class ConfigPanel : StackPanel
         ShowBar();
     }
 
-    static string Entries(string dir)
+    private static string Entries(string dir)
     {
         try { return string.Join("\n", Directory.EnumerateFileSystemEntries(dir).Select(Path.GetFileName).Order()); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return "Cannot read: " + e.Message; }
     }
 
-    void ShowBar()
+    private void ShowBar()
     {
         _bar.Children.Clear();
         if (_code == null || _stamp == null)
@@ -73,11 +73,11 @@ class ConfigPanel : StackPanel
         }
     }
 
-    void Edit() { _code!.ReadOnly = false; _status.Text = "Editing"; ShowBar(); }
+    private void Edit() { _code!.ReadOnly = false; _status.Text = "Editing"; ShowBar(); }
 
-    void Cancel() { _code!.Text = _original; _code.ReadOnly = true; _status.Text = ""; ShowBar(); }
+    private void Cancel() { _code!.Text = _original; _code.ReadOnly = true; _status.Text = ""; ShowBar(); }
 
-    async void Save()
+    private async void Save()
     {
         if (_code!.Text == _original) { Cancel(); return; }
         if (ConfigEditor.Validate(_path, _code.Text) is { } error) { await Dialogs.Message(_x.Owner, "Not saved", error); return; }

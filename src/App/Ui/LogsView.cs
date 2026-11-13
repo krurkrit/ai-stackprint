@@ -16,19 +16,19 @@ namespace AiStackprint.Ui;
 /// The selected app's log folders are watched while the page is open: new, removed and renamed files update the list,
 /// and a file that grows gets its size and time updated in place.
 /// </summary>
-partial class LogsView(Ctx x)
+internal partial class LogsView(Ctx x)
 {
-    string? _app;
-    LogFile? _file;
-    List<LogFile> _files = new();
-    readonly HashSet<string> _checked = new();
-    LogViewer _viewer = new(x);
-    LogSummaryCard _summary = new();
-    ContentControl _table = new();
-    LogFolderWatcher? _watcher;
-    string? _watching;   // app whose folders are watched
+    private string? _app;
+    private LogFile? _file;
+    private List<LogFile> _files = [];
+    private readonly HashSet<string> _checked = [];
+    private LogViewer _viewer = new(x);
+    private LogSummaryCard _summary = new();
+    private ContentControl _table = new();
+    private LogFolderWatcher? _watcher;
+    private string? _watching;   // app whose folders are watched
 
-    IEnumerable<AppDefinition> Apps => x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id));
+    private IEnumerable<AppDefinition> Apps => x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id));
 
     public Control Build(string? appId)
     {
@@ -37,8 +37,8 @@ partial class LogsView(Ctx x)
         var def = _app == null ? null : x.S.Def(_app);
         Relist(def);
 
-        var apps = Table.Build(new[] { new Col("App", "*") }, Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
-            .Select(d => new TableRow(new Control[] { AppName(d.Logo, d.Category, d.Name, 24) }, () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
+        var apps = Table.Build([new Col("App", "*")], Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
+            .Select(d => new TableRow([AppName(d.Logo, d.Category, d.Name, 24)], () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
 
         var head = new StackPanel { Spacing = 6, Children = { def == null ? H1("Logs") : H1("Logs", "Logs", def.Name) } };
         if (def != null)
@@ -57,7 +57,7 @@ partial class LogsView(Ctx x)
                 del.Add(Btn($"Older than {days} d", () => Delete(LogTrash.OlderThan(_files, days))));
             }
 
-            del.Add(Btn("Delete selected", () => Delete(_files.Where(f => _checked.Contains(f.Path)).ToList()), false, "delete"));
+            del.Add(Btn("Delete selected", () => Delete([.. _files.Where(f => _checked.Contains(f.Path))]), false, "delete"));
             var follow = new ToggleSwitch { OnContent = "Follow newest", OffContent = "Follow newest", IsChecked = _viewer.Follow };
             ToolTip.SetTip(follow, "Open the newest log file, switch to a new file when one appears, and stay at the end. Clicking an older file turns it off.");
             follow.IsCheckedChanged += (_, _) =>
@@ -75,7 +75,7 @@ partial class LogsView(Ctx x)
 
                 x.Go("Logs:" + _app);
             };
-            right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = 260, Content = _table.Free() }, del.Prepend(follow).ToArray()));
+            right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = 260, Content = _table.Free() }, [.. del.Prepend(follow)]));
             FillTable(def);
         }
         right.Children.Add(_viewer.Build(_file, () => x.Go("Logs:" + _app)));
@@ -90,9 +90,9 @@ partial class LogsView(Ctx x)
         return g;
     }
 
-    void Relist(AppDefinition? def)
+    private void Relist(AppDefinition? def)
     {
-        _files = def == null ? new() : LogReader.Find(def, x.S.Projects);
+        _files = def == null ? [] : LogReader.Find(def, x.S.Projects);
         if (_file != null)
         {
             _file = _files.FirstOrDefault(f => f.Path == _file.Path);
@@ -102,7 +102,7 @@ partial class LogsView(Ctx x)
         _checked.IntersectWith(_files.Select(f => f.Path));
     }
 
-    void FillTable(AppDefinition def)
+    private void FillTable(AppDefinition def)
     {
         var rows = _files.Select(f =>
         {
@@ -118,14 +118,14 @@ partial class LogsView(Ctx x)
                     _checked.Remove(f.Path);
                 }
             };
-            return new TableRow(new Control[]
-            {
+            return new TableRow(
+            [
                 check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path)),   // type on the second line: the name needs the width
                 Txt(LogViewer.Size(f.Size), 13), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), 13),
-                IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete(new() { f }))
-            }, () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
+                IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete([f]))
+            ], () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });
-        _table.Content = Table.Build(new[] { new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40") }, rows,
+        _table.Content = Table.Build([new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40")], rows,
             "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
     }
 
@@ -156,10 +156,10 @@ partial class LogsView(Ctx x)
         _viewer = new LogViewer(x) { Readable = _viewer.Readable, Follow = _viewer.Follow };
         _summary = new LogSummaryCard { Days = _summary.Days };
         _table.Content = null; _table = new ContentControl();
-        _files = new(); _checked.Clear(); _file = null;
+        _files = []; _checked.Clear(); _file = null;
     }
 
-    async void Delete(List<LogFile> files)
+    private async void Delete(List<LogFile> files)
     {
         if (files.Count == 0) { await Dialogs.Message(x.Owner, "Delete logs", "No files selected."); return; }
         var active = files.Where(f => LogTrash.IsActive(f)).ToList();

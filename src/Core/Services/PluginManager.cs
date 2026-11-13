@@ -15,7 +15,7 @@ public static partial class PluginManager
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._\-]*(@[A-Za-z0-9][A-Za-z0-9._\-/]*)?$")]
     private static partial Regex PluginId();
 
-    static readonly string[] _scopes = { "user", "project", "local" };
+    private static readonly string[] _scopes = ["user", "project", "local"];
 
     /// <summary>Fills {plugin} and {scope}. Rejects ids and scopes outside a strict whitelist so nothing can inject arguments.</summary>
     public static List<string> Build(IReadOnlyList<string> template, string plugin, string scope)
@@ -35,14 +35,14 @@ public static partial class PluginManager
             throw new ArgumentException($"Unknown scope \"{scope}\".");
         }
 
-        return template.Select(a => a.Replace("{plugin}", plugin).Replace("{scope}", scope)).ToList();
+        return [.. template.Select(a => a.Replace("{plugin}", plugin).Replace("{scope}", scope))];
     }
 
     public static Task<(int Code, string Output)> Install(AppDefinition d, string plugin, string scope, string? project) =>
-        Run(Build(d.PluginCommands?.Install ?? new(), plugin, scope), project);
+        Run(Build(d.PluginCommands?.Install ?? [], plugin, scope), project);
 
     public static Task<(int Code, string Output)> Remove(AppDefinition d, Item plugin) =>
-        Run(Build(d.PluginCommands?.Remove ?? new(), plugin.Name, plugin.Scope ?? "user"), plugin.Project);
+        Run(Build(d.PluginCommands?.Remove ?? [], plugin.Name, plugin.Scope ?? "user"), plugin.Project);
 
     /// <summary>Runs argv[0] found on PATH with the rest as separate arguments. cwd is the project folder for project scopes.</summary>
     public static async Task<(int Code, string Output)> Run(List<string> argv, string? cwd)
@@ -80,7 +80,7 @@ public static partial class PluginManager
 
         var exts = OperatingSystem.IsWindows() && !Path.HasExtension(cmd)
             ? (Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT").Split(';', StringSplitOptions.RemoveEmptyEntries)
-            : new[] { "" };
+            : [""];
         foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
             foreach (var e in exts)

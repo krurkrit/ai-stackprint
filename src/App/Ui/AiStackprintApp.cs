@@ -14,8 +14,8 @@ public class AiStackprintApp : Application
         Styles.Add(Theme.Fluent());   // Fluent controls with the Snowy Owl palette; variant follows the OS (ThemeVariant.Default)
         Styles.Add(CodeView.EditorStyles());
         // Text boxes, number boxes and drop-downs share one height
-        Styles.Add(new Style(x => x.OfType<Avalonia.Controls.ComboBox>()) { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Primitives.TemplatedControl.MinHeightProperty, 36d) } });
-        Styles.Add(new Style(x => x.OfType<Avalonia.Controls.TextBox>()) { Setters = { new Avalonia.Styling.Setter(Avalonia.Controls.Primitives.TemplatedControl.MinHeightProperty, 36d) } });
+        Styles.Add(new Style(x => x.OfType<Avalonia.Controls.ComboBox>()) { Setters = { new Avalonia.Styling.Setter(Avalonia.Layout.Layoutable.MinHeightProperty, 36d) } });
+        Styles.Add(new Style(x => x.OfType<Avalonia.Controls.TextBox>()) { Setters = { new Avalonia.Styling.Setter(Avalonia.Layout.Layoutable.MinHeightProperty, 36d) } });
         Theme.Appearance(this, new Models.Settings());   // defaults until MainWindow loads settings.json
     }
 

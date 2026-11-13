@@ -11,9 +11,9 @@ namespace AiStackprint.Core.Tests;
 [Collection("Environment")]
 public class LimitsTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() { Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null); Directory.Delete(_tmp, true); }
-    static readonly DateTime _now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
+    private static readonly DateTime _now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
 
     [Fact]
     public void Claude_reply_windows_plan_and_extra_usage()
@@ -23,7 +23,7 @@ public class LimitsTests : IDisposable
               "seven_day_opus": null, "seven_day_sonnet": { "utilization": 1.0 }, "iguana_necktie": null,
               "extra_usage": { "is_enabled": true, "monthly_limit": 100000, "used_credits": 0.0, "utilization": null } }
             """, _now);
-        Assert.Equal(new[] { "5-hour", "Weekly", "Weekly · Sonnet" }, s.Windows.Select(w => w.Name));
+        Assert.Equal(["5-hour", "Weekly", "Weekly · Sonnet"], s.Windows.Select(w => w.Name));
         Assert.Equal(35, s.Windows[0].UsedPercent);
         Assert.NotNull(s.Windows[0].ResetsAt);
         Assert.Null(s.Windows[1].ResetsAt);
@@ -54,7 +54,7 @@ public class LimitsTests : IDisposable
               "secondary_window": { "used_percent": 7, "limit_window_seconds": 604800, "reset_after_seconds": 3600 } } }
             """, _now);
         Assert.Equal("Plus", s.Plan);
-        Assert.Equal(new[] { ("5-hour", 42.0), ("Weekly", 7.0) }, s.Windows.Select(w => (w.Name, w.UsedPercent)));
+        Assert.Equal([("5-hour", 42.0), ("Weekly", 7.0)], s.Windows.Select(w => (w.Name, w.UsedPercent)));
         Assert.Equal(_now.AddHours(1), s.Windows[1].ResetsAt);
     }
 
@@ -67,7 +67,7 @@ public class LimitsTests : IDisposable
                                    "premium_interactions": { "entitlement": 300, "remaining": 240, "percent_remaining": 80, "unlimited": false } } }
             """, _now);
         Assert.Equal("Individual pro", s.Plan);
-        Assert.Equal(new[] { ("Premium requests", 20.0), ("Completions", 25.0) }, s.Windows.Select(w => (w.Name, w.UsedPercent)));
+        Assert.Equal([("Premium requests", 20.0), ("Completions", 25.0)], s.Windows.Select(w => (w.Name, w.UsedPercent)));
         Assert.Equal(new DateTime(2026, 12, 1), s.Windows[0].ResetsAt!.Value.Date);
     }
 
@@ -75,7 +75,7 @@ public class LimitsTests : IDisposable
     public void Gemini_buckets_and_cursor_figures()
     {
         var g = GeminiLimits.Parse("""{ "buckets": [ { "modelId": "gemini-2.5-pro", "remainingFraction": 0.75, "resetTime": "2026-11-13T00:00:00Z" }, { "remainingFraction": 1 } ] }""", _now);
-        Assert.Equal(new[] { ("gemini-2.5-pro", 25.0), ("Requests", 0.0) }, g.Windows.Select(w => (w.Name, w.UsedPercent)));
+        Assert.Equal([("gemini-2.5-pro", 25.0), ("Requests", 0.0)], g.Windows.Select(w => (w.Name, w.UsedPercent)));
 
         var c = CursorLimits.Parse("""{ "membershipType": "pro", "billingCycleEnd": "2026-12-01T00:00:00Z", "individualUsage": { "plan": { "used": 500, "limit": 2000 } } }""", _now);
         Assert.Equal("Pro", c.Plan);
@@ -117,7 +117,7 @@ public class LimitsTests : IDisposable
 
 public class ScanAndHealthTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
     [Fact]
@@ -139,13 +139,13 @@ public class ScanAndHealthTests : IDisposable
         File.WriteAllText(cfg, "x");
         var a = new Item("Skill", "a", "", "App", "User", "/s/a/SKILL.md") { App = "app" };
         var c = new Item("Config", "CLAUDE.md", "Instructions", "App", "User", cfg) { App = "app" };
-        Assert.Null(ScanDiff.Update(new[] { a, c }, file).Since);
+        Assert.Null(ScanDiff.Update([a, c], file).Since);
         File.SetLastWriteTimeUtc(cfg, DateTime.UtcNow.AddMinutes(1));
         var b = a with { Name = "b", Path = "/s/b/SKILL.md" };
-        var r = ScanDiff.Update(new[] { b, c }, file);
+        var r = ScanDiff.Update([b, c], file);
         Assert.NotNull(r.Since);
-        Assert.Equal(new[] { ("Added", "b"), ("Edited", "CLAUDE.md"), ("Removed", "a") }, r.Changes.Select(x => (x.What, x.Name)).OrderBy(x => x.What));
-        Assert.Empty(ScanDiff.Update(new[] { b, c }, file).Changes);
+        Assert.Equal([("Added", "b"), ("Edited", "CLAUDE.md"), ("Removed", "a")], r.Changes.Select(x => (x.What, x.Name)).OrderBy(x => x.What));
+        Assert.Empty(ScanDiff.Update([b, c], file).Changes);
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class ScanAndHealthTests : IDisposable
     {
         var plugin = new Item("Plugin", "gone@market", "", "Claude Code", "User", Path.Combine(_tmp, "nope")) { App = "claude-code" };
         var skills = Enumerable.Range(0, 12).Select(i => new Item("Skill", $"s{i}", new string('d', 900), "Claude Code", "User", Path.Combine(_tmp, $"s{i}", "SKILL.md"))
-        { App = "claude-code", Invokers = new[] { "Agent", "User" } }).ToList();
+        { App = "claude-code", Invokers = ["Agent", "User"] }).ToList();
         var issues = Health.Compute(skills.Append(plugin).ToList());
         Assert.Contains(issues, h => h.Area == "Plugins" && h.Finding.Warning && h.Finding.Text.Contains("folder is missing"));
         Assert.Contains(issues, h => h.Subject == "Claude Code skill list" && h.Finding.Warning);

@@ -13,13 +13,13 @@ namespace AiStackprint.Ui;
 /// A column: header text, a Grid width ("2*", "120"), right alignment for numbers, and a minimum width for a star column
 /// (short values like an app name or version would otherwise break mid-word in a narrow window). Use star or pixel widths so rows line up.
 /// </summary>
-record Col(string Head, string Width, bool Right = false, double Min = 0);
+internal record Col(string Head, string Width, bool Right = false, double Min = 0);
 
 /// <summary>A row: one control per column, optional click handler, and whether it is the current selection.</summary>
-record TableRow(Control[] Cells, Action? Click = null, bool Selected = false);
+internal record TableRow(Control[] Cells, Action? Click = null, bool Selected = false);
 
 /// <summary>Flat list with column headers, row dividers, hover and selection. Replaces the old expandable tree.</summary>
-static class Table
+internal static class Table
 {
     public static Control Build(Col[] cols, IEnumerable<TableRow> rows, string empty = "Nothing found.")
     {
@@ -27,7 +27,7 @@ static class Table
         ColumnDefinitions Defs()
         {
             var d = new ColumnDefinitions(widths);
-            for (int i = 0; i < cols.Length; i++)
+            for (var i = 0; i < cols.Length; i++)
             {
                 d[i].MinWidth = Size(cols[i].Min);
             }
@@ -36,7 +36,7 @@ static class Table
         }
         var sp = new StackPanel();
         var head = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = 12, Margin = new Thickness(10, 0, 10, 6) };
-        for (int c = 0; c < cols.Length; c++)
+        for (var c = 0; c < cols.Length; c++)
         {
             head.Children.Add(Txt(cols[c].Head, 12, true, Muted).With(t =>
             {
@@ -52,11 +52,11 @@ static class Table
 
         sp.Children.Add(head);
 
-        int n = 0;
+        var n = 0;
         foreach (var r in rows)
         {
             var g = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = 12 };
-            for (int c = 0; c < r.Cells.Length; c++)
+            for (var c = 0; c < r.Cells.Length; c++)
             {
                 r.Cells[c].VerticalAlignment = VerticalAlignment.Center;
                 if (c < cols.Length && cols[c].Right)

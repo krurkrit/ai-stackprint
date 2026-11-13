@@ -16,24 +16,24 @@ namespace AiStackprint.Ui;
 /// Usage of one app from its session logs: tokens by type, estimated cost, a per-day chart, and totals by model and by project.
 /// Calculated in the background; stops and lets go of its data when the page closes.
 /// </summary>
-partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
+internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
 {
     /// <summary>What the user picked; kept by the page so it survives rebuilds.</summary>
     public class Prefs { public int Days = 7; public bool Cost; public bool CacheReads; public string Account = ""; }
 
     public static bool Supports(AppDefinition d) => d.Logs.Concat(d.Usage).Any(l => LogParsers.Find(l.Format) != null);
 
-    readonly ContentControl _body = new();
-    CancellationTokenSource? _cts;
-    UsageResult? _last;
-    UsageLive? _live;
-    List<string> _accounts = new();
-    DateTime _since;
+    private readonly ContentControl _body = new();
+    private CancellationTokenSource? _cts;
+    private UsageResult? _last;
+    private UsageLive? _live;
+    private List<string> _accounts = [];
+    private DateTime _since;
 
     public Control Build()
     {
         var range = new ContentControl();
-        void Pills() => range.Content = W.Pills(new[] { ("7 days", "7"), ("30 days", "30"), ("All", "0") }, prefs.Days.ToString(), v => { prefs.Days = int.Parse(v); Pills(); Refresh(); });
+        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], prefs.Days.ToString(), v => { prefs.Days = int.Parse(v); Pills(); Refresh(); });
         Pills();
         var card = Section("data_pie", "Usage", _body, range);
         card.DetachedFromVisualTree += (_, _) => { _cts?.Cancel(); _body.Content = null; _last = null; _live = null; };
@@ -41,7 +41,7 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         return card;
     }
 
-    async void Refresh()
+    private async void Refresh()
     {
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
@@ -60,7 +60,7 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
                 var names = files.Select(f => f.Account ?? "Default").Distinct().OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ToList();
                 if (prefs.Account != "" && names.Contains(prefs.Account))
                 {
-                    files = files.Where(f => (f.Account ?? "Default") == prefs.Account).ToList();
+                    files = [.. files.Where(f => (f.Account ?? "Default") == prefs.Account)];
                 }
 
                 return (UsageStats.Compute(files, since, cts.Token), UsageStats.Live(files, DateTime.Now, cts.Token), names);
@@ -77,7 +77,7 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _body.Content = Txt("Cannot read logs: " + e.Message, 13, false, Muted); }
     }
 
-    void Render()
+    private void Render()
     {
         if (_last == null)
         {
@@ -85,11 +85,11 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         }
 
         if (_accounts.Count < 2) { _body.Content = Show(_last); return; }
-        var pills = W.Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v => { prefs.Account = v; Refresh(); });
+        var pills = Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v => { prefs.Account = v; Refresh(); });
         _body.Content = new StackPanel { Spacing = 14, Children = { Row(Txt("Account", 13, false, Muted), pills), Show(_last) } };
     }
 
-    Control Show(UsageResult r)
+    private Control Show(UsageResult r)
     {
         var b = r.Buckets;
         if (b.Count == 0)
@@ -111,7 +111,7 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
                 unpriced.Add(v.Model);
             }
         }
-        int models = b.Select(v => v.Model).Distinct().Count();
+        var models = b.Select(v => v.Model).Distinct().Count();
         bool priced = unpriced.Count < models, writes = cw > 0, cost = priced && prefs.Cost, reads = cr > 0 && prefs.CacheReads;   // hide what the logs or prices cannot fill
 
         var tiles = new WrapPanel();
@@ -141,17 +141,17 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         Tile("Sessions", r.Sessions.ToString("N0"));
         Tile("Messages", msgs.ToString("N0"), sub > 0 ? $"{sub:N0} from sub-agents" : null);
 
-        var metric = W.Pills(new[] { ("Tokens", "t"), ("Cost", "c") }, cost ? "c" : "t", v => { prefs.Cost = v == "c"; Render(); }).With(m => m.IsVisible = priced);
+        var metric = Pills([("Tokens", "t"), ("Cost", "c")], cost ? "c" : "t", v => { prefs.Cost = v == "c"; Render(); }).With(m => m.IsVisible = priced);
         var cache = new CheckBox { Content = "Include cache reads", IsChecked = prefs.CacheReads, IsVisible = !cost && cr > 0, VerticalAlignment = VerticalAlignment.Center };
         cache.IsCheckedChanged += (_, _) => { prefs.CacheReads = cache.IsChecked == true; Render(); };
         var chart = Chart(b, cost, priced, reads, writes, out var legend);
 
         var modelRows = b.GroupBy(v => v.Model).Select(g => (Name: g.Key, In: g.Sum(v => v.Input), Out: g.Sum(v => v.Output), CW: g.Sum(v => v.CacheWrite), CR: g.Sum(v => v.CacheRead), Cost: CostOf(g)))
             .OrderByDescending(m => m.In + m.Out + m.CW + m.CR).Take(10)
-            .Select(m => new TableRow(new Control?[] { Txt(m.Name, 13, true), Txt(Fmt(m.In), 13), Txt(Fmt(m.Out), 13), writes ? Txt(Fmt(m.CW), 13) : null, Txt(Fmt(m.CR), 13), priced ? Txt(m.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>().ToArray()));
+            .Select(m => new TableRow([.. new Control?[] { Txt(m.Name, 13, true), Txt(Fmt(m.In), 13), Txt(Fmt(m.Out), 13), writes ? Txt(Fmt(m.CW), 13) : null, Txt(Fmt(m.CR), 13), priced ? Txt(m.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>()]));
         var projectRows = b.GroupBy(v => v.Project).Select(g => (Name: g.Key, Msgs: g.Sum(v => v.Messages), Tok: g.Sum(v => v.Input + v.Output + v.CacheWrite), Cost: CostOf(g)))
             .OrderByDescending(p => p.Tok).Take(10)
-            .Select(p => new TableRow(new Control?[] { Txt(p.Name, 13, true), Txt(p.Msgs.ToString("N0"), 13), Txt(Fmt(p.Tok), 13), priced ? Txt(p.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>().ToArray()));
+            .Select(p => new TableRow([.. new Control?[] { Txt(p.Name, 13, true), Txt(p.Msgs.ToString("N0"), 13), Txt(Fmt(p.Tok), 13), priced ? Txt(p.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>()]));
 
         var notes = new StackPanel { Spacing = 4 };
         if (unpriced.Count > 0)
@@ -185,8 +185,8 @@ partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
                 tiles,
                 Row(metric, cache),
                 chart, legend,
-                Title("By model", 14), Table.Build(new[] { new Col("Model", "2*"), new Col("Input", "1*", true), new Col("Output", "1*", true), writes ? new Col("Cache write", "1*", true) : null, new Col("Cache read", "1*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>().ToArray(), modelRows),
-                Title("By project", 14), Table.Build(new[] { new Col("Project", "2*"), new Col("Messages", "1*", true), new Col("Tokens (no cache reads)", "1.4*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>().ToArray(), projectRows),
+                Title("By model", 14), Table.Build([.. new[] { new Col("Model", "2*"), new Col("Input", "1*", true), new Col("Output", "1*", true), writes ? new Col("Cache write", "1*", true) : null, new Col("Cache read", "1*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], modelRows),
+                Title("By project", 14), Table.Build([.. new[] { new Col("Project", "2*"), new Col("Messages", "1*", true), new Col("Tokens (no cache reads)", "1.4*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], projectRows),
                 notes, edit
             }
         };

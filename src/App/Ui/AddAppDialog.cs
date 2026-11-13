@@ -13,12 +13,12 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Lets the user register any app (e.g. a new orchestrator) by pointing at its config folder.</summary>
-class AddAppDialog : Window
+internal class AddAppDialog : Window
 {
-    readonly TextBox _name = new() { PlaceholderText = "App name, e.g. My Orchestrator" };
-    readonly TextBox _folder = new() { PlaceholderText = "Config folder, e.g. ~/.myapp (used to detect and scan)" };
-    readonly TextBox _proj = new() { PlaceholderText = "Optional project-relative skills folder, e.g. .myapp/skills" };
-    readonly ComboBox _cat = new() { ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" }, SelectedIndex = 0 };
+    private readonly TextBox _name = new() { PlaceholderText = "App name, e.g. My Orchestrator" };
+    private readonly TextBox _folder = new() { PlaceholderText = "Config folder, e.g. ~/.myapp (used to detect and scan)" };
+    private readonly TextBox _proj = new() { PlaceholderText = "Optional project-relative skills folder, e.g. .myapp/skills" };
+    private readonly ComboBox _cat = new() { ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" }, SelectedIndex = 0 };
 
     public AddAppDialog()
     {
@@ -49,7 +49,7 @@ class AddAppDialog : Window
         };
     }
 
-    void Save()
+    private void Save()
     {
         var name = (_name.Text ?? "").Trim();
         var folder = (_folder.Text ?? "").Trim();
@@ -60,7 +60,7 @@ class AddAppDialog : Window
 
         var def = new AppDefinition
         {
-            Id = new string(name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-'),
+            Id = new string([.. name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-')]).Trim('-'),
             Name = name,
             Category = _cat.SelectedItem as string ?? "custom",
             Detect = { folder },

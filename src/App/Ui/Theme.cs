@@ -17,22 +17,22 @@ namespace AiStackprint.Ui;
 /// plus the Fluent palette so built-in controls match. The only place colors are defined;
 /// Appearance settings may override accent, hover and selection per theme.
 /// </summary>
-static class Theme
+internal static class Theme
 {
     // Snowy Owl color tokens
-    const string White = "#F8F9FA", Black = "#34383C", DarkBlack = "#18191B";
-    const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
-    const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#12633D";
+    private const string White = "#F8F9FA", Black = "#34383C", DarkBlack = "#18191B";
+    private const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
+    private const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#12633D";
     // Status colors used as text, icons and bars must read on each theme's background: light warning is the Snowy Owl brown,
     // dark error and success are lighter tints. Fills behind white text (danger buttons, Close hover) keep Error.
-    const string ErrorDark = "#F28B95", SuccessDark = "#5FCB94";
+    private const string ErrorDark = "#F28B95", SuccessDark = "#5FCB94";
 
     /// <summary>Swatches offered in Appearance › Colors.</summary>
     public static readonly (string Name, string Hex)[] Swatches =
-    {
+    [
         ("Blue", BlueLight), ("Light blue", BlueDark), ("Orange", OrangeAccent), ("Brown", OrangeLight), ("Peach", OrangeDark),
         ("Green", Success), ("Red", Error), ("Yellow", Warning), ("Graphite", Black), ("Paper", White)
-    };
+    ];
 
     /// <summary>UI font stack: the chosen family (default Inter), then Noto Sans, then the platform default. Fonts are not bundled.</summary>
     public static FontFamily Font { get; private set; } = Stack("Inter");
@@ -42,34 +42,34 @@ static class Theme
     public static FontWeight MonoWeight { get; private set; } = FontWeight.Normal;
 
     // Areas: sidebar, main area, and cards/lists/bottom panel/text boxes (Surface = Bg)
-    const string LightSide = "#DEE2E6", LightMain = "#E9ECEF", DarkSide = "#2E3035", DarkMain = "#24262A";
+    private const string LightSide = "#DEE2E6", LightMain = "#E9ECEF", DarkSide = "#2E3035", DarkMain = "#24262A";
 
     /// <summary>Default level colors (System, Local, Project, User) for the dashboard bars.</summary>
-    public static readonly string[] LightLevels = { "#7048E8", "#D6336C", "#2F9E44", "#1098AD" }, DarkLevels = { "#9775FA", "#F06595", "#51CF66", "#3BC9DB" };
-    public static readonly string[] LevelNames = { "System", "Local", "Project", "User" };
+    public static readonly string[] LightLevels = ["#7048E8", "#D6336C", "#2F9E44", "#1098AD"], DarkLevels = ["#9775FA", "#F06595", "#51CF66", "#3BC9DB"];
+    public static readonly string[] LevelNames = ["System", "Local", "Project", "User"];
 
-    record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
+    private record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
         double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main);
 
-    static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
-    static readonly Palette _dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
+    private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
+    private static readonly Palette _dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
 
-    static readonly ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
+    private static readonly ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
 
     public static FluentTheme Fluent() => new() { Palettes = { [ThemeVariant.Light] = _lightFluent, [ThemeVariant.Dark] = _darkFluent } };
 
-    static FontFamily Stack(string family) => new(family == "Inter" ? "Inter, Noto Sans, $Default" : $"{family}, Inter, Noto Sans, $Default");
-    static FontFamily MonoStack(string family) => new($"{family}, JetBrains Mono, Cascadia Mono, Consolas, Menlo, monospace");
+    private static FontFamily Stack(string family) => new(family == "Inter" ? "Inter, Noto Sans, $Default" : $"{family}, Inter, Noto Sans, $Default");
+    private static FontFamily MonoStack(string family) => new($"{family}, JetBrains Mono, Cascadia Mono, Consolas, Menlo, monospace");
 
     /// <summary>The two text colors an accent button can use; the app picks whichever reads better.</summary>
     public static (Color Light, Color Dark) AccentTexts => (C(White), C(AccentTextDark));
 
     /// <summary>App category colors for charts (Okabe-Ito based, checked against the card color of each theme: every slice is at least 3:1 and none look alike for color-blind viewers).</summary>
-    public static readonly string[] Categories = { "agent", "chat", "editor", "orchestrator", "runtime", "shared", "custom" };
-    static readonly string[] _lightCategory = { "#1F6FB5", "#D1590E", "#178A5B", "#8E4A9E", "#9A7400", "#5F6B76", "#C2306E" };
-    static readonly string[] _darkCategory = { "#5AA9F0", "#FF8C42", "#4CC38A", "#C58BE0", "#E8B923", "#9AA5B1", "#F06595" };
+    public static readonly string[] Categories = ["agent", "chat", "editor", "orchestrator", "runtime", "shared", "custom"];
+    private static readonly string[] _lightCategory = ["#1F6FB5", "#D1590E", "#178A5B", "#8E4A9E", "#9A7400", "#5F6B76", "#C2306E"];
+    private static readonly string[] _darkCategory = ["#5AA9F0", "#FF8C42", "#4CC38A", "#C58BE0", "#E8B923", "#9AA5B1", "#F06595"];
 
-    static readonly double[] _levelAlpha = { 1, .85, .72, .62 };   // faintest still >= 3:1 on the card (chart marks)
+    private static readonly double[] _levelAlpha = [1, .85, .72, .62];   // faintest still >= 3:1 on the card (chart marks)
 
     /// <summary>Default level color: the accent, fainter for each level after System (opaque, blended onto the card color so stacked bars stay solid).</summary>
     public static Color LevelDefault(bool dark, int i, Color? accent = null)
@@ -106,12 +106,12 @@ static class Theme
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }
 
-    static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
+    private static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
 
     /// <summary>Parses #RRGGBB / #AARRGGBB; null when empty or invalid.</summary>
     public static Color? ParseHex(string? hex) => !string.IsNullOrWhiteSpace(hex) && Color.TryParse(hex.Trim(), out var c) ? c : null;
 
-    static ResourceDictionary Keys(Palette p, ThemeColors o, ColorPaletteResources fluent)
+    private static ResourceDictionary Keys(Palette p, ThemeColors o, ColorPaletteResources fluent)
     {
         Color fg = C(p.Fg), bg = C(p.Bg);
         var custom = ParseHex(o.Accent);
@@ -155,12 +155,12 @@ static class Theme
             [W.HighlightRingKey] = B(C(p == _dark ? Warning : OrangeAccent)),
             [W.ScrimKey] = B(A(Colors.Black, p == _dark ? .5 : .35)),   // behind the search overlay
         };
-        for (int i = 0; i < Categories.Length; i++)
+        for (var i = 0; i < Categories.Length; i++)
         {
             d[W.CategoryKey(Categories[i])] = B(C((p == _dark ? _darkCategory : _lightCategory)[i]));
         }
 
-        for (int i = 0; i < LevelNames.Length; i++)
+        for (var i = 0; i < LevelNames.Length; i++)
         {
             d[W.LevelKey(LevelNames[i])] = B(ParseHex(o.Levels?.ElementAtOrDefault(i)) ?? LevelDefault(p == _dark, i, primary));
         }
@@ -177,7 +177,7 @@ static class Theme
         // Switch (off): input-border-colored track, card-colored knob; pointer over: the side menu color as track
         foreach (var s in new[] { "", "PointerOver", "Pressed" })
         {
-            bool over = s != "";
+            var over = s != "";
             d["ToggleSwitchFillOff" + s] = over ? d[W.SideKey] : d[W.BorderKey];
             d["ToggleSwitchStrokeOff" + s] = over ? d[W.SideKey] : d[W.BorderKey];
             d["ToggleSwitchKnobFillOff" + s] = d[W.Surface];
@@ -203,7 +203,7 @@ static class Theme
         return d;
     }
 
-    static ColorPaletteResources FluentPalette(Palette p)
+    private static ColorPaletteResources FluentPalette(Palette p)
     {
         Color bg = C(p.Bg), fg = C(p.Fg);
         return new ColorPaletteResources
@@ -234,14 +234,14 @@ static class Theme
 
     /// <summary>Chart series after the accent: [0] is the default accent, then output, cache write, cache read. Dark output is blue because the dark accent is orange.</summary>
     public static Color[] Series(bool dark) => dark
-        ? new[] { C(OrangeAccent), C(BlueDark), C("#5FCB94"), C("#9AA0A6") }
-        : new[] { C(BlueLight), C("#D1590E"), C(Success), C("#7A8087") };
+        ? [C(OrangeAccent), C(BlueDark), C("#5FCB94"), C("#9AA0A6")]
+        : [C(BlueLight), C("#D1590E"), C(Success), C("#7A8087")];
 
     /// <summary>Accent fill for hover/pressed: the accent moved away from its text color.</summary>
     public static Color Shade(Color accent, Color text, double amount) =>
         Color.FromUInt32(Services.Contrast.AwayFrom(accent.ToUInt32(), text.ToUInt32(), amount));
 
-    static Color C(string hex) => Color.Parse(hex);
-    static Color A(Color c, double a) => Color.FromArgb((byte)Math.Round(a * 255), c.R, c.G, c.B);
-    static IBrush B(Color c) => new ImmutableSolidColorBrush(c);
+    private static Color C(string hex) => Color.Parse(hex);
+    private static Color A(Color c, double a) => Color.FromArgb((byte)Math.Round(a * 255), c.R, c.G, c.B);
+    private static IBrush B(Color c) => new ImmutableSolidColorBrush(c);
 }

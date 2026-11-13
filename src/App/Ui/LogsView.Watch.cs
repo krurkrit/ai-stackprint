@@ -7,10 +7,10 @@ using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
 
-partial class LogsView
+internal partial class LogsView
 {
     /// <summary>Watches the selected app's log folders. Stops when another app is chosen or the page closes.</summary>
-    void Watch(AppDefinition? def)
+    private void Watch(AppDefinition? def)
     {
         if (def?.Id == _watching && _watcher != null)
         {
@@ -31,7 +31,7 @@ partial class LogsView
     /// Files were added, removed or renamed: find the list again. Otherwise update the rows that changed in place
     /// (size and time), so the list does not jump. The open file reloads or offers "New lines".
     /// </summary>
-    void OnChanged(AppDefinition def, LogFolderWatcher.Batch b)
+    private void OnChanged(AppDefinition def, LogFolderWatcher.Batch b)
     {
         if (_watching != def.Id)
         {
@@ -40,12 +40,12 @@ partial class LogsView
 
         var open = _file is { } f ? (f.Path, f.Size, f.Modified) : default;
         var paths = b.Paths.Select(p => p.EndsWith("-wal", StringComparison.OrdinalIgnoreCase) ? p[..^4] : p).ToHashSet(StringComparer.OrdinalIgnoreCase);   // SQLite writes land in the -wal file
-        bool relist = b.Structure;
+        var relist = b.Structure;
         if (!relist)
         {
             foreach (var p in paths)
             {
-                int i = _files.FindIndex(lf => string.Equals(lf.Path, p, StringComparison.OrdinalIgnoreCase));
+                var i = _files.FindIndex(lf => string.Equals(lf.Path, p, StringComparison.OrdinalIgnoreCase));
                 if (i < 0)
                 {
                     continue;
@@ -68,7 +68,7 @@ partial class LogsView
         }
         else
         {
-            _files = _files.OrderByDescending(lf => lf.Modified).ToList();
+            _files = [.. _files.OrderByDescending(lf => lf.Modified)];
             if (_file != null)
             {
                 _file = _files.FirstOrDefault(lf => lf.Path == _file.Path);

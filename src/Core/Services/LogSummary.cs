@@ -28,19 +28,19 @@ public static partial class LogSummary
     /// <summary>Only the newest part of a session file is parsed.</summary>
     public const int SessionBytes = 8 << 20;
 
-    record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
+    private record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
 
-    static readonly ConcurrentDictionary<(string, long, long), SessionTotals> _cache = new();
+    private static readonly ConcurrentDictionary<(string, long, long), SessionTotals> _cache = new();
 
-    static SessionTotals Totals(Session s) => new(
+    private static SessionTotals Totals(Session s) => new(
         s.Entries.Count(e => e.Role == "user"), s.Entries.Count(e => e.Role == "tool"), s.Entries.Count(e => e.SubAgent), s.InputTokens, s.OutputTokens,
-        s.Entries.Where(e => e.Role == "tool" && e.Tool != null).GroupBy(e => e.Tool!).ToDictionary(g => g.Key, g => g.Count()), s.Models.ToList());
+        s.Entries.Where(e => e.Role == "tool" && e.Tool != null).GroupBy(e => e.Tool!).ToDictionary(g => g.Key, g => g.Count()), [.. s.Models]);
 
     /// <param name="since">Only files modified after this time; null = all.</param>
     public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since, CancellationToken ct = default)
     {
         var files = all.Where(f => since == null || f.Modified >= since).ToList();
-        int errors = 0, warnings = 0; long budget = TextBudget; bool capped = false;
+        int errors = 0, warnings = 0; var budget = TextBudget; var capped = false;
         var sessions = new List<SessionTotals>();
         foreach (var f in files.OrderByDescending(f => f.Modified))
         {
@@ -79,10 +79,10 @@ public static partial class LogSummary
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // skip files that vanished or are locked
         }
         return new LogStats(files.Count, files.Sum(f => f.Size), files.MaxBy(f => f.Modified)?.Modified, files.MinBy(f => f.Modified)?.Modified,
-            files.OrderByDescending(f => f.Size).Take(3).ToList(), errors, warnings, capped,
+            [.. files.OrderByDescending(f => f.Size).Take(3)], errors, warnings, capped,
             sessions.Count, sessions.Sum(t => t.Prompts), sessions.Sum(t => t.ToolCalls), sessions.Sum(t => t.SubAgentSteps),
             sessions.Sum(t => t.InputTokens), sessions.Sum(t => t.OutputTokens),
-            sessions.SelectMany(t => t.Tools).GroupBy(t => t.Key).Select(g => (g.Key, g.Sum(t => t.Value))).OrderByDescending(t => t.Item2).Take(5).ToList(),
-            sessions.SelectMany(t => t.Models).Distinct().Order().ToList());
+            [.. sessions.SelectMany(t => t.Tools).GroupBy(t => t.Key).Select(g => (g.Key, g.Sum(t => t.Value))).OrderByDescending(t => t.Item2).Take(5)],
+            [.. sessions.SelectMany(t => t.Models).Distinct().Order()]);
     }
 }

@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// Gemini CLI (geminicli.com/docs/cli/gemini-md): ~/.gemini/GEMINI.md, then the context files from the project root down to the start folder,
 /// @imports; files in sub-folders when a tool reads there. File names from settings.json context.fileName. No size limit is documented.
 /// </summary>
-class GeminiContext : IContextRule
+internal class GeminiContext : IContextRule
 {
     public string Id => "gemini";
 
@@ -35,7 +35,7 @@ class GeminiContext : IContextRule
             Add(Path.Combine(gemini, n), LoadWhen.Always, "Global");
         }
 
-        foreach (var dir in Chain(RootOf(start, new[] { ".git" }) ?? start, start))
+        foreach (var dir in Chain(RootOf(start, [".git"]) ?? start, start))
         {
             foreach (var n in names)
             {
@@ -52,16 +52,16 @@ class GeminiContext : IContextRule
     }
 
     /// <summary>context.fileName: a string or a list; GEMINI.md when not set.</summary>
-    static List<string> Names(string settings)
+    private static List<string> Names(string settings)
     {
         var m = Regex.Match(settings, "\"fileName\"\\s*:\\s*(\\[[^\\]]*\\]|\"[^\"]*\")");
-        var list = m.Success ? Regex.Matches(m.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : new();
-        return list.Count > 0 ? list : new() { "GEMINI.md" };
+        var list = m.Success ? Regex.Matches(m.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : [];
+        return list.Count > 0 ? list : ["GEMINI.md"];
     }
 }
 
 /// <summary>GitHub Copilot: .github/copilot-instructions.md and the nearest AGENTS.md always; .github/instructions/*.instructions.md by their applyTo pattern.</summary>
-class CopilotContext : IContextRule
+internal class CopilotContext : IContextRule
 {
     public string Id => "copilot";
 
@@ -84,7 +84,7 @@ class CopilotContext : IContextRule
             var apply = SkillDoc.Parse(ReadText(f)).Get("applyTo");
             files.Add(Measure(f, apply == "" ? LoadWhen.AgentDecides : LoadWhen.Conditional, null, apply == "" ? "No applyTo: used when relevant" : "For " + apply));
         }
-        return new ContextReport(Id, "characters", null, null, files, new());
+        return new ContextReport(Id, "characters", null, null, files, []);
     }
 }
 
@@ -92,7 +92,7 @@ class CopilotContext : IContextRule
 /// Cursor (cursor.com/docs/rules): .cursor/rules/*.mdc by alwaysApply / globs / description, AGENTS.md, legacy .cursorrules.
 /// A plain .md in .cursor/rules is ignored. Rules should stay under 500 lines.
 /// </summary>
-class CursorContext : IContextRule
+internal class CursorContext : IContextRule
 {
     public string Id => "cursor";
     public const int RuleLines = 500;

@@ -10,10 +10,10 @@ namespace AiStackprint.Core.Tests;
 
 public class LogToolsTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    LogFile Log(string name, string text, DateTime? when = null, string? format = null)
+    private LogFile Log(string name, string text, DateTime? when = null, string? format = null)
     {
         var p = Path.Combine(_tmp, name);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
@@ -32,7 +32,7 @@ public class LogToolsTests : IDisposable
     {
         var f = Log("a.log", "ok\nERROR one\nfine\nerror two\n");
         var hits = LogSearch.File(f.Path, LogSearch.Pattern("error", false, false));
-        Assert.Equal(new long[] { 2, 4 }, hits.Select(h => h.Line));
+        Assert.Equal([2, 4], hits.Select(h => h.Line));
         Assert.Equal(0, hits[0].Column);
         Assert.Single(LogSearch.File(f.Path, LogSearch.Pattern("error", true, false)));
         Assert.Equal(2, LogSearch.File(f.Path, LogSearch.Pattern(@"(one|two)$", false, true)).Count);
@@ -56,7 +56,7 @@ public class LogToolsTests : IDisposable
         var keep = Log("keep.log", "x");
         var del = Log("del.log", "y");
         var trash = Path.Combine(_tmp, "Trash");
-        var (moved, failed) = LogTrash.Delete(new[] { del.Path, keep.Path }, new[] { del }, trash);
+        var (moved, failed) = LogTrash.Delete([del.Path, keep.Path], [del], trash);
         Assert.Equal(new[] { del.Path }, moved);
         Assert.Equal(keep.Path, Assert.Single(failed).Path);
         Assert.True(File.Exists(keep.Path));
@@ -71,7 +71,7 @@ public class LogToolsTests : IDisposable
         var now = new DateTime(2026, 11, 11, 12, 0, 0);
         var old = new LogFile("a", "Logs", "/x/old.log", 1, now.AddDays(-40), null);
         var fresh = new LogFile("a", "Logs", "/x/new.log", 1, now.AddSeconds(-10), null);
-        Assert.Equal(new[] { old }, LogTrash.OlderThan(new[] { old, fresh }, 30, now));
+        Assert.Equal(new[] { old }, LogTrash.OlderThan([old, fresh], 30, now));
         Assert.True(LogTrash.IsActive(fresh, now));
         Assert.False(LogTrash.IsActive(old, now));
     }
@@ -86,7 +86,7 @@ public class LogToolsTests : IDisposable
             """{"type":"user","message":{"content":"hi"}}""" + "\n" +
             """{"type":"assistant","message":{"model":"m1","usage":{"input_tokens":10,"output_tokens":3},"content":[{"type":"tool_use","name":"Bash","input":{"command":"ls"}}]}}""" + "\n",
             now.AddHours(-2), "claude-session");
-        var s = LogSummary.Compute(new[] { plain, stale, session }, now.AddDays(-7));
+        var s = LogSummary.Compute([plain, stale, session], now.AddDays(-7));
         Assert.Equal(2, s.Files);
         Assert.Equal(1, s.Errors);
         Assert.Equal(1, s.Warnings);
@@ -96,7 +96,7 @@ public class LogToolsTests : IDisposable
         Assert.Equal(("Bash", 1), Assert.Single(s.TopTools));
         Assert.Equal(10, s.InputTokens);
         Assert.Equal(new[] { "m1" }, s.Models);
-        Assert.Equal(3, LogSummary.Compute(new[] { plain, stale, session }, null).Files);
+        Assert.Equal(3, LogSummary.Compute([plain, stale, session], null).Files);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class LogToolsTests : IDisposable
         var file = Path.Combine(dir, "current.log");
         File.WriteAllText(file, "a");
         var batches = new System.Collections.Concurrent.ConcurrentQueue<LogFolderWatcher.Batch>();
-        using var w = new LogFolderWatcher(new[] { (dir, "*.log", false) }, file, TimeSpan.FromMilliseconds(300)) { Quiet = TimeSpan.FromMilliseconds(150) };
+        using var w = new LogFolderWatcher([(dir, "*.log", false)], file, TimeSpan.FromMilliseconds(300)) { Quiet = TimeSpan.FromMilliseconds(150) };
         w.Changed += b => batches.Enqueue(b);
         File.WriteAllText(Path.Combine(dir, "notes.txt"), "x");   // not a log file: ignored
         Thread.Sleep(600);
@@ -142,7 +142,7 @@ public class LogToolsTests : IDisposable
         Assert.Null(LogReader.Restat(f));
     }
 
-    static void Wait(Func<bool> done)
+    private static void Wait(Func<bool> done)
     {
         var until = DateTime.Now.AddSeconds(5);
         while (!done() && DateTime.Now < until)

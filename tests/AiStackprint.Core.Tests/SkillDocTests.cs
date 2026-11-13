@@ -10,10 +10,10 @@ namespace AiStackprint.Core.Tests;
 
 public class SkillDocTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    string Write(string rel, string text)
+    private string Write(string rel, string text)
     {
         var p = Path.Combine(_tmp, rel.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);

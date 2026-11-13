@@ -11,10 +11,10 @@ namespace AiStackprint.Core.Tests;
 
 public class ConfigEditorTests : IDisposable
 {
-    readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
+    private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    string File(string name, string text, bool bom = false)
+    private string File(string name, string text, bool bom = false)
     {
         var f = Path.Combine(_tmp, name);
         System.IO.File.WriteAllText(f, text, new UTF8Encoding(bom));
@@ -69,6 +69,6 @@ public class ConfigEditorTests : IDisposable
         var noBom = File("b.md", "x");
         var (_, s2) = ConfigEditor.Read(noBom);
         ConfigEditor.Save(noBom, "y", s2, _tmp);
-        Assert.Equal(new[] { (byte)'y' }, System.IO.File.ReadAllBytes(noBom));
+        Assert.Equal([(byte)'y'], System.IO.File.ReadAllBytes(noBom));
     }
 }

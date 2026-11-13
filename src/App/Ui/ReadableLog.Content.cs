@@ -17,20 +17,20 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-partial class ReadableLog
+internal partial class ReadableLog
 {
     /// <summary>Text the app injected around the message (instructions, environment, reminders, marker blocks): its own collapsed area.</summary>
-    static Control Injected(ContextBlocks.Part part) => Fold($"Injected · {part.Label} · ", part.Text, null, new Thickness(0), markdown: true);
+    private static Control Injected(ContextBlocks.Part part) => Fold($"Injected · {part.Label} · ", part.Text, null, new Thickness(0), markdown: true);
 
     internal static Control Code(string text, string ext) =>
         new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = new CodeView(ext, lineNumbers: false, compact: true) { Text = text.TrimEnd('\n') } };
 
-    static readonly Regex _fence = new(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline);
+    private static readonly Regex _fence = new(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline);
 
     /// <summary>Splits markdown into prose and fenced code blocks; the fence language picks the grammar.</summary>
     internal static IEnumerable<(string Text, string? Lang)> Fences(string md)
     {
-        int at = 0;
+        var at = 0;
         foreach (Match m in _fence.Matches(md))
         {
             if (m.Index > at && md[at..m.Index].Trim() != "")
@@ -47,7 +47,7 @@ partial class ReadableLog
         }
     }
 
-    static string Ext(string fence) => fence.ToLowerInvariant() switch
+    private static string Ext(string fence) => fence.ToLowerInvariant() switch
     {
         "" or "text" or "txt" or "plain" => ".txt",
         "csharp" or "cs" or "c#" => ".cs",
@@ -64,12 +64,12 @@ partial class ReadableLog
         var x => "." + x
     };
 
-    static Control ToolCall(LogEntry e)
+    private static Control ToolCall(LogEntry e)
     {
         var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*"), ColumnSpacing = 8 };
         line.Children.Add(Icon("wrench", 14).Themed(TextElement.ForegroundProperty, Muted));
         line.Children.Add(L(e.Tool ?? "tool", true).With(t => { Grid.SetColumn(t, 1); t.VerticalAlignment = VerticalAlignment.Center; }));
-        var args = new TextBlock { Text = TextDecode.Strip(e.Text.Split('\n')[0]), FontFamily = Ui.Theme.Mono, FontSize = Ui.Theme.MonoSize, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center }
+        var args = new TextBlock { Text = TextDecode.Strip(e.Text.Split('\n')[0]), FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center }
             .Themed(TextBlock.ForegroundProperty, Muted);
         Grid.SetColumn(args, 2); line.Children.Add(args);
         // No arrow when opening would show the same one line the header already shows
@@ -82,10 +82,10 @@ partial class ReadableLog
     }
 
     /// <summary>Collapsed by default; long tool output and thinking stay out of the way. Highlighted when opened.</summary>
-    static Control Folded(string label, string text, string? lang, bool markdown = false) => Fold(label + " · ", text, lang, new Thickness(12, 0, 0, 0), markdown);
+    private static Control Folded(string label, string text, string? lang, bool markdown = false) => Fold(label + " · ", text, lang, new Thickness(12, 0, 0, 0), markdown);
 
     /// <summary>An expander whose header is the label and first line; a plain line when the text is that one line (opening would add nothing).</summary>
-    static Control Fold(string label, string text, string? lang, Thickness margin, bool markdown = false)
+    private static Control Fold(string label, string text, string? lang, Thickness margin, bool markdown = false)
     {
         var first = FirstLine(TextDecode.Clean(text.Length > 400 ? text[..400] : text));
         var header = L(label + first, false, Muted).With(t => { t.TextWrapping = TextWrapping.NoWrap; t.TextTrimming = TextTrimming.CharacterEllipsis; });
@@ -98,14 +98,14 @@ partial class ReadableLog
     }
 
     /// <summary>The opened text would equal the header line: one short line that decoding does not change.</summary>
-    static bool SameAsHeader(string text, string header)
+    private static bool SameAsHeader(string text, string header)
     {
         var t = text.Trim();
         return t.Length <= 120 && !t.Contains('\n') && t == header.Trim() && !TextDecode.Prepare(t, null).Changed;
     }
 
     /// <summary>Opened content: decoded text (JSON pretty, escapes, shell colors, image data shortened) with a toggle back to the original when it was changed.</summary>
-    static Control StepBody(string original, string? lang)
+    private static Control StepBody(string original, string? lang)
     {
         if (lang is ".md" or ".markdown")
         {
@@ -120,7 +120,7 @@ partial class ReadableLog
             return view;
         }
 
-        bool formatted = true;
+        var formatted = true;
         var toggle = new Button { Content = "Show original", Padding = new Thickness(8, 2), MinHeight = 0, FontSize = Size(12), HorizontalAlignment = HorizontalAlignment.Left };
         toggle.Click += (_, _) =>
         {
@@ -132,10 +132,10 @@ partial class ReadableLog
     }
 
     /// <summary>Markdown in the body font; a Source toggle shows the text as written.</summary>
-    static Control Rendered(string md)
+    private static Control Rendered(string md)
     {
         var view = new ContentControl { Content = MarkdownView.Document(md) };
-        bool source = false;
+        var source = false;
         var toggle = new Button { Content = "Source", Padding = new Thickness(8, 2), MinHeight = 0, FontSize = Size(12), HorizontalAlignment = HorizontalAlignment.Left };
         toggle.Click += (_, _) =>
         {
@@ -146,15 +146,15 @@ partial class ReadableLog
         return new StackPanel { Spacing = 4, Children = { toggle, view } };
     }
 
-    static Control Plain(string text) =>
-        new SelectableTextBlock { Text = text, FontFamily = Ui.Theme.Mono, FontSize = Ui.Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(SelectableTextBlock.ForegroundProperty, Text);
+    private static Control Plain(string text) =>
+        new SelectableTextBlock { Text = text, FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, Text);
 
     /// <summary>Shell output with its colors. Palette follows the theme at the time the step is opened.</summary>
-    static Control AnsiText(List<TextDecode.AnsiRun> runs)
+    private static Control AnsiText(List<TextDecode.AnsiRun> runs)
     {
-        var tb = new SelectableTextBlock { FontFamily = Ui.Theme.Mono, FontSize = Ui.Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(SelectableTextBlock.ForegroundProperty, Text);
-        bool dark = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-        tb.Inlines ??= new InlineCollection();
+        var tb = new SelectableTextBlock { FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, Text);
+        var dark = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+        tb.Inlines ??= [];
         foreach (var r in runs)
         {
             var run = new Run(r.Text);
@@ -173,20 +173,20 @@ partial class ReadableLog
         return tb;
     }
 
-    static readonly string[] _ansiDark =
-        { "#6E7681", "#F47067", "#57AB5A", "#C69026", "#539BF5", "#B083F0", "#39C5CF", "#ADBAC7", "#909DAB", "#FF938A", "#6BC46D", "#DAAA3F", "#6CB6FF", "#DCBDFB", "#56D4DD", "#CDD9E5" };
-    static readonly string[] _ansiLight =
-        { "#24292F", "#CF222E", "#116329", "#7D4E00", "#0550AE", "#8250DF", "#1B7C83", "#6E7781", "#57606A", "#A40E26", "#1A7F37", "#633C01", "#0969DA", "#6639BA", "#3192AA", "#8C959F" };
+    private static readonly string[] _ansiDark =
+        ["#6E7681", "#F47067", "#57AB5A", "#C69026", "#539BF5", "#B083F0", "#39C5CF", "#ADBAC7", "#909DAB", "#FF938A", "#6BC46D", "#DAAA3F", "#6CB6FF", "#DCBDFB", "#56D4DD", "#CDD9E5"];
+    private static readonly string[] _ansiLight =
+        ["#24292F", "#CF222E", "#116329", "#7D4E00", "#0550AE", "#8250DF", "#1B7C83", "#6E7781", "#57606A", "#A40E26", "#1A7F37", "#633C01", "#0969DA", "#6639BA", "#3192AA", "#8C959F"];
 
-    static Color AnsiColor(int c, bool dark) =>
+    private static Color AnsiColor(int c, bool dark) =>
         c >= 0x1000000 ? Color.FromRgb((byte)(c >> 16), (byte)(c >> 8), (byte)c) : Color.Parse((dark ? _ansiDark : _ansiLight)[Math.Clamp(c, 0, 15)]);
 
     /// <summary>Builds the expander's content the first time it opens, so hundreds of steps stay fast.</summary>
-    static Expander Lazy(Expander x, Func<Control> content)
+    private static Expander Lazy(Expander x, Func<Control> content)
     {
         x.PropertyChanged += (_, e) => { if (e.Property == Expander.IsExpandedProperty && x.IsExpanded && x.Content == null) { x.Content = content(); } };
         return x;
     }
 
-    static string FirstLine(string s) { var l = s.TrimStart().Split('\n')[0]; return l.Length > 120 ? l[..120] + "…" : l; }
+    private static string FirstLine(string s) { var l = s.TrimStart().Split('\n')[0]; return l.Length > 120 ? l[..120] + "…" : l; }
 }

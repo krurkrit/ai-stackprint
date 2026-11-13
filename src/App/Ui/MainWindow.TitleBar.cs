@@ -13,15 +13,15 @@ namespace AiStackprint.Ui;
 /// Custom title bar: name and back/forward on the left, minimize and close on the right.
 /// F11 toggles full screen (there is no full-screen button). On macOS the system window buttons stay.
 /// </summary>
-partial class MainWindow
+internal partial class MainWindow
 {
-    const double TitleBarHeight = 40;
-    Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!;
-    WindowState _beforeFullScreen = WindowState.Normal;
+    private const double TitleBarHeight = 40;
+    private Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!;
+    private WindowState _beforeFullScreen = WindowState.Normal;
 
-    Control TitleBar()
+    private Control TitleBar()
     {
-        bool mac = OperatingSystem.IsMacOS();
+        var mac = OperatingSystem.IsMacOS();
         ExtendClientAreaToDecorationsHint = true;
         if (mac)
         {
@@ -88,10 +88,10 @@ partial class MainWindow
     }
 
     /// <summary>Title-bar icon button: muted icon, Rescan colors (accent fill, accent text) under the pointer.</summary>
-    static Button TitleBtn(string icon, string tip, Action a)
+    private static Button TitleBtn(string icon, string tip, Action a)
     {
         var b = new Button { Content = Icon(icon, 16), Padding = new Thickness(8), Background = Avalonia.Media.Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
-        b.Themed(Button.ForegroundProperty, Muted);   // the icon inherits it, so the hover text color applies too
+        b.Themed(ForegroundProperty, Muted);   // the icon inherits it, so the hover text color applies too
         HoverStyle(b);
         ToolTip.SetTip(b, tip);
         b.Click += (_, _) => a();
@@ -99,7 +99,7 @@ partial class MainWindow
     }
 
     /// <summary>Close turns the danger-button red under the pointer, like the Windows close button.</summary>
-    static Button CloseHover(Button b)
+    private static Button CloseHover(Button b)
     {
         foreach (var v in new[] { Avalonia.Styling.ThemeVariant.Light, Avalonia.Styling.ThemeVariant.Dark })
         {
@@ -119,7 +119,7 @@ partial class MainWindow
     }
 
     /// <summary>Disabled back/forward: no gray fill, only a faded icon.</summary>
-    static Button HistoryBtn(Button b)
+    private static Button HistoryBtn(Button b)
     {
         b.Resources["ButtonBackgroundDisabled"] = Avalonia.Media.Brushes.Transparent;
         b.Resources["ButtonBorderBrushDisabled"] = Avalonia.Media.Brushes.Transparent;
@@ -127,23 +127,23 @@ partial class MainWindow
         return b;
     }
 
-    void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    private void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
-    void ToggleFullScreen()
+    private void ToggleFullScreen()
     {
         if (WindowState == WindowState.FullScreen) { WindowState = _beforeFullScreen; return; }
         _beforeFullScreen = WindowState == WindowState.Minimized ? WindowState.Normal : WindowState;
         WindowState = WindowState.FullScreen;
     }
 
-    void UpdateMaxButton()
+    private void UpdateMaxButton()
     {
-        bool max = WindowState == WindowState.Maximized;
+        var max = WindowState == WindowState.Maximized;
         _maxBtn.Content = Icon(max ? "restore" : "maximize", 16);
         ToolTip.SetTip(_maxBtn, max ? "Restore" : "Maximize");
     }
 
-    void UpdateHistoryButtons()
+    private void UpdateHistoryButtons()
     {
         _backBtn.IsEnabled = _back.Count > 0;
         _forwardBtn.IsEnabled = _forward.Count > 0;

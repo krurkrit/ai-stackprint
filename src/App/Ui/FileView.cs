@@ -12,11 +12,11 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Shows one file read-only: Markdown rendered (front matter left out), text highlighted, images as images.</summary>
-static class FileView
+internal static class FileView
 {
-    const long MaxText = 2 << 20;
-    static readonly string[] _images = { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".ico" };
-    static readonly string[] _markdown = { ".md", ".markdown", ".mdc" };
+    private const long MaxText = 2 << 20;
+    private static readonly string[] _images = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".ico"];
+    private static readonly string[] _markdown = [".md", ".markdown", ".mdc"];
 
     public static bool IsMarkdown(string path) => _markdown.Contains(Path.GetExtension(path).ToLowerInvariant());
 
@@ -74,7 +74,7 @@ static class FileView
         return r.ReadToEnd();
     }
 
-    static Control TooBig(string path, long len, bool binary = false) => new StackPanel
+    private static Control TooBig(string path, long len, bool binary = false) => new StackPanel
     {
         Spacing = 10,
         Children = { Txt(binary ? "This file is not text." : $"This file is {LogViewer.Size(len)}, too large to show here.", 13, false, Muted),

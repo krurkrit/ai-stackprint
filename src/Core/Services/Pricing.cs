@@ -17,7 +17,7 @@ public class ModelPrice
 public class PriceFile
 {
     public string? Note { get; set; }
-    public Dictionary<string, ModelPrice> Models { get; set; } = new();
+    public Dictionary<string, ModelPrice> Models { get; set; } = [];
 }
 
 /// <summary>
@@ -28,9 +28,9 @@ public static class Pricing
 {
     public static string FilePath => Path.Combine(AppCatalog.Folder, "prices.json");
 
-    static PriceFile? _file;
-    static DateTime _stamp, _checked;
-    static readonly object _gate = new();
+    private static PriceFile? _file;
+    private static DateTime _stamp, _checked;
+    private static readonly object _gate = new();
 
     public static PriceFile Defaults() => new()
     {
@@ -58,7 +58,7 @@ public static class Pricing
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
-    static PriceFile Load()
+    private static PriceFile Load()
     {
         lock (_gate)
         {
@@ -103,7 +103,7 @@ public static class Pricing
             {
                 Ensure();
                 var file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog._opt) ?? Defaults();
-                bool changed = false;
+                var changed = false;
                 foreach (var m in models.Distinct())
                 {
                     if (!file.Models.Keys.Any(k => k.Length > 0 && m.Contains(k, StringComparison.OrdinalIgnoreCase))) { file.Models[m] = new ModelPrice(); changed = true; }

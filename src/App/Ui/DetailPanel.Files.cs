@@ -11,11 +11,11 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>The right side of the panel: Content (the open file) and Files (everything in the folder), with Back for followed links.</summary>
-partial class DetailPanel
+internal partial class DetailPanel
 {
-    Control Content()
+    private Control Content()
     {
-        var tabs = Pills(new[] { ("Content", "Content"), ("Files", "Files") }, _tab, v => { _tab = v; Render(); });
+        var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v => { _tab = v; Render(); });
         var bar = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
         DockPanel.SetDock(tabs, Dock.Right);
         bar.Children.Add(tabs);
@@ -27,7 +27,7 @@ partial class DetailPanel
 
         if (_tab == "Content" && Current is { } cur)
         {
-            crumbs.Add(Txt(Rel(cur), 13, false, Muted).With(t => t.FontFamily = Ui.Theme.Mono));
+            crumbs.Add(Txt(Rel(cur), 13, false, Muted).With(t => t.FontFamily = Theme.Mono));
             if (FileView.IsMarkdown(cur))
             {
                 crumbs.Add(Btn(_raw ? "Rendered" : "Source", () => { _raw = !_raw; Render(); }, false, _raw ? "document_text" : "code"));
@@ -35,10 +35,10 @@ partial class DetailPanel
 
             crumbs.Add(IconBtn("open", "Open in its app", () => PathUtil.OpenFile(cur)));
         }
-        bar.Children.Add(Row(crumbs.ToArray()));
+        bar.Children.Add(Row([.. crumbs]));
 
         Control body;
-        bool scrolls = true;
+        var scrolls = true;
         if (_tab == "Files")
         {
             body = FileList();
@@ -59,9 +59,9 @@ partial class DetailPanel
         return dock;
     }
 
-    string Rel(string? path) => path == null ? "" : Path.GetRelativePath(Root, path);
+    private string Rel(string? path) => path == null ? "" : Path.GetRelativePath(Root, path);
 
-    Control FileList()
+    private Control FileList()
     {
         var files = SkillDoc.Files(Root);
         if (files.Count == 0)
@@ -72,12 +72,12 @@ partial class DetailPanel
         var rows = files.Select(f =>
         {
             var full = Path.Combine(Root, f.Rel);
-            return new TableRow(new Control[] { Mono(f.Rel, 13), Txt(LogViewer.Size(f.Size), 13, false, Muted) }, () => Open(full), full == Current);
+            return new TableRow([Mono(f.Rel, 13), Txt(LogViewer.Size(f.Size), 13, false, Muted)], () => Open(full), full == Current);
         });
-        return Table.Build(new[] { new Col("File", "*"), new Col("Size", "90", true) }, rows);
+        return Table.Build([new Col("File", "*"), new Col("Size", "90", true)], rows);
     }
 
-    void Open(string file)
+    private void Open(string file)
     {
         if (file != Current)
         {
@@ -89,7 +89,7 @@ partial class DetailPanel
         Render();
     }
 
-    void GoBack()
+    private void GoBack()
     {
         if (_back.Count == 0)
         {
@@ -105,7 +105,7 @@ partial class DetailPanel
     /// A link in the open document. Web links open in the browser; files inside the folder open here; a folder shows Files.
     /// A link that leaves the folder is not followed here: it asks, then opens that place in the file manager.
     /// </summary>
-    async void Link(string link)
+    private async void Link(string link)
     {
         if (SkillDoc.IsExternal(link)) { PathUtil.OpenFile(link); return; }
         if (link.StartsWith('#') || Current is not { } from)

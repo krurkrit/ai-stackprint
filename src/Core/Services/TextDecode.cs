@@ -25,7 +25,7 @@ public static partial class TextDecode
     [GeneratedRegex(@"data:image/[a-z+.-]+;base64,[A-Za-z0-9+/=]{200,}")]
     private static partial Regex DataUrl();
 
-    static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     /// <summary>Removes ANSI escape sequences (colors, cursor moves, window titles).</summary>
     public static string Strip(string s) => s.Contains('\x1B') ? AnsiCode().Replace(s, "").Replace("\r\n", "\n") : s;
@@ -33,13 +33,13 @@ public static partial class TextDecode
     /// <summary>True when the text holds JSON escapes as characters (\u001b, \n) instead of real ones: mostly one line with escapes in it.</summary>
     public static bool LooksEscaped(string s)
     {
-        int escapes = JsonEscape().Count(s);
+        var escapes = JsonEscape().Count(s);
         if (escapes == 0)
         {
             return false;
         }
 
-        int lines = 0;
+        var lines = 0;
         foreach (var c in s)
         {
             if (c == '\n')
@@ -70,7 +70,7 @@ public static partial class TextDecode
     /// <summary>The ANSI text as colored runs (SGR codes: 30-37, 90-97, 38;5;n, 38;2;r;g;b, bold, reset). Other codes are dropped.</summary>
     public static List<AnsiRun> Runs(string s)
     {
-        var runs = new List<AnsiRun>(); int at = 0; int? fg = null; bool bold = false;
+        var runs = new List<AnsiRun>(); var at = 0; int? fg = null; var bold = false;
         foreach (Match m in AnsiCode().Matches(s))
         {
             if (m.Index > at)
@@ -86,9 +86,9 @@ public static partial class TextDecode
             }
 
             var codes = v[2..^1].Split(';');
-            for (int i = 0; i < codes.Length; i++)
+            for (var i = 0; i < codes.Length; i++)
             {
-                int c = codes[i] == "" ? 0 : int.TryParse(codes[i], out var n) ? n : -1;
+                var c = codes[i] == "" ? 0 : int.TryParse(codes[i], out var n) ? n : -1;
                 if (c == 0) { fg = null; bold = false; }
                 else if (c == 1)
                 {
@@ -123,12 +123,12 @@ public static partial class TextDecode
             runs.Add(new(s[at..], fg, bold));
         }
 
-        return runs.Where(r => r.Text.Length > 0).Select(r => r with { Text = r.Text.Replace("\r\n", "\n") }).ToList();
+        return [.. runs.Where(r => r.Text.Length > 0).Select(r => r with { Text = r.Text.Replace("\r\n", "\n") })];
     }
 
-    static int Rgb(int r, int g, int b) => 0x1000000 | (Math.Clamp(r, 0, 255) << 16) | (Math.Clamp(g, 0, 255) << 8) | Math.Clamp(b, 0, 255);
+    private static int Rgb(int r, int g, int b) => 0x1000000 | (Math.Clamp(r, 0, 255) << 16) | (Math.Clamp(g, 0, 255) << 8) | Math.Clamp(b, 0, 255);
 
-    static int Palette256(int i)
+    private static int Palette256(int i)
     {
         if (i < 0 || i > 255)
         {
@@ -140,14 +140,14 @@ public static partial class TextDecode
             return i;
         }
 
-        if (i >= 232) { int g = 8 + 10 * (i - 232); return Rgb(g, g, g); }
-        int v = i - 16;
+        if (i >= 232) { var g = 8 + 10 * (i - 232); return Rgb(g, g, g); }
+        var v = i - 16;
         return Rgb(Level(v / 36), Level(v / 6 % 6), Level(v % 6));
     }
 
-    static int Level(int x) => x == 0 ? 0 : 55 + 40 * x;
+    private static int Level(int x) => x == 0 ? 0 : 55 + 40 * x;
 
-    static bool JsonLike(string? lang) => lang is null or ".txt" or ".json";
+    private static bool JsonLike(string? lang) => lang is null or ".txt" or ".json";
 
     /// <summary>Pretty JSON when the text is a JSON object/array, or a JSON string that contains one. False when it is not (or was cut off).</summary>
     public static bool TryPrettyJson(string text, out string pretty)
@@ -189,7 +189,7 @@ public static partial class TextDecode
             return new(p0, ".json", null, p0 != text);
         }
 
-        var t = text; bool changed = false;
+        var t = text; var changed = false;
         if (LooksEscaped(t)) { t = Unescape(t); changed = true; }
         var shortened = DataUrl().Replace(t, m => $"[image data, {Math.Max(1, m.Length * 3 / 4 / 1024)} KB]");
         if (shortened != t) { t = shortened; changed = true; }

@@ -9,7 +9,7 @@ namespace AiStackprint.Core.Tests;
 
 public class TextDecodeTests
 {
-    const string Esc = "\u001b";
+    private const string Esc = "\u001b";
 
     [Fact]
     public void Strip_removes_colors_and_other_escape_sequences()
@@ -23,7 +23,7 @@ public class TextDecodeTests
     public void Runs_follow_sgr_codes()
     {
         var runs = TextDecode.Runs($"a{Esc}[1;31mb{Esc}[0mc{Esc}[38;5;2md{Esc}[38;2;1;2;3me");
-        Assert.Equal(new[] { "a", "b", "c", "d", "e" }, runs.Select(r => r.Text));
+        Assert.Equal(["a", "b", "c", "d", "e"], runs.Select(r => r.Text));
         Assert.Null(runs[0].Color);
         Assert.Equal(1, runs[1].Color); Assert.True(runs[1].Bold);
         Assert.Null(runs[2].Color); Assert.False(runs[2].Bold);

@@ -66,7 +66,7 @@ public static class ConfigEditor
         return backup;
     }
 
-    static bool HasBom(string path)
+    private static bool HasBom(string path)
     {
         using var fs = File.OpenRead(path);
         Span<byte> b = stackalloc byte[3];
