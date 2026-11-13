@@ -18,6 +18,8 @@ public sealed class LogFolderWatcher : IDisposable
     private readonly Timer _debounce, _poll;
     private readonly object _lock = new();
     private readonly HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _created = new(StringComparer.OrdinalIgnoreCase);
+    private readonly DateTime _started = DateTime.UtcNow;
     private readonly string? _newest;
     private (long Size, long Ticks) _stamp;
     private bool _structure, _pending;
@@ -43,8 +45,8 @@ public sealed class LogFolderWatcher : IDisposable
             {
                 var w = new FileSystemWatcher(dir, pattern) { IncludeSubdirectories = recursive, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size };
                 w.Changed += (_, e) => Kick(e.FullPath, false);
-                w.Created += (_, e) => Kick(e.FullPath, true);
-                w.Deleted += (_, e) => Kick(e.FullPath, true);
+                w.Created += (_, e) => Kick(e.FullPath, IsNew(e.FullPath));
+                w.Deleted += (_, e) => { Forget(e.FullPath); Kick(e.FullPath, true); };
                 w.Renamed += (_, e) => { Kick(e.OldFullPath, true); Kick(e.FullPath, true); };
                 w.Error += (_, _) => Kick(dir, true);   // buffer overflow: find the files again
                 w.EnableRaisingEvents = true;
@@ -54,6 +56,34 @@ public sealed class LogFolderWatcher : IDisposable
         }
         var every = poll ?? TimeSpan.FromSeconds(10);
         _poll = new Timer(_ => Poll(), null, every, every);
+    }
+
+    /// <summary>
+    /// macOS (FSEvents) also reports writes to an existing file as Created. A file counts as new only the first time,
+    /// and only when it was made after the watcher started; later Created events for it are plain changes.
+    /// </summary>
+    private bool IsNew(string path)
+    {
+        try
+        {
+            if (File.Exists(path) && File.GetCreationTimeUtc(path) <= _started)
+            {
+                return false;
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        lock (_lock)
+        {
+            return _created.Add(path);
+        }
+    }
+
+    private void Forget(string path)
+    {
+        lock (_lock)
+        {
+            _created.Remove(path);
+        }
     }
 
     private void Kick(string path, bool structure)
