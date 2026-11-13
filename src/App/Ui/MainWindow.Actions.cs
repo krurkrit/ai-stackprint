@@ -104,6 +104,11 @@ internal partial class MainWindow
         _scanning = false; _scanned = true;
         Refresh();
         RequestLimits();
+        if (first)
+        {
+            UpdateView.Startup(_x);
+        }
+
         if (first && CrashLog.TakeNew())
         {
             Toast.Show("AI Stackprint closed unexpectedly last time. The details are in " + CrashLog.File, "warning", 12);

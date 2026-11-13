@@ -38,7 +38,7 @@ internal class SettingsView(Ctx x)
         });
         var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);
 
-        return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x),
+        return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x), UpdateView.Settings(x),
             Section("eye_off", "App visibility", new StackPanel
             {
                 Spacing = 12,

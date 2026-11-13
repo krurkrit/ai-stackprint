@@ -113,6 +113,9 @@ public class Settings
     public int FadeSeconds { get; set; } = 10;         // new log lines/steps stay highlighted and fade out over this many seconds; 0 = off
     public int LimitsRefreshMinutes { get; set; } = 1; // live usage limits: at most one call per app per this many minutes (min 1)
     public List<string> LimitsEnabled { get; set; } = [];   // app ids whose saved sign-in may be used to ask the provider for limits (opt-in)
+    public bool CheckUpdates { get; set; }              // ask GitHub for the latest release at most once a day (opt-in)
+    public DateTime? UpdateCheckedUtc { get; set; }     // last successful check
+    public string? UpdateDismissed { get; set; }        // "Later" on this version: no notice until a newer one
     public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
     public ThemeColors Light { get; set; } = new();
     public ThemeColors Dark { get; set; } = new();

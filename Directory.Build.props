@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Version>0.1.0</Version>   <!-- app version; release tags are v<Version> (UpdateCheck compares with the latest GitHub release) -->
   </PropertyGroup>
   <PropertyGroup>
     <!-- .NET analyzers: latest rule set; which rules are warnings is set in .editorconfig (aspnetcore's list) -->
