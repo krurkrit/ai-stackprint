@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using AiStackprint.Models;
 
 namespace AiStackprint.Services;
@@ -40,7 +41,7 @@ class ClaudePluginReader : IPluginReader
                     string? project = Str("projectPath") is "" ? null : Str("projectPath");
                     var (desc, author) = Manifest(path);
                     rows.Add(new Item("Plugin", p.Name, desc, app.Name, level, path)
-                        { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name) });
+                    { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name) });
                     if (path != "")
                         Scanner.Tagged(rows, () => Scanner.ReadRoot(path, new ScanRoot { Level = level, Depth = 6 }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
                             i => i with { App = app.Id, Plugin = p.Name, Project = project });

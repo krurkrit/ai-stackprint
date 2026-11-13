@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -144,11 +146,15 @@ static class LimitsView
             };
             return new TableRow(new Control[] { AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, 13, false, Muted), sw });
         });
-        return Section("data_pie", "Usage limits", new StackPanel { Spacing = 12, Children =
+        return Section("data_pie", "Usage limits", new StackPanel
+        {
+            Spacing = 12,
+            Children =
         {
             Txt("Plan and limits from each app's own sign-in, asked from the provider the app uses. Off until you turn it on per app. Codex limits also come from its session log without any call.", 13, false, Muted),
             Row(Txt("Refresh every", 14, false, Muted), every, Txt("minutes (at least 1); pages show the last reading in between", 12, false, Muted)),
             Table.Build(new[] { new Col("App", "2*"), new Col("Asks", "1.4*"), new Col("Live limits", "1*") }, rows)
-        } });
+        }
+        });
     }
 }

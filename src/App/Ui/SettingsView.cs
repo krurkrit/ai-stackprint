@@ -1,6 +1,8 @@
-using Avalonia.Controls;
 using AiStackprint.Models;
 using AiStackprint.Services;
+
+using Avalonia.Controls;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -31,9 +33,13 @@ class SettingsView(Ctx x)
         var table = Table.Build(new[] { new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*") }, rows);
 
         return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x),
-            Section("eye_off", "App visibility", new StackPanel { Spacing = 12, Children = {
+            Section("eye_off", "App visibility", new StackPanel
+            {
+                Spacing = 12,
+                Children = {
                 Txt("Hidden apps are skipped when scanning and left out of the dashboard, lists and projects. Saved to " + SettingsStore.File, 13, false, Muted),
-                notInstalled, table } }));
+                notInstalled, table }
+            }));
     }
 
     void Save(Action change)

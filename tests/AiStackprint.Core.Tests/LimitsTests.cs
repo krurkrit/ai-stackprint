@@ -1,5 +1,6 @@
 using AiStackprint.Models;
 using AiStackprint.Services;
+
 using Xunit;
 
 namespace AiStackprint.Core.Tests;
@@ -149,7 +150,7 @@ public class ScanAndHealthTests : IDisposable
     {
         var plugin = new Item("Plugin", "gone@market", "", "Claude Code", "User", Path.Combine(_tmp, "nope")) { App = "claude-code" };
         var skills = Enumerable.Range(0, 12).Select(i => new Item("Skill", $"s{i}", new string('d', 900), "Claude Code", "User", Path.Combine(_tmp, $"s{i}", "SKILL.md"))
-            { App = "claude-code", Invokers = new[] { "Agent", "User" } }).ToList();
+        { App = "claude-code", Invokers = new[] { "Agent", "User" } }).ToList();
         var issues = Health.Compute(skills.Append(plugin).ToList());
         Assert.Contains(issues, h => h.Area == "Plugins" && h.Finding.Warning && h.Finding.Text.Contains("folder is missing"));
         Assert.Contains(issues, h => h.Subject == "Claude Code skill list" && h.Finding.Warning);

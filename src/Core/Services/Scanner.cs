@@ -87,7 +87,7 @@ public static class Scanner
         if (!File.Exists(path) && !Directory.Exists(path)) return;
         var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", _ => "Instructions" };
         rows.Add(new Item("Config", Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar)), kind, d.Name, c.Level, path)
-            { App = d.Id, Project = project, LevelLabel = c.Label });
+        { App = d.Id, Project = project, LevelLabel = c.Label });
     }
 
     public static void ReadRoot(string path, ScanRoot r, string source, List<Item> rows)
@@ -132,7 +132,7 @@ public static class Scanner
                     var l = lines[i];
                     if (l.Length > 0 && !char.IsWhiteSpace(l[0]) && l.Contains(':')) block = l[..l.IndexOf(':')].Trim();
                     if (l.StartsWith("name:")) { var n = Clean(l[5..]); if (n != "") name = n; }
-                    else if (l.StartsWith("author:") || (block == "metadata" && l.Length > 0 && char.IsWhiteSpace(l[0]) &&l.TrimStart().StartsWith("author:")))
+                    else if (l.StartsWith("author:") || (block == "metadata" && l.Length > 0 && char.IsWhiteSpace(l[0]) && l.TrimStart().StartsWith("author:")))
                     { var a = Clean(l.TrimStart()[7..]); if (a != "") author = a; }
                     else if (l.StartsWith("description:"))
                     {

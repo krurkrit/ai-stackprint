@@ -1,6 +1,7 @@
-using Avalonia.Platform.Storage;
 using AiStackprint.Models;
 using AiStackprint.Services;
+
+using Avalonia.Platform.Storage;
 
 namespace AiStackprint.Ui;
 

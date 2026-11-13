@@ -1,12 +1,15 @@
 using System.Text.RegularExpressions;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Documents;
-using Avalonia.Layout;
-using Avalonia.Threading;
+
 using AiStackprint.Models;
 using AiStackprint.Services;
+
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
+using Avalonia.Threading;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -14,7 +17,7 @@ namespace AiStackprint.Ui;
 /// <summary>Read-only viewer for one log file: Raw (highlighted text) or Conversation (sessions), search with a results list and jump-to-line.</summary>
 class LogViewer
 {
-    readonly Ctx x;
+    readonly Ctx _x;
     readonly TextBox _query = SearchBox("Search this file", 0).With(t => t.MinWidth = 200);
     readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(8, 4) }, _regex = new() { Content = ".*", Padding = new Thickness(8, 4) }, _only = new() { Content = "Only matching", Padding = new Thickness(8, 4) };
     readonly ContentControl _view = new(), _results = new();
@@ -33,7 +36,7 @@ class LogViewer
 
     public LogViewer(Ctx ctx)
     {
-        x = ctx;
+        _x = ctx;
         ToolTip.SetTip(_case, "Match case"); ToolTip.SetTip(_regex, "Regular expression"); ToolTip.SetTip(_only, "Show only matching lines (Raw)");
         foreach (var t in new[] { _case, _regex, _only }) t.VerticalContentAlignment = VerticalAlignment.Center;
         _query.TextChanged += (_, _) => Search();
@@ -75,7 +78,7 @@ class LogViewer
     const int ReadableBytes = 8 << 20, RawBytes = 256 * 1024;
 
     /// <summary>Highlight time for new content, from Settings (0 = off).</summary>
-    double FadeSeconds => Math.Clamp(x.S.Settings.FadeSeconds, 0, 60);
+    double FadeSeconds => Math.Clamp(_x.S.Settings.FadeSeconds, 0, 60);
 
     /// <summary>Re-reads the file. Raw: last 256 KB (or the window around a search hit). Conversation: up to 8 MB parsed.</summary>
     /// <param name="update">The file grew while open: highlight what is new.</param>
@@ -145,7 +148,7 @@ class LogViewer
     void Render(bool toEnd)
     {
         if (ShowReadable) { _view.Content = _readable?.Root; return; }
-        _code ??= new CodeView(_file!.Path, lineNumbers: x.S.Settings.LogLineNumbers) { KeepOnDetach = true };
+        _code ??= new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true };
         var text = _raw;
         if (_only.IsChecked == true && Pattern() is { } p) text = string.Join('\n', text.Split('\n').Where(l => p.IsMatch(l)));
         _code.Text = text;
@@ -221,9 +224,18 @@ class LogViewer
 
     static Control Hit(string where, string text, Action go)
     {
-        var b = new Border { CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 4), Cursor = Hand, Background = Avalonia.Media.Brushes.Transparent,
-            Child = new StackPanel { Children = { Txt(where, 12, false, Accent).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; }),
-                Txt(text, 12).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) } } };
+        var b = new Border
+        {
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(6, 4),
+            Cursor = Hand,
+            Background = Avalonia.Media.Brushes.Transparent,
+            Child = new StackPanel
+            {
+                Children = { Txt(where, 12, false, Accent).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; }),
+                Txt(text, 12).With(t => { t.FontFamily = Ui.Theme.Mono; t.FontSize = Ui.Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
+            }
+        };
         b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);
         b.PointerExited += (_, _) => b.Background = Avalonia.Media.Brushes.Transparent;
         b.PointerReleased += (_, _) => go();

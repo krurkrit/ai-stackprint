@@ -1,3 +1,6 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -8,8 +11,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -45,7 +47,9 @@ partial class MainWindow : Window
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
         {
-            Width = OpenWidth, ClipToBounds = true, Padding = new Thickness(10, 12),
+            Width = OpenWidth,
+            ClipToBounds = true,
+            Padding = new Thickness(10, 12),
             Transitions = new Transitions { new DoubleTransition { Property = WidthProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() } }
         }.Themed(Border.BackgroundProperty, SideKey);
         var main = new DockPanel();
@@ -88,9 +92,14 @@ partial class MainWindow : Window
         if (full) content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
         var b = new Button
         {
-            Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, MinHeight = 40, Background = Brushes.Transparent,
+            Content = content,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            MinHeight = 40,
+            Background = Brushes.Transparent,
             HorizontalContentAlignment = full ? HorizontalAlignment.Left : HorizontalAlignment.Center,
-            Padding = new Thickness(full ? 12 : 0, 0), FontWeight = MenuWeight, FontSize = Size(14)
+            Padding = new Thickness(full ? 12 : 0, 0),
+            FontWeight = MenuWeight,
+            FontSize = Size(14)
         };
         if (active)
         {

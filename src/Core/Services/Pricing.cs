@@ -25,8 +25,8 @@ public static class Pricing
 {
     public static string FilePath => Path.Combine(AppCatalog.Folder, "prices.json");
 
-    static PriceFile? _file;
-    static DateTime _stamp, _checked;
+    static PriceFile? s_file;
+    static DateTime s_stamp, s_checked;
     static readonly object Gate = new();
 
     public static PriceFile Defaults() => new()
@@ -55,20 +55,20 @@ public static class Pricing
     {
         lock (Gate)
         {
-            if (_file != null && DateTime.UtcNow - _checked < TimeSpan.FromSeconds(2)) return _file;
-            _checked = DateTime.UtcNow;
+            if (s_file != null && DateTime.UtcNow - s_checked < TimeSpan.FromSeconds(2)) return s_file;
+            s_checked = DateTime.UtcNow;
             try
             {
                 Ensure();
                 var stamp = File.GetLastWriteTimeUtc(FilePath);
-                if (_file == null || stamp != _stamp)
+                if (s_file == null || stamp != s_stamp)
                 {
-                    _file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog.Opt) ?? Defaults();
-                    _stamp = stamp;
+                    s_file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog.Opt) ?? Defaults();
+                    s_stamp = stamp;
                 }
             }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { _file ??= Defaults(); }
-            return _file;
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { s_file ??= Defaults(); }
+            return s_file;
         }
     }
 
@@ -95,7 +95,7 @@ public static class Pricing
                 bool changed = false;
                 foreach (var m in models.Distinct())
                     if (!file.Models.Keys.Any(k => k.Length > 0 && m.Contains(k, StringComparison.OrdinalIgnoreCase))) { file.Models[m] = new ModelPrice(); changed = true; }
-                if (changed) { File.WriteAllText(FilePath, JsonSerializer.Serialize(file, AppCatalog.Opt)); _file = null; }
+                if (changed) { File.WriteAllText(FilePath, JsonSerializer.Serialize(file, AppCatalog.Opt)); s_file = null; }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
         }

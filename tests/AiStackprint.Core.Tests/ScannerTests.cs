@@ -1,5 +1,6 @@
 using AiStackprint.Models;
 using AiStackprint.Services;
+
 using Xunit;
 
 namespace AiStackprint.Core.Tests;
@@ -42,7 +43,8 @@ public class ScannerTests : IDisposable
         File.WriteAllText(Path.Combine(proj, "services", "api", "RULES.md"), "r");
         var d = new AppDefinition
         {
-            Id = "app", Name = "App",
+            Id = "app",
+            Name = "App",
             ProjectRoots = { new ScanRoot { Path = ".app/skills", Level = "Project", Nested = true, Label = "REPO" } },
             Configs = { new ConfigFile { Path = "RULES.md", Level = "Project", Nested = true }, new ConfigFile { Path = "LOCAL.md", Level = "Local" } }
         };
@@ -65,7 +67,8 @@ public class ScannerTests : IDisposable
         Skill(home, "mine");
         var d = new AppDefinition
         {
-            Id = "codex", Name = "Codex",
+            Id = "codex",
+            Name = "Codex",
             Roots = { new ScanRoot { Path = home }, new ScanRoot { Path = Path.Combine(home, ".system"), Bundled = true } }
         };
         var skills = Scanner.Collect(new[] { d }, Array.Empty<string>()).Items.Where(i => i.Kind == "Skill").ToList();

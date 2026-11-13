@@ -132,8 +132,15 @@ static class W
 
     /// <summary>Success status as an outlined pill (Snowy Owl report style). Readable in both themes.</summary>
     public static Control Status(string s) =>
-        new Border { CornerRadius = new CornerRadius(999), BorderThickness = new Thickness(1), Padding = new Thickness(8, 1), HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center, Child = Txt(s, 12, true, SuccessText) }
+        new Border
+        {
+            CornerRadius = new CornerRadius(999),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(8, 1),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = Txt(s, 12, true, SuccessText)
+        }
             .Themed(Border.BorderBrushProperty, SuccessKey).Themed(Border.BackgroundProperty, SuccessFill);
 
     public static TextBlock DotText(string s, string key) => WithDot(Dot(key), s, 13).With(t => t.VerticalAlignment = VerticalAlignment.Center);
@@ -277,7 +284,9 @@ static class W
     /// <summary>Search field: text and icon centered vertically. 40 px tall on list pages; pass 0 to match a row of 32-px controls.</summary>
     public static TextBox SearchBox(string placeholder, double minHeight = 40) => new()
     {
-        PlaceholderText = placeholder, MinHeight = minHeight, VerticalContentAlignment = VerticalAlignment.Center,
+        PlaceholderText = placeholder,
+        MinHeight = minHeight,
+        VerticalContentAlignment = VerticalAlignment.Center,
         InnerLeftContent = Icon("search", 16).Themed(TextElement.ForegroundProperty, Muted).With(i => { i.Margin = new Thickness(10, 0, 0, 0); i.VerticalAlignment = VerticalAlignment.Center; })
     };
 
@@ -303,13 +312,13 @@ static class W
         return wrap;
     }
 
-    static int _radioGroups;
+    static int s_radioGroups;
 
     /// <summary>One choice among <paramref name="opts"/> as radio buttons.</summary>
     public static Control Radios(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
     {
         var wrap = new WrapPanel { ItemSpacing = 16, LineSpacing = 6 };
-        string group = "r" + ++_radioGroups;
+        string group = "r" + ++s_radioGroups;
         foreach (var (label, value) in opts)
         {
             var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };

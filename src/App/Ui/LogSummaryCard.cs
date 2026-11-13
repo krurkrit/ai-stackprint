@@ -1,7 +1,9 @@
-using Avalonia;
-using Avalonia.Controls;
 using AiStackprint.Models;
 using AiStackprint.Services;
+
+using Avalonia;
+using Avalonia.Controls;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -54,7 +56,7 @@ class LogSummaryCard
         if (s.Newest is { } n) Add($"Last activity {n:yyyy-MM-dd HH:mm}");
         if (s.Oldest is { } o && s.Files > 1) Add($"Oldest {o:yyyy-MM-dd}");
         if (s.Errors + s.Warnings > 0 || s.Files > s.Sessions)
-            { Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null); Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null); }
+        { Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null); Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null); }
         if (s.TextCapped) Add("Error count covers the newest 50 MB of text logs");
         if (s.Sessions > 0)
         {

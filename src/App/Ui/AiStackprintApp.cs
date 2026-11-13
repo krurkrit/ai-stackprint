@@ -1,6 +1,6 @@
 using Avalonia;
-using Avalonia.Styling;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
 
 namespace AiStackprint.Ui;
 

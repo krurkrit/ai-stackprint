@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -72,11 +74,20 @@ static class AppearanceSection
         Group("Side menu");
         Add("Weight", Combo(labels, WLabel(st.MenuWeight, 500), l => Change(() => st.MenuWeight = WValue(l))));
 
-        var preview = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(14), Child = new StackPanel { Spacing = 6, Children =
+        var preview = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(14),
+            Child = new StackPanel
+            {
+                Spacing = 6,
+                Children =
         {
             Title("Claude Code", 22), Txt("Skills that apply in this project, with their level and source.", 14),
             Txt("Emphasis text · format-code · Project level", 14, true), Txt("Muted detail text", 12, false, Muted)
-        } } }.Themed(Border.BackgroundProperty, Background);
+        }
+            }
+        }.Themed(Border.BackgroundProperty, Background);
 
         var reset = Btn("Reset to defaults", () => Change(() =>
         {
@@ -85,8 +96,12 @@ static class AppearanceSection
             st.LogFontFamily = d.LogFontFamily; st.LogFontSize = d.LogFontSize; st.LogFontWeight = d.LogFontWeight; st.HeadingFontFamily = d.HeadingFontFamily; st.HeadingWeight = d.HeadingWeight;
             st.MenuWeight = d.MenuWeight; st.LogLineNumbers = d.LogLineNumbers; st.Light = new(); st.Dark = new();
         }), false, "arrow_reset");
-        var colors = new StackPanel { Spacing = 8, Children = { Title("Colors", 14), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", 12, false, Muted),
-            ColorSettings.Build(st, Change) } };
+        var colors = new StackPanel
+        {
+            Spacing = 8,
+            Children = { Title("Colors", 14), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", 12, false, Muted),
+            ColorSettings.Build(st, Change) }
+        };
         return Section("text_font", "Appearance", new StackPanel { Spacing = 16, Children = { grid, preview, colors } }, reset);
     }
 

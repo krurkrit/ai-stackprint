@@ -1,7 +1,9 @@
-using Avalonia.Controls;
-using Avalonia.Layout;
 using AiStackprint.Models;
 using AiStackprint.Services;
+
+using Avalonia.Controls;
+using Avalonia.Layout;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;

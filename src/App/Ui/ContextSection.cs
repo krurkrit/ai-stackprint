@@ -1,9 +1,11 @@
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -90,8 +92,13 @@ class ContextSection(Ctx x)
 
     static string Label(LoadWhen w) => w switch
     {
-        LoadWhen.Always => "At launch", LoadWhen.Imported => "At launch (import)", LoadWhen.OnDemand => "On demand", LoadWhen.Conditional => "Matching files",
-        LoadWhen.AgentDecides => "Agent decides", LoadWhen.Manual => "When mentioned", _ => "Ignored"
+        LoadWhen.Always => "At launch",
+        LoadWhen.Imported => "At launch (import)",
+        LoadWhen.OnDemand => "On demand",
+        LoadWhen.Conditional => "Matching files",
+        LoadWhen.AgentDecides => "Agent decides",
+        LoadWhen.Manual => "When mentioned",
+        _ => "Ignored"
     };
 
     /// <summary>Use of the limit: accent up to 75 %, warning to 100 %, error over it.</summary>
@@ -122,10 +129,19 @@ class ContextSection(Ctx x)
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { }
         }, out bool scrolls);
         Control body = scrolls ? new ScrollViewer { Content = view, MaxHeight = 420 } : view.With(v => v.Height = 380);
-        return new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(14), Child = new StackPanel { Spacing = 8, Children =
+        return new Border
+        {
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(14),
+            Child = new StackPanel
+            {
+                Spacing = 8,
+                Children =
         {
             Row(Txt(Show(path), 13, true).With(t => t.FontFamily = Ui.Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
             body
-        } } }.Themed(Border.BackgroundProperty, Surface);
+        }
+            }
+        }.Themed(Border.BackgroundProperty, Surface);
     }
 }

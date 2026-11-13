@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
-using AiStackprint.Models;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -37,8 +39,14 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
         Filter();
         var card = new Border
         {
-            Width = 640, MaxHeight = 520, VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 72, 0, 0),
-            CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(1), Padding = new Thickness(12),
+            Width = 640,
+            MaxHeight = 520,
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 72, 0, 0),
+            CornerRadius = new CornerRadius(12),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(12),
             Child = new DockPanel { Children = { _box.Free().With(b => { DockPanel.SetDock(b, Dock.Top); b.Margin = new Thickness(0, 0, 0, 10); }), new ScrollViewer { Content = _list.Free() } } }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         card.PointerPressed += (_, e) => e.Handled = true;   // clicks inside do not close it
@@ -78,8 +86,14 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
         for (int i = 0; i < _shown.Count; i++)
         {
             var en = _shown[i]; int at = i;
-            var row = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(10, 6), Cursor = Hand, Background = Brushes.Transparent,
-                Child = Row(Icon(en.Icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(en.Title, 14, true), Txt(en.Sub, 12, false, Muted)) };
+            var row = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(10, 6),
+                Cursor = Hand,
+                Background = Brushes.Transparent,
+                Child = Row(Icon(en.Icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(en.Title, 14, true), Txt(en.Sub, 12, false, Muted))
+            };
             if (i == _pick) row.Themed(Border.BackgroundProperty, Selected);
             row.PointerReleased += (_, _) => { _pick = at; Run(); };
             _list.Children.Add(row);

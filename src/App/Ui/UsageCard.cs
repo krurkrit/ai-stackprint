@@ -1,8 +1,10 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -157,17 +159,17 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         if (max <= 0)
             return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", 13, false, Muted);
 
-        const double H = 140;
-        var grid = new Grid { ColumnSpacing = 3, Height = H + 22, Margin = new Thickness(0, 6, 0, 0) };
+        const double barHeight = 140;
+        var grid = new Grid { ColumnSpacing = 3, Height = barHeight + 22, Margin = new Thickness(0, 6, 0, 0) };
         int step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
         for (int i = 0; i < bars.Count; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            var col = new Grid { RowDefinitions = new RowDefinitions($"{H},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
+            var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = 28 };
             for (int j = bars[i].Parts.Length - 1; j >= 0; j--)
                 if (bars[i].Parts[j] > 0)
-                    stack.Children.Add(new Border { Height = Math.Max(1, H * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(1) }.Themed(Border.BackgroundProperty, keys[j]));
+                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(1) }.Themed(Border.BackgroundProperty, keys[j]));
             var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", 10, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
             Grid.SetRow(label, 1);
             col.Children.Add(stack); col.Children.Add(label);
@@ -208,7 +210,7 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
                 }
             });
         }
-        string Win(WindowUse w) => $"{Fmt(w.Tokens)} tokens · {w.Messages:N0} messages" + (w.Cost is { } c ? " · " + Money(c) : "");
+        static string Win(WindowUse w) => $"{Fmt(w.Tokens)} tokens · {w.Messages:N0} messages" + (w.Cost is { } c ? " · " + Money(c) : "");
         var rows = new List<Control>
         {
             Txt("Last 5 hours: " + Win(live.Last5h), 13), Txt("Last 7 days: " + Win(live.Last7d), 13)

@@ -1,10 +1,11 @@
+using AiStackprint.Models;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
-using AiStackprint.Models;
 
 namespace AiStackprint.Ui;
 
@@ -17,7 +18,7 @@ static class Theme
 {
     // Snowy Owl color tokens
     const string White = "#F8F9FA", Black = "#34383C", DarkBlack = "#18191B";
-        const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
+    const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
     const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#12633D";
     // Status colors used as text, icons and bars must read on each theme's background: light warning is the Snowy Owl brown,
     // dark error and success are lighter tints. Fills behind white text (danger buttons, Close hover) keep Error.
@@ -118,21 +119,37 @@ static class Theme
         fluent.Accent = primary;
         var d = new ResourceDictionary
         {
-            [W.Background] = B(bg), [W.Text] = B(fg), [W.Surface] = B(C(p.Surface)), [W.SideKey] = B(C(p.Side)), [W.MainKey] = B(C(p.Main)),
-            [W.Muted] = B(A(fg, p.MutedAlpha)), [W.BorderKey] = B(A(fg, p.DividerAlpha)),
-            [W.Subtle] = B(hover), [W.Selected] = B(A(primary, p.SelectedAlpha)),
-            [W.Accent] = B(primary), [W.OnAccent] = B(onPrimary), [W.Link] = B(custom ?? C(p.Link)),
-            [W.SelectionKey] = B(selection), ["TextControlSelectionHighlightColor"] = B(selection),
-            [W.ErrorKey] = B(Status(p == Dark).Error), [W.ErrorFill] = B(C(Error)), [W.OnError] = B(Colors.White),
-            [W.WarningKey] = B(Status(p == Dark).Warning), [W.SuccessKey] = B(Status(p == Dark).Success),
+            [W.Background] = B(bg),
+            [W.Text] = B(fg),
+            [W.Surface] = B(C(p.Surface)),
+            [W.SideKey] = B(C(p.Side)),
+            [W.MainKey] = B(C(p.Main)),
+            [W.Muted] = B(A(fg, p.MutedAlpha)),
+            [W.BorderKey] = B(A(fg, p.DividerAlpha)),
+            [W.Subtle] = B(hover),
+            [W.Selected] = B(A(primary, p.SelectedAlpha)),
+            [W.Accent] = B(primary),
+            [W.OnAccent] = B(onPrimary),
+            [W.Link] = B(custom ?? C(p.Link)),
+            [W.SelectionKey] = B(selection),
+            ["TextControlSelectionHighlightColor"] = B(selection),
+            [W.ErrorKey] = B(Status(p == Dark).Error),
+            [W.ErrorFill] = B(C(Error)),
+            [W.OnError] = B(Colors.White),
+            [W.WarningKey] = B(Status(p == Dark).Warning),
+            [W.SuccessKey] = B(Status(p == Dark).Success),
             // Status outline (Snowy Owl report style): success border, tinted fill; dark theme keeps normal text for contrast
-            [W.SuccessText] = B(p == Dark ? fg : C(Success)), [W.SuccessFill] = B(A(Status(p == Dark).Success, .12)),
+            [W.SuccessText] = B(p == Dark ? fg : C(Success)),
+            [W.SuccessFill] = B(A(Status(p == Dark).Success, .12)),
             // Chart series: four hues that differ in both themes (accent, then orange or light blue, green, gray)
             [W.ChartIn] = B(primary),   // first series follows the accent
-            [W.ChartOut] = B(Series(p == Dark)[1]), [W.ChartWrite] = B(Series(p == Dark)[2]), [W.ChartRead] = B(Series(p == Dark)[3]),
+            [W.ChartOut] = B(Series(p == Dark)[1]),
+            [W.ChartWrite] = B(Series(p == Dark)[2]),
+            [W.ChartRead] = B(Series(p == Dark)[3]),
             ["ButtonBackgroundPointerOver"] = B(hover),
             // New log lines/steps, fading out: amber fill behind the text and a solid ring (light: orange, dark: yellow)
-            [W.HighlightKey] = B(A(C(Warning), p == Dark ? .26 : .42)), [W.HighlightRingKey] = B(C(p == Dark ? Warning : OrangeAccent)),
+            [W.HighlightKey] = B(A(C(Warning), p == Dark ? .26 : .42)),
+            [W.HighlightRingKey] = B(C(p == Dark ? Warning : OrangeAccent)),
             [W.ScrimKey] = B(A(Colors.Black, p == Dark ? .5 : .35)),   // behind the search overlay
         };
         for (int i = 0; i < Categories.Length; i++)
@@ -176,10 +193,22 @@ static class Theme
         Color bg = C(p.Bg), fg = C(p.Fg);
         return new ColorPaletteResources
         {
-            Accent = C(p.Primary), RegionColor = bg, ErrorText = C(Error),
-            AltHigh = bg, AltMediumHigh = A(bg, .8), AltMedium = A(bg, .6), AltMediumLow = A(bg, .4), AltLow = A(bg, .2),
-            BaseHigh = fg, BaseMediumHigh = A(fg, .8), BaseMedium = A(fg, .6), BaseMediumLow = A(fg, .4), BaseLow = A(fg, .2),
-            ChromeMedium = C(p.Surface), ChromeLow = C(p.Surface), ChromeAltLow = fg,
+            Accent = C(p.Primary),
+            RegionColor = bg,
+            ErrorText = C(Error),
+            AltHigh = bg,
+            AltMediumHigh = A(bg, .8),
+            AltMedium = A(bg, .6),
+            AltMediumLow = A(bg, .4),
+            AltLow = A(bg, .2),
+            BaseHigh = fg,
+            BaseMediumHigh = A(fg, .8),
+            BaseMedium = A(fg, .6),
+            BaseMediumLow = A(fg, .4),
+            BaseLow = A(fg, .2),
+            ChromeMedium = C(p.Surface),
+            ChromeLow = C(p.Surface),
+            ChromeAltLow = fg,
         };
     }
 

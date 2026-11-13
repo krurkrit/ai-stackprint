@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -26,7 +27,9 @@ partial class MainWindow
         _forwardBtn = HistoryBtn(TitleBtn("arrow_right", "Forward (Alt+→)", Forward));
         var left = new StackPanel
         {
-            Orientation = Orientation.Horizontal, Spacing = 2, VerticalAlignment = VerticalAlignment.Center,
+            Orientation = Orientation.Horizontal,
+            Spacing = 2,
+            VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(mac ? 78 : 14, 0, 0, 0),   // macOS draws its window buttons on the left
             Children = { Title("AI Stackprint", 13).With(t => t.Margin = new Thickness(0, 0, 10, 0)), _backBtn, _forwardBtn }
         };
@@ -35,8 +38,14 @@ partial class MainWindow
         {
             _maxBtn = TitleBtn("maximize", "Maximize", ToggleMaximize);
             PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty) UpdateMaxButton(); };
-            var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
-                Children = { TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized), _maxBtn, CloseHover(TitleBtn("dismiss", "Close", Close)) } };
+            var right = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 2,
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Children = { TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized), _maxBtn, CloseHover(TitleBtn("dismiss", "Close", Close)) }
+            };
             DockPanel.SetDock(right, Dock.Right);
             row.Children.Add(right);
         }
@@ -73,8 +82,10 @@ partial class MainWindow
             if (Application.Current!.Resources.ThemeDictionaries.TryGetValue(v, out var td) && td is ResourceDictionary rd && rd.TryGetValue(ErrorFill, out var red) && rd.TryGetValue(OnError, out var onRed))
                 b.Resources.ThemeDictionaries[v] = new ResourceDictionary
                 {
-                    ["ButtonBackgroundPointerOver"] = red, ["ButtonBackgroundPressed"] = red,
-                    ["ButtonForegroundPointerOver"] = onRed, ["ButtonForegroundPressed"] = onRed
+                    ["ButtonBackgroundPointerOver"] = red,
+                    ["ButtonBackgroundPressed"] = red,
+                    ["ButtonForegroundPointerOver"] = onRed,
+                    ["ButtonForegroundPressed"] = onRed
                 };
         return b;
     }

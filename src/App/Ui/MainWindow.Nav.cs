@@ -1,3 +1,5 @@
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -5,7 +7,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -37,8 +39,14 @@ partial class MainWindow
         for (int i = 0; i < Themes.Length; i++)
         {
             var t = Themes[i]; bool on = t.Mode == cur;
-            var b = new Button { Content = Icon(t.Icon, 18), HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Center, MinHeight = 32, Background = Brushes.Transparent };
+            var b = new Button
+            {
+                Content = Icon(t.Icon, 18),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                MinHeight = 32,
+                Background = Brushes.Transparent
+            };
             HoverStyle(b);
             b.Themed(Button.ForegroundProperty, on ? Accent : Muted);
             if (on) b.Themed(Button.BackgroundProperty, Surface);

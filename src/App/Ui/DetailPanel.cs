@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -145,11 +147,16 @@ partial class DetailPanel(Ctx x)
     {
         var sp = new StackPanel { Spacing = 6, Children = { Txt("Checks", 13, false, Muted) } };
         foreach (var x in f)
-            sp.Children.Add(new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 8, Children =
+            sp.Children.Add(new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                ColumnSpacing = 8,
+                Children =
             {
                 Icon(x.Warning ? "warning" : "info", 14).Themed(TextElement.ForegroundProperty, x.Warning ? WarningKey : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
                 Txt(x.Text, 13).With(t => Grid.SetColumn(t, 1))
-            } });
+            }
+            });
         return sp;
     }
 
@@ -157,8 +164,13 @@ partial class DetailPanel(Ctx x)
     public static Control AppLink(Ctx x, string appId, string fallback)
     {
         var d = x.S.Def(appId);
-        var b = new Border { Background = Avalonia.Media.Brushes.Transparent, Cursor = Hand, HorizontalAlignment = HorizontalAlignment.Left,
-            Child = AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? fallback, 22) };
+        var b = new Border
+        {
+            Background = Avalonia.Media.Brushes.Transparent,
+            Cursor = Hand,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Child = AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? fallback, 22)
+        };
         ToolTip.SetTip(b, "Open the app page");
         b.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { e.Handled = true; x.Go("App:" + appId); } };
         return b;

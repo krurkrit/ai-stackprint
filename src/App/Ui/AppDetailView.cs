@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -81,8 +83,12 @@ class AppDetailView(Ctx x)
             Txt(i.Name, 14, true), Txt(i.Description, 13), LevelCell(i), Mono(i.Path, 12),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
         }, () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
-        var body = new StackPanel { Spacing = 12, Children = { Table.Build(new[] { new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112") }, rows,
-            "No instruction or settings files found. Add project folders to see project files.") } };
+        var body = new StackPanel
+        {
+            Spacing = 12,
+            Children = { Table.Build(new[] { new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112") }, rows,
+            "No instruction or settings files found. Add project folders to see project files.") }
+        };
         if (_preview != null && cfg.Any(i => i.Path == _preview)) body.Children.Add(new ConfigPanel(x, _preview));
         return Section("document", "Instructions & settings", body);
     }

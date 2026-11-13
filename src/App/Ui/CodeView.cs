@@ -3,9 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
+
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.TextMate;
+
 using TextMateSharp.Grammars;
 
 namespace AiStackprint.Ui;
@@ -16,12 +18,12 @@ namespace AiStackprint.Ui;
 /// </summary>
 class CodeView : Border
 {
-    static RegistryOptions? _registry;
-    static SharedGrammars? _shared;
-    static RegistryOptions Registry => _registry ??= new RegistryOptions(ThemeName.LightPlus);
+    static RegistryOptions? s_registry;
+    static SharedGrammars? s_shared;
+    static RegistryOptions Registry => s_registry ??= new RegistryOptions(ThemeName.LightPlus);
     /// <summary>Every view's highlighter reads grammars through this, so each grammar is parsed once, not once per view (Markdown and shell embed dozens of languages: ~15 MB each).</summary>
-    static SharedGrammars Shared => _shared ??= new SharedGrammars(Registry);
-    static int _live;   // installed highlighters; the grammars are dropped when the last one goes
+    static SharedGrammars Shared => s_shared ??= new SharedGrammars(Registry);
+    static int s_live;   // installed highlighters; the grammars are dropped when the last one goes
     bool _disposed;
 
     /// <summary>
@@ -44,7 +46,12 @@ class CodeView : Border
     {
         _editor = new TextEditor
         {
-            IsReadOnly = readOnly, ShowLineNumbers = lineNumbers, WordWrap = false, FontFamily = Ui.Theme.Mono, FontSize = Ui.Theme.MonoSize, FontWeight = Ui.Theme.MonoWeight,
+            IsReadOnly = readOnly,
+            ShowLineNumbers = lineNumbers,
+            WordWrap = false,
+            FontFamily = Ui.Theme.Mono,
+            FontSize = Ui.Theme.MonoSize,
+            FontWeight = Ui.Theme.MonoWeight,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = compact ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto,
             Padding = new Thickness(lineNumbers ? 0 : 8, 4, 4, 4)
@@ -76,7 +83,7 @@ class CodeView : Border
         if (_disposed || _textMate != null) return;
         _textMate = _editor.InstallTextMate(Shared);
         if (_scope != null) _textMate.SetGrammar(_scope);
-        _live++;
+        s_live++;
         ApplyTheme();
     }
 
@@ -84,7 +91,7 @@ class CodeView : Border
     {
         if (_textMate == null) return;
         _textMate.Dispose(); _textMate = null;
-        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
+        if (--s_live <= 0) { s_live = 0; s_registry = null; s_shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
     }
 
     /// <summary>Releases the highlighter for good and, with the last view, the loaded grammars. Safe to call twice.</summary>

@@ -41,7 +41,13 @@ public static partial class TextDecode
     public static string Unescape(string s) => JsonEscape().Replace(s, m => m.Value[1] switch
     {
         'u' => ((char)Convert.ToInt32(m.Value[2..], 16)).ToString(),
-        'n' => "\n", 'r' => "\r", 't' => "\t", '"' => "\"", '\\' => "\\", '/' => "/", _ => m.Value
+        'n' => "\n",
+        'r' => "\r",
+        't' => "\t",
+        '"' => "\"",
+        '\\' => "\\",
+        '/' => "/",
+        _ => m.Value
     });
 
     /// <summary>Short one-line-safe form for headers: escapes decoded, colors removed.</summary>

@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -38,8 +39,14 @@ static class Busy
     {
         var arc = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse("M12,3 A9,9 0 1 1 3,12"), StrokeThickness = 2.5, StrokeLineCap = PenLineCap.Round }
             .Themed(Avalonia.Controls.Shapes.Shape.StrokeProperty, Accent);
-        var v = new Viewbox { Width = Size(size), Height = Size(size), Child = new Canvas { Width = 24, Height = 24, Children = { arc } },
-            RenderTransform = new RotateTransform(), VerticalAlignment = VerticalAlignment.Center };
+        var v = new Viewbox
+        {
+            Width = Size(size),
+            Height = Size(size),
+            Child = new Canvas { Width = 24, Height = 24, Children = { arc } },
+            RenderTransform = new RotateTransform(),
+            VerticalAlignment = VerticalAlignment.Center
+        };
         CancellationTokenSource? cts = null;
         v.AttachedToVisualTree += (_, _) => { cts?.Cancel(); cts = new(); _ = Spin(v, cts.Token); };
         v.DetachedFromVisualTree += (_, _) => cts?.Cancel();

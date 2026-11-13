@@ -1,8 +1,10 @@
+using AiStackprint.Models;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
-using AiStackprint.Models;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -27,7 +29,8 @@ class AddAppDialog : Window
         ok.IsDefault = true;
         Content = new StackPanel
         {
-            Margin = new Thickness(20), Spacing = 10,
+            Margin = new Thickness(20),
+            Spacing = 10,
             Children =
             {
                 Txt("Add an app to scan", 18, true), _name, _cat,
@@ -48,8 +51,10 @@ class AddAppDialog : Window
         var def = new AppDefinition
         {
             Id = new string(name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-'),
-            Name = name, Category = _cat.SelectedItem as string ?? "custom",
-            Detect = { folder }, Roots = { new ScanRoot { Path = folder, Level = "User", Depth = 4 } }
+            Name = name,
+            Category = _cat.SelectedItem as string ?? "custom",
+            Detect = { folder },
+            Roots = { new ScanRoot { Path = folder, Level = "User", Depth = 4 } }
         };
         if (!string.IsNullOrWhiteSpace(_proj.Text)) def.ProjectRoots.Add(new ScanRoot { Path = _proj.Text.Trim(), Level = "Project" });
         Close(def);

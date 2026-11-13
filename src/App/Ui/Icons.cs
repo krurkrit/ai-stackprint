@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+
 using Avalonia.Media;
 
 namespace AiStackprint.Ui;
@@ -22,8 +23,13 @@ static class Icons
 
     public static string ForCategory(string category) => category switch
     {
-        "agent" => "bot", "orchestrator" => "flow", "editor" => "code", "runtime" => "server",
-        "shared" => "people", "chat" => "chat", _ => "wrench"
+        "agent" => "bot",
+        "orchestrator" => "flow",
+        "editor" => "code",
+        "runtime" => "server",
+        "shared" => "people",
+        "chat" => "chat",
+        _ => "wrench"
     };
 
     static Dictionary<string, Shape[]> Load(string resource)

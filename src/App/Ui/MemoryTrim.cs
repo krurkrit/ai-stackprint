@@ -8,12 +8,12 @@ namespace AiStackprint.Ui;
 /// </summary>
 static class MemoryTrim
 {
-    static DispatcherTimer? _timer;
+    static DispatcherTimer? s_timer;
 
     public static void Request()
     {
-        _timer ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) => { _timer!.Stop(); Compact(); });
-        _timer.Stop(); _timer.Start();
+        s_timer ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) => { s_timer!.Stop(); Compact(); });
+        s_timer.Stop(); s_timer.Start();
     }
 
     static void Compact()

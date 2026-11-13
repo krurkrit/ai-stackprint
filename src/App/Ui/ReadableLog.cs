@@ -1,4 +1,7 @@
 using System.Text.RegularExpressions;
+
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -7,7 +10,7 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -160,9 +163,19 @@ class ReadableLog
 
     static string Ext(string fence) => fence.ToLowerInvariant() switch
     {
-        "" or "text" or "txt" or "plain" => ".txt", "csharp" or "cs" or "c#" => ".cs", "js" or "javascript" => ".js", "ts" or "typescript" => ".ts",
-        "bash" or "sh" or "shell" or "zsh" or "console" => ".sh", "powershell" or "ps1" or "pwsh" => ".ps1", "python" or "py" => ".py",
-        "yaml" or "yml" => ".yaml", "toml" => ".ini", "markdown" or "md" => ".md", "rust" or "rs" => ".rs", "golang" or "go" => ".go", var x => "." + x
+        "" or "text" or "txt" or "plain" => ".txt",
+        "csharp" or "cs" or "c#" => ".cs",
+        "js" or "javascript" => ".js",
+        "ts" or "typescript" => ".ts",
+        "bash" or "sh" or "shell" or "zsh" or "console" => ".sh",
+        "powershell" or "ps1" or "pwsh" => ".ps1",
+        "python" or "py" => ".py",
+        "yaml" or "yml" => ".yaml",
+        "toml" => ".ini",
+        "markdown" or "md" => ".md",
+        "rust" or "rs" => ".rs",
+        "golang" or "go" => ".go",
+        var x => "." + x
     };
 
     static Control ToolCall(LogEntry e)

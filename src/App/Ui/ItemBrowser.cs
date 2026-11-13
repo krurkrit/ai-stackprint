@@ -1,9 +1,11 @@
+using AiStackprint.Models;
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
-using AiStackprint.Models;
-using AiStackprint.Services;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -15,7 +17,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 class ItemBrowser
 {
-    readonly Ctx x;
+    readonly Ctx _x;
     readonly string _kind;
     readonly TextBox _search = SearchBox("Search name, description, path or author");
     readonly ComboBox _app = new() { MinWidth = 200, MinHeight = 32 };
@@ -31,7 +33,7 @@ class ItemBrowser
 
     public ItemBrowser(Ctx ctx, string kind)
     {
-        x = ctx; _kind = kind; _panel = new DetailPanel(ctx);
+        _x = ctx; _kind = kind; _panel = new DetailPanel(ctx);
         _search.TextChanged += (_, _) => { _q = _search.Text ?? ""; Fill(); };
         _app.SelectionChanged += (_, _) => { if (_building) return; _appId = (_app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
     }
@@ -52,15 +54,18 @@ class ItemBrowser
         _items = items;
         if (_sel != null) _sel = items.FirstOrDefault(i => Same(i, _sel));   // the same item after a rescan (a new record), or gone
         _building = true;
-        var apps = x.ShownApps.Where(a => items.Any(i => i.App == a.Id)).Select(a => new AppOption(a.Id, a.Name)).Prepend(new AppOption("", "All apps")).ToList();
+        var apps = _x.ShownApps.Where(a => items.Any(i => i.App == a.Id)).Select(a => new AppOption(a.Id, a.Name)).Prepend(new AppOption("", "All apps")).ToList();
         _app.ItemsSource = apps;
         _app.SelectedItem = apps.FirstOrDefault(a => a.Id == _appId) ?? apps[0];
         if (_app.SelectedItem is AppOption { Id: "" }) _appId = "";
         _building = false;
 
         var own = _filter.Controls(items, _kind == "Skill", Fill);
-        var search = new DockPanel { Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(10, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
-            _shown.Free().With(t => { DockPanel.SetDock(t, Dock.Right); t.Margin = new Thickness(12, 0, 0, 0); t.VerticalAlignment = VerticalAlignment.Center; }), _search.Free() } };
+        var search = new DockPanel
+        {
+            Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(10, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
+            _shown.Free().With(t => { DockPanel.SetDock(t, Dock.Right); t.Margin = new Thickness(12, 0, 0, 0); t.VerticalAlignment = VerticalAlignment.Center; }), _search.Free() }
+        };
         var list = new StackPanel { Spacing = 14, Margin = new Thickness(32, 28, 32, 20) };
         list.Children.AddRange(top);
         list.Children.Add(search);
@@ -71,13 +76,13 @@ class ItemBrowser
         var g = _grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto,0") };
         _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = 6 }.Themed(GridSplitter.BackgroundProperty, BorderKey);
         ToolTip.SetTip(_splitter, "Drag to resize · double-click to maximize or restore");
-        _splitter.DragCompleted += (_, _) => { if (!_max) { x.S.Settings.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); SettingsStore.Save(x.S.Settings); } };
+        _splitter.DragCompleted += (_, _) => { if (!_max) { _x.S.Settings.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); SettingsStore.Save(_x.S.Settings); } };
         _splitter.DoubleTapped += (_, _) => { _max = !_max; Layout(); };
         _bottom = new Border().Themed(Border.BackgroundProperty, Background);
         Grid.SetRow(_splitter, 1); Grid.SetRow(_bottom, 2);
         g.Children.Add(new ScrollViewer { Content = list }); g.Children.Add(_splitter); g.Children.Add(_bottom);
         ShowPanel();
-        x.Escape = () => { if (_sel == null) return false; Close(); return true; };
+        _x.Escape = () => { if (_sel == null) return false; Close(); return true; };
         return g;
     }
 
@@ -98,7 +103,7 @@ class ItemBrowser
         if (_grid == null) return;
         bool open = _sel != null;
         _grid.RowDefinitions[0].Height = open && _max ? new GridLength(0) : GridLength.Star;
-        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(x.S.Settings.PanelHeight, 160, 2000));
+        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, 160, 2000));
     }
 
     void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }
@@ -128,7 +133,7 @@ class ItemBrowser
     TableRow Row(Item i) => new(new Control[]
     {
         Table.NameDesc(i.Name, i.Description),
-        DetailPanel.AppLink(x, i.App, i.Source),
+        DetailPanel.AppLink(_x, i.App, i.Source),
         AppDetailView.LevelCell(i),
         _kind == "Plugin" ? Txt(i.Version ?? "", 13) : AppDetailView.InvokeCell(i),
         PathCell(i.Path),
@@ -137,10 +142,10 @@ class ItemBrowser
 
     Control Actions(Item i)
     {
-        var sp = (StackPanel)W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)));
+        var sp = (StackPanel)W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(_x.Owner, i.Path)));
         sp.Spacing = 0;
-        if (i.Kind == "Skill" && SkillManager.CannotRemove(i) == null) sp.Children.Add(IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, i)));
-        else if (i.Kind == "Plugin" && x.S.Def(i.App) is { PluginCommands: not null } d) sp.Children.Add(IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(x, d, i)));
+        if (i.Kind == "Skill" && SkillManager.CannotRemove(i) == null) sp.Children.Add(IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(_x, i)));
+        else if (i.Kind == "Plugin" && _x.S.Def(i.App) is { PluginCommands: not null } d) sp.Children.Add(IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(_x, d, i)));
         return sp;
     }
 
@@ -151,8 +156,14 @@ class ItemBrowser
         var parts = path.TrimEnd(sep).Split(sep);
         int keep = parts.Length >= 2 && parts[^1].Equals("SKILL.md", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
         var head = string.Join(sep, parts[..^keep]) + (parts.Length > keep ? sep.ToString() : "");
-        var tb = new TextBlock { FontFamily = Ui.Theme.Mono, FontSize = Size(12), TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-            MaxLines = 4, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis }   /* a squeezed column (narrow window) would otherwise wrap a letter per line; the tooltip has the full path */.Themed(TextBlock.ForegroundProperty, W.Text);
+        var tb = new TextBlock
+        {
+            FontFamily = Ui.Theme.Mono,
+            FontSize = Size(12),
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            MaxLines = 4,
+            TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+        }   /* a squeezed column (narrow window) would otherwise wrap a letter per line; the tooltip has the full path */.Themed(TextBlock.ForegroundProperty, W.Text);
         tb.Inlines = new InlineCollection
         {
             new Run(head).With(r => r.Bind(TextElement.ForegroundProperty, tb.GetResourceObservable(Muted))),
