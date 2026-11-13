@@ -228,14 +228,7 @@ partial class MainWindow : Window
             _ when _view.StartsWith("Project:") => _project.Build(_view[8..]),
             _ => DashboardView.Build(_x, AddProject)
         };
-        if (leftLogs) Avalonia.Threading.Dispatcher.UIThread.Post(Compact, Avalonia.Threading.DispatcherPriority.Background);
-    }
-
-    /// <summary>Gives the memory of the page that was just closed back to the system.</summary>
-    static void Compact()
-    {
-        GC.Collect(); GC.WaitForPendingFinalizers();
-        GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        MemoryTrim.Request();   // the page that was just replaced
     }
 
     async void AddProject()

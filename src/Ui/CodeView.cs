@@ -84,7 +84,7 @@ class CodeView : Border
     {
         if (_textMate == null) return;
         _textMate.Dispose(); _textMate = null;
-        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; }
+        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
     }
 
     /// <summary>Releases the highlighter for good and, with the last view, the loaded grammars. Safe to call twice.</summary>
