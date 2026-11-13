@@ -1,6 +1,8 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
@@ -21,8 +23,15 @@ partial class MainWindow
     {
         bool mac = OperatingSystem.IsMacOS();
         ExtendClientAreaToDecorationsHint = true;
-        if (mac) ExtendClientAreaTitleBarHeightHint = TitleBarHeight;
-        else WindowDecorations = WindowDecorations.BorderOnly;   // our own buttons replace the drawn caption buttons
+        if (mac)
+        {
+            ExtendClientAreaTitleBarHeightHint = TitleBarHeight;
+        }
+        else
+        {
+            WindowDecorations = WindowDecorations.BorderOnly;   // our own buttons replace the drawn caption buttons
+        }
+
         _backBtn = HistoryBtn(TitleBtn("arrow_left", "Back (Alt+←)", Back));
         _forwardBtn = HistoryBtn(TitleBtn("arrow_right", "Forward (Alt+→)", Forward));
         var left = new StackPanel
@@ -37,7 +46,7 @@ partial class MainWindow
         if (!mac)
         {
             _maxBtn = TitleBtn("maximize", "Maximize", ToggleMaximize);
-            PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty) UpdateMaxButton(); };
+            PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty) { UpdateMaxButton(); } };
             var right = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -55,9 +64,23 @@ partial class MainWindow
         // Buttons handle their own presses, so this only sees presses on the empty bar.
         bar.PointerPressed += (_, e) =>
         {
-            if (!e.GetCurrentPoint(bar).Properties.IsLeftButtonPressed) return;
-            if (e.ClickCount == 2) { if (!mac) ToggleMaximize(); }
-            else BeginMoveDrag(e);
+            if (!e.GetCurrentPoint(bar).Properties.IsLeftButtonPressed)
+            {
+                return;
+            }
+
+            if (e.ClickCount == 2)
+            {
+                if (!mac)
+                {
+                    ToggleMaximize();
+                }
+            }
+            else
+            {
+                BeginMoveDrag(e);
+            }
+
             e.Handled = true;
         };
         UpdateHistoryButtons();
@@ -79,7 +102,9 @@ partial class MainWindow
     static Button CloseHover(Button b)
     {
         foreach (var v in new[] { Avalonia.Styling.ThemeVariant.Light, Avalonia.Styling.ThemeVariant.Dark })
+        {
             if (Application.Current!.Resources.ThemeDictionaries.TryGetValue(v, out var td) && td is ResourceDictionary rd && rd.TryGetValue(ErrorFill, out var red) && rd.TryGetValue(OnError, out var onRed))
+            {
                 b.Resources.ThemeDictionaries[v] = new ResourceDictionary
                 {
                     ["ButtonBackgroundPointerOver"] = red,
@@ -87,6 +112,9 @@ partial class MainWindow
                     ["ButtonForegroundPointerOver"] = onRed,
                     ["ButtonForegroundPressed"] = onRed
                 };
+            }
+        }
+
         return b;
     }
 
@@ -95,7 +123,7 @@ partial class MainWindow
     {
         b.Resources["ButtonBackgroundDisabled"] = Avalonia.Media.Brushes.Transparent;
         b.Resources["ButtonBorderBrushDisabled"] = Avalonia.Media.Brushes.Transparent;
-        b.PropertyChanged += (_, e) => { if (e.Property == IsEnabledProperty && b.Content is Control c) c.Opacity = b.IsEnabled ? 1 : .35; };
+        b.PropertyChanged += (_, e) => { if (e.Property == IsEnabledProperty && b.Content is Control c) { c.Opacity = b.IsEnabled ? 1 : .35; } };
         return b;
     }
 

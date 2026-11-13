@@ -1,5 +1,7 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
 
 using AiStackprint.Models;
@@ -15,13 +17,17 @@ public static class LimitProviders
     public static readonly ILimitProvider[] All = { new ClaudeLimits(), new CodexLimits(), new CopilotLimits(), new CursorLimits(), new GeminiLimits() };
     public static ILimitProvider? Find(string? id) => id == null ? null : All.FirstOrDefault(p => p.Id == id);
 
-    internal static readonly JsonDocumentOptions Lenient = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    internal static readonly JsonDocumentOptions _lenient = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
 
     internal static JsonDocument? ReadJson(string path)
     {
-        if (!File.Exists(path)) return null;
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        return JsonDocument.Parse(fs, Lenient);
+        return JsonDocument.Parse(fs, _lenient);
     }
 
     // Null when missing (LogParsers' Str/Num return "" and 0), so absent fields are told apart from zero
@@ -32,7 +38,11 @@ public static class LimitProviders
     public static JsonElement? JwtClaims(string token)
     {
         var parts = token.Split('.');
-        if (parts.Length < 2) return null;
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
         try
         {
             var s = parts[1].Replace('-', '+').Replace('_', '/');
@@ -48,9 +58,13 @@ public static class LimitProviders
     internal static async Task<string> Send(HttpClient http, HttpRequestMessage req, CancellationToken ct)
     {
         req.Headers.UserAgent.ParseAdd("AiStackprint/1.0");
-        using var res = await http.SendAsync(req, ct);
-        if (!res.IsSuccessStatusCode) throw new LimitHttpException(res.StatusCode, res.Headers.RetryAfter?.Delta ?? (res.Headers.RetryAfter?.Date is { } d ? d - DateTimeOffset.UtcNow : null));
-        return await res.Content.ReadAsStringAsync(ct);
+        using var res = await http.SendAsync(req, ct).ConfigureAwait(false);
+        if (!res.IsSuccessStatusCode)
+        {
+            throw new LimitHttpException(res.StatusCode, res.Headers.RetryAfter?.Delta ?? (res.Headers.RetryAfter?.Date is { } d ? d - DateTimeOffset.UtcNow : null));
+        }
+
+        return await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
     }
 
     internal static string Cap(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..].Replace('_', ' ');
@@ -72,7 +86,11 @@ public class ClaudeLimits : ILimitProvider
         var file = Path.Combine(dir, ".credentials.json");
         using var doc = LimitProviders.ReadJson(file);
         var o = doc?.RootElement.Get("claudeAiOauth") ?? default;
-        if (o.OptStr("accessToken") is not { Length: > 0 } token) return null;
+        if (o.OptStr("accessToken") is not { Length: > 0 } token)
+        {
+            return null;
+        }
+
         DateTime? exp = o.OptNum("expiresAt") is { } ms ? DateTimeOffset.FromUnixTimeMilliseconds((long)ms).UtcDateTime : null;
         return new(token, exp, file, Plan(o.OptStr("subscriptionType"), o.OptStr("rateLimitTier")));
     }
@@ -80,7 +98,11 @@ public class ClaudeLimits : ILimitProvider
     /// <summary>"max" + "default_claude_max_20x" → "Max 20x".</summary>
     public static string? Plan(string? type, string? tier)
     {
-        if (string.IsNullOrEmpty(type)) return null;
+        if (string.IsNullOrEmpty(type))
+        {
+            return null;
+        }
+
         var mult = tier is { } t && System.Text.RegularExpressions.Regex.Match(t, @"(\d+x)\b") is { Success: true } m ? " " + m.Groups[1].Value : "";
         return LimitProviders.Cap(type) + mult;
     }
@@ -90,7 +112,7 @@ public class ClaudeLimits : ILimitProvider
         using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.anthropic.com/api/oauth/usage");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", c.Token);
         req.Headers.Add("anthropic-beta", "oauth-2025-04-20");
-        return Parse(await LimitProviders.Send(http, req, ct), DateTime.Now);
+        return Parse(await LimitProviders.Send(http, req, ct).ConfigureAwait(false), DateTime.Now);
     }
 
     /// <summary>Every object with a numeric "utilization" is a window (five_hour, seven_day, per-model ones); null windows are left out.</summary>
@@ -100,8 +122,16 @@ public class ClaudeLimits : ILimitProvider
         var windows = new List<LimitWindow>(); string? note = null;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
-            if (p.Name == "extra_usage" && p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("is_enabled", out var on) && on.ValueKind == JsonValueKind.True) note = "Extra usage is on.";
-            if (p.Value.OptNum("utilization") is not { } u) continue;
+            if (p.Name == "extra_usage" && p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("is_enabled", out var on) && on.ValueKind == JsonValueKind.True)
+            {
+                note = "Extra usage is on.";
+            }
+
+            if (p.Value.OptNum("utilization") is not { } u)
+            {
+                continue;
+            }
+
             var name = p.Name switch { "five_hour" => "5-hour", "seven_day" => "Weekly", "extra_usage" => "Extra usage", _ when p.Name.StartsWith("seven_day_") => "Weekly · " + LimitProviders.Cap(p.Name[10..]), _ => LimitProviders.Cap(p.Name) };
             windows.Add(new(name, u, LimitProviders.Time(p.Value, "resets_at")));
         }
@@ -121,7 +151,11 @@ public class CodexLimits : ILimitProvider
         var file = Path.Combine(dir, "auth.json");
         using var doc = LimitProviders.ReadJson(file);
         var t = doc?.RootElement.Get("tokens") ?? default;
-        if (t.OptStr("access_token") is not { Length: > 0 } token) return null;   // API-key sign-in: no plan limits
+        if (t.OptStr("access_token") is not { Length: > 0 } token)
+        {
+            return null;   // API-key sign-in: no plan limits
+        }
+
         var claims = t.OptStr("id_token") is { } id ? LimitProviders.JwtClaims(id) : null;
         var plan = claims?.Get("https://api.openai.com/auth").OptStr("chatgpt_plan_type");
         var extra = t.OptStr("account_id") is { } acc ? new Dictionary<string, string> { ["account"] = acc } : null;
@@ -132,7 +166,11 @@ public class CodexLimits : ILimitProvider
     {
         var files = LogReader.Find(d, projects).Where(f => LogParsers.Find(f.Format) != null).Take(3).ToList();
         var samples = files.SelectMany(f => LogParsers.Find(f.Format)!.Limits(LogReader.Lines(f.Path, 2 << 20))).ToList();
-        if (samples.Count == 0) return null;
+        if (samples.Count == 0)
+        {
+            return null;
+        }
+
         var latest = samples.GroupBy(s => s.Name).Select(g => g.MaxBy(s => s.Time)!).OrderBy(s => s.WindowMinutes).ToList();
         return new(null, latest.Select(s => new LimitWindow(s.Name, s.ResetsAt < DateTime.Now ? 0 : s.UsedPercent, s.ResetsAt)).ToList(), latest.Max(s => s.Time), null, true);
     }
@@ -141,8 +179,12 @@ public class CodexLimits : ILimitProvider
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, "https://chatgpt.com/backend-api/wham/usage");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", c.Token);
-        if (c.Extra?.GetValueOrDefault("account") is { } acc) req.Headers.Add("ChatGPT-Account-Id", acc);
-        return Parse(await LimitProviders.Send(http, req, ct), DateTime.Now);
+        if (c.Extra?.GetValueOrDefault("account") is { } acc)
+        {
+            req.Headers.Add("ChatGPT-Account-Id", acc);
+        }
+
+        return Parse(await LimitProviders.Send(http, req, ct).ConfigureAwait(false), DateTime.Now);
     }
 
     /// <summary>Any object with "used_percent" is a window; its length (seconds or minutes) names it.</summary>
@@ -160,9 +202,18 @@ public class CodexLimits : ILimitProvider
                     var reset = LimitProviders.Time(e, "reset_at") ?? LimitProviders.Time(e, "resets_at") ?? (e.OptNum("reset_after_seconds") is { } after ? now.AddSeconds(after) : null);
                     windows.Add(new(minutes switch { 300 => "5-hour", 10080 => "Weekly", > 0 => $"{minutes:0}-minute", _ => "Limit" }, pct, reset));
                 }
-                foreach (var p in e.EnumerateObject()) Walk(p.Value);
+                foreach (var p in e.EnumerateObject())
+                {
+                    Walk(p.Value);
+                }
             }
-            else if (e.ValueKind == JsonValueKind.Array) foreach (var v in e.EnumerateArray()) Walk(v);
+            else if (e.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var v in e.EnumerateArray())
+                {
+                    Walk(v);
+                }
+            }
         }
         Walk(doc.RootElement);
         var plan = doc.RootElement.OptStr("plan_type");

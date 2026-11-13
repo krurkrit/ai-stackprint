@@ -1,9 +1,11 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
 
@@ -95,7 +97,11 @@ static class DashboardView
     static Control ByApp(Ctx x, string kind)
     {
         var groups = x.S.Items.Where(i => i.Kind == kind).GroupBy(i => i.App).OrderByDescending(g => g.Count()).ToList();
-        if (groups.Count == 0) return Txt(kind == "Skill" ? "No skills found." : "No plugins found.", 13, false, Muted);
+        if (groups.Count == 0)
+        {
+            return Txt(kind == "Skill" ? "No skills found." : "No plugins found.", 13, false, Muted);
+        }
+
         int max = groups.Max(g => g.Count());
         var sp = new StackPanel { Spacing = 8 };
         foreach (var g in groups)
@@ -105,7 +111,7 @@ static class DashboardView
             sp.Children.Add(Bar(AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? g.Key, 22), segs, g.Count(), max, () => x.Browse(kind, g.Key, null),
                 string.Join("\n", Levels.Order.Select(l => (l, n: g.Count(i => i.Level == l))).Where(t => t.n > 0).Select(t => $"{t.l}: {t.n}"))));
         }
-        sp.Children.Add(new WrapPanel().With(w => { foreach (var l in Levels.Order.Where(l => groups.Any(g => g.Any(i => i.Level == l)))) w.Children.Add(DotText(l, LevelKey(l)).With(t => t.Margin = new Thickness(0, 4, 14, 0))); }));
+        sp.Children.Add(new WrapPanel().With(w => { foreach (var l in Levels.Order.Where(l => groups.Any(g => g.Any(i => i.Level == l)))) { w.Children.Add(DotText(l, LevelKey(l)).With(t => t.Margin = new Thickness(0, 4, 14, 0))); } }));
         return sp;
     }
 
@@ -119,16 +125,26 @@ static class DashboardView
         var pluginAuthor = items.Where(i => i.Kind == "Plugin" && i.Author != null).GroupBy(i => (i.App, i.Name)).ToDictionary(g => g.Key, g => g.First().Author!);
         // A plugin's skills count for the plugin's author
         string Author(Item i) => i.Author ?? (i.Plugin is { } p ? pluginAuthor.GetValueOrDefault((i.App, p)) ?? (p.Contains('@') ? p[(p.IndexOf('@') + 1)..] : p) : i.Bundled ? i.Source : "Local");
-        if (items.Count == 0) return Txt("No skills or plugins found.", 13, false, Muted);
+        if (items.Count == 0)
+        {
+            return Txt("No skills or plugins found.", 13, false, Muted);
+        }
+
         var groups = items.GroupBy(Author).OrderByDescending(g => g.Count()).ToList();
         var top = groups.Take(TopAuthors).Select(g => (Name: g.Key, Skills: g.Count(i => i.Kind == "Skill"), Plugins: g.Count(i => i.Kind == "Plugin"), Other: false)).ToList();
         if (groups.Count > TopAuthors)
+        {
             top.Add(("Other", groups.Skip(TopAuthors).Sum(g => g.Count(i => i.Kind == "Skill")), groups.Skip(TopAuthors).Sum(g => g.Count(i => i.Kind == "Plugin")), true));
+        }
+
         int max = top.Max(t => t.Skills + t.Plugins);
         var sp = new StackPanel { Spacing = 8 };
         foreach (var t in top)
+        {
             sp.Children.Add(Bar(Txt(t.Name, 13, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), new[] { (t.Skills, ChartIn), (t.Plugins, ChartOut) }, t.Skills + t.Plugins, max,
                 t.Other ? null : () => x.Browse(t.Skills >= t.Plugins ? "Skill" : "Plugin", null, t.Name), $"{t.Name}\nSkills: {t.Skills}\nPlugins: {t.Plugins}"));
+        }
+
         sp.Children.Add(Row(DotText("Skills", ChartIn), DotText("Plugins", ChartOut)).With(r => r.Margin = new Thickness(0, 4, 0, 0)));
         return sp;
     }
@@ -143,13 +159,21 @@ static class DashboardView
             bar.ColumnDefinitions.Add(new ColumnDefinition(n, GridUnitType.Star));
             bar.Children.Add(new Border().Themed(Border.BackgroundProperty, key).With(b => Grid.SetColumn(b, col++)));
         }
-        if (max > total) bar.ColumnDefinitions.Add(new ColumnDefinition(max - total, GridUnitType.Star));
+        if (max > total)
+        {
+            bar.ColumnDefinitions.Add(new ColumnDefinition(max - total, GridUnitType.Star));
+        }
+
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("170,*,48"), ColumnSpacing = 10, Background = Brushes.Transparent };
         g.Children.Add(label.With(l => l.VerticalAlignment = VerticalAlignment.Center));
         g.Children.Add(new Border { CornerRadius = new CornerRadius(3), ClipToBounds = true, Child = bar, VerticalAlignment = VerticalAlignment.Center }.With(b => Grid.SetColumn(b, 1)));
         g.Children.Add(Txt(total.ToString("N0"), 13, false, Muted).With(t => { Grid.SetColumn(t, 2); t.HorizontalAlignment = HorizontalAlignment.Right; t.VerticalAlignment = VerticalAlignment.Center; }));
         ToolTip.SetTip(g, tip);
-        if (open == null) return g;
+        if (open == null)
+        {
+            return g;
+        }
+
         var row = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(6, 4), Cursor = Hand, Background = Brushes.Transparent, Child = g };
         row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
         row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
@@ -163,17 +187,26 @@ static class DashboardView
         var c = x.S.Changes;
         var title = c.Since is { } since ? $"Changed since {(since.Date == DateTime.Today ? since.ToString("HH:mm") : since.ToString("yyyy-MM-dd HH:mm"))}" : "Changes";
         Control body;
-        if (c.Since == null) body = Txt("Changes show here from the next scan on.", 13, false, Muted);
-        else if (c.Changes.Count == 0) body = Txt("Nothing was added, removed or edited.", 13, false, Muted);
+        if (c.Since == null)
+        {
+            body = Txt("Changes show here from the next scan on.", 13, false, Muted);
+        }
+        else if (c.Changes.Count == 0)
+        {
+            body = Txt("Nothing was added, removed or edited.", 13, false, Muted);
+        }
         else
         {
             var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(new Control[]
             {
                 Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, 13, false, Muted),
                 Txt(ch.Name, 13, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, 13, false, Muted)
-            }, ch.What == "Removed" ? null : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) x.Open(it); }));
+            }, ch.What == "Removed" ? null : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
             body = new StackPanel { Spacing = 6, Children = { Table.Build(new[] { new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*") }, rows) } };
-            if (c.Changes.Count > 12) ((StackPanel)body).Children.Add(Txt($"… and {c.Changes.Count - 12} more", 12, false, Muted));
+            if (c.Changes.Count > 12)
+            {
+                ((StackPanel)body).Children.Add(Txt($"… and {c.Changes.Count - 12} more", 12, false, Muted));
+            }
         }
         return Section("arrow_sync", title, body);
     }
@@ -190,14 +223,21 @@ static class DashboardView
                 grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(n, GridUnitType.Star)));
                 grid.Children.Add(new Border().Themed(Border.BackgroundProperty, key).With(b => Grid.SetColumn(b, col++)));
             }
-            if (n > 0) legend.Children.Add(DotText($"{label} {n}", key).With(d => { d.Margin = new Thickness(0, 0, 14, 0); d.TextWrapping = TextWrapping.Wrap; }));   // a narrow tile wraps instead of cutting off the count
+            if (n > 0)
+            {
+                legend.Children.Add(DotText($"{label} {n}", key).With(d => { d.Margin = new Thickness(0, 0, 14, 0); d.TextWrapping = TextWrapping.Wrap; }));   // a narrow tile wraps instead of cutting off the count
+            }
         }
-        if (col == 0) grid.Children.Add(new Border().Themed(Border.BackgroundProperty, BorderKey));
+        if (col == 0)
+        {
+            grid.Children.Add(new Border().Themed(Border.BackgroundProperty, BorderKey));
+        }
+
         var card = Card(new StackPanel
         {
             Spacing = 10,
             Children = { Beside(IconTile(icon), Txt(title, 13, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center)),
-                Title(big, 32).With(t => { t.FontFeatures = Tabular; t.HorizontalAlignment = HorizontalAlignment.Right; }),
+                Title(big, 32).With(t => { t.FontFeatures = _tabular; t.HorizontalAlignment = HorizontalAlignment.Right; }),
                 new Border { CornerRadius = new CornerRadius(5), ClipToBounds = true, Child = grid }, legend }
         });
         card.Cursor = Hand;
@@ -206,5 +246,5 @@ static class DashboardView
     }
 
     /// <summary>Tabular figures: numbers line up.</summary>
-    static readonly FontFeatureCollection Tabular = new() { FontFeature.Parse("tnum") };
+    static readonly FontFeatureCollection _tabular = new() { FontFeature.Parse("tnum") };
 }

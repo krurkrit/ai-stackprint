@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -19,7 +22,7 @@ public record ContextFile(string Path, LoadWhen Load, long Bytes, int Chars, str
 public record ContextReport(string AppId, string Unit, long? Limit, string? LimitNote, List<ContextFile> Files, List<Finding> Findings)
 {
     /// <summary>Size of what loads at the start of every session and counts toward the limit, in <see cref="Unit"/>.</summary>
-    public long AlwaysTotal => Files.Where(f => f.Counted && f.Load is LoadWhen.Always or LoadWhen.Imported).Sum(f => Measure(f));
+    public long AlwaysTotal => Files.Where(f => f.Counted && f.Load is LoadWhen.Always or LoadWhen.Imported).Sum(Measure);
     public long Measure(ContextFile f) => f.Kept ?? (Unit == "bytes" ? f.Bytes : f.Chars);
 }
 
@@ -39,7 +42,7 @@ public static partial class ContextBudget
     public static readonly IContextRule[] Rules = { new ClaudeContext(), new CodexContext(), new GeminiContext(), new CopilotContext(), new CursorContext() };
     public static IContextRule? Find(string? id) => id == null ? null : Rules.FirstOrDefault(r => r.Id == id);
 
-    static readonly HashSet<string> Skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
+    static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
 
     public static ContextFile Measure(string path, LoadWhen load, string? via = null, string? note = null)
     {
@@ -74,7 +77,11 @@ public static partial class ContextBudget
     public static List<string> Ancestors(string start)
     {
         var list = new List<string>();
-        for (var d = new DirectoryInfo(start); d != null; d = d.Parent) list.Add(d.FullName);
+        for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
+        {
+            list.Add(d.FullName);
+        }
+
         list.Reverse();
         return list;
     }
@@ -84,23 +91,46 @@ public static partial class ContextBudget
     {
         var m = markers.ToList();
         for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
-            if (m.Any(x => Directory.Exists(Path.Combine(d.FullName, x)) || File.Exists(Path.Combine(d.FullName, x)))) return d.FullName;
+        {
+            if (m.Any(x => Directory.Exists(Path.Combine(d.FullName, x)) || File.Exists(Path.Combine(d.FullName, x))))
+            {
+                return d.FullName;
+            }
+        }
+
         return null;
     }
 
     /// <summary>Files named one of <paramref name="names"/> in sub-folders below <paramref name="start"/> (not start itself), skipping hidden and build folders.</summary>
     public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names, int depth = 3)
     {
-        if (depth == 0) yield break;
+        if (depth == 0)
+        {
+            yield break;
+        }
+
         List<string> dirs;
         try { dirs = Directory.EnumerateDirectories(start).ToList(); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { yield break; }
         foreach (var d in dirs.Order(StringComparer.OrdinalIgnoreCase))
         {
             var n = Path.GetFileName(d);
-            if (n.StartsWith('.') || Skip.Contains(n)) continue;
-            foreach (var name in names) { var f = Path.Combine(d, name); if (File.Exists(f)) yield return f; }
-            foreach (var f in Below(d, names, depth - 1)) yield return f;
+            if (n.StartsWith('.') || _skip.Contains(n))
+            {
+                continue;
+            }
+
+            foreach (var name in names)
+            {
+                var f = Path.Combine(d, name); if (File.Exists(f))
+                {
+                    yield return f;
+                }
+            }
+            foreach (var f in Below(d, names, depth - 1))
+            {
+                yield return f;
+            }
         }
     }
 

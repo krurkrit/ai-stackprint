@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.Json;
 
 namespace AiStackprint.Services;
@@ -25,9 +28,9 @@ public static class Pricing
 {
     public static string FilePath => Path.Combine(AppCatalog.Folder, "prices.json");
 
-    static PriceFile? s_file;
-    static DateTime s_stamp, s_checked;
-    static readonly object Gate = new();
+    static PriceFile? _file;
+    static DateTime _stamp, _checked;
+    static readonly object _gate = new();
 
     public static PriceFile Defaults() => new()
     {
@@ -44,31 +47,39 @@ public static class Pricing
     {
         try
         {
-            if (File.Exists(FilePath)) return;
+            if (File.Exists(FilePath))
+            {
+                return;
+            }
+
             Directory.CreateDirectory(AppCatalog.Folder);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(Defaults(), AppCatalog.Opt));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(Defaults(), AppCatalog._opt));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
     static PriceFile Load()
     {
-        lock (Gate)
+        lock (_gate)
         {
-            if (s_file != null && DateTime.UtcNow - s_checked < TimeSpan.FromSeconds(2)) return s_file;
-            s_checked = DateTime.UtcNow;
+            if (_file != null && DateTime.UtcNow - _checked < TimeSpan.FromSeconds(2))
+            {
+                return _file;
+            }
+
+            _checked = DateTime.UtcNow;
             try
             {
                 Ensure();
                 var stamp = File.GetLastWriteTimeUtc(FilePath);
-                if (s_file == null || stamp != s_stamp)
+                if (_file == null || stamp != _stamp)
                 {
-                    s_file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog.Opt) ?? Defaults();
-                    s_stamp = stamp;
+                    _file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog._opt) ?? Defaults();
+                    _stamp = stamp;
                 }
             }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { s_file ??= Defaults(); }
-            return s_file;
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { _file ??= Defaults(); }
+            return _file;
         }
     }
 
@@ -86,16 +97,19 @@ public static class Pricing
     /// <summary>Adds an all-zero placeholder for each model that has no entry yet, so you only have to fill in the numbers.</summary>
     public static void AddMissing(IEnumerable<string> models)
     {
-        lock (Gate)
+        lock (_gate)
         {
             try
             {
                 Ensure();
-                var file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog.Opt) ?? Defaults();
+                var file = JsonSerializer.Deserialize<PriceFile>(File.ReadAllText(FilePath), AppCatalog._opt) ?? Defaults();
                 bool changed = false;
                 foreach (var m in models.Distinct())
+                {
                     if (!file.Models.Keys.Any(k => k.Length > 0 && m.Contains(k, StringComparison.OrdinalIgnoreCase))) { file.Models[m] = new ModelPrice(); changed = true; }
-                if (changed) { File.WriteAllText(FilePath, JsonSerializer.Serialize(file, AppCatalog.Opt)); s_file = null; }
+                }
+
+                if (changed) { File.WriteAllText(FilePath, JsonSerializer.Serialize(file, AppCatalog._opt)); _file = null; }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
         }

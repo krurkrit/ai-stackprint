@@ -10,7 +10,8 @@ AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAM
 - Build: `dotnet build` (the solution `AiStackprint.slnx`: all projects)
 - Publish: `dotnet publish src/App -c Release -r <win-x64|linux-x64|osx-arm64> --self-contained false`
 - Test: `dotnet test` (all), or `dotnet test tests/AiStackprint.Core.Tests` (services; builds Core only, no UI). If you add logic to `src/Core/Services`, add tests for it.
-- Format: `dotnet format` before committing. Style is `.editorconfig` (the .NET default: Allman braces, `_camelCase` fields, `s_camelCase` static fields, PascalCase constants, file-scoped namespaces, System usings first); formatting and naming are checked on build.
+- Format: `dotnet format` before committing. Style and analyzers follow dotnet/aspnetcore's `.editorconfig`: braces on every `if`/loop, Allman braces, `_camelCase` private and internal fields (static too), PascalCase constants, `var`, file-scoped namespaces, System usings first, no unused usings, `ConfigureAwait(false)` in Core (not in UI code). Analyzer and style warnings show on build; keep it at 0 warnings.
+- Every `.cs` file starts with the license header (`file_header_template` in `.editorconfig`; `dotnet format` adds it). The license is MIT (`LICENSE`).
 - SDK: .NET 10 (LTS), pinned in `global.json`. Package versions are set once in `Directory.Packages.props` (exact versions; projects list packages without versions). Shared build settings: `Directory.Build.props`.
 
 ## Layout

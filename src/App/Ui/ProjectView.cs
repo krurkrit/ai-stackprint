@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -14,7 +17,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 class ProjectView(Ctx x, Action<string> removeProject)
 {
-    static readonly string[] Order = Levels.Order;
+    static readonly string[] _order = Levels.Order;
     readonly ItemBrowser _browser = new(x, "Skill");
     readonly ContextSection _context = new(x);
     string? _project;   // project the list state belongs to: reset when another opens
@@ -39,18 +42,20 @@ class ProjectView(Ctx x, Action<string> removeProject)
         head.Children.Add(Row(IconTile("folder", 56), title));
 
         var summary = new WrapPanel { Children = { Levels.InfoButton().With(b => b.Margin = new Avalonia.Thickness(0, 0, 4, 0)) } };
-        foreach (var l in Order)
+        foreach (var l in _order)
+        {
             summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => c.Margin = new Avalonia.Thickness(0, 0, 8, 0)));
+        }
 
         var top = new List<Control> { head, summary, _context.Build(project), Configs(all), Title($"Skills · {skills.Count}", 18).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
         return _browser.Build(top, skills);
     }
 
     /// <summary>Instruction/settings files read in this project, one row per file with every app that reads it.</summary>
-    Control Configs(List<Item> all)
+    static Control Configs(List<Item> all)
     {
         var rows = all.Where(i => i.Kind == "Config").GroupBy(i => i.Path)
-            .OrderBy(g => Array.IndexOf(Order, g.First().Level)).ThenBy(g => g.First().Name)
+            .OrderBy(g => Array.IndexOf(_order, g.First().Level)).ThenBy(g => g.First().Name)
             .Select(g =>
             {
                 var i = g.First();

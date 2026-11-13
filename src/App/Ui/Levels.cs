@@ -1,7 +1,7 @@
-using Avalonia;
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
-using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
 

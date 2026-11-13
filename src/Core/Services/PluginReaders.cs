@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.Json;
 
 using AiStackprint.Models;
@@ -13,8 +16,8 @@ public interface IPluginReader
 
 public static class PluginReaders
 {
-    static readonly IPluginReader[] All = { new ClaudePluginReader() };
-    public static IPluginReader? Find(string? format) => format == null ? null : All.FirstOrDefault(r => r.Format == format);
+    static readonly IPluginReader[] _all = { new ClaudePluginReader() };
+    public static IPluginReader? Find(string? format) => format == null ? null : _all.FirstOrDefault(r => r.Format == format);
 }
 
 /// <summary>~/.claude/plugins/installed_plugins.json: { "plugins": { "name@market": [ { scope, version, installPath } ] } }</summary>
@@ -24,11 +27,19 @@ class ClaudePluginReader : IPluginReader
 
     public void Read(string file, AppDefinition app, List<Item> rows)
     {
-        if (!File.Exists(file)) return;
+        if (!File.Exists(file))
+        {
+            return;
+        }
+
         try
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(file));
-            if (!doc.RootElement.TryGetProperty("plugins", out var ps)) return;
+            if (!doc.RootElement.TryGetProperty("plugins", out var ps))
+            {
+                return;
+            }
+
             foreach (var p in ps.EnumerateObject())
             {
                 var entries = p.Value.ValueKind == JsonValueKind.Array ? p.Value.EnumerateArray().ToList() : new() { p.Value };
@@ -43,8 +54,10 @@ class ClaudePluginReader : IPluginReader
                     rows.Add(new Item("Plugin", p.Name, desc, app.Name, level, path)
                     { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name) });
                     if (path != "")
+                    {
                         Scanner.Tagged(rows, () => Scanner.ReadRoot(path, new ScanRoot { Level = level, Depth = 6 }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
                             i => i with { App = app.Id, Plugin = p.Name, Project = project });
+                    }
                 }
             }
         }
@@ -55,7 +68,11 @@ class ClaudePluginReader : IPluginReader
     public static (string Description, string? Author) Manifest(string installPath)
     {
         var f = Path.Combine(installPath, ".claude-plugin", "plugin.json");
-        if (installPath == "" || !File.Exists(f)) return ("", null);
+        if (installPath == "" || !File.Exists(f))
+        {
+            return ("", null);
+        }
+
         try
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(f), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });

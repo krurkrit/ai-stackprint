@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 
 using Avalonia.Controls;
@@ -26,7 +29,11 @@ class HealthView(Ctx x)
 
         var page = new List<Control> { head, intro };
         var shown = issues.Where(i => _all || i.Finding.Warning).ToList();
-        if (shown.Count == 0) page.Add(Card(Row(Icon("info", 18).Themed(TextElement.ForegroundProperty, SuccessKey), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", 14))));
+        if (shown.Count == 0)
+        {
+            page.Add(Card(Row(Icon("info", 18).Themed(TextElement.ForegroundProperty, SuccessKey), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", 14))));
+        }
+
         foreach (var g in shown.GroupBy(i => i.Area))
         {
             var rows = g.OrderByDescending(i => i.Finding.Warning).ThenBy(i => i.Subject, StringComparer.OrdinalIgnoreCase).Select(i => new TableRow(new Control[]

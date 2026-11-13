@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -5,8 +8,6 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
-using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -36,7 +37,14 @@ partial class MainWindow : Window
     public MainWindow()
     {
         Title = "AI Stackprint"; Width = 1280; Height = 820; MinWidth = 900;
-        using (var icon = typeof(MainWindow).Assembly.GetManifestResourceStream("app-icon.ico")) if (icon != null) Icon = new WindowIcon(icon);
+        using (var icon = typeof(MainWindow).Assembly.GetManifestResourceStream("app-icon.ico"))
+        {
+            if (icon != null)
+            {
+                Icon = new WindowIcon(icon);
+            }
+        }
+
         try { AppCatalog.MigrateOldFolder(); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // old data stays where it was; the app starts fresh
         _s.Settings = SettingsStore.Load();
@@ -76,7 +84,11 @@ partial class MainWindow : Window
 
     void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
     {
-        if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Right || e.Source is not TextBlock { Text.Length: > 0 } tb || tb is SelectableTextBlock) return;
+        if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Right || e.Source is not TextBlock { Text.Length: > 0 } tb || tb is SelectableTextBlock)
+        {
+            return;
+        }
+
         var item = new MenuItem { Header = "Copy" };
         item.Click += (_, _) => Toast.Copy(this, tb.Text, "Text");
         new ContextMenu { Items = { item } }.Open(tb);
@@ -89,7 +101,11 @@ partial class MainWindow : Window
         bool full = _navOpen && !iconOnly;
         var glyph = Icon(icon, 20);
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { glyph } };
-        if (full) content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        if (full)
+        {
+            content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        }
+
         var b = new Button
         {
             Content = content,
@@ -107,7 +123,11 @@ partial class MainWindow : Window
             b.CornerRadius = new CornerRadius(8);
         }
         HoverStyle(b);
-        if (!full) ToolTip.SetTip(b, text);
+        if (!full)
+        {
+            ToolTip.SetTip(b, text);
+        }
+
         b.Click += (_, _) => a();
         return b;
     }
@@ -122,8 +142,15 @@ partial class MainWindow : Window
             var d = new ResourceDictionary();
             foreach (var s in new[] { "PointerOver", "Pressed" })
             {
-                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg)) d["ButtonBackground" + s] = bg;
-                if (app.TryGetResource("AccentButtonForeground" + s, v, out var fg)) d["ButtonForeground" + s] = fg;
+                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg))
+                {
+                    d["ButtonBackground" + s] = bg;
+                }
+
+                if (app.TryGetResource("AccentButtonForeground" + s, v, out var fg))
+                {
+                    d["ButtonForeground" + s] = fg;
+                }
             }
             b.Resources.ThemeDictionaries[v] = d;
         }
@@ -142,7 +169,11 @@ partial class MainWindow : Window
     {
         bool rescan = _view == "Settings" && view != "Settings" && _x.SettingsChanged;
         _view = view;
-        if (rescan) { _x.SettingsChanged = false; Scan(); } else Refresh();
+        if (rescan) { _x.SettingsChanged = false; Scan(); }
+        else
+        {
+            Refresh();
+        }
     }
 
     /// <summary>Skills or Plugins page filtered to an app and/or a search text.</summary>
@@ -157,7 +188,10 @@ partial class MainWindow : Window
     {
         if (i.Kind == "Plugin") { _plugins.Select(i); Go("Plugin"); }
         else if (i.Kind == "Skill") { _skills.Select(i); Go("Skill"); }
-        else Go("App:" + i.App);
+        else
+        {
+            Go("App:" + i.App);
+        }
     }
 
     Control Section(string title) => _navOpen
@@ -175,7 +209,10 @@ partial class MainWindow : Window
             var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = 36; b.Width = 160; b.Themed(Button.BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
             head.Children.Add(box);
         }
-        else head.Children.Add(IconBtn("search", "Search (Ctrl+K)", _palette.Open, Text).With(b => b.HorizontalAlignment = HorizontalAlignment.Center));
+        else
+        {
+            head.Children.Add(IconBtn("search", "Search (Ctrl+K)", _palette.Open, Text).With(b => b.HorizontalAlignment = HorizontalAlignment.Center));
+        }
 
         var nav = new StackPanel { Spacing = 2 };
         nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
@@ -187,14 +224,21 @@ partial class MainWindow : Window
         nav.Children.Add(Go("warning", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
         nav.Children.Add(Section("PROJECTS"));
         foreach (var p in _s.Projects)
+        {
             nav.Children.Add(Go("folder", Ctx.ProjectName(p), "Project:" + p).With(b => ToolTip.SetTip(b, p)));
+        }
+
         nav.Children.Add(NavBtn("folder_add", "Add project folder", AddProject));
 
         var foot = new StackPanel { Spacing = 8, Margin = new Thickness(0, 12, 0, 0) };
         foot.Children.Add(Go("settings", "Settings", "Settings"));
         foot.Children.Add(ThemeSwitch());
         var rescan = Btn(_navOpen ? "Rescan" : "", Scan, true, "arrow_sync");
-        if (_scanning && _navOpen) rescan.Content = Busy.Inline(true, "Scanning…");
+        if (_scanning && _navOpen)
+        {
+            rescan.Content = Busy.Inline(true, "Scanning…");
+        }
+
         if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "") : Icon("arrow_sync", 20); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
         rescan.HorizontalAlignment = HorizontalAlignment.Stretch; rescan.HorizontalContentAlignment = HorizontalAlignment.Center;
         foot.Children.Add(rescan);
@@ -215,14 +259,22 @@ partial class MainWindow : Window
 
     void Refresh()
     {
-        if (!_scanned) return;   // the first scan shows its own loading line
+        if (!_scanned)
+        {
+            return;   // the first scan shows its own loading line
+        }
+
         RefreshNav();
         UpdateHistoryButtons();
         _x.Escape = null;
         bool inLogs = _view == "Logs" || _view.StartsWith("Logs:");
         bool leftLogs = _wasLogs && !inLogs;
         _wasLogs = inLogs;
-        if (leftLogs) _logs.Release();   // the Logs page keeps no file text, controls or watcher once it is closed
+        if (leftLogs)
+        {
+            _logs.Release();   // the Logs page keeps no file text, controls or watcher once it is closed
+        }
+
         _body.Content = _view switch
         {
             "Dashboard" => DashboardView.Build(_x, AddProject),
@@ -243,7 +295,11 @@ partial class MainWindow : Window
     async void AddProject()
     {
         var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Project folder" });
-        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p || _s.Projects.Contains(p)) return;
+        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p || _s.Projects.Contains(p))
+        {
+            return;
+        }
+
         _s.Projects.Add(p);
         _view = "Project:" + p;
         Scan();
@@ -259,7 +315,11 @@ partial class MainWindow : Window
     async void AddApp()
     {
         var def = await new AddAppDialog().ShowDialog<AppDefinition?>(this);
-        if (def == null) return;
+        if (def == null)
+        {
+            return;
+        }
+
         AppCatalog.SaveUser(def);
         _s.Defs = AppCatalog.Load();
         _view = "App:" + def.Id;
@@ -268,7 +328,11 @@ partial class MainWindow : Window
 
     async void Scan()
     {
-        if (_scanning) return;
+        if (_scanning)
+        {
+            return;
+        }
+
         _scanning = true; RefreshNav();
         var defs = SettingsStore.Visible(_s.Defs, _s.Settings); var projects = _s.Projects.ToList();
         var r = await Task.Run(() => Scanner.Collect(defs, projects));
@@ -279,6 +343,9 @@ partial class MainWindow : Window
         _scanning = false; _scanned = true;
         Refresh();
         RequestLimits();
-        if (first && CrashLog.TakeNew()) Toast.Show("AI Stackprint closed unexpectedly last time. The details are in " + CrashLog.File, "warning", 12);
+        if (first && CrashLog.TakeNew())
+        {
+            Toast.Show("AI Stackprint closed unexpectedly last time. The details are in " + CrashLog.File, "warning", 12);
+        }
     }
 }

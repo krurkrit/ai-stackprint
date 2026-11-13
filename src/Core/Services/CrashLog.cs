@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Reflection;
 
 namespace AiStackprint.Services;
@@ -25,7 +28,11 @@ public static class CrashLog
         {
             Directory.CreateDirectory(folder);
             var info = new FileInfo(Path.Combine(folder, "crash.log"));
-            if (info.Exists && info.Length > MaxBytes) info.Delete();   // start over rather than grow without end
+            if (info.Exists && info.Length > MaxBytes)
+            {
+                info.Delete();   // start over rather than grow without end
+            }
+
             var version = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version;   // the app's version, not Core's
             System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} · {what} · v{version} · {Environment.OSVersion}\n{e}\n\n");
         }
@@ -39,8 +46,16 @@ public static class CrashLog
         string log = Path.Combine(folder, "crash.log"), seen = Path.Combine(folder, "crash.seen");
         try
         {
-            if (!System.IO.File.Exists(log)) return false;
-            if (System.IO.File.Exists(seen) && System.IO.File.GetLastWriteTimeUtc(seen) >= System.IO.File.GetLastWriteTimeUtc(log)) return false;
+            if (!System.IO.File.Exists(log))
+            {
+                return false;
+            }
+
+            if (System.IO.File.Exists(seen) && System.IO.File.GetLastWriteTimeUtc(seen) >= System.IO.File.GetLastWriteTimeUtc(log))
+            {
+                return false;
+            }
+
             System.IO.File.WriteAllText(seen, "");
             return true;
         }

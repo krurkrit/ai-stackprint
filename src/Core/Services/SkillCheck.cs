@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.RegularExpressions;
 
 namespace AiStackprint.Services;
@@ -26,24 +29,57 @@ public static partial class SkillCheck
         var root = Path.GetDirectoryName(path) ?? "";
         if (skillMd)
         {
-            if (!doc.HasFront) f.Add(new("No front matter (--- … ---): name and description are missing."));
-            else if (!doc.FrontClosed) f.Add(new("The front matter is not closed with a --- line."));
+            if (!doc.HasFront)
+            {
+                f.Add(new("No front matter (--- … ---): name and description are missing."));
+            }
+            else if (!doc.FrontClosed)
+            {
+                f.Add(new("The front matter is not closed with a --- line."));
+            }
             else
             {
                 var name = doc.Get("name"); var folder = Path.GetFileName(root);
-                if (name == "") f.Add(new("No name in the front matter."));
+                if (name == "")
+                {
+                    f.Add(new("No name in the front matter."));
+                }
                 else
                 {
-                    if (name.Length > NameMax) f.Add(new($"Name is {name.Length} characters (limit {NameMax})."));
-                    if (!NameRule().IsMatch(name)) f.Add(new("Name should use only lowercase letters, numbers and single hyphens, not at the start or end."));
-                    if (!name.Equals(folder, StringComparison.Ordinal)) f.Add(new($"Name \"{name}\" differs from its folder \"{folder}\".", false));
+                    if (name.Length > NameMax)
+                    {
+                        f.Add(new($"Name is {name.Length} characters (limit {NameMax})."));
+                    }
+
+                    if (!NameRule().IsMatch(name))
+                    {
+                        f.Add(new("Name should use only lowercase letters, numbers and single hyphens, not at the start or end."));
+                    }
+
+                    if (!name.Equals(folder, StringComparison.Ordinal))
+                    {
+                        f.Add(new($"Name \"{name}\" differs from its folder \"{folder}\".", false));
+                    }
                 }
                 var desc = doc.Get("description");
-                if (desc == "") f.Add(new("No description: the agent cannot tell when to use it."));
-                else if (desc.Length > DescriptionMax) f.Add(new($"Description is {desc.Length:N0} characters (limit {DescriptionMax:N0})."));
-                if (doc.Get("compatibility").Length > CompatibilityMax) f.Add(new($"Compatibility is over {CompatibilityMax} characters."));
+                if (desc == "")
+                {
+                    f.Add(new("No description: the agent cannot tell when to use it."));
+                }
+                else if (desc.Length > DescriptionMax)
+                {
+                    f.Add(new($"Description is {desc.Length:N0} characters (limit {DescriptionMax:N0})."));
+                }
+
+                if (doc.Get("compatibility").Length > CompatibilityMax)
+                {
+                    f.Add(new($"Compatibility is over {CompatibilityMax} characters."));
+                }
             }
-            if (doc.Lines > BodyLines) f.Add(new($"SKILL.md has {doc.Lines:N0} lines; keep it under {BodyLines} and move detail into reference files.", false));
+            if (doc.Lines > BodyLines)
+            {
+                f.Add(new($"SKILL.md has {doc.Lines:N0} lines; keep it under {BodyLines} and move detail into reference files.", false));
+            }
         }
         f.AddRange(LinkFindings(root, path, doc.Body, nested: skillMd));
         return f;
@@ -54,15 +90,26 @@ public static partial class SkillCheck
     {
         foreach (var link in SkillDoc.Links(md))
         {
-            if (SkillDoc.IsExternal(link) || link.StartsWith('#')) continue;
+            if (SkillDoc.IsExternal(link) || link.StartsWith('#'))
+            {
+                continue;
+            }
+
             var full = SkillDoc.Resolve(root, file, link);
             if (full == null) { yield return new($"Link leaves the skill folder: {link}"); continue; }
             if (!File.Exists(full) && !Directory.Exists(full)) { yield return new($"Broken link: {link}"); continue; }
-            if (!nested || !full.EndsWith(".md", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!nested || !full.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             List<string> further;
             try { further = SkillDoc.Links(SkillDoc.Read(full).Body).Where(l => SkillDoc.Resolve(root, full, l) is { } p && p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)).ToList(); }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { continue; }
-            if (further.Count > 0) yield return new($"{link} links on to {string.Join(", ", further.Take(3))}; keep references one level deep from SKILL.md.", false);
+            if (further.Count > 0)
+            {
+                yield return new($"{link} links on to {string.Join(", ", further.Take(3))}; keep references one level deep from SKILL.md.", false);
+            }
         }
     }
 

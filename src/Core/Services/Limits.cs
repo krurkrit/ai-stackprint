@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Net;
 
 using AiStackprint.Models;
@@ -43,7 +46,7 @@ public class LimitHttpException(HttpStatusCode code, TimeSpan? retryAfter) : Htt
 /// </summary>
 public sealed class LimitsService(Func<Settings> settings)
 {
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
     public static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(1);
 
     class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
@@ -57,21 +60,45 @@ public sealed class LimitsService(Func<Settings> settings)
 
     public bool Enabled(string appId) => settings().LimitsEnabled.Contains(appId);
 
-    public LimitStatus Status(string appId) { lock (_lock) return _cache.TryGetValue(appId, out var e) ? e.Status : new(LimitState.Off, null, null, null, false); }
+    public LimitStatus Status(string appId)
+    {
+        lock (_lock)
+        {
+            return _cache.TryGetValue(appId, out var e) ? e.Status : new(LimitState.Off, null, null, null, false);
+        }
+    }
 
     /// <summary>When the last reading was taken; null before the first.</summary>
-    public DateTime? Fetched(string appId) { lock (_lock) return _cache.TryGetValue(appId, out var e) && e.Fetched != default ? e.Fetched : null; }
+    public DateTime? Fetched(string appId)
+    {
+        lock (_lock)
+        {
+            return _cache.TryGetValue(appId, out var e) && e.Fetched != default ? e.Fetched : null;
+        }
+    }
 
     /// <summary>Starts a refresh when one is due (or <paramref name="force"/>d, still at most once a minute). Returns at once; listen to <see cref="Updated"/>.</summary>
     public void Request(AppDefinition d, IReadOnlyList<string> projects, bool force = false)
     {
-        if (LimitProviders.Find(d.Limits) is not { } p) return;
+        if (LimitProviders.Find(d.Limits) is not { } p)
+        {
+            return;
+        }
+
         Entry e;
         lock (_lock)
         {
-            if (!_cache.TryGetValue(d.Id, out e!)) _cache[d.Id] = e = new Entry();
+            if (!_cache.TryGetValue(d.Id, out e!))
+            {
+                _cache[d.Id] = e = new Entry();
+            }
+
             var age = DateTime.UtcNow - e.Fetched;
-            if (e.Running || DateTime.UtcNow < e.RetryAfter || age < MinInterval || (!force && age < Interval)) return;
+            if (e.Running || DateTime.UtcNow < e.RetryAfter || age < MinInterval || (!force && age < Interval))
+            {
+                return;
+            }
+
             e.Running = true;
             e.Status = e.Status with { Busy = true };
         }
@@ -89,15 +116,30 @@ public sealed class LimitsService(Func<Settings> settings)
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or FormatException or System.Text.Json.JsonException) { }   // no reading from the log
         try
         {
-            if (!Enabled(d.Id)) next = new(logs != null ? LimitState.Ok : LimitState.Off, logs, old, logs == null ? "Live limits are off for this app." : null, false);
-            else if (p.Credential(Services.PathUtil.Home) is not { } c) next = new(LimitState.NoSignIn, logs, old, "No saved sign-in was found in a file (it may be in the system keychain).", false);
-            else if (e.Status.State == LimitState.SignInAgain && Stamp(c.File) == e.CredStamp) next = e.Status with { Busy = false };   // wait for a new sign-in
-            else if (c.Expires is { } exp && exp < DateTime.UtcNow) next = new(LimitState.Expired, logs ?? old, old, $"The saved sign-in expired. Use {d.Name} once and it renews it.", false);
-            else if (logs != null && DateTime.Now - logs.FetchedAt < TimeSpan.FromMinutes(10)) next = new(LimitState.Ok, logs, old, null, false);   // the app's own log is fresh: no call
+            if (!Enabled(d.Id))
+            {
+                next = new(logs != null ? LimitState.Ok : LimitState.Off, logs, old, logs == null ? "Live limits are off for this app." : null, false);
+            }
+            else if (p.Credential(Services.PathUtil.Home) is not { } c)
+            {
+                next = new(LimitState.NoSignIn, logs, old, "No saved sign-in was found in a file (it may be in the system keychain).", false);
+            }
+            else if (e.Status.State == LimitState.SignInAgain && Stamp(c.File) == e.CredStamp)
+            {
+                next = e.Status with { Busy = false };   // wait for a new sign-in
+            }
+            else if (c.Expires is { } exp && exp < DateTime.UtcNow)
+            {
+                next = new(LimitState.Expired, logs ?? old, old, $"The saved sign-in expired. Use {d.Name} once and it renews it.", false);
+            }
+            else if (logs != null && DateTime.Now - logs.FetchedAt < TimeSpan.FromMinutes(10))
+            {
+                next = new(LimitState.Ok, logs, old, null, false);   // the app's own log is fresh: no call
+            }
             else
             {
                 e.CredStamp = Stamp(c.File);
-                var snap = await p.Fetch(Http, c, CancellationToken.None);
+                var snap = await p.Fetch(_http, c, CancellationToken.None).ConfigureAwait(false);
                 next = new(LimitState.Ok, snap with { Plan = snap.Plan ?? c.Plan }, old, null, false);
             }
         }
@@ -136,7 +178,11 @@ public sealed class LimitsService(Func<Settings> settings)
     public static DateTime? FullAt(LimitWindow before, DateTime beforeAt, LimitWindow now, DateTime nowAt)
     {
         double rise = now.UsedPercent - before.UsedPercent, hours = (nowAt - beforeAt).TotalHours;
-        if (rise <= 0 || hours <= 0 || now.UsedPercent >= 100) return null;
+        if (rise <= 0 || hours <= 0 || now.UsedPercent >= 100)
+        {
+            return null;
+        }
+
         var full = nowAt.AddHours((100 - now.UsedPercent) * hours / rise);
         return now.ResetsAt is { } r && full >= r ? null : full;
     }

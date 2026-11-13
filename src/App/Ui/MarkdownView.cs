@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 
 using Avalonia;
@@ -17,7 +20,11 @@ static class MarkdownView
     public static Control Render(string md, Action<string>? link = null)
     {
         var sp = new StackPanel { Spacing = 6 };
-        foreach (var b in MarkdownLite.Blocks(md)) sp.Children.Add(Block(b, link));
+        foreach (var b in MarkdownLite.Blocks(md))
+        {
+            sp.Children.Add(Block(b, link));
+        }
+
         return sp;
     }
 
@@ -26,7 +33,10 @@ static class MarkdownView
     {
         var sp = new StackPanel { Spacing = 8 };
         foreach (var (text, lang) in ReadableLog.Fences(md))
+        {
             sp.Children.Add(lang == null ? Render(text, link) : ReadableLog.Code(text, lang));
+        }
+
         return sp;
     }
 
@@ -66,7 +76,12 @@ static class MarkdownView
         bool built = false;
         tb.AttachedToVisualTree += (_, _) =>
         {
-            if (built) return; built = true;
+            if (built)
+            {
+                return;
+            }
+
+            built = true;
             IBrush? link = tb.TryFindResource(Link, tb.ActualThemeVariant, out var o) ? o as IBrush : null;
             tb.Inlines ??= new InlineCollection();
             var links = new List<(int Start, int Length, string Url)>();
@@ -76,14 +91,25 @@ static class MarkdownView
                 // Clickable links show their label only; the target is in the tooltip
                 var text = s.Url != null && onLink != null && s.Text.EndsWith($" ({s.Url})") ? s.Text[..^(s.Url.Length + 3)] : s.Text;
                 var run = new Run(text);
-                if (s.Bold) run.FontWeight = FontWeight.Bold;
-                if (s.Italic) run.FontStyle = FontStyle.Italic;
+                if (s.Bold)
+                {
+                    run.FontWeight = FontWeight.Bold;
+                }
+
+                if (s.Italic)
+                {
+                    run.FontStyle = FontStyle.Italic;
+                }
+
                 if (s.Code) { run.FontFamily = Ui.Theme.Mono; run.FontSize = Ui.Theme.MonoSize; }
-                if (s.Url != null) { run.TextDecorations = TextDecorations.Underline; if (link != null) run.Foreground = link; links.Add((at, text.Length, s.Url)); }
+                if (s.Url != null) { run.TextDecorations = TextDecorations.Underline; if (link != null) { run.Foreground = link; } links.Add((at, text.Length, s.Url)); }
                 tb.Inlines.Add(run);
                 at += text.Length;
             }
-            if (onLink != null && links.Count > 0) Clickable(tb, links, onLink);
+            if (onLink != null && links.Count > 0)
+            {
+                Clickable(tb, links, onLink);
+            }
         };
         return tb;
     }
@@ -98,7 +124,11 @@ static class MarkdownView
         {
             var p = e.GetPosition(tb) - new Point(tb.Padding.Left, tb.Padding.Top);
             var hit = tb.TextLayout.HitTestPoint(p);
-            if (!hit.IsInside) return null;
+            if (!hit.IsInside)
+            {
+                return null;
+            }
+
             int i = hit.TextPosition;
             return links.FirstOrDefault(l => i >= l.Start && i < l.Start + l.Length).Url;
         }
@@ -110,7 +140,11 @@ static class MarkdownView
         };
         tb.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, (_, e) =>
         {
-            if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Left || tb.SelectionStart != tb.SelectionEnd) return;
+            if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Left || tb.SelectionStart != tb.SelectionEnd)
+            {
+                return;
+            }
+
             if (At(e) is { } url) { e.Handled = true; onLink(url); }
         }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
     }

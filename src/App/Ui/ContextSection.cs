@@ -1,9 +1,11 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
-using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 
 using static AiStackprint.Ui.W;
@@ -29,11 +31,22 @@ class ContextSection(Ctx x)
         if (!ReferenceEquals(_scan, x.S.Items)) { _scan = x.S.Items; _last = null; }
         var apps = x.S.Defs.Where(d => ContextBudget.Find(d.Context) != null && x.ShownApps.Any(a => a.Id == d.Id))
             .Select(d => new AppDefinitionRef(d.Id, d.Name, d.Logo, d.Category)).ToList();
-        if (apps.Count == 0) return new Panel();
+        if (apps.Count == 0)
+        {
+            return new Panel();
+        }
+
         string start = _start!, home = PathUtil.Home;
-        if (_last != null) _host.Content = Show(_last);
-        else Busy.Into(_host, "Reading instruction files…", _ => apps.Select(a => (a, ContextBudget.Find(x.S.Def(a.Id)!.Context)!.Read(project, start, home))).ToList(),
+        if (_last != null)
+        {
+            _host.Content = Show(_last);
+        }
+        else
+        {
+            Busy.Into(_host, "Reading instruction files…", _ => apps.Select(a => (a, ContextBudget.Find(x.S.Def(a.Id)!.Context)!.Read(project, start, home))).ToList(),
             r => { _last = r; return Show(r); });
+        }
+
         var pick = Btn(ContextBudget.Same(start, project) ? "Start in…" : "Start in: " + Path.GetRelativePath(project, start), () => PickStart(project), false, "folder_open");
         ToolTip.SetTip(pick, "Which files load depends on the folder a session starts in. Pick a folder inside the project.");
         var reset = ContextBudget.Same(start, project) ? null : IconBtn("dismiss", "Start in the project folder", () => { _start = project; _last = null; x.Refresh(); });
@@ -44,7 +57,11 @@ class ContextSection(Ctx x)
     {
         var start = await x.Owner.StorageProvider.TryGetFolderFromPathAsync(project);
         var r = await x.Owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Session starts in", SuggestedStartLocation = start });
-        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p) return;
+        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p)
+        {
+            return;
+        }
+
         if (!ContextBudget.Same(p, project) && !ContextBudget.Inside(p, project)) { Toast.Show("Pick a folder inside the project", "warning"); return; }
         _start = p; _last = null; _preview = null;
         x.Refresh();
@@ -54,8 +71,15 @@ class ContextSection(Ctx x)
     {
         var sp = new StackPanel { Spacing = 22 };
         foreach (var (app, r) in reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true))
+        {
             sp.Children.Add(App(app, r));
-        if (sp.Children.Count == 0) sp.Children.Add(Txt("No instruction files found for the installed apps.", 13, false, Muted));
+        }
+
+        if (sp.Children.Count == 0)
+        {
+            sp.Children.Add(Txt("No instruction files found for the installed apps.", 13, false, Muted));
+        }
+
         return sp;
     }
 
@@ -66,27 +90,49 @@ class ContextSection(Ctx x)
         long total = r.AlwaysTotal;
         sp.Children.Add(Row(AppName(app.Logo, app.Category, app.Name, 24),
             Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens", 13, false, Muted)));
-        if (r.Limit is { } limit && r.Files.Count > 0) sp.Children.Add(Bar(total, limit, r));
+        if (r.Limit is { } limit && r.Files.Count > 0)
+        {
+            sp.Children.Add(Bar(total, limit, r));
+        }
+
         foreach (var f in r.Findings)
+        {
             sp.Children.Add(Row(Icon(f.Warning ? "warning" : "info", 14).Themed(TextElement.ForegroundProperty, f.Warning ? WarningKey : Muted), Txt(f.Text, 13)));
-        if (r.Files.Count == 0) return sp;
+        }
+
+        if (r.Files.Count == 0)
+        {
+            return sp;
+        }
 
         long running = 0;
         var rows = r.Files.Select(f =>
         {
             bool counted = f.Counted && f.Load is LoadWhen.Always or LoadWhen.Imported;
-            if (counted) running += r.Measure(f);
-            var name = Txt(Show(f.Path), 13, true).With(t => { t.FontFamily = Ui.Theme.Mono; if (f.Via != null) t.Margin = new Thickness(16, 0, 0, 0); });
-            if (f.Via != null) ToolTip.SetTip(name, "Imported by " + f.Via);
+            if (counted)
+            {
+                running += r.Measure(f);
+            }
+
+            var name = Txt(Show(f.Path), 13, true).With(t => { t.FontFamily = Ui.Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
+            if (f.Via != null)
+            {
+                ToolTip.SetTip(name, "Imported by " + f.Via);
+            }
+
             return new TableRow(new Control[]
             {
                 name, Txt(Label(f.Load), 13), Txt($"{(r.Unit == "bytes" ? f.Bytes : f.Chars):N0}", 13), Txt($"{f.Tokens:N0}", 13, false, Muted),
                 Txt(counted ? $"{running:N0}" : "", 13, false, r.Limit is { } l && running > l && counted ? ErrorKey : Muted), Txt(f.Note ?? "", 12, false, Muted)
-            }, () => { _preview = _preview == f.Path ? null : f.Path; if (_last != null) _host.Content = Show(_last); }, _preview == f.Path);
+            }, () => { _preview = _preview == f.Path ? null : f.Path; if (_last != null) { _host.Content = Show(_last); } }, _preview == f.Path);
         }).ToList();
         sp.Children.Add(Table.Build(new[] { new Col("File", "2.4*"), new Col("Loads", "1.1*"), new Col(r.Unit == "bytes" ? "Bytes" : "Characters", ".8*", true),
             new Col("≈Tokens", ".7*", true), new Col("Running total", ".9*", true), new Col("Note", "1.8*") }, rows));
-        if (_preview != null && r.Files.Any(f => f.Path == _preview)) sp.Children.Add(Preview(_preview));
+        if (_preview != null && r.Files.Any(f => f.Path == _preview))
+        {
+            sp.Children.Add(Preview(_preview));
+        }
+
         return sp;
     }
 
@@ -124,7 +170,13 @@ class ContextSection(Ctx x)
             try
             {
                 var target = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path) ?? "", Uri.UnescapeDataString(link.Split('#')[0])));
-                if (File.Exists(target)) { _preview = target; if (_last != null) _host.Content = Show(_last); }
+                if (File.Exists(target))
+                {
+                    _preview = target; if (_last != null)
+                    {
+                        _host.Content = Show(_last);
+                    }
+                }
             }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { }
         }, out bool scrolls);

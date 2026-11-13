@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -22,7 +25,7 @@ public static partial class TextDecode
     [GeneratedRegex(@"data:image/[a-z+.-]+;base64,[A-Za-z0-9+/=]{200,}")]
     private static partial Regex DataUrl();
 
-    static readonly JsonSerializerOptions Pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     /// <summary>Removes ANSI escape sequences (colors, cursor moves, window titles).</summary>
     public static string Strip(string s) => s.Contains('\x1B') ? AnsiCode().Replace(s, "").Replace("\r\n", "\n") : s;
@@ -31,9 +34,20 @@ public static partial class TextDecode
     public static bool LooksEscaped(string s)
     {
         int escapes = JsonEscape().Count(s);
-        if (escapes == 0) return false;
+        if (escapes == 0)
+        {
+            return false;
+        }
+
         int lines = 0;
-        foreach (var c in s) if (c == '\n') lines++;
+        foreach (var c in s)
+        {
+            if (c == '\n')
+            {
+                lines++;
+            }
+        }
+
         return lines == 0 || escapes > lines * 2;   // code that merely contains "\n" in a few places stays as it is
     }
 
@@ -59,20 +73,43 @@ public static partial class TextDecode
         var runs = new List<AnsiRun>(); int at = 0; int? fg = null; bool bold = false;
         foreach (Match m in AnsiCode().Matches(s))
         {
-            if (m.Index > at) runs.Add(new(s[at..m.Index], fg, bold));
+            if (m.Index > at)
+            {
+                runs.Add(new(s[at..m.Index], fg, bold));
+            }
+
             at = m.Index + m.Length;
             var v = m.Value;
-            if (v.Length < 3 || v[1] != '[' || v[^1] != 'm') continue;
+            if (v.Length < 3 || v[1] != '[' || v[^1] != 'm')
+            {
+                continue;
+            }
+
             var codes = v[2..^1].Split(';');
             for (int i = 0; i < codes.Length; i++)
             {
                 int c = codes[i] == "" ? 0 : int.TryParse(codes[i], out var n) ? n : -1;
                 if (c == 0) { fg = null; bold = false; }
-                else if (c == 1) bold = true;
-                else if (c == 22) bold = false;
-                else if (c is >= 30 and <= 37) fg = c - 30;
-                else if (c is >= 90 and <= 97) fg = c - 90 + 8;
-                else if (c == 39) fg = null;
+                else if (c == 1)
+                {
+                    bold = true;
+                }
+                else if (c == 22)
+                {
+                    bold = false;
+                }
+                else if (c is >= 30 and <= 37)
+                {
+                    fg = c - 30;
+                }
+                else if (c is >= 90 and <= 97)
+                {
+                    fg = c - 90 + 8;
+                }
+                else if (c == 39)
+                {
+                    fg = null;
+                }
                 else if (c == 38 && i + 1 < codes.Length)
                 {
                     if (codes[i + 1] == "5" && i + 2 < codes.Length && int.TryParse(codes[i + 2], out var idx)) { fg = Palette256(idx); i += 2; }
@@ -81,7 +118,11 @@ public static partial class TextDecode
                 }
             }
         }
-        if (at < s.Length) runs.Add(new(s[at..], fg, bold));
+        if (at < s.Length)
+        {
+            runs.Add(new(s[at..], fg, bold));
+        }
+
         return runs.Where(r => r.Text.Length > 0).Select(r => r with { Text = r.Text.Replace("\r\n", "\n") }).ToList();
     }
 
@@ -89,8 +130,16 @@ public static partial class TextDecode
 
     static int Palette256(int i)
     {
-        if (i < 0 || i > 255) return 7;
-        if (i < 16) return i;
+        if (i < 0 || i > 255)
+        {
+            return 7;
+        }
+
+        if (i < 16)
+        {
+            return i;
+        }
+
         if (i >= 232) { int g = 8 + 10 * (i - 232); return Rgb(g, g, g); }
         int v = i - 16;
         return Rgb(Level(v / 36), Level(v / 6 % 6), Level(v % 6));
@@ -105,13 +154,25 @@ public static partial class TextDecode
     {
         pretty = "";
         var t = text.Trim();
-        if (t.Length < 2 || t.Length > 200_000) return false;
+        if (t.Length < 2 || t.Length > 200_000)
+        {
+            return false;
+        }
+
         try
         {
-            if (t[0] == '"' && t[^1] == '"') t = JsonSerializer.Deserialize<string>(t)?.Trim() ?? "";
-            if (t.Length < 2 || !((t[0] == '{' && t[^1] == '}') || (t[0] == '[' && t[^1] == ']'))) return false;
+            if (t[0] == '"' && t[^1] == '"')
+            {
+                t = JsonSerializer.Deserialize<string>(t)?.Trim() ?? "";
+            }
+
+            if (t.Length < 2 || !((t[0] == '{' && t[^1] == '}') || (t[0] == '[' && t[^1] == ']')))
+            {
+                return false;
+            }
+
             using var d = JsonDocument.Parse(t);
-            pretty = JsonSerializer.Serialize(d.RootElement, Pretty).Replace("\r\n", "\n");
+            pretty = JsonSerializer.Serialize(d.RootElement, _pretty).Replace("\r\n", "\n");
             return true;
         }
         catch (JsonException) { return false; }
@@ -123,13 +184,25 @@ public static partial class TextDecode
     /// </summary>
     public static Prepared Prepare(string text, string? lang)
     {
-        if (JsonLike(lang) && !text.Contains('\x1B') && TryPrettyJson(text, out var p0)) return new(p0, ".json", null, p0 != text);
+        if (JsonLike(lang) && !text.Contains('\x1B') && TryPrettyJson(text, out var p0))
+        {
+            return new(p0, ".json", null, p0 != text);
+        }
+
         var t = text; bool changed = false;
         if (LooksEscaped(t)) { t = Unescape(t); changed = true; }
         var shortened = DataUrl().Replace(t, m => $"[image data, {Math.Max(1, m.Length * 3 / 4 / 1024)} KB]");
         if (shortened != t) { t = shortened; changed = true; }
-        if (t.Contains('\x1B')) return new(Strip(t), null, Runs(t), true);
-        if (JsonLike(lang) && TryPrettyJson(t, out var p1)) return new(p1, ".json", null, true);
+        if (t.Contains('\x1B'))
+        {
+            return new(Strip(t), null, Runs(t), true);
+        }
+
+        if (JsonLike(lang) && TryPrettyJson(t, out var p1))
+        {
+            return new(p1, ".json", null, true);
+        }
+
         return new(t, lang, null, changed);
     }
 }

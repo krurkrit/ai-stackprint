@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.RegularExpressions;
 
 namespace AiStackprint.Services;
@@ -31,9 +34,17 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
         text = text.Replace("\r\n", "\n");
         var lines = text.Split('\n');
         int count = text.EndsWith('\n') ? lines.Length - 1 : lines.Length;
-        if (lines.Length == 0 || lines[0].Trim() != "---") return new(new Dictionary<string, string>(), text, count, false, false);
+        if (lines.Length == 0 || lines[0].Trim() != "---")
+        {
+            return new(new Dictionary<string, string>(), text, count, false, false);
+        }
+
         int end = Array.FindIndex(lines, 1, l => l.Trim() == "---");
-        if (end < 0) return new(new Dictionary<string, string>(), text, count, true, false);
+        if (end < 0)
+        {
+            return new(new Dictionary<string, string>(), text, count, true, false);
+        }
+
         return new(ParseFront(lines[1..end]), string.Join('\n', lines[(end + 1)..]).TrimStart('\n'), count, true, true);
     }
 
@@ -44,22 +55,42 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
         string? key = null, parent = null; bool block = false;
         foreach (var raw in lines)
         {
-            if (raw.Trim() == "" || raw.TrimStart().StartsWith('#')) { if (block && key != null) d[key] += "\n"; continue; }
+            if (raw.Trim() == "" || raw.TrimStart().StartsWith('#')) { if (block && key != null) { d[key] += "\n"; } continue; }
             bool indented = char.IsWhiteSpace(raw[0]);
             var t = raw.Trim();
             if (indented && block && key != null) { d[key] = (d[key] + " " + t).Trim(); continue; }
             if (t.StartsWith("- ") && key != null && (indented || parent == key)) { d[key] = d[key] == "" ? Clean(t[2..]) : d[key] + ", " + Clean(t[2..]); continue; }
             var m = KeyLine().Match(t);
-            if (!m.Success) continue;
+            if (!m.Success)
+            {
+                continue;
+            }
+
             string k = m.Groups[1].Value, v = m.Groups[2].Value.Trim();
-            if (!indented) parent = null;
-            if (indented && parent != null) k = parent + "." + k;
+            if (!indented)
+            {
+                parent = null;
+            }
+
+            if (indented && parent != null)
+            {
+                k = parent + "." + k;
+            }
+
             block = v is "|" or ">" or "|-" or ">-" or "|+" or ">+";
-            if (!indented && v == "") parent = k;
+            if (!indented && v == "")
+            {
+                parent = k;
+            }
+
             key = k;
             d[k] = block ? "" : Clean(v);
         }
-        foreach (var k in d.Keys.ToList()) d[k] = d[k].Trim();
+        foreach (var k in d.Keys.ToList())
+        {
+            d[k] = d[k].Trim();
+        }
+
         return d;
     }
 
@@ -81,9 +112,17 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     /// </summary>
     public static string? Resolve(string root, string fromFile, string link)
     {
-        if (IsExternal(link) || link.StartsWith('#')) return null;
+        if (IsExternal(link) || link.StartsWith('#'))
+        {
+            return null;
+        }
+
         var target = Uri.UnescapeDataString(link.Split('#')[0].Split('?')[0]);
-        if (target == "") return null;
+        if (target == "")
+        {
+            return null;
+        }
+
         string full;
         try { full = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(fromFile) ?? root, target.Replace('/', Path.DirectorySeparatorChar))); }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { return null; }
@@ -95,14 +134,25 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     public static List<(string Rel, long Size)> Files(string root, int max = 300)
     {
         var res = new List<(string, long)>();
-        if (!Directory.Exists(root)) return res;
+        if (!Directory.Exists(root))
+        {
+            return res;
+        }
+
         var opt = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 5, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.Hidden | FileAttributes.System };
         foreach (var f in new DirectoryInfo(root).EnumerateFiles("*", opt))
         {
             var rel = Path.GetRelativePath(root, f.FullName);
-            if (rel.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith('.') && p != ".claude-plugin" && p != ".mcp.json")) continue;
+            if (rel.Split(Path.DirectorySeparatorChar).Any(p => p.StartsWith('.') && p != ".claude-plugin" && p != ".mcp.json"))
+            {
+                continue;
+            }
+
             res.Add((rel, f.Length));
-            if (res.Count >= max) break;
+            if (res.Count >= max)
+            {
+                break;
+            }
         }
         return res.OrderBy(f => f.Item1.Count(c => c == Path.DirectorySeparatorChar)).ThenBy(f => f.Item1, StringComparer.OrdinalIgnoreCase).ToList();
     }

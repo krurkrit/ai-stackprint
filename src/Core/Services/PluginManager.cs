@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,14 +15,26 @@ public static partial class PluginManager
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._\-]*(@[A-Za-z0-9][A-Za-z0-9._\-/]*)?$")]
     private static partial Regex PluginId();
 
-    static readonly string[] Scopes = { "user", "project", "local" };
+    static readonly string[] _scopes = { "user", "project", "local" };
 
     /// <summary>Fills {plugin} and {scope}. Rejects ids and scopes outside a strict whitelist so nothing can inject arguments.</summary>
     public static List<string> Build(IReadOnlyList<string> template, string plugin, string scope)
     {
-        if (template.Count == 0) throw new InvalidOperationException("This app has no plugin command configured.");
-        if (!PluginId().IsMatch(plugin)) throw new ArgumentException($"\"{plugin}\" is not a valid plugin id (name or name@marketplace).");
-        if (!Scopes.Contains(scope)) throw new ArgumentException($"Unknown scope \"{scope}\".");
+        if (template.Count == 0)
+        {
+            throw new InvalidOperationException("This app has no plugin command configured.");
+        }
+
+        if (!PluginId().IsMatch(plugin))
+        {
+            throw new ArgumentException($"\"{plugin}\" is not a valid plugin id (name or name@marketplace).");
+        }
+
+        if (!_scopes.Contains(scope))
+        {
+            throw new ArgumentException($"Unknown scope \"{scope}\".");
+        }
+
         return template.Select(a => a.Replace("{plugin}", plugin).Replace("{scope}", scope)).ToList();
     }
 
@@ -34,15 +49,23 @@ public static partial class PluginManager
     {
         var exe = Which(argv[0]) ?? throw new FileNotFoundException($"\"{argv[0]}\" was not found on PATH.");
         var psi = new ProcessStartInfo(exe) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
-        foreach (var a in argv.Skip(1)) psi.ArgumentList.Add(a);
-        if (cwd != null) psi.WorkingDirectory = cwd;
+        foreach (var a in argv.Skip(1))
+        {
+            psi.ArgumentList.Add(a);
+        }
+
+        if (cwd != null)
+        {
+            psi.WorkingDirectory = cwd;
+        }
+
         using var p = Process.Start(psi)!;
         var output = new StringBuilder();
         var err = p.StandardError.ReadToEndAsync();
-        output.Append(await p.StandardOutput.ReadToEndAsync());
-        output.Append(await err);
+        output.Append(await p.StandardOutput.ReadToEndAsync().ConfigureAwait(false));
+        output.Append(await err.ConfigureAwait(false));
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-        try { await p.WaitForExitAsync(cts.Token); }
+        try { await p.WaitForExitAsync(cts.Token).ConfigureAwait(false); }
         catch (OperationCanceledException) { p.Kill(true); return (-1, output + "\nTimed out after 5 minutes."); }
         return (p.ExitCode, output.ToString().Trim());
     }
@@ -50,16 +73,26 @@ public static partial class PluginManager
     /// <summary>Resolves a command on PATH, honouring PATHEXT on Windows (claude.exe, claude.cmd).</summary>
     public static string? Which(string cmd)
     {
-        if (Path.IsPathRooted(cmd)) return File.Exists(cmd) ? cmd : null;
+        if (Path.IsPathRooted(cmd))
+        {
+            return File.Exists(cmd) ? cmd : null;
+        }
+
         var exts = OperatingSystem.IsWindows() && !Path.HasExtension(cmd)
             ? (Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT").Split(';', StringSplitOptions.RemoveEmptyEntries)
             : new[] { "" };
         foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
             foreach (var e in exts)
             {
                 var f = Path.Combine(dir.Trim('"'), cmd + e.ToLowerInvariant());
-                if (File.Exists(f)) return f;
+                if (File.Exists(f))
+                {
+                    return f;
+                }
             }
+        }
+
         return null;
     }
 }

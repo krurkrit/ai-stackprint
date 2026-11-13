@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,7 +12,7 @@ namespace AiStackprint.Services;
 /// <summary>Loads built-in app definitions, then user definitions (same id overrides the built-in).</summary>
 public static class AppCatalog
 {
-    internal static readonly JsonSerializerOptions Opt = new()
+    internal static readonly JsonSerializerOptions _opt = new()
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
@@ -30,7 +33,11 @@ public static class AppCatalog
     {
         appData ??= AppData;
         string old = Path.Combine(appData, "AiProfiler"), now = Path.Combine(appData, "AiStackprint");
-        if (!Directory.Exists(old) || Directory.Exists(now)) return false;
+        if (!Directory.Exists(old) || Directory.Exists(now))
+        {
+            return false;
+        }
+
         Directory.Move(old, now);
         return true;
     }
@@ -40,7 +47,10 @@ public static class AppCatalog
     {
         var defs = new List<AppDefinition>();
         using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("apps.builtin.json")!)
-            defs.AddRange(JsonSerializer.Deserialize<List<AppDefinition>>(s, Opt) ?? new());
+        {
+            defs.AddRange(JsonSerializer.Deserialize<List<AppDefinition>>(s, _opt) ?? new());
+        }
+
         foreach (var u in ReadUser())
         {
             u.Origin = defs.RemoveAll(d => d.Id == u.Id) > 0 ? AppOrigin.Override : AppOrigin.Custom;
@@ -53,8 +63,12 @@ public static class AppCatalog
     public static void RemoveUser(string id)
     {
         var all = ReadUser();
-        if (all.RemoveAll(d => d.Id == id) == 0) return;
-        File.WriteAllText(UserFile, JsonSerializer.Serialize(all, Opt));
+        if (all.RemoveAll(d => d.Id == id) == 0)
+        {
+            return;
+        }
+
+        File.WriteAllText(UserFile, JsonSerializer.Serialize(all, _opt));
     }
 
     public static void SaveUser(AppDefinition def)
@@ -63,12 +77,12 @@ public static class AppCatalog
         all.RemoveAll(d => d.Id == def.Id);
         all.Add(def);
         Directory.CreateDirectory(Path.GetDirectoryName(UserFile)!);
-        File.WriteAllText(UserFile, JsonSerializer.Serialize(all, Opt));
+        File.WriteAllText(UserFile, JsonSerializer.Serialize(all, _opt));
     }
 
     static List<AppDefinition> ReadUser()
     {
-        try { return File.Exists(UserFile) ? JsonSerializer.Deserialize<List<AppDefinition>>(File.ReadAllText(UserFile), Opt) ?? new() : new(); }
+        try { return File.Exists(UserFile) ? JsonSerializer.Deserialize<List<AppDefinition>>(File.ReadAllText(UserFile), _opt) ?? new() : new(); }
         catch (Exception e) when (e is JsonException or IOException) { return new(); }
     }
 }

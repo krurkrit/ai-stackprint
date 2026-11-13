@@ -1,7 +1,9 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
-using Avalonia.Layout;
 using Avalonia.Media;
 
 using static AiStackprint.Ui.W;
@@ -18,7 +20,9 @@ static class PieChart
         var canvas = new Canvas { Width = Size, Height = Size };
         double c = Size / 2, total = slices.Sum(s => s.Value);
         if (total <= 0)
+        {
             canvas.Children.Add(Slice(c, 0, 359.99, BorderKey));
+        }
         else
         {
             double at = 0;

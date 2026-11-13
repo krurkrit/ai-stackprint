@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 using AiStackprint.Ui;
 
@@ -15,8 +18,12 @@ public class ThemeTests
     {
         var s = Theme.Status(dark);
         foreach (var c in new[] { s.Error, s.Warning, s.Success })
+        {
             foreach (var bg in new[] { s.Background, s.Main })
+            {
                 Assert.True(Contrast.Ratio(c.ToUInt32(), bg.ToUInt32()) >= 4.5, $"{c} on {bg}");
+            }
+        }
     }
 
     [Theory]
@@ -27,6 +34,8 @@ public class ThemeTests
         var card = Theme.Status(dark).Background.ToUInt32();
         var marks = Theme.Series(dark).Concat(Enumerable.Range(0, 4).Select(i => Theme.LevelDefault(dark, i)));
         foreach (var c in marks)
+        {
             Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");   // WCAG 1.4.11: chart marks need 3:1
+        }
     }
 }

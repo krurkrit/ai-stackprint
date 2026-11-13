@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -14,7 +17,7 @@ namespace AiStackprint.Ui;
 static class AppearanceSection
 {
     /// <summary>One list for Body and Emphasis weight.</summary>
-    static readonly (string Label, int Value)[] Weights =
+    static readonly (string Label, int Value)[] _weights =
         { ("Light (300)", 300), ("Regular (400)", 400), ("Medium (500)", 500), ("SemiBold (600)", 600), ("Bold (700)", 700) };
 
     /// <summary>Typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
@@ -23,7 +26,11 @@ static class AppearanceSection
         var box = new NumericUpDown { Minimum = min, Maximum = max, Increment = 1, FormatString = "0", MinWidth = 120, Value = (decimal)Math.Clamp(Math.Round(value), min, max) };
         box.ValueChanged += (_, e) =>
         {
-            if (e.NewValue is not { } v) return;
+            if (e.NewValue is not { } v)
+            {
+                return;
+            }
+
             var n = Math.Clamp(Math.Round((double)v), min, max);
             if (n != value) { value = n; set(n); }
         };
@@ -36,9 +43,9 @@ static class AppearanceSection
         void Change(Action a) { a(); SettingsStore.Save(st); x.Restyle(); }
 
         var installed = FontManager.Current.SystemFonts.Select(f => f.Name).Distinct().Order(StringComparer.OrdinalIgnoreCase).ToList();
-        var labels = Weights.Select(w => w.Label).ToList();
-        string WLabel(int v, int fallback) => Weights.FirstOrDefault(w => w.Value == v).Label ?? Weights.First(w => w.Value == fallback).Label;
-        int WValue(string l) => Weights.First(w => w.Label == l).Value;
+        var labels = _weights.Select(w => w.Label).ToList();
+        string WLabel(int v, int fallback) => _weights.FirstOrDefault(w => w.Value == v).Label ?? _weights.First(w => w.Value == fallback).Label;
+        int WValue(string l) => _weights.First(w => w.Label == l).Value;
         var monoKnown = new[] { "JetBrains Mono", "Cascadia Mono", "Cascadia Code", "Consolas", "Fira Code", "Fira Mono", "Source Code Pro", "Menlo", "Monaco", "SF Mono", "DejaVu Sans Mono", "Ubuntu Mono", "Courier New" };
         var monos = installed.Where(f => monoKnown.Contains(f, StringComparer.OrdinalIgnoreCase) || f.Contains("Mono", StringComparison.OrdinalIgnoreCase) || f.Contains("Code", StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -113,9 +120,21 @@ static class AppearanceSection
         var have = installedOnly ?? fonts;
         bool Has(string f) => f == first || have.Contains(f, StringComparer.OrdinalIgnoreCase);
         var names = fonts.ToList();
-        if (!names.Contains(current) && !names.Contains(fallback)) names.Insert(0, current);
-        if (!names.Contains(fallback) && first == null) names.Insert(0, fallback);
-        if (first != null && !names.Contains(first)) names.Insert(0, first);
+        if (!names.Contains(current) && !names.Contains(fallback))
+        {
+            names.Insert(0, current);
+        }
+
+        if (!names.Contains(fallback) && first == null)
+        {
+            names.Insert(0, fallback);
+        }
+
+        if (first != null && !names.Contains(first))
+        {
+            names.Insert(0, first);
+        }
+
         string Label(string f) => Has(f) ? f : f + NotInstalled;
         var items = names.Select(Label).ToList();
         var c = Combo(items, Label(current), l => pick(l.EndsWith(NotInstalled) ? l[..^NotInstalled.Length] : l));
@@ -125,7 +144,7 @@ static class AppearanceSection
     internal static ComboBox Combo(List<string> items, string current, Action<string> pick)
     {
         var c = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : items.FirstOrDefault(), MinWidth = 220 };
-        c.SelectionChanged += (_, _) => { if (c.SelectedItem is string s && s != current) pick(s); };
+        c.SelectionChanged += (_, _) => { if (c.SelectedItem is string s && s != current) { pick(s); } };
         return c;
     }
 }

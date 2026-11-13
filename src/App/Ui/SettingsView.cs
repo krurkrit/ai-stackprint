@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -24,7 +27,10 @@ class SettingsView(Ctx x)
             shown.IsCheckedChanged += (_, _) => Save(() =>
             {
                 st.HiddenApps.Remove(d.Id);
-                if (shown.IsChecked != true) st.HiddenApps.Add(d.Id);
+                if (shown.IsChecked != true)
+                {
+                    st.HiddenApps.Add(d.Id);
+                }
             });
             Control status = hidden ? Txt("Not scanned", 13, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", 13, false, Muted);
             var origin = d.Origin switch { AppOrigin.Custom => "Custom", AppOrigin.Override => "Customised", _ => "Built-in" };

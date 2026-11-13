@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>   <!-- .editorconfig rules marked warning show on build -->
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- .NET analyzers: latest rule set; which rules are warnings is set in .editorconfig (aspnetcore's list) -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>   <!-- IDE rules marked warning in .editorconfig show on build -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>   <!-- needed for IDE0005 (unused usings) on build -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>   <!-- not every public member or parameter needs an XML doc comment -->
   </PropertyGroup>
 </Project>

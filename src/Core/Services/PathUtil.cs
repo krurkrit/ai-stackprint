@@ -1,5 +1,7 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Diagnostics;
-using System.IO;
 
 namespace AiStackprint.Services;
 
@@ -12,7 +14,10 @@ public static class PathUtil
     {
         p = Environment.ExpandEnvironmentVariables(p);
         if (p == "~" || p.StartsWith("~/") || p.StartsWith("~\\"))
+        {
             p = System.IO.Path.Combine(Home, p[1..].TrimStart('/', '\\'));
+        }
+
         return p.Replace('/', System.IO.Path.DirectorySeparatorChar);
     }
 
@@ -31,8 +36,14 @@ public static class PathUtil
         if (Directory.Exists(path)) { OpenFolder(path); return; }
         try
         {
-            if (OperatingSystem.IsWindows()) Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-            else Process.Start(OperatingSystem.IsMacOS() ? "open" : "xdg-open", path);
+            if (OperatingSystem.IsWindows())
+            {
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            else
+            {
+                Process.Start(OperatingSystem.IsMacOS() ? "open" : "xdg-open", path);
+            }
         }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException) { }
     }
@@ -42,8 +53,14 @@ public static class PathUtil
         var dir = File.Exists(path) ? System.IO.Path.GetDirectoryName(path)! : path;
         try
         {
-            if (OperatingSystem.IsWindows()) Process.Start("explorer.exe", $"\"{dir}\"");
-            else Process.Start(OperatingSystem.IsMacOS() ? "open" : "xdg-open", dir);
+            if (OperatingSystem.IsWindows())
+            {
+                Process.Start("explorer.exe", $"\"{dir}\"");
+            }
+            else
+            {
+                Process.Start(OperatingSystem.IsMacOS() ? "open" : "xdg-open", dir);
+            }
         }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException) { }
     }

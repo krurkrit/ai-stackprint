@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -18,7 +21,7 @@ static class Busy
 {
     const int DelayMs = 300;
 
-    static readonly Animation Turn = new()
+    static readonly Animation _turn = new()
     {
         Duration = TimeSpan.FromSeconds(0.9),
         Children =
@@ -31,7 +34,13 @@ static class Busy
     /// <summary>Looping animations cannot use RunAsync, so one turn is run again until the spinner leaves the screen.</summary>
     static async Task Spin(Animatable v, CancellationToken ct)
     {
-        try { while (!ct.IsCancellationRequested) await Turn.RunAsync(v, ct); }
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await _turn.RunAsync(v, ct);
+            }
+        }
         catch (OperationCanceledException) { }
     }
 
@@ -77,7 +86,10 @@ static class Busy
         try
         {
             var r = await Task.Run(() => work(ct), ct);
-            if (!ct.IsCancellationRequested) host.Content = show(r);
+            if (!ct.IsCancellationRequested)
+            {
+                host.Content = show(r);
+            }
         }
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or HttpRequestException or System.Text.Json.JsonException)

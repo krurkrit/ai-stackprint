@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 namespace AiStackprint.Services;
 
 /// <param name="Fork">When the main session started it (its Task/Agent call, else the step before).</param>
@@ -15,7 +18,10 @@ public static class AgentTimelines
     public static AgentTimeline? Build(IReadOnlyList<LogEntry> entries)
     {
         var timed = entries.Where(e => e.Time != null).ToList();
-        if (!timed.Any(e => e.SubAgent)) return null;
+        if (!timed.Any(e => e.SubAgent))
+        {
+            return null;
+        }
 
         // One lane per agent id; without ids, one lane per unbroken run of sub-agent steps
         var lanes = new List<List<LogEntry>>(); var byAgent = new Dictionary<string, int>(); int run = -1; bool prevSub = false;
@@ -45,7 +51,11 @@ public static class AgentTimelines
         {
             DateTime start = steps.Min(e => e.Time)!.Value, end = steps.Max(e => e.Time)!.Value;
             var call = tasks.Where(t => t.Time <= start && !used.Contains(t)).LastOrDefault();
-            if (call != null) used.Add(call);
+            if (call != null)
+            {
+                used.Add(call);
+            }
+
             var fork = call?.Time ?? main.Where(e => e.Time <= start).LastOrDefault()?.Time ?? start;
             var merge = main.FirstOrDefault(e => e.Time >= end)?.Time ?? end;
             var first = steps[0].Text.Trim().Split('\n')[0];
@@ -55,8 +65,14 @@ public static class AgentTimelines
         var waits = new List<(DateTime From, DateTime To)>();
         foreach (var l in result.OrderBy(l => l.Start))
         {
-            if (waits.Count > 0 && l.Start <= waits[^1].To) waits[^1] = (waits[^1].From, l.End > waits[^1].To ? l.End : waits[^1].To);
-            else waits.Add((l.Start, l.End));
+            if (waits.Count > 0 && l.Start <= waits[^1].To)
+            {
+                waits[^1] = (waits[^1].From, l.End > waits[^1].To ? l.End : waits[^1].To);
+            }
+            else
+            {
+                waits.Add((l.Start, l.End));
+            }
         }
         return new(timed[0].Time!.Value, timed[^1].Time!.Value, result.Take(MaxLanes).ToList(), waits, result.Count);
     }

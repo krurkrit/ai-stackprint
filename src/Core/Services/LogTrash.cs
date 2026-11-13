@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 
 namespace AiStackprint.Services;
@@ -60,7 +63,11 @@ public static class LogTrash
     static string Unique(string folder, string name)
     {
         var p = Path.Combine(folder, name);
-        for (int i = 2; File.Exists(p) || Directory.Exists(p); i++) p = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)}.{i}{Path.GetExtension(name)}");
+        for (int i = 2; File.Exists(p) || Directory.Exists(p); i++)
+        {
+            p = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)}.{i}{Path.GetExtension(name)}");
+        }
+
         return p;
     }
 }

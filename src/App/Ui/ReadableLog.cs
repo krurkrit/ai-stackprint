@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.RegularExpressions;
 
 using AiStackprint.Services;
@@ -30,39 +33,73 @@ class ReadableLog
         Steps = s.Entries.TakeLast(MaxSteps).ToList();
         var list = new StackPanel { Spacing = 8, Margin = new Thickness(14) };
         list.Children.Add(Summary(s));
-        if (AgentTimelines.Build(s.Entries) is { } timeline) list.Children.Add(AgentGraph.Build(timeline));
-        if (s.Entries.Count > MaxSteps) list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", 12, false, Muted));
+        if (AgentTimelines.Build(s.Entries) is { } timeline)
+        {
+            list.Children.Add(AgentGraph.Build(timeline));
+        }
+
+        if (s.Entries.Count > MaxSteps)
+        {
+            list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", 12, false, Muted));
+        }
+
         bool? wasSub = null;
         foreach (var e in Steps)
         {
-            if (e.SubAgent && wasSub != true) list.Children.Add(Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(24, 6, 0, 0)));
+            if (e.SubAgent && wasSub != true)
+            {
+                list.Children.Add(Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(24, 6, 0, 0)));
+            }
+
             wasSub = e.SubAgent;
             var step = Step(e);
             _controls[e] = step;
             if (e.SubAgent)
+            {
                 step = new Border { BorderThickness = new Thickness(2, 0, 0, 0), Padding = new Thickness(12, 0, 0, 0), Margin = new Thickness(24, 0, 0, 0), Child = step }
                     .Themed(Border.BorderBrushProperty, Accent);
+            }
+
             var holder = new Panel { Children = { step } };
             _holders[e] = holder;
             list.Children.Add(holder);
         }
-        if (Steps.Count == 0) list.Children.Add(Txt("No readable steps in this file.", 14, false, Muted));
+        if (Steps.Count == 0)
+        {
+            list.Children.Add(Txt("No readable steps in this file.", 14, false, Muted));
+        }
+
         _scroll.Content = list;
-        if (toEnd) Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
+        if (toEnd)
+        {
+            Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
+        }
     }
 
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>
     public void Reveal(LogEntry e)
     {
-        if (!_controls.TryGetValue(e, out var c)) return;
-        if (c is Expander x) x.IsExpanded = true;
-        Dispatcher.UIThread.Post(() => c.BringIntoView(), DispatcherPriority.Background);
+        if (!_controls.TryGetValue(e, out var c))
+        {
+            return;
+        }
+
+        if (c is Expander x)
+        {
+            x.IsExpanded = true;
+        }
+
+        Dispatcher.UIThread.Post(c.BringIntoView, DispatcherPriority.Background);
     }
 
     /// <summary>Steps after <paramref name="previousLast"/> (the last step of the earlier read); none when it is no longer in view.</summary>
     public List<LogEntry> After(LogEntry? previousLast)
     {
-        if (previousLast == null) return new();
+        if (previousLast == null)
+        {
+            return new();
+        }
+
         int i = Steps.LastIndexOf(previousLast);
         return i < 0 ? new() : Steps.Skip(i + 1).ToList();
     }
@@ -70,10 +107,18 @@ class ReadableLog
     /// <summary>Tints the given steps and fades the tint out over <paramref name="seconds"/>.</summary>
     public void Flash(IEnumerable<LogEntry> steps, double seconds)
     {
-        if (seconds <= 0) return;
+        if (seconds <= 0)
+        {
+            return;
+        }
+
         foreach (var e in steps)
         {
-            if (!_holders.TryGetValue(e, out var holder) || holder.Children.FirstOrDefault(c => c.IsHitTestVisible) is not { } step) continue;
+            if (!_holders.TryGetValue(e, out var holder) || holder.Children.FirstOrDefault(c => c.IsHitTestVisible) is not { } step)
+            {
+                continue;
+            }
+
             var margin = step.Margin;   // the step's own indent (20 px sides, sub-agent indent), so the highlight lines up with it
             // Fill behind the step (text keeps its contrast) and a ring on top (visible on opaque bubbles too)
             var fill = new Border { CornerRadius = new CornerRadius(8), Margin = margin, IsHitTestVisible = false }.Themed(Border.BackgroundProperty, HighlightKey);
@@ -81,11 +126,14 @@ class ReadableLog
             holder.Children.Insert(0, fill);
             holder.Children.Add(ring);
             foreach (var b in new[] { fill, ring })
+            {
                 Dispatcher.UIThread.Post(() =>
                 {
                     b.Transitions = new Avalonia.Animation.Transitions { new Avalonia.Animation.DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromSeconds(seconds), Easing = new Avalonia.Animation.Easings.CubicEaseIn() } };
                     b.Opacity = 0;
                 }, DispatcherPriority.Background);
+            }
+
             DispatcherTimer.RunOnce(() => { holder.Children.Remove(fill); holder.Children.Remove(ring); }, TimeSpan.FromSeconds(seconds + 0.5));
         }
     }
@@ -94,13 +142,28 @@ class ReadableLog
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
-        if (s.Models.Count > 0) Add(string.Join(", ", s.Models));
+        if (s.Models.Count > 0)
+        {
+            Add(string.Join(", ", s.Models));
+        }
+
         Add(Plural(s.Entries.Count(e => e.Role == "user"), "prompt"));
         Add(Plural(s.Entries.Count(e => e.Role == "tool"), "tool call"));
-        if (s.Entries.Any(e => e.SubAgent)) Add(Plural(s.Entries.Count(e => e.SubAgent), "sub-agent step"));
-        if (s.InputTokens + s.OutputTokens > 0) Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
+        if (s.Entries.Any(e => e.SubAgent))
+        {
+            Add(Plural(s.Entries.Count(e => e.SubAgent), "sub-agent step"));
+        }
+
+        if (s.InputTokens + s.OutputTokens > 0)
+        {
+            Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
+        }
+
         if (s.Start is { } a && s.End is { } b)
+        {
             Add($"{a:yyyy-MM-dd HH:mm} – {b:HH:mm} ({((b - a).TotalMinutes < 1 ? $"{(b - a).TotalSeconds:0} s" : $"{(b - a).TotalMinutes:0} min")})");
+        }
+
         return w;
     }
 
@@ -134,7 +197,9 @@ class ReadableLog
         {
             if (part.Label != null) { body.Children.Add(Injected(part)); continue; }
             foreach (var (text, lang) in Fences(part.Text))
+            {
                 body.Children.Add(lang == null ? MarkdownView.Render(text) : Code(text, lang));
+            }
         }
         return new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(12, 10), Child = body, Margin = mine ? new Thickness(20, 0, 0, 0) : new Thickness(0, 0, 20, 0) }
             .Themed(Border.BackgroundProperty, bg);
@@ -146,19 +211,26 @@ class ReadableLog
     internal static Control Code(string text, string ext) =>
         new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = new CodeView(ext, lineNumbers: false, compact: true) { Text = text.TrimEnd('\n') } };
 
-    static readonly Regex Fence = new(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline);
+    static readonly Regex _fence = new(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline);
 
     /// <summary>Splits markdown into prose and fenced code blocks; the fence language picks the grammar.</summary>
     internal static IEnumerable<(string Text, string? Lang)> Fences(string md)
     {
         int at = 0;
-        foreach (Match m in Fence.Matches(md))
+        foreach (Match m in _fence.Matches(md))
         {
-            if (m.Index > at && md[at..m.Index].Trim() != "") yield return (md[at..m.Index], null);
+            if (m.Index > at && md[at..m.Index].Trim() != "")
+            {
+                yield return (md[at..m.Index], null);
+            }
+
             yield return (m.Groups[2].Value, Ext(m.Groups[1].Value));
             at = m.Index + m.Length;
         }
-        if (at < md.Length && md[at..].Trim() != "") yield return (md[at..], null);
+        if (at < md.Length && md[at..].Trim() != "")
+        {
+            yield return (md[at..], null);
+        }
     }
 
     static string Ext(string fence) => fence.ToLowerInvariant() switch
@@ -187,7 +259,10 @@ class ReadableLog
             .Themed(TextBlock.ForegroundProperty, Muted);
         Grid.SetColumn(args, 2); line.Children.Add(args);
         // No arrow when opening would show the same one line the header already shows
-        if (string.IsNullOrEmpty(e.Detail) || SameAsHeader(e.Detail, args.Text ?? "")) return line.With(l => l.Margin = new Thickness(12, 2));
+        if (string.IsNullOrEmpty(e.Detail) || SameAsHeader(e.Detail, args.Text ?? ""))
+        {
+            return line.With(l => l.Margin = new Thickness(12, 2));
+        }
         // Full input (command, JSON arguments, patch) highlighted when opened
         return Lazy(new Expander { Header = line, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(12, 0, 0, 0) }, () => Code(e.Detail, e.Lang ?? ".txt"));
     }
@@ -200,7 +275,11 @@ class ReadableLog
     {
         var first = FirstLine(TextDecode.Clean(text.Length > 400 ? text[..400] : text));
         var header = L(label + first, false, Muted).With(t => { t.TextWrapping = TextWrapping.NoWrap; t.TextTrimming = TextTrimming.CharacterEllipsis; });
-        if (SameAsHeader(text, first)) return header.With(h => h.Margin = new Thickness(margin.Left + 12, 6, 0, 6));
+        if (SameAsHeader(text, first))
+        {
+            return header.With(h => h.Margin = new Thickness(margin.Left + 12, 6, 0, 6));
+        }
+
         return Lazy(new Expander { Header = header, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = margin }, () => markdown ? Rendered(TextDecode.Strip(text)) : StepBody(text, lang));
     }
 
@@ -214,11 +293,19 @@ class ReadableLog
     /// <summary>Opened content: decoded text (JSON pretty, escapes, shell colors, image data shortened) with a toggle back to the original when it was changed.</summary>
     static Control StepBody(string original, string? lang)
     {
-        if (lang is ".md" or ".markdown") return Rendered(original);
+        if (lang is ".md" or ".markdown")
+        {
+            return Rendered(original);
+        }
+
         var p = TextDecode.Prepare(original, lang);
         Control Show(bool fmt) => !fmt ? Plain(original) : p.Ansi != null ? AnsiText(p.Ansi) : p.Lang != null ? Code(p.Text, p.Lang) : Plain(p.Text);
         var view = new ContentControl { Content = Show(true) };
-        if (!p.Changed) return view;
+        if (!p.Changed)
+        {
+            return view;
+        }
+
         bool formatted = true;
         var toggle = new Button { Content = "Show original", Padding = new Thickness(8, 2), MinHeight = 0, FontSize = Size(12), HorizontalAlignment = HorizontalAlignment.Left };
         toggle.Click += (_, _) =>
@@ -257,25 +344,33 @@ class ReadableLog
         foreach (var r in runs)
         {
             var run = new Run(r.Text);
-            if (r.Color is { } c) run.Foreground = new ImmutableSolidColorBrush(AnsiColor(c, dark));
-            if (r.Bold) run.FontWeight = FontWeight.Bold;
+            if (r.Color is { } c)
+            {
+                run.Foreground = new ImmutableSolidColorBrush(AnsiColor(c, dark));
+            }
+
+            if (r.Bold)
+            {
+                run.FontWeight = FontWeight.Bold;
+            }
+
             tb.Inlines.Add(run);
         }
         return tb;
     }
 
-    static readonly string[] AnsiDark =
+    static readonly string[] _ansiDark =
         { "#6E7681", "#F47067", "#57AB5A", "#C69026", "#539BF5", "#B083F0", "#39C5CF", "#ADBAC7", "#909DAB", "#FF938A", "#6BC46D", "#DAAA3F", "#6CB6FF", "#DCBDFB", "#56D4DD", "#CDD9E5" };
-    static readonly string[] AnsiLight =
+    static readonly string[] _ansiLight =
         { "#24292F", "#CF222E", "#116329", "#7D4E00", "#0550AE", "#8250DF", "#1B7C83", "#6E7781", "#57606A", "#A40E26", "#1A7F37", "#633C01", "#0969DA", "#6639BA", "#3192AA", "#8C959F" };
 
     static Color AnsiColor(int c, bool dark) =>
-        c >= 0x1000000 ? Color.FromRgb((byte)(c >> 16), (byte)(c >> 8), (byte)c) : Color.Parse((dark ? AnsiDark : AnsiLight)[Math.Clamp(c, 0, 15)]);
+        c >= 0x1000000 ? Color.FromRgb((byte)(c >> 16), (byte)(c >> 8), (byte)c) : Color.Parse((dark ? _ansiDark : _ansiLight)[Math.Clamp(c, 0, 15)]);
 
     /// <summary>Builds the expander's content the first time it opens, so hundreds of steps stay fast.</summary>
     static Expander Lazy(Expander x, Func<Control> content)
     {
-        x.PropertyChanged += (_, e) => { if (e.Property == Expander.IsExpandedProperty && x.IsExpanded && x.Content == null) x.Content = content(); };
+        x.PropertyChanged += (_, e) => { if (e.Property == Expander.IsExpandedProperty && x.IsExpanded && x.Content == null) { x.Content = content(); } };
         return x;
     }
 

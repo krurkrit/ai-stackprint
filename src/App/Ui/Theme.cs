@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 
 using Avalonia;
@@ -48,12 +51,12 @@ static class Theme
     record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
         double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main);
 
-    static readonly Palette Light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
-    static readonly Palette Dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
+    static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
+    static readonly Palette _dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
 
-    static readonly ColorPaletteResources LightFluent = FluentPalette(Light), DarkFluent = FluentPalette(Dark);
+    static readonly ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
 
-    public static FluentTheme Fluent() => new() { Palettes = { [ThemeVariant.Light] = LightFluent, [ThemeVariant.Dark] = DarkFluent } };
+    public static FluentTheme Fluent() => new() { Palettes = { [ThemeVariant.Light] = _lightFluent, [ThemeVariant.Dark] = _darkFluent } };
 
     static FontFamily Stack(string family) => new(family == "Inter" ? "Inter, Noto Sans, $Default" : $"{family}, Inter, Noto Sans, $Default");
     static FontFamily MonoStack(string family) => new($"{family}, JetBrains Mono, Cascadia Mono, Consolas, Menlo, monospace");
@@ -63,23 +66,23 @@ static class Theme
 
     /// <summary>App category colors for charts (Okabe-Ito based, checked against the card color of each theme: every slice is at least 3:1 and none look alike for color-blind viewers).</summary>
     public static readonly string[] Categories = { "agent", "chat", "editor", "orchestrator", "runtime", "shared", "custom" };
-    static readonly string[] LightCategory = { "#1F6FB5", "#D1590E", "#178A5B", "#8E4A9E", "#9A7400", "#5F6B76", "#C2306E" };
-    static readonly string[] DarkCategory = { "#5AA9F0", "#FF8C42", "#4CC38A", "#C58BE0", "#E8B923", "#9AA5B1", "#F06595" };
+    static readonly string[] _lightCategory = { "#1F6FB5", "#D1590E", "#178A5B", "#8E4A9E", "#9A7400", "#5F6B76", "#C2306E" };
+    static readonly string[] _darkCategory = { "#5AA9F0", "#FF8C42", "#4CC38A", "#C58BE0", "#E8B923", "#9AA5B1", "#F06595" };
 
-    static readonly double[] LevelAlpha = { 1, .85, .72, .62 };   // faintest still >= 3:1 on the card (chart marks)
+    static readonly double[] _levelAlpha = { 1, .85, .72, .62 };   // faintest still >= 3:1 on the card (chart marks)
 
     /// <summary>Default level color: the accent, fainter for each level after System (opaque, blended onto the card color so stacked bars stay solid).</summary>
     public static Color LevelDefault(bool dark, int i, Color? accent = null)
     {
-        var p = dark ? Dark : Light;
+        var p = dark ? _dark : _light;
         var a = accent ?? C(p.Primary);
-        return Color.FromUInt32(Services.Contrast.Blend(A(a, LevelAlpha[i]).ToUInt32(), C(p.Bg).ToUInt32()));
+        return Color.FromUInt32(Services.Contrast.Blend(A(a, _levelAlpha[i]).ToUInt32(), C(p.Bg).ToUInt32()));
     }
 
     /// <summary>Default colors shown as placeholders in Appearance: (accent, hover, selection) for a theme.</summary>
     public static (Color Accent, Color Hover, Color Selection, Color Background, Color Text) Defaults(bool dark)
     {
-        var p = dark ? Dark : Light;
+        var p = dark ? _dark : _light;
         return (C(p.Primary), A(C(p.Fg), p.HoverAlpha), A(C(p.Selection), p.SelectionAlpha), C(p.Bg), C(p.Fg));
     }
 
@@ -99,8 +102,8 @@ static class Theme
         app.Resources["ControlContentThemeFontSize"] = W.Size(14);
         W.Body = (FontWeight)Weight(s.BodyWeight, 400);
         W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 500);
-        app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(Light, s.Light, LightFluent);
-        app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(Dark, s.Dark, DarkFluent);
+        app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(_light, s.Light, _lightFluent);
+        app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }
 
     static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
@@ -133,34 +136,44 @@ static class Theme
             [W.Link] = B(custom ?? C(p.Link)),
             [W.SelectionKey] = B(selection),
             ["TextControlSelectionHighlightColor"] = B(selection),
-            [W.ErrorKey] = B(Status(p == Dark).Error),
+            [W.ErrorKey] = B(Status(p == _dark).Error),
             [W.ErrorFill] = B(C(Error)),
             [W.OnError] = B(Colors.White),
-            [W.WarningKey] = B(Status(p == Dark).Warning),
-            [W.SuccessKey] = B(Status(p == Dark).Success),
+            [W.WarningKey] = B(Status(p == _dark).Warning),
+            [W.SuccessKey] = B(Status(p == _dark).Success),
             // Status outline (Snowy Owl report style): success border, tinted fill; dark theme keeps normal text for contrast
-            [W.SuccessText] = B(p == Dark ? fg : C(Success)),
-            [W.SuccessFill] = B(A(Status(p == Dark).Success, .12)),
+            [W.SuccessText] = B(p == _dark ? fg : C(Success)),
+            [W.SuccessFill] = B(A(Status(p == _dark).Success, .12)),
             // Chart series: four hues that differ in both themes (accent, then orange or light blue, green, gray)
             [W.ChartIn] = B(primary),   // first series follows the accent
-            [W.ChartOut] = B(Series(p == Dark)[1]),
-            [W.ChartWrite] = B(Series(p == Dark)[2]),
-            [W.ChartRead] = B(Series(p == Dark)[3]),
+            [W.ChartOut] = B(Series(p == _dark)[1]),
+            [W.ChartWrite] = B(Series(p == _dark)[2]),
+            [W.ChartRead] = B(Series(p == _dark)[3]),
             ["ButtonBackgroundPointerOver"] = B(hover),
             // New log lines/steps, fading out: amber fill behind the text and a solid ring (light: orange, dark: yellow)
-            [W.HighlightKey] = B(A(C(Warning), p == Dark ? .26 : .42)),
-            [W.HighlightRingKey] = B(C(p == Dark ? Warning : OrangeAccent)),
-            [W.ScrimKey] = B(A(Colors.Black, p == Dark ? .5 : .35)),   // behind the search overlay
+            [W.HighlightKey] = B(A(C(Warning), p == _dark ? .26 : .42)),
+            [W.HighlightRingKey] = B(C(p == _dark ? Warning : OrangeAccent)),
+            [W.ScrimKey] = B(A(Colors.Black, p == _dark ? .5 : .35)),   // behind the search overlay
         };
         for (int i = 0; i < Categories.Length; i++)
-            d[W.CategoryKey(Categories[i])] = B(C((p == Dark ? DarkCategory : LightCategory)[i]));
+        {
+            d[W.CategoryKey(Categories[i])] = B(C((p == _dark ? _darkCategory : _lightCategory)[i]));
+        }
+
         for (int i = 0; i < LevelNames.Length; i++)
-            d[W.LevelKey(LevelNames[i])] = B(ParseHex(o.Levels?.ElementAtOrDefault(i)) ?? LevelDefault(p == Dark, i, primary));
+        {
+            d[W.LevelKey(LevelNames[i])] = B(ParseHex(o.Levels?.ElementAtOrDefault(i)) ?? LevelDefault(p == _dark, i, primary));
+        }
         // Inputs sit on cards: card background and the divider color as border (cards themselves have no border)
         foreach (var k in new[] { "TextControlBackground", "TextControlBackgroundPointerOver", "TextControlBackgroundFocused", "ComboBoxBackground", "ComboBoxBackgroundPointerOver", "ComboBoxBackgroundPressed" })
+        {
             d[k] = d[W.Surface];
+        }
+
         foreach (var k in new[] { "TextControlBorderBrush", "TextControlBorderBrushPointerOver", "ComboBoxBorderBrush", "ComboBoxBorderBrushPointerOver", "ComboBoxBorderBrushPressed" })
+        {
             d[k] = d[W.BorderKey];
+        }
         // Switch (off): input-border-colored track, card-colored knob; pointer over: the side menu color as track
         foreach (var s in new[] { "", "PointerOver", "Pressed" })
         {
@@ -181,7 +194,9 @@ static class Theme
         d["ComboBoxBorderBrushPressed"] = d[W.Accent];
         // Fluent accent buttons default to white text; Snowy Owl pairs each accent with its own text color.
         foreach (var k in new[] { "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed" })
+        {
             d[k] = B(onPrimary);
+        }
         // Accent hover and pressed: darker or lighter, away from the text color, so the text never loses contrast (Fluent's own hover could drop below 4.5:1)
         d["AccentButtonBackgroundPointerOver"] = B(Shade(primary, onPrimary, .15));
         d["AccentButtonBackgroundPressed"] = B(Shade(primary, onPrimary, .28));

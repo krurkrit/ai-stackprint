@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 
 using Avalonia;
@@ -23,7 +26,10 @@ class AddAppDialog : Window
         var browse = Btn("Browse...", async () =>
         {
             var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "App config folder" });
-            if (r.Count > 0 && r[0].TryGetLocalPath() is { } p) _folder.Text = p;
+            if (r.Count > 0 && r[0].TryGetLocalPath() is { } p)
+            {
+                _folder.Text = p;
+            }
         });
         var ok = Btn("Save", Save, true);
         ok.IsDefault = true;
@@ -47,7 +53,11 @@ class AddAppDialog : Window
     {
         var name = (_name.Text ?? "").Trim();
         var folder = (_folder.Text ?? "").Trim();
-        if (name == "" || folder == "") return;
+        if (name == "" || folder == "")
+        {
+            return;
+        }
+
         var def = new AppDefinition
         {
             Id = new string(name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-'),
@@ -56,7 +66,11 @@ class AddAppDialog : Window
             Detect = { folder },
             Roots = { new ScanRoot { Path = folder, Level = "User", Depth = 4 } }
         };
-        if (!string.IsNullOrWhiteSpace(_proj.Text)) def.ProjectRoots.Add(new ScanRoot { Path = _proj.Text.Trim(), Level = "Project" });
+        if (!string.IsNullOrWhiteSpace(_proj.Text))
+        {
+            def.ProjectRoots.Add(new ScanRoot { Path = _proj.Text.Trim(), Level = "Project" });
+        }
+
         Close(def);
     }
 }

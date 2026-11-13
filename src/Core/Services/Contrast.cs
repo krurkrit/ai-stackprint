@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 namespace AiStackprint.Services;
 
 /// <summary>WCAG 2 contrast for colors given as 0xAARRGGBB. Translucent colors are blended over the background first.</summary>

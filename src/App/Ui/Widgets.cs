@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -37,7 +40,11 @@ static class W
     /// <summary>Numbers only (digits and separators): aligned digits in the body font.</summary>
     static void NumberStyle(TextBlock t, string s)
     {
-        if (s.Length == 0 || s.Length > 24 || !s.All(c => char.IsDigit(c) || c is ',' or '.' or ' ' or '%' or ':' or '-' or '/')) return;
+        if (s.Length == 0 || s.Length > 24 || !s.All(c => char.IsDigit(c) || c is ',' or '.' or ' ' or '%' or ':' or '-' or '/'))
+        {
+            return;
+        }
+
         t.FontFeatures = FontFeatureCollection.Parse("tnum");
     }
     public static double Size(double px) => Math.Round(px * Scale, 1);
@@ -76,7 +83,7 @@ static class W
     /// <summary>Card titles, names in headers, big numbers: Heading weight.</summary>
     public static TextBlock Title(string s, double size = 15) =>
         new TextBlock { Text = s, FontSize = Size(size), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
-            .With(t => { if (HeadingFont != null) t.FontFamily = HeadingFont; NumberStyle(t, s); });
+            .With(t => { if (HeadingFont != null) { t.FontFamily = HeadingFont; } NumberStyle(t, s); });
 
     public static TextBlock Mono(string s, double size = 13) => Txt(s, size).With(t => t.FontFamily = Theme.Mono);
 
@@ -109,7 +116,11 @@ static class W
         btns.Children.AddRange(actions);
         Grid.SetColumn(btns, 1);
         head.Children.Add(name); head.Children.Add(btns);
-        if (actions.Length == 0) name.Margin = new Thickness(0);
+        if (actions.Length == 0)
+        {
+            name.Margin = new Thickness(0);
+        }
+
         return Card(new StackPanel { Children = { head, body } });
     }
 
@@ -218,7 +229,11 @@ static class W
     {
         object content = icon == null ? text : Row(Icon(icon, 16), new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
         var b = new Button { Content = content, MinHeight = 36, Padding = new Thickness(14, 0), VerticalContentAlignment = VerticalAlignment.Center };
-        if (primary) b.Classes.Add("accent");
+        if (primary)
+        {
+            b.Classes.Add("accent");
+        }
+
         b.Click += (_, _) => a();
         return b;
     }
@@ -244,7 +259,11 @@ static class W
         foreach (var (label, value) in opts)
         {
             var b = new Button { Content = label, MinHeight = 32, CornerRadius = new CornerRadius(16) };
-            if (value == current) b.Classes.Add("accent");
+            if (value == current)
+            {
+                b.Classes.Add("accent");
+            }
+
             b.Click += (_, _) => pick(value);
             wrap.Children.Add(b);
         }
@@ -255,7 +274,13 @@ static class W
     {
         var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         foreach (var x in c)
-            if (!x.IsSet(Layoutable.VerticalAlignmentProperty)) x.VerticalAlignment = VerticalAlignment.Center;   // a label lines up with the control beside it
+        {
+            if (!x.IsSet(Layoutable.VerticalAlignmentProperty))
+            {
+                x.VerticalAlignment = VerticalAlignment.Center;   // a label lines up with the control beside it
+            }
+        }
+
         sp.Children.AddRange(c);
         return sp;
     }
@@ -275,7 +300,10 @@ static class W
     public static void KeepOffered(HashSet<string> off, ICollection<string> offered)
     {
         off.IntersectWith(offered);
-        if (offered.Count < 2 || off.Count >= offered.Count) off.Clear();
+        if (offered.Count < 2 || off.Count >= offered.Count)
+        {
+            off.Clear();
+        }
     }
 
     /// <summary>Check box text with a muted count after it.</summary>
@@ -302,9 +330,19 @@ static class W
             var cb = new CheckBox { Content = label, IsChecked = !off.Contains(value), MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
             cb.IsCheckedChanged += (_, _) =>
             {
-                if (cb.IsChecked == true) { if (!off.Remove(value)) return; }
+                if (cb.IsChecked == true)
+                {
+                    if (!off.Remove(value))
+                    {
+                        return;
+                    }
+                }
                 else if (opts.Count(o => !off.Contains(o.Value)) <= 1) { cb.IsChecked = true; return; }
-                else off.Add(value);
+                else
+                {
+                    off.Add(value);
+                }
+
                 changed();
             };
             wrap.Children.Add(cb);
@@ -312,17 +350,17 @@ static class W
         return wrap;
     }
 
-    static int s_radioGroups;
+    static int _radioGroups;
 
     /// <summary>One choice among <paramref name="opts"/> as radio buttons.</summary>
     public static Control Radios(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
     {
         var wrap = new WrapPanel { ItemSpacing = 16, LineSpacing = 6 };
-        string group = "r" + ++s_radioGroups;
+        string group = "r" + ++_radioGroups;
         foreach (var (label, value) in opts)
         {
             var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
-            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != current) pick(value); };
+            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != current) { pick(value); } };
             wrap.Children.Add(rb);
         }
         return wrap;
@@ -337,7 +375,7 @@ static class W
     }
 
     /// <summary>Level dots are shown only where the design asks for them (dashboard bars, legend, Levels help).</summary>
-    public static bool LevelDots { get; set; } = false;
+    public static bool LevelDots { get; set; }
 
     public static readonly Cursor Hand = new(StandardCursorType.Hand);
 }

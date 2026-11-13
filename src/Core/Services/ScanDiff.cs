@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.Json;
 
 using AiStackprint.Models;
@@ -20,7 +23,11 @@ public static class ScanDiff
 
     static long Stamp(Item i)
     {
-        if (i.Kind != "Config") return 0;
+        if (i.Kind != "Config")
+        {
+            return 0;
+        }
+
         try { return System.IO.File.GetLastWriteTimeUtc(i.Path).Ticks; }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return 0; }
     }
@@ -30,7 +37,13 @@ public static class ScanDiff
     {
         var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i))).DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
         Snapshot? old = null;
-        try { if (System.IO.File.Exists(file)) old = JsonSerializer.Deserialize<Snapshot>(System.IO.File.ReadAllText(file)); }
+        try
+        {
+            if (System.IO.File.Exists(file))
+            {
+                old = JsonSerializer.Deserialize<Snapshot>(System.IO.File.ReadAllText(file));
+            }
+        }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { }
         var changes = new List<Change>();
         if (old != null)
@@ -38,9 +51,21 @@ public static class ScanDiff
             var before = old.Items.ToDictionary(e => (e.Kind, e.Path, e.Name));
             var after = now.ToDictionary(e => (e.Kind, e.Path, e.Name));
             foreach (var e in now)
-                if (!before.TryGetValue((e.Kind, e.Path, e.Name), out var b)) changes.Add(new("Added", e.Kind, e.Name, e.App, e.Path));
-                else if (b.Stamp != e.Stamp) changes.Add(new("Edited", e.Kind, e.Name, e.App, e.Path));
-            foreach (var e in old.Items.Where(e => !after.ContainsKey((e.Kind, e.Path, e.Name)))) changes.Add(new("Removed", e.Kind, e.Name, e.App, e.Path));
+            {
+                if (!before.TryGetValue((e.Kind, e.Path, e.Name), out var b))
+                {
+                    changes.Add(new("Added", e.Kind, e.Name, e.App, e.Path));
+                }
+                else if (b.Stamp != e.Stamp)
+                {
+                    changes.Add(new("Edited", e.Kind, e.Name, e.App, e.Path));
+                }
+            }
+
+            foreach (var e in old.Items.Where(e => !after.ContainsKey((e.Kind, e.Path, e.Name))))
+            {
+                changes.Add(new("Removed", e.Kind, e.Name, e.App, e.Path));
+            }
         }
         try
         {

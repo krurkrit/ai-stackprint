@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 namespace AiStackprint.Services;
 
 /// <summary>
@@ -31,7 +34,11 @@ public sealed class LogFolderWatcher : IDisposable
         _debounce = new Timer(_ => Flush());
         foreach (var (dir, pattern, recursive) in roots.Distinct())
         {
-            if (!Directory.Exists(dir)) continue;
+            if (!Directory.Exists(dir))
+            {
+                continue;
+            }
+
             try
             {
                 var w = new FileSystemWatcher(dir, pattern) { IncludeSubdirectories = recursive, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size };
@@ -55,7 +62,11 @@ public sealed class LogFolderWatcher : IDisposable
         {
             _paths.Add(path);
             _structure |= structure;
-            if (_pending) return;
+            if (_pending)
+            {
+                return;
+            }
+
             _pending = true;
         }
         try { _debounce.Change(Quiet, Timeout.InfiniteTimeSpan); }
@@ -75,14 +86,22 @@ public sealed class LogFolderWatcher : IDisposable
 
     void Poll()
     {
-        if (_newest == null) return;
+        if (_newest == null)
+        {
+            return;
+        }
+
         var now = Stamp();
         if (now != _stamp) { _stamp = now; Kick(_newest, now.Size < 0); }
     }
 
     (long Size, long Ticks) Stamp()
     {
-        if (_newest == null) return default;
+        if (_newest == null)
+        {
+            return default;
+        }
+
         try { var i = new FileInfo(_newest); return i.Exists ? (i.Length, i.LastWriteTimeUtc.Ticks) : (-1, 0); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return (-2, 0); }
     }
@@ -90,7 +109,11 @@ public sealed class LogFolderWatcher : IDisposable
     public void Dispose()
     {
         _poll.Dispose(); _debounce.Dispose();
-        foreach (var w in _watchers) w.Dispose();
+        foreach (var w in _watchers)
+        {
+            w.Dispose();
+        }
+
         Changed = null;
     }
 }

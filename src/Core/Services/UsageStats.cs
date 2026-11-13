@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Collections.Concurrent;
 
 using AiStackprint.Models;
@@ -28,7 +31,7 @@ public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bo
 /// <summary>Usage per app from session logs. Buckets per file are cached by path + size + time, so re-opening is instant and the cache stays small.</summary>
 public static class UsageStats
 {
-    static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> Cache = new();
+    static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> _cache = new();
 
     /// <param name="since">Only usage from this day on; DateTime.MinValue = all.</param>
     public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct = default)
@@ -38,14 +41,30 @@ public static class UsageStats
         foreach (var f in files)
         {
             ct.ThrowIfCancellationRequested();
-            if (LogParsers.Find(f.Format) is not { } parser) continue;
+            if (LogParsers.Find(f.Format) is not { } parser)
+            {
+                continue;
+            }
+
             withParser++;
-            if (f.Modified < since) continue;   // nothing written since then
+            if (f.Modified < since)
+            {
+                continue;   // nothing written since then
+            }
+
             try
             {
-                if (Cache.Count > 2000) Cache.Clear();
-                var buckets = Cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Bucket(parser.UsageFile(f.Path)));
-                if (!parser.WholeFile && f.Size > LogSummary.SessionBytes) capped = true;
+                if (_cache.Count > 2000)
+                {
+                    _cache.Clear();
+                }
+
+                var buckets = _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Bucket(parser.UsageFile(f.Path)));
+                if (!parser.WholeFile && f.Size > LogSummary.SessionBytes)
+                {
+                    capped = true;
+                }
+
                 var inRange = buckets.Where(b => b.Day >= first).ToList();
                 if (inRange.Count > 0) { sessions++; all.AddRange(inRange); }
             }
@@ -54,21 +73,25 @@ public static class UsageStats
         return new(all, sessions, withParser, capped);
     }
 
-    static readonly ConcurrentDictionary<(string, long, long), List<UsageEvent>> Events = new();
+    static readonly ConcurrentDictionary<(string, long, long), List<UsageEvent>> _events = new();
 
     /// <summary>Use in the last 5 hours and 7 days (exact, from event times), the current 5-hour block, and the latest limit readings.</summary>
     public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct = default)
     {
         var withParser = files.Where(f => LogParsers.Find(f.Format) != null).ToList();
         var events = new List<UsageEvent>(); var limits = new List<LimitSample>();
-        if (Events.Count > 40) Events.Clear();
+        if (_events.Count > 40)
+        {
+            _events.Clear();
+        }
+
         foreach (var f in withParser.Where(f => f.Modified >= now.AddDays(-8)))
         {
             ct.ThrowIfCancellationRequested();
             try
             {
                 var parser = LogParsers.Find(f.Format)!;
-                var list = Events.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => parser.UsageFile(f.Path).Where(e => e.Time >= now.AddDays(-8)).ToList());
+                var list = _events.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => parser.UsageFile(f.Path).Where(e => e.Time >= now.AddDays(-8)).ToList());
                 events.AddRange(list.Where(e => e.Time >= now.AddDays(-7)));
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
@@ -85,11 +108,22 @@ public static class UsageStats
         foreach (var e in events)
         {
             if (blockStart == null || e.Time >= blockStart.Value.AddHours(5) || e.Time - last > TimeSpan.FromHours(5))
+            {
                 blockStart = new DateTime(e.Time.Year, e.Time.Month, e.Time.Day, e.Time.Hour, 0, 0, e.Time.Kind);
+            }
+
             last = e.Time;
         }
         WindowUse? block = null;
-        if (blockStart is { } bs && now < bs.AddHours(5)) block = Sum(events.Where(e => e.Time >= bs)); else blockStart = null;
+        if (blockStart is { } bs && now < bs.AddHours(5))
+        {
+            block = Sum(events.Where(e => e.Time >= bs));
+        }
+        else
+        {
+            blockStart = null;
+        }
+
         return new(limits.GroupBy(l => l.Name).Select(g => g.MaxBy(l => l.Time)!).OrderBy(l => l.WindowMinutes).ToList(),
             Sum(events.Where(e => e.Time >= now.AddHours(-5))), Sum(events), blockStart, block);
     }

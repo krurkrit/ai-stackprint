@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 
 using Xunit;
@@ -29,6 +32,8 @@ public class ContrastTests
     {
         double before = Contrast.Ratio(text, accent);
         foreach (var amount in new[] { .15, .28 })
+        {
             Assert.True(Contrast.Ratio(text, Contrast.AwayFrom(accent, text, amount)) > before);
+        }
     }
 }

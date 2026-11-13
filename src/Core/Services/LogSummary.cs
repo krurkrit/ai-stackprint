@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
@@ -27,7 +30,7 @@ public static partial class LogSummary
 
     record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
 
-    static readonly ConcurrentDictionary<(string, long, long), SessionTotals> Cache = new();
+    static readonly ConcurrentDictionary<(string, long, long), SessionTotals> _cache = new();
 
     static SessionTotals Totals(Session s) => new(
         s.Entries.Count(e => e.Role == "user"), s.Entries.Count(e => e.Role == "tool"), s.Entries.Count(e => e.SubAgent), s.InputTokens, s.OutputTokens,
@@ -46,17 +49,30 @@ public static partial class LogSummary
             {
                 if (LogParsers.Find(f.Format) is { } parser)
                 {
-                    if (Cache.Count > 2000) Cache.Clear();
-                    sessions.Add(Cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Totals(parser.Parse(LogReader.Lines(f.Path, SessionBytes)))));
+                    if (_cache.Count > 2000)
+                    {
+                        _cache.Clear();
+                    }
+
+                    sessions.Add(_cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Totals(parser.Parse(LogReader.Lines(f.Path, SessionBytes)))));
                 }
-                else if (budget - f.Size < 0) capped = true;
+                else if (budget - f.Size < 0)
+                {
+                    capped = true;
+                }
                 else
                 {
                     budget -= f.Size;
                     foreach (var line in LogReader.Lines(f.Path, long.MaxValue))
                     {
-                        if (ErrorLine().IsMatch(line)) errors++;
-                        else if (WarnLine().IsMatch(line)) warnings++;
+                        if (ErrorLine().IsMatch(line))
+                        {
+                            errors++;
+                        }
+                        else if (WarnLine().IsMatch(line))
+                        {
+                            warnings++;
+                        }
                     }
                 }
             }

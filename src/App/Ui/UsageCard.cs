@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -42,7 +45,11 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
     {
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
-        if (_last == null) _body.Content = Busy.Loading("Calculating usage from the logs…");
+        if (_last == null)
+        {
+            _body.Content = Busy.Loading("Calculating usage from the logs…");
+        }
+
         var projects = x.S.Projects.ToList(); var d = def; _live = null;
         var since = _since = prefs.Days == 0 ? DateTime.MinValue : DateTime.Today.AddDays(1 - prefs.Days);
         try
@@ -51,10 +58,18 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
             {
                 var files = LogReader.Find(d, projects, usage: true);
                 var names = files.Select(f => f.Account ?? "Default").Distinct().OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ToList();
-                if (prefs.Account != "" && names.Contains(prefs.Account)) files = files.Where(f => (f.Account ?? "Default") == prefs.Account).ToList();
+                if (prefs.Account != "" && names.Contains(prefs.Account))
+                {
+                    files = files.Where(f => (f.Account ?? "Default") == prefs.Account).ToList();
+                }
+
                 return (UsageStats.Compute(files, since, cts.Token), UsageStats.Live(files, DateTime.Now, cts.Token), names);
             }, cts.Token);
-            if (cts.IsCancellationRequested) return;
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+
             _last = r; _live = live; _accounts = accounts;
             Render();
         }
@@ -64,7 +79,11 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
 
     void Render()
     {
-        if (_last == null) return;
+        if (_last == null)
+        {
+            return;
+        }
+
         if (_accounts.Count < 2) { _body.Content = Show(_last); return; }
         var pills = W.Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v => { prefs.Account = v; Refresh(); });
         _body.Content = new StackPanel { Spacing = 14, Children = { Row(Txt("Account", 13, false, Muted), pills), Show(_last) } };
@@ -74,12 +93,24 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
     {
         var b = r.Buckets;
         if (b.Count == 0)
+        {
             return Txt(r.Files == 0 ? "No session logs found for this app." : "No usage in this period.", 13, false, Muted);
+        }
 
         long inp = b.Sum(v => v.Input), outp = b.Sum(v => v.Output), cw = b.Sum(v => v.CacheWrite), cr = b.Sum(v => v.CacheRead);
         int msgs = b.Sum(v => v.Messages), sub = b.Sum(v => v.SubAgentMessages);
         var unpriced = new SortedSet<string>(); decimal total = 0;
-        foreach (var v in b) { if (Pricing.Cost(v) is { } c) total += c; else unpriced.Add(v.Model); }
+        foreach (var v in b)
+        {
+            if (Pricing.Cost(v) is { } c)
+            {
+                total += c;
+            }
+            else
+            {
+                unpriced.Add(v.Model);
+            }
+        }
         int models = b.Select(v => v.Model).Distinct().Count();
         bool priced = unpriced.Count < models, writes = cw > 0, cost = priced && prefs.Cost, reads = cr > 0 && prefs.CacheReads;   // hide what the logs or prices cannot fill
 
@@ -87,14 +118,26 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         void Tile(string label, string value, string? tip = null)
         {
             var t = Stat(label, value).With(s => s.Margin = new Thickness(0, 0, 10, 10));
-            if (tip != null) ToolTip.SetTip(t, tip);
+            if (tip != null)
+            {
+                ToolTip.SetTip(t, tip);
+            }
+
             tiles.Children.Add(t);
         }
         Tile("Input", Fmt(inp), "Input tokens that were not served from the cache");
         Tile("Output", Fmt(outp));
-        if (writes) Tile("Cache write", Fmt(cw));
+        if (writes)
+        {
+            Tile("Cache write", Fmt(cw));
+        }
+
         Tile("Cache read", Fmt(cr), "Input served from the cache (cheaper)");
-        if (priced) Tile("Est. cost", Money(total), "The app's own figure where its log has one, else an estimate from prices.json");
+        if (priced)
+        {
+            Tile("Est. cost", Money(total), "The app's own figure where its log has one, else an estimate from prices.json");
+        }
+
         Tile("Sessions", r.Sessions.ToString("N0"));
         Tile("Messages", msgs.ToString("N0"), sub > 0 ? $"{sub:N0} from sub-agents" : null);
 
@@ -111,10 +154,26 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
             .Select(p => new TableRow(new Control?[] { Txt(p.Name, 13, true), Txt(p.Msgs.ToString("N0"), 13), Txt(Fmt(p.Tok), 13), priced ? Txt(p.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>().ToArray()));
 
         var notes = new StackPanel { Spacing = 4 };
-        if (unpriced.Count > 0) notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an empty entry for each; fill in the numbers.", 12, false, Muted));
-        if (r.Capped) notes.Children.Add(Txt("Files over 8 MB: only the newest 8 MB of each is counted.", 12, false, Muted));
-        if (r.Files >= LogReader.MaxFiles) notes.Children.Add(Txt($"Counts the newest {LogReader.MaxFiles} log files.", 12, false, Muted));
-        if (priced) notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", 12, false, Muted));
+        if (unpriced.Count > 0)
+        {
+            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an empty entry for each; fill in the numbers.", 12, false, Muted));
+        }
+
+        if (r.Capped)
+        {
+            notes.Children.Add(Txt("Files over 8 MB: only the newest 8 MB of each is counted.", 12, false, Muted));
+        }
+
+        if (r.Files >= LogReader.MaxFiles)
+        {
+            notes.Children.Add(Txt($"Counts the newest {LogReader.MaxFiles} log files.", 12, false, Muted));
+        }
+
+        if (priced)
+        {
+            notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", 12, false, Muted));
+        }
+
         var edit = Btn("Edit prices", () => { Pricing.Ensure(); Pricing.AddMissing(unpriced); PathUtil.OpenFile(Pricing.FilePath); }, false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
 
         return new StackPanel
@@ -138,13 +197,20 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         var first = prefs.Days == 0 ? b.Min(v => v.Day) : DateOnly.FromDateTime(_since);
-        if (today.DayNumber - first.DayNumber > 89) first = today.AddDays(-89);
+        if (today.DayNumber - first.DayNumber > 89)
+        {
+            first = today.AddDays(-89);
+        }
+
         var byDay = b.Where(v => v.Day >= first).GroupBy(v => v.Day).ToDictionary(g => g.Key, g => g.ToList());
         var keep = cost ? new[] { true } : new[] { true, true, writes, reads };
         var keys = (cost ? new[] { Accent } : new[] { ChartIn, ChartOut, ChartWrite, ChartRead }).Where((_, k) => keep[k]).ToArray();
         var names = (cost ? new[] { "Estimated cost" } : new[] { "Input", "Output", "Cache write", "Cache read" }).Where((_, k) => keep[k]).ToArray();
         legend = new WrapPanel { Children = { } };
-        for (int k = 0; k < names.Length; k++) ((WrapPanel)legend).Children.Add(DotText(names[k], keys[k]).With(s => s.Margin = new Thickness(0, 0, 14, 0)));
+        for (int k = 0; k < names.Length; k++)
+        {
+            ((WrapPanel)legend).Children.Add(DotText(names[k], keys[k]).With(s => s.Margin = new Thickness(0, 0, 14, 0)));
+        }
 
         var bars = new List<(DateOnly Day, double[] Parts, string Tip)>();
         for (var d = first; d <= today; d = d.AddDays(1))
@@ -157,7 +223,9 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
         }
         double max = bars.Max(v => v.Parts.Sum());
         if (max <= 0)
+        {
             return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", 13, false, Muted);
+        }
 
         const double barHeight = 140;
         var grid = new Grid { ColumnSpacing = 3, Height = barHeight + 22, Margin = new Thickness(0, 6, 0, 0) };
@@ -168,8 +236,13 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
             var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
             var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = 28 };
             for (int j = bars[i].Parts.Length - 1; j >= 0; j--)
+            {
                 if (bars[i].Parts[j] > 0)
+                {
                     stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(1) }.Themed(Border.BackgroundProperty, keys[j]));
+                }
+            }
+
             var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", 10, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
             Grid.SetRow(label, 1);
             col.Children.Add(stack); col.Children.Add(label);
@@ -184,7 +257,11 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
     Control Limits()
     {
         var live = _live;
-        if (live == null) return new StackPanel();
+        if (live == null)
+        {
+            return new StackPanel();
+        }
+
         var sp = new StackPanel { Spacing = 8 };
         // Apps with live limits show them in the Plan & limits card above
         var limits = LimitsView.Has(def) ? new List<LimitSample>() : live.Limits;
@@ -216,8 +293,15 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
             Txt("Last 5 hours: " + Win(live.Last5h), 13), Txt("Last 7 days: " + Win(live.Last7d), 13)
         };
         if (live.Block != null && live.BlockStart is { } bs)
+        {
             rows.Add(Txt($"Current 5-hour block: {Win(live.Block)} · started {bs:HH:mm}, ends about {bs.AddHours(5):HH:mm}", 13));
-        foreach (var r in rows) sp.Children.Add(r);
+        }
+
+        foreach (var r in rows)
+        {
+            sp.Children.Add(r);
+        }
+
         sp.Children.Add(Txt(limits.Count > 0 ? "Percent and reset time are what the app wrote in its log; they update when the app runs. Tokens exclude cache reads."
             : "A block starts at the first message after a 5-hour gap. Tokens exclude cache reads.", 12, false, Muted));
         return sp;
@@ -228,7 +312,11 @@ class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs)
     static decimal? CostOf(IEnumerable<UsageBucket> g)
     {
         decimal sum = 0; bool any = false;
-        foreach (var v in g) if (Pricing.Cost(v) is { } c) { sum += c; any = true; }
+        foreach (var v in g)
+        {
+            if (Pricing.Cost(v) is { } c) { sum += c; any = true; }
+        }
+
         return any ? sum : null;
     }
 

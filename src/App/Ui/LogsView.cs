@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -39,7 +42,10 @@ class LogsView(Ctx x)
             .Select(d => new TableRow(new Control[] { AppName(d.Logo, d.Category, d.Name, 24) }, () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
 
         var head = new StackPanel { Spacing = 6, Children = { def == null ? H1("Logs") : H1("Logs", "Logs", def.Name) } };
-        if (def != null) head.Children.Add(Txt("Looks in: " + string.Join("  ·  ", def.Logs.Where(l => PathUtil.OsMatches(l.Os)).Select(l => l.Path)) + "  ·  watching for changes · F5 reads again", 12, false, Muted));
+        if (def != null)
+        {
+            head.Children.Add(Txt("Looks in: " + string.Join("  ·  ", def.Logs.Where(l => PathUtil.OsMatches(l.Os)).Select(l => l.Path)) + "  ·  watching for changes · F5 reads again", 12, false, Muted));
+        }
 
         var right = new StackPanel { Spacing = 14, Margin = new Thickness(12, 28, 32, 28), Children = { head } };
         if (def != null)
@@ -48,15 +54,26 @@ class LogsView(Ctx x)
             // Follow first, then the destructive buttons together
             var del = new List<Control>();
             foreach (var days in new[] { 7, 30, 90 })
+            {
                 del.Add(Btn($"Older than {days} d", () => Delete(LogTrash.OlderThan(_files, days))));
+            }
+
             del.Add(Btn("Delete selected", () => Delete(_files.Where(f => _checked.Contains(f.Path)).ToList()), false, "delete"));
             var follow = new ToggleSwitch { OnContent = "Follow newest", OffContent = "Follow newest", IsChecked = _viewer.Follow };
             ToolTip.SetTip(follow, "Open the newest log file, switch to a new file when one appears, and stay at the end. Clicking an older file turns it off.");
             follow.IsCheckedChanged += (_, _) =>
             {
-                if ((follow.IsChecked == true) == _viewer.Follow) return;
+                if ((follow.IsChecked == true) == _viewer.Follow)
+                {
+                    return;
+                }
+
                 _viewer.Follow = follow.IsChecked == true;
-                if (_viewer.Follow) _file = _files.FirstOrDefault();
+                if (_viewer.Follow)
+                {
+                    _file = _files.FirstOrDefault();
+                }
+
                 x.Go("Logs:" + _app);
             };
             right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = 260, Content = _table.Free() }, del.Prepend(follow).ToArray()));
@@ -77,7 +94,11 @@ class LogsView(Ctx x)
     void Relist(AppDefinition? def)
     {
         _files = def == null ? new() : LogReader.Find(def, x.S.Projects);
-        if (_file != null) _file = _files.FirstOrDefault(f => f.Path == _file.Path);
+        if (_file != null)
+        {
+            _file = _files.FirstOrDefault(f => f.Path == _file.Path);
+        }
+
         _file ??= _files.FirstOrDefault();
         _checked.IntersectWith(_files.Select(f => f.Path));
     }
@@ -87,13 +108,23 @@ class LogsView(Ctx x)
         var rows = _files.Select(f =>
         {
             var check = new CheckBox { IsChecked = _checked.Contains(f.Path) };
-            check.IsCheckedChanged += (_, _) => { if (check.IsChecked == true) _checked.Add(f.Path); else _checked.Remove(f.Path); };
+            check.IsCheckedChanged += (_, _) =>
+            {
+                if (check.IsChecked == true)
+                {
+                    _checked.Add(f.Path);
+                }
+                else
+                {
+                    _checked.Remove(f.Path);
+                }
+            };
             return new TableRow(new Control[]
             {
                 check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path)),   // type on the second line: the name needs the width
                 Txt(LogViewer.Size(f.Size), 13), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), 13),
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete(new() { f }))
-            }, () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) _viewer.Follow = false; x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
+            }, () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });
         _table.Content = Table.Build(new[] { new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40") }, rows,
             "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
@@ -102,9 +133,17 @@ class LogsView(Ctx x)
     /// <summary>Watches the selected app's log folders. Stops when another app is chosen or the page closes.</summary>
     void Watch(AppDefinition? def)
     {
-        if (def?.Id == _watching && _watcher != null) return;
+        if (def?.Id == _watching && _watcher != null)
+        {
+            return;
+        }
+
         _watcher?.Dispose(); _watcher = null; _watching = def?.Id;
-        if (def == null) return;
+        if (def == null)
+        {
+            return;
+        }
+
         _watcher = new LogFolderWatcher(LogReader.Roots(def, x.S.Projects), _files.FirstOrDefault()?.Path);   // _files is newest first
         _watcher.Changed += b => Dispatcher.UIThread.Post(() => OnChanged(def, b));
     }
@@ -115,34 +154,69 @@ class LogsView(Ctx x)
     /// </summary>
     void OnChanged(AppDefinition def, LogFolderWatcher.Batch b)
     {
-        if (_watching != def.Id) return;
+        if (_watching != def.Id)
+        {
+            return;
+        }
+
         var open = _file is { } f ? (f.Path, f.Size, f.Modified) : default;
         var paths = b.Paths.Select(p => p.EndsWith("-wal", StringComparison.OrdinalIgnoreCase) ? p[..^4] : p).ToHashSet(StringComparer.OrdinalIgnoreCase);   // SQLite writes land in the -wal file
         bool relist = b.Structure;
         if (!relist)
+        {
             foreach (var p in paths)
             {
                 int i = _files.FindIndex(lf => string.Equals(lf.Path, p, StringComparison.OrdinalIgnoreCase));
-                if (i < 0) continue;
-                if (LogReader.Restat(_files[i]) is { } now) _files[i] = now; else relist = true;
+                if (i < 0)
+                {
+                    continue;
+                }
+
+                if (LogReader.Restat(_files[i]) is { } now)
+                {
+                    _files[i] = now;
+                }
+                else
+                {
+                    relist = true;
+                }
             }
-        if (relist) Relist(def);
+        }
+
+        if (relist)
+        {
+            Relist(def);
+        }
         else
         {
             _files = _files.OrderByDescending(lf => lf.Modified).ToList();
-            if (_file != null) _file = _files.FirstOrDefault(lf => lf.Path == _file.Path);
+            if (_file != null)
+            {
+                _file = _files.FirstOrDefault(lf => lf.Path == _file.Path);
+            }
         }
-        if (_viewer.Follow && _files.FirstOrDefault() is { } newest) _file = newest;   // a new file takes over while following
+        if (_viewer.Follow && _files.FirstOrDefault() is { } newest)
+        {
+            _file = newest;   // a new file takes over while following
+        }
+
         FillTable(def);
         _summary.Update(_files);
         if (_file?.Path != open.Path) { x.Go("Logs:" + def.Id); return; }   // the open file is gone: show the newest
-        if (_file != null && (_file.Path, _file.Size, _file.Modified) != open) _viewer.FileChanged();
+        if (_file != null && (_file.Path, _file.Size, _file.Modified) != open)
+        {
+            _viewer.FileChanged();
+        }
     }
 
     /// <summary>F5 on the Logs page: find the files again and re-read the open one.</summary>
     public void Reload()
     {
-        if (_app == null || x.S.Def(_app) is not { } def) return;
+        if (_app == null || x.S.Def(_app) is not { } def)
+        {
+            return;
+        }
+
         Relist(def);
         FillTable(def);
         _summary.Update(_files);
@@ -170,14 +244,29 @@ class LogsView(Ctx x)
         if (files.Count == 0) { await Dialogs.Message(x.Owner, "Delete logs", "No files selected."); return; }
         var active = files.Where(f => LogTrash.IsActive(f)).ToList();
         var msg = $"Move {ReadableLog.Plural(files.Count, "file")} ({LogViewer.Size(files.Sum(f => f.Size))}) to the {(OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash")}? You can restore them from there.";
-        if (files.Any(f => f.Format != null)) msg += "\nSession logs also disappear from the app's resume/history list.";
-        if (active.Count > 0) msg += $"\n{ReadableLog.Plural(active.Count, "file")} changed in the last minute and may still be in use by an open session.";
+        if (files.Any(f => f.Format != null))
+        {
+            msg += "\nSession logs also disappear from the app's resume/history list.";
+        }
+
+        if (active.Count > 0)
+        {
+            msg += $"\n{ReadableLog.Plural(active.Count, "file")} changed in the last minute and may still be in use by an open session.";
+        }
+
         msg += "\n\n" + string.Join("\n", files.Take(8).Select(f => Path.GetFileName(f.Path))) + (files.Count > 8 ? $"\n… and {files.Count - 8} more" : "");
-        if (!await Dialogs.Confirm(x.Owner, "Delete logs", msg, "Move to " + (OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash"), true)) return;
+        if (!await Dialogs.Confirm(x.Owner, "Delete logs", msg, "Move to " + (OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash"), true))
+        {
+            return;
+        }
+
         var (moved, failed) = LogTrash.Delete(files.Select(f => f.Path), _files);
         _checked.ExceptWith(moved);
         if (failed.Count > 0)
+        {
             await Dialogs.Message(x.Owner, "Some files were not deleted", string.Join("\n", failed.Select(f => $"{Path.GetFileName(f.Path)}: {f.Reason}")));
+        }
+
         x.Go("Logs:" + _app);
     }
 }

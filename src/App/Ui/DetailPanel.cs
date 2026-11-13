@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -58,9 +61,17 @@ partial class DetailPanel(Ctx x)
     {
         var d = x.S.Def(It.App);
         var chips = new WrapPanel { ItemSpacing = 6, LineSpacing = 6, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
-        if (It.Version != null) chips.Children.Add(Chip(It.Version));
+        if (It.Version != null)
+        {
+            chips.Children.Add(Chip(It.Version));
+        }
+
         var actions = Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(It.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, It.Path)));
-        if (RemoveAction() is { } remove) ((StackPanel)actions).Children.Add(IconBtn("delete", It.Kind == "Plugin" ? "Remove plugin" : "Remove skill", remove, ErrorKey));
+        if (RemoveAction() is { } remove)
+        {
+            ((StackPanel)actions).Children.Add(IconBtn("delete", It.Kind == "Plugin" ? "Remove plugin" : "Remove skill", remove, ErrorKey));
+        }
+
         ((StackPanel)actions).Children.Add(IconBtn("dismiss", "Close (Esc)", () => _close()));
         var dock = new DockPanel { Margin = new Thickness(0, 0, 0, 12) };
         DockPanel.SetDock(actions, Dock.Right);
@@ -71,8 +82,16 @@ partial class DetailPanel(Ctx x)
 
     Action? RemoveAction()
     {
-        if (It.Kind == "Skill" && SkillManager.CannotRemove(It) == null) return () => AppActions.RemoveSkill(x, It);
-        if (It.Kind == "Plugin" && x.S.Def(It.App) is { PluginCommands: not null } d) return () => AppActions.RemovePlugin(x, d, It);
+        if (It.Kind == "Skill" && SkillManager.CannotRemove(It) == null)
+        {
+            return () => AppActions.RemoveSkill(x, It);
+        }
+
+        if (It.Kind == "Plugin" && x.S.Def(It.App) is { PluginCommands: not null } d)
+        {
+            return () => AppActions.RemovePlugin(x, d, It);
+        }
+
         return null;
     }
 
@@ -82,9 +101,15 @@ partial class DetailPanel(Ctx x)
         var sp = new StackPanel { Spacing = 12 };
         SkillDoc? doc = null;
         if (It.Kind == "Skill")
+        {
             try { doc = SkillDoc.Read(It.Path); }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { sp.Children.Add(Txt("Cannot read: " + e.Message, 13, false, Muted)); }
-        if (It.Description != "") sp.Children.Add(Sel(It.Description, 14));
+        }
+
+        if (It.Description != "")
+        {
+            sp.Children.Add(Sel(It.Description, 14));
+        }
 
         var kv = new Grid { ColumnDefinitions = new ColumnDefinitions("100,*"), RowSpacing = 6, ColumnSpacing = 10 };
         void Add(string k, Control v)
@@ -95,16 +120,25 @@ partial class DetailPanel(Ctx x)
             Grid.SetRow(a, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
             kv.Children.Add(a); kv.Children.Add(v);
         }
-        void AddText(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) Add(k, Sel(v, 13)); }
+        void AddText(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) { Add(k, Sel(v, 13)); } }
         Add("App", AppLink(x, It.App, It.Source));
-        if (It.LevelLabel != null) AddText("App's term", It.LevelLabel);
+        if (It.LevelLabel != null)
+        {
+            AddText("App's term", It.LevelLabel);
+        }
+
         if (It.Kind == "Skill") { Add("Invoked by", AppDetailView.InvokeCell(It)); AddText("From", AppDetailView.From(It)); }
         AddText("Plugin", It.Plugin);
         AddText("Scope", It.Kind == "Plugin" ? It.Scope : null);
         AddText("Author", It.Author);
         if (doc != null)
+        {
             foreach (var (k, v) in doc.Front.Where(f => f.Value != "" && f.Key is not ("name" or "description" or "author" or "metadata.author")))
+            {
                 AddText(Label(k), v);
+            }
+        }
+
         Add("Path", Sel(It.Path, 12).With(t => t.FontFamily = Ui.Theme.Mono));
         if (doc != null)
         {
@@ -114,11 +148,23 @@ partial class DetailPanel(Ctx x)
         }
         sp.Children.Add(kv);
 
-        if (It.Kind == "Plugin") sp.Children.Add(PluginParts());
+        if (It.Kind == "Plugin")
+        {
+            sp.Children.Add(PluginParts());
+        }
+
         var dup = x.S.Items.Where(i => i.Kind == It.Kind && i.Name == It.Name && !ItemBrowser.Same(i, It)).Select(i => $"{i.Level} ({i.Source})").Distinct().ToList();
         var findings = doc != null ? SkillCheck.Check(It.Path, doc) : new();
-        if (dup.Count > 0) findings.Insert(0, new Finding("Same name also at: " + string.Join(", ", dup), false));
-        if (findings.Count > 0) sp.Children.Add(Findings(findings));
+        if (dup.Count > 0)
+        {
+            findings.Insert(0, new Finding("Same name also at: " + string.Join(", ", dup), false));
+        }
+
+        if (findings.Count > 0)
+        {
+            sp.Children.Add(Findings(findings));
+        }
+
         return sp;
     }
 
@@ -137,9 +183,23 @@ partial class DetailPanel(Ctx x)
         bool hooks = File.Exists(Path.Combine(Root, "hooks", "hooks.json")), mcp = File.Exists(Path.Combine(Root, ".mcp.json"));
         var parts = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
         foreach (var (label, n) in new[] { ("skills", skills), ("commands", Count("commands", "*.md")), ("agents", Count("agents", "*.md")) })
-            if (n > 0) parts.Children.Add(Chip($"{n} {label}"));
-        if (hooks) parts.Children.Add(Chip("Hooks · runs commands", WarningKey).With(c => ToolTip.SetTip(c, "Hooks run commands on this computer when the app does certain things.")));
-        if (mcp) parts.Children.Add(Chip("MCP servers · runs programs", WarningKey).With(c => ToolTip.SetTip(c, "MCP servers are programs the app starts on this computer.")));
+        {
+            if (n > 0)
+            {
+                parts.Children.Add(Chip($"{n} {label}"));
+            }
+        }
+
+        if (hooks)
+        {
+            parts.Children.Add(Chip("Hooks · runs commands", WarningKey).With(c => ToolTip.SetTip(c, "Hooks run commands on this computer when the app does certain things.")));
+        }
+
+        if (mcp)
+        {
+            parts.Children.Add(Chip("MCP servers · runs programs", WarningKey).With(c => ToolTip.SetTip(c, "MCP servers are programs the app starts on this computer.")));
+        }
+
         return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = 6, Children = { Txt("Contains", 13, false, Muted), parts } };
     }
 
@@ -147,6 +207,7 @@ partial class DetailPanel(Ctx x)
     {
         var sp = new StackPanel { Spacing = 6, Children = { Txt("Checks", 13, false, Muted) } };
         foreach (var x in f)
+        {
             sp.Children.Add(new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("Auto,*"),
@@ -157,6 +218,8 @@ partial class DetailPanel(Ctx x)
                 Txt(x.Text, 13).With(t => Grid.SetColumn(t, 1))
             }
             });
+        }
+
         return sp;
     }
 

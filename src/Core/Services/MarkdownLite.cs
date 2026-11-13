@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.RegularExpressions;
 
 namespace AiStackprint.Services;
@@ -53,8 +56,15 @@ public static partial class MarkdownLite
             {
                 Flush();
                 var q = t.TrimStart('>').Trim();
-                if (res.Count > 0 && res[^1].Kind == MdKind.Quote) res[^1] = res[^1] with { Text = res[^1].Text + "\n" + q };
-                else res.Add(new(MdKind.Quote, q));
+                if (res.Count > 0 && res[^1].Kind == MdKind.Quote)
+                {
+                    res[^1] = res[^1] with { Text = res[^1].Text + "\n" + q };
+                }
+                else
+                {
+                    res.Add(new(MdKind.Quote, q));
+                }
+
                 continue;
             }
             para.Add(l.TrimEnd());
@@ -70,18 +80,35 @@ public static partial class MarkdownLite
         var res = new List<MdSpan>(); int at = 0;
         foreach (Match m in InlineToken().Matches(text))
         {
-            if (m.Index > at) res.Add(new(text[at..m.Index], false, false, false, null));
+            if (m.Index > at)
+            {
+                res.Add(new(text[at..m.Index], false, false, false, null));
+            }
+
             at = m.Index + m.Length;
-            if (m.Groups["code"].Success) res.Add(new(m.Groups["code"].Value, false, false, true, null));
+            if (m.Groups["code"].Success)
+            {
+                res.Add(new(m.Groups["code"].Value, false, false, true, null));
+            }
             else if (m.Groups["lt"].Success)
             {
                 string lt = m.Groups["lt"].Value, url = m.Groups["url"].Value;
                 res.Add(new(lt == url ? lt : $"{lt} ({url})", false, false, false, url));
             }
-            else if (m.Groups["b1"].Success || m.Groups["b2"].Success) res.Add(new(m.Groups["b1"].Success ? m.Groups["b1"].Value : m.Groups["b2"].Value, true, false, false, null));
-            else res.Add(new(m.Groups["i1"].Success ? m.Groups["i1"].Value : m.Groups["i2"].Value, false, true, false, null));
+            else if (m.Groups["b1"].Success || m.Groups["b2"].Success)
+            {
+                res.Add(new(m.Groups["b1"].Success ? m.Groups["b1"].Value : m.Groups["b2"].Value, true, false, false, null));
+            }
+            else
+            {
+                res.Add(new(m.Groups["i1"].Success ? m.Groups["i1"].Value : m.Groups["i2"].Value, false, true, false, null));
+            }
         }
-        if (at < text.Length) res.Add(new(text[at..], false, false, false, null));
+        if (at < text.Length)
+        {
+            res.Add(new(text[at..], false, false, false, null));
+        }
+
         return res;
     }
 }

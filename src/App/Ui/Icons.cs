@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Reflection;
 using System.Text.Json;
 
@@ -14,12 +17,12 @@ static class Icons
     public record Part(string D, double? O);
     public record Shape(Geometry Data, double Opacity);
 
-    static readonly Dictionary<string, Shape[]> Ui = Load("icons.json"), Logos = Load("logos.json");
+    static readonly Dictionary<string, Shape[]> _ui = Load("icons.json"), _logos = Load("logos.json");
 
     /// <summary>UI icon by name (file name without _24_regular). Throws on unknown names: a typo is a bug.</summary>
-    public static Shape[] Get(string name) => Ui[name];
+    public static Shape[] Get(string name) => _ui[name];
 
-    public static Shape[]? Logo(string? key) => key != null && Logos.TryGetValue(key, out var s) ? s : null;
+    public static Shape[]? Logo(string? key) => key != null && _logos.TryGetValue(key, out var s) ? s : null;
 
     public static string ForCategory(string category) => category switch
     {

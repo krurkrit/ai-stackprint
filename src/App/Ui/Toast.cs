@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
@@ -16,7 +19,11 @@ static class Toast
 
     public static void Show(string text, string icon = "info", double seconds = 2.4)
     {
-        if (Host == null) return;
+        if (Host == null)
+        {
+            return;
+        }
+
         var t = new Border
         {
             CornerRadius = new CornerRadius(8),
@@ -27,7 +34,11 @@ static class Toast
             Transitions = new Transitions { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(400) } }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         Host.Children.Add(t);
-        while (Host.Children.Count > 3) Host.Children.RemoveAt(0);
+        while (Host.Children.Count > 3)
+        {
+            Host.Children.RemoveAt(0);
+        }
+
         DispatcherTimer.RunOnce(() => t.Opacity = 0, TimeSpan.FromSeconds(seconds));
         DispatcherTimer.RunOnce(() => Host?.Children.Remove(t), TimeSpan.FromSeconds(seconds + 0.6));
     }
@@ -35,7 +46,11 @@ static class Toast
     /// <summary>Copies text to the clipboard and confirms it.</summary>
     public static async void Copy(TopLevel owner, string text, string what = "Path")
     {
-        if (owner.Clipboard is not { } c) return;
+        if (owner.Clipboard is not { } c)
+        {
+            return;
+        }
+
         try { await c.SetTextAsync(text); }
         catch (System.Runtime.InteropServices.ExternalException) { Show("Could not copy: the clipboard is busy. Try again.", "warning"); return; }
         Show($"{what} copied", "copy");

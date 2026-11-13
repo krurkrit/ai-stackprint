@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -38,12 +41,19 @@ class LogSummaryCard
     {
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
-        if (_body.Content == null) _body.Content = Txt("Calculating…", 13, false, Muted);
+        if (_body.Content == null)
+        {
+            _body.Content = Txt("Calculating…", 13, false, Muted);
+        }
+
         var files = _files; var since = _days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-_days);
         try
         {
             var s = await Task.Run(() => LogSummary.Compute(files, since, cts.Token), cts.Token);
-            if (!cts.IsCancellationRequested) _body.Content = Show(s);
+            if (!cts.IsCancellationRequested)
+            {
+                _body.Content = Show(s);
+            }
         }
         catch (OperationCanceledException) { }
     }
@@ -53,22 +63,57 @@ class LogSummaryCard
         var w = new WrapPanel();
         void Add(string t, string? key = null) => w.Children.Add(Chip(t, key).With(c => c.Margin = new Thickness(0, 0, 8, 8)));
         Add(ReadableLog.Plural(s.Files, "file") + " · " + LogViewer.Size(s.Bytes));
-        if (s.Newest is { } n) Add($"Last activity {n:yyyy-MM-dd HH:mm}");
-        if (s.Oldest is { } o && s.Files > 1) Add($"Oldest {o:yyyy-MM-dd}");
+        if (s.Newest is { } n)
+        {
+            Add($"Last activity {n:yyyy-MM-dd HH:mm}");
+        }
+
+        if (s.Oldest is { } o && s.Files > 1)
+        {
+            Add($"Oldest {o:yyyy-MM-dd}");
+        }
+
         if (s.Errors + s.Warnings > 0 || s.Files > s.Sessions)
         { Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null); Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null); }
-        if (s.TextCapped) Add("Error count covers the newest 50 MB of text logs");
+        if (s.TextCapped)
+        {
+            Add("Error count covers the newest 50 MB of text logs");
+        }
+
         if (s.Sessions > 0)
         {
             Add(ReadableLog.Plural(s.Sessions, "session")); Add(ReadableLog.Plural(s.Prompts, "prompt")); Add(ReadableLog.Plural(s.ToolCalls, "tool call"));
-            if (s.SubAgentSteps > 0) Add(ReadableLog.Plural(s.SubAgentSteps, "sub-agent step"));
-            if (s.InputTokens + s.OutputTokens > 0) Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
-            if (s.Models.Count > 0) Add(string.Join(", ", s.Models));
+            if (s.SubAgentSteps > 0)
+            {
+                Add(ReadableLog.Plural(s.SubAgentSteps, "sub-agent step"));
+            }
+
+            if (s.InputTokens + s.OutputTokens > 0)
+            {
+                Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
+            }
+
+            if (s.Models.Count > 0)
+            {
+                Add(string.Join(", ", s.Models));
+            }
         }
         var sp = new StackPanel { Spacing = 6, Children = { w } };
-        if (s.TopTools.Count > 0) sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), 13, false, Muted));
-        if (s.Largest.Count > 0) sp.Children.Add(Txt("Largest: " + string.Join(" · ", s.Largest.Select(f => $"{Path.GetFileName(f.Path)} {LogViewer.Size(f.Size)}")), 13, false, Muted));
-        if (s.Files == 0) sp.Children.Add(Txt("No log files in this period.", 13, false, Muted));
+        if (s.TopTools.Count > 0)
+        {
+            sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), 13, false, Muted));
+        }
+
+        if (s.Largest.Count > 0)
+        {
+            sp.Children.Add(Txt("Largest: " + string.Join(" · ", s.Largest.Select(f => $"{Path.GetFileName(f.Path)} {LogViewer.Size(f.Size)}")), 13, false, Muted));
+        }
+
+        if (s.Files == 0)
+        {
+            sp.Children.Add(Txt("No log files in this period.", 13, false, Muted));
+        }
+
         return sp;
     }
 }

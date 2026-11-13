@@ -1,7 +1,8 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
-
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
@@ -20,7 +21,11 @@ class AppDetailView(Ctx x)
 
     public Control Build(string appId)
     {
-        if (x.S.Def(appId) is not { } d) return Page(Txt("This app is hidden or no longer defined.", 14, false, Muted));
+        if (x.S.Def(appId) is not { } d)
+        {
+            return Page(Txt("This app is hidden or no longer defined.", 14, false, Muted));
+        }
+
         var info = x.Info(appId);
         var items = x.S.Items.Where(i => i.App == appId).ToList();
         return Page(Header(d, info), LimitsView.Card(x, d), Usage(d), Configs(items), Plugins(d, items), Skills(d, items));
@@ -54,11 +59,21 @@ class AppDetailView(Ctx x)
         var title = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Children = { H1("AI apps", "Apps", d.Name), chips } };
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Top };
-        if (info?.Folder is { } folder) actions.Children.Add(Btn("Open config folder", () => PathUtil.OpenFolder(folder), false, "folder_open"));
-        if (d.Logs.Count > 0) actions.Children.Add(Btn("View logs", () => x.Go("Logs:" + d.Id), false, "document_text"));
+        if (info?.Folder is { } folder)
+        {
+            actions.Children.Add(Btn("Open config folder", () => PathUtil.OpenFolder(folder), false, "folder_open"));
+        }
+
+        if (d.Logs.Count > 0)
+        {
+            actions.Children.Add(Btn("View logs", () => x.Go("Logs:" + d.Id), false, "document_text"));
+        }
+
         actions.Children.Add(Btn("Hide", () => AppActions.Hide(x, d), false, "eye_off").With(b => ToolTip.SetTip(b, "Hide this app everywhere. Undo in Settings.")));
         if (d.Origin != AppOrigin.BuiltIn)
+        {
             actions.Children.Add(DangerBtn(d.Origin == AppOrigin.Custom ? "Remove app" : "Reset to built-in", () => AppActions.RemoveApp(x, d), "delete"));
+        }
 
         var head = new DockPanel();
         DockPanel.SetDock(actions, Dock.Right);
@@ -66,9 +81,16 @@ class AppDetailView(Ctx x)
         head.Children.Add(Row(AppLogo(d.Logo, d.Category, 56), title));
 
         var sp = new StackPanel { Spacing = 16, Children = { head } };
-        if (info?.Folder is { } f) sp.Children.Add(Row(Txt("Config folder", 13, false, Muted), Mono(f)));
+        if (info?.Folder is { } f)
+        {
+            sp.Children.Add(Row(Txt("Config folder", 13, false, Muted), Mono(f)));
+        }
+
         if (d.Notes != null)
+        {
             sp.Children.Add(Row(Icon("info", 16).Themed(TextElement.ForegroundProperty, Muted), Txt(d.Notes, 13, false, Muted)));
+        }
+
         return sp;
     }
 
@@ -89,14 +111,22 @@ class AppDetailView(Ctx x)
             Children = { Table.Build(new[] { new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112") }, rows,
             "No instruction or settings files found. Add project folders to see project files.") }
         };
-        if (_preview != null && cfg.Any(i => i.Path == _preview)) body.Children.Add(new ConfigPanel(x, _preview));
+        if (_preview != null && cfg.Any(i => i.Path == _preview))
+        {
+            body.Children.Add(new ConfigPanel(x, _preview));
+        }
+
         return Section("document", "Instructions & settings", body);
     }
 
     Control Plugins(AppDefinition d, List<Item> items)
     {
         var plugins = items.Where(i => i.Kind == "Plugin").OrderBy(i => i.Name).ToList();
-        if (d.PluginManifest == null && plugins.Count == 0) return new Panel();
+        if (d.PluginManifest == null && plugins.Count == 0)
+        {
+            return new Panel();
+        }
+
         bool manage = d.PluginCommands != null;
         var rows = plugins.Select(p => new TableRow(new Control[]
         {

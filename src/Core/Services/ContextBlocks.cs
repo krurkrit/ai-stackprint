@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.RegularExpressions;
 
 namespace AiStackprint.Services;
@@ -20,12 +23,20 @@ public static partial class ContextBlocks
         var parts = new List<Part>(); int at = 0;
         foreach (Match m in Block().Matches(text))
         {
-            if (m.Index > at && text[at..m.Index].Trim() != "") parts.Add(new(null, text[at..m.Index].Trim('\n')));
+            if (m.Index > at && text[at..m.Index].Trim() != "")
+            {
+                parts.Add(new(null, text[at..m.Index].Trim('\n')));
+            }
+
             var label = m.Groups["n"].Success ? m.Groups["n"].Value : m.Groups["t"].Value;
             parts.Add(new(label, (m.Groups["b"].Success ? m.Groups["b"].Value : m.Groups["b2"].Value).Trim('\n')));
             at = m.Index + m.Length;
         }
-        if (at < text.Length && text[at..].Trim() != "") parts.Add(new(null, text[at..].Trim('\n')));
+        if (at < text.Length && text[at..].Trim() != "")
+        {
+            parts.Add(new(null, text[at..].Trim('\n')));
+        }
+
         return parts;
     }
 }

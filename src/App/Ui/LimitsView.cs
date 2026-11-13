@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -18,7 +21,11 @@ static class LimitsView
     /// <summary>App page card; nothing for apps without a provider.</summary>
     public static Control Card(Ctx x, AppDefinition d)
     {
-        if (!Has(d)) return new Panel();
+        if (!Has(d))
+        {
+            return new Panel();
+        }
+
         var host = new ContentControl();
         void Render() => host.Content = Body(x, d, compact: false);
         Render();
@@ -33,7 +40,11 @@ static class LimitsView
     public static Control Strip(Ctx x)
     {
         var apps = x.S.Defs.Where(d => Has(d) && x.Info(d.Id)?.Installed == true && x.ShownApps.Any(a => a.Id == d.Id)).ToList();
-        if (apps.Count == 0) return new Panel();
+        if (apps.Count == 0)
+        {
+            return new Panel();
+        }
+
         var host = new StackPanel { Spacing = 14 };
         void Render()
         {
@@ -49,7 +60,7 @@ static class LimitsView
         }
         Render();
         var card = Section("data_pie", "Plan & limits", host);
-        card.AttachedToVisualTree += (_, _) => { MainWindow.LimitsChanged += Render; foreach (var d in apps) x.Limits.Request(d, x.S.Projects); };
+        card.AttachedToVisualTree += (_, _) => { MainWindow.LimitsChanged += Render; foreach (var d in apps) { x.Limits.Request(d, x.S.Projects); } };
         card.DetachedFromVisualTree += (_, _) => MainWindow.LimitsChanged -= Render;
         return card;
     }
@@ -71,17 +82,45 @@ static class LimitsView
         if (st.Data is { } s)
         {
             var head = new List<Control>();
-            if (s.Plan != null) head.Add(Chip(s.Plan, AccentKeyForPlan));
-            if (s.FromLogs) head.Add(Txt("from the app's own log", 12, false, Muted));
-            if (head.Count > 0) sp.Children.Add(Row(head.ToArray()));
-            foreach (var w in s.Windows) sp.Children.Add(Window(w, st.Previous, s, compact));
-            if (s.Windows.Count == 0) sp.Children.Add(Txt(s.Note ?? "No limits reported.", 13, false, Muted));
-            else if (s.Note != null && !compact) sp.Children.Add(Txt(s.Note, 12, false, Muted));
+            if (s.Plan != null)
+            {
+                head.Add(Chip(s.Plan, AccentKeyForPlan));
+            }
+
+            if (s.FromLogs)
+            {
+                head.Add(Txt("from the app's own log", 12, false, Muted));
+            }
+
+            if (head.Count > 0)
+            {
+                sp.Children.Add(Row(head.ToArray()));
+            }
+
+            foreach (var w in s.Windows)
+            {
+                sp.Children.Add(Window(w, st.Previous, s, compact));
+            }
+
+            if (s.Windows.Count == 0)
+            {
+                sp.Children.Add(Txt(s.Note ?? "No limits reported.", 13, false, Muted));
+            }
+            else if (s.Note != null && !compact)
+            {
+                sp.Children.Add(Txt(s.Note, 12, false, Muted));
+            }
         }
         if (st.Message != null && st.State != LimitState.Ok)
+        {
             sp.Children.Add(Row(Icon(st.State is LimitState.Off ? "info" : "warning", 14).Themed(TextElement.ForegroundProperty, st.State is LimitState.Off ? Muted : WarningKey), Txt(st.Message, 12, false, Muted)));
+        }
+
         if (x.Limits.Fetched(d.Id) is { } at)
+        {
             sp.Children.Add(Busy.Inline(st.Busy, $"Updated {Ago(at)}" + (on ? "" : " · live calls off")));
+        }
+
         return sp;
     }
 
@@ -96,14 +135,21 @@ static class LimitsView
         bar.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
         var text = $"{w.UsedPercent:0.#}% used" + (w.ResetsAt is { } r ? $" · resets {Reset(r)}" : "");
         if (prev?.Windows.FirstOrDefault(p => p.Name == w.Name) is { } before && LimitsService.FullAt(before, prev.FetchedAt, w, now.FetchedAt) is { } full)
+        {
             text += $" · full about {full:HH:mm} at this pace";
+        }
+
         return new StackPanel { Spacing = 3, Children = { Row(Txt(w.Name, 13, true), Txt(text, 12, false, Muted)), bar } };
     }
 
     static string Reset(DateTime t)
     {
         var left = t - DateTime.Now;
-        if (left <= TimeSpan.Zero) return "now";
+        if (left <= TimeSpan.Zero)
+        {
+            return "now";
+        }
+
         var span = left.TotalHours >= 24 ? $"{(int)left.TotalDays} d {left.Hours} h" : left.TotalHours >= 1 ? $"{(int)left.TotalHours} h {left.Minutes} min" : $"{Math.Max(1, left.Minutes)} min";
         return $"in {span} ({(t.Date == DateTime.Today ? t.ToString("HH:mm") : t.ToString("ddd HH:mm"))})";
     }
@@ -123,8 +169,16 @@ static class LimitsView
             $"To show your plan and limits, AI Stackprint reads the sign-in {d.Name} saved on this computer and sends it only to {p.Host}, as {d.Name} itself does, " +
             $"at most once every {min:0} minute{(min == 1 ? "" : "s")}.\n\nThe token stays in memory; it is never shown, saved or logged, and never renewed by this app.\n\n" +
             "This endpoint is not documented by the provider and may stop working, and using it from another app may be against the provider's terms.", "Turn on");
-        if (!ok) return;
-        if (!x.S.Settings.LimitsEnabled.Contains(d.Id)) x.S.Settings.LimitsEnabled.Add(d.Id);
+        if (!ok)
+        {
+            return;
+        }
+
+        if (!x.S.Settings.LimitsEnabled.Contains(d.Id))
+        {
+            x.S.Settings.LimitsEnabled.Add(d.Id);
+        }
+
         SettingsStore.Save(x.S.Settings);
         x.Limits.Request(d, x.S.Projects, force: true);
         x.Refresh();

@@ -1,8 +1,8 @@
-using AiStackprint.Services;
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Avalonia;
+using AiStackprint.Services;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -19,10 +19,10 @@ partial class MainWindow
     readonly Panel _overlay = new();
     readonly CommandPalette _palette;
 
-    void Back() { if (_back.Count == 0) return; _forward.Push(_view); Show(_back.Pop()); }
-    void Forward() { if (_forward.Count == 0) return; _back.Push(_view); Show(_forward.Pop()); }
+    void Back() { if (_back.Count == 0) { return; } _forward.Push(_view); Show(_back.Pop()); }
+    void Forward() { if (_forward.Count == 0) { return; } _back.Push(_view); Show(_forward.Pop()); }
 
-    static readonly (string Mode, string Icon, string Tip)[] Themes =
+    static readonly (string Mode, string Icon, string Tip)[] _themes =
         { ("System", "desktop", "Follow the system theme"), ("Light", "weather_sunny", "Light theme"), ("Dark", "weather_moon", "Dark theme") };
 
     /// <summary>System / sun / moon switch. Open: three segments, the active one highlighted. Collapsed: one button that cycles.</summary>
@@ -31,14 +31,14 @@ partial class MainWindow
         var cur = _s.Settings.Theme;
         if (!_navOpen)
         {
-            int i = Math.Max(0, Array.FindIndex(Themes, t => t.Mode == cur));
-            var next = Themes[(i + 1) % Themes.Length];
-            return NavBtn(Themes[i].Icon, $"{Themes[i].Tip} (click: {next.Mode.ToLowerInvariant()})", () => SetTheme(next.Mode));
+            int i = Math.Max(0, Array.FindIndex(_themes, t => t.Mode == cur));
+            var next = _themes[(i + 1) % _themes.Length];
+            return NavBtn(_themes[i].Icon, $"{_themes[i].Tip} (click: {next.Mode.ToLowerInvariant()})", () => SetTheme(next.Mode));
         }
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = 4 };
-        for (int i = 0; i < Themes.Length; i++)
+        for (int i = 0; i < _themes.Length; i++)
         {
-            var t = Themes[i]; bool on = t.Mode == cur;
+            var t = _themes[i]; bool on = t.Mode == cur;
             var b = new Button
             {
                 Content = Icon(t.Icon, 18),
@@ -49,7 +49,11 @@ partial class MainWindow
             };
             HoverStyle(b);
             b.Themed(Button.ForegroundProperty, on ? Accent : Muted);
-            if (on) b.Themed(Button.BackgroundProperty, Surface);
+            if (on)
+            {
+                b.Themed(Button.BackgroundProperty, Surface);
+            }
+
             ToolTip.SetTip(b, t.Tip);
             b.Click += (_, _) => SetTheme(t.Mode);
             Grid.SetColumn(b, i);
@@ -72,9 +76,23 @@ partial class MainWindow
             bool ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
             if (ctrl && e.Key == Key.K) { _palette.Open(); e.Handled = true; }
             else if (e.Key == Key.F11) { ToggleFullScreen(); e.Handled = true; }
-            else if (e.Key == Key.F5) { if (_view.StartsWith("Logs")) _logs.Reload(); else Scan(); e.Handled = true; }
+            else if (e.Key == Key.F5)
+            {
+                if (_view.StartsWith("Logs"))
+                {
+                    _logs.Reload();
+                }
+                else
+                {
+                    Scan();
+                }
+                e.Handled = true;
+            }
             else if (e.Key == Key.Escape && _palette.IsOpen) { _palette.Close(); e.Handled = true; }
-            else if (e.Key == Key.Escape && _x.Escape?.Invoke() == true) e.Handled = true;
+            else if (e.Key == Key.Escape && _x.Escape?.Invoke() == true)
+            {
+                e.Handled = true;
+            }
             else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Left) { Back(); e.Handled = true; }
             else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Right) { Forward(); e.Handled = true; }
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -103,8 +121,14 @@ partial class MainWindow
 
     void RequestLimits()
     {
-        if (WindowState == WindowState.Minimized || !_scanned) return;
+        if (WindowState == WindowState.Minimized || !_scanned)
+        {
+            return;
+        }
+
         foreach (var d in _s.Defs.Where(d => d.Limits != null && _x.Info(d.Id)?.Installed == true))
+        {
             _x.Limits.Request(d, _s.Projects);
+        }
     }
 }

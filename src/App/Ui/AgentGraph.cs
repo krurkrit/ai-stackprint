@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Services;
 
 using Avalonia;
@@ -27,7 +30,11 @@ static class AgentGraph
         double at = 0;
         void Seg(double from, double to, string key, string tip)
         {
-            if (to - from <= 0) return;
+            if (to - from <= 0)
+            {
+                return;
+            }
+
             main.ColumnDefinitions.Add(new ColumnDefinition(to - from, GridUnitType.Star));
             var b = new Border().Themed(Border.BackgroundProperty, key);
             ToolTip.SetTip(b, tip);
@@ -50,7 +57,11 @@ static class AgentGraph
             void Col(double w, Control? c)
             {
                 g.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(w, 0.0001), GridUnitType.Star));
-                if (c == null) return;
+                if (c == null)
+                {
+                    return;
+                }
+
                 Grid.SetColumn(c, g.ColumnDefinitions.Count - 1);
                 g.Children.Add(c);
             }
@@ -65,7 +76,10 @@ static class AgentGraph
             ToolTip.SetTip(g, $"{l.Label}\n{l.Steps:N0} steps · {l.Start:HH:mm:ss} – {l.End:HH:mm:ss} ({(dur.TotalMinutes < 1 ? $"{dur.TotalSeconds:0} s" : $"{dur.TotalMinutes:0.#} min")})\nBranched {l.Fork:HH:mm:ss} · merged {l.Merge:HH:mm:ss}");
             rows.Children.Add(Lane(l.Label, g));
         }
-        if (t.TotalLanes > t.Lanes.Count) rows.Children.Add(Txt($"Showing {t.Lanes.Count} of {t.TotalLanes} sub-agents.", 12, false, Muted));
+        if (t.TotalLanes > t.Lanes.Count)
+        {
+            rows.Children.Add(Txt($"Showing {t.Lanes.Count} of {t.TotalLanes} sub-agents.", 12, false, Muted));
+        }
 
         var legend = new WrapPanel
         {

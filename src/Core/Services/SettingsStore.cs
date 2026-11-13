@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text.Json;
 
 using AiStackprint.Models;
@@ -12,7 +15,7 @@ public static class SettingsStore
     public static Settings Load(string? file = null)
     {
         file ??= File;
-        try { return System.IO.File.Exists(file) ? JsonSerializer.Deserialize<Settings>(System.IO.File.ReadAllText(file), AppCatalog.Opt) ?? new() : new(); }
+        try { return System.IO.File.Exists(file) ? JsonSerializer.Deserialize<Settings>(System.IO.File.ReadAllText(file), AppCatalog._opt) ?? new() : new(); }
         catch (Exception e) when (e is JsonException or IOException) { return new(); }
     }
 
@@ -20,7 +23,7 @@ public static class SettingsStore
     {
         file ??= File;
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        System.IO.File.WriteAllText(file, JsonSerializer.Serialize(s, AppCatalog.Opt));
+        System.IO.File.WriteAllText(file, JsonSerializer.Serialize(s, AppCatalog._opt));
     }
 
     /// <summary>Apps to scan: everything except the ones hidden in settings.</summary>

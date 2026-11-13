@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -35,7 +38,7 @@ class ItemBrowser
     {
         _x = ctx; _kind = kind; _panel = new DetailPanel(ctx);
         _search.TextChanged += (_, _) => { _q = _search.Text ?? ""; Fill(); };
-        _app.SelectionChanged += (_, _) => { if (_building) return; _appId = (_app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
+        _app.SelectionChanged += (_, _) => { if (_building) { return; } _appId = (_app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
     }
 
     /// <summary>Clears search, filters and selection (another project opened).</summary>
@@ -52,12 +55,20 @@ class ItemBrowser
     public Control Build(IEnumerable<Control> top, List<Item> items)
     {
         _items = items;
-        if (_sel != null) _sel = items.FirstOrDefault(i => Same(i, _sel));   // the same item after a rescan (a new record), or gone
+        if (_sel != null)
+        {
+            _sel = items.FirstOrDefault(i => Same(i, _sel));   // the same item after a rescan (a new record), or gone
+        }
+
         _building = true;
         var apps = _x.ShownApps.Where(a => items.Any(i => i.App == a.Id)).Select(a => new AppOption(a.Id, a.Name)).Prepend(new AppOption("", "All apps")).ToList();
         _app.ItemsSource = apps;
         _app.SelectedItem = apps.FirstOrDefault(a => a.Id == _appId) ?? apps[0];
-        if (_app.SelectedItem is AppOption { Id: "" }) _appId = "";
+        if (_app.SelectedItem is AppOption { Id: "" })
+        {
+            _appId = "";
+        }
+
         _building = false;
 
         var own = _filter.Controls(items, _kind == "Skill", Fill);
@@ -82,7 +93,7 @@ class ItemBrowser
         Grid.SetRow(_splitter, 1); Grid.SetRow(_bottom, 2);
         g.Children.Add(new ScrollViewer { Content = list }); g.Children.Add(_splitter); g.Children.Add(_bottom);
         ShowPanel();
-        _x.Escape = () => { if (_sel == null) return false; Close(); return true; };
+        _x.Escape = () => { if (_sel == null) { return false; } Close(); return true; };
         return g;
     }
 
@@ -92,7 +103,11 @@ class ItemBrowser
     /// <summary>Opens, switches or closes the panel in place, so the list keeps its scroll position.</summary>
     void ShowPanel()
     {
-        if (_bottom == null || _splitter == null) return;
+        if (_bottom == null || _splitter == null)
+        {
+            return;
+        }
+
         _bottom.Child = _sel == null ? null : _panel.Build(_sel, Close).Free();   // the panel outlives the page: take it from the old one
         _splitter.IsVisible = _bottom.IsVisible = _sel != null;
         Layout();
@@ -100,7 +115,11 @@ class ItemBrowser
 
     void Layout()
     {
-        if (_grid == null) return;
+        if (_grid == null)
+        {
+            return;
+        }
+
         bool open = _sel != null;
         _grid.RowDefinitions[0].Height = open && _max ? new GridLength(0) : GridLength.Star;
         _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, 160, 2000));
@@ -108,7 +127,7 @@ class ItemBrowser
 
     void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }
 
-    void Pick(Item i) { _sel = _sel != null && Same(i, _sel) ? null : i; if (_sel == null) _max = false; ShowPanel(); Fill(); }
+    void Pick(Item i) { _sel = _sel != null && Same(i, _sel) ? null : i; if (_sel == null) { _max = false; } ShowPanel(); Fill(); }
 
     /// <summary>The same skill or plugin across scans. Records compare lists by reference, so a rescan would make every item look new.</summary>
     public static bool Same(Item a, Item b) => a.Kind == b.Kind && a.App == b.App && a.Level == b.Level && a.Name == b.Name && a.Path == b.Path && a.Project == b.Project;
@@ -144,8 +163,15 @@ class ItemBrowser
     {
         var sp = (StackPanel)W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(_x.Owner, i.Path)));
         sp.Spacing = 0;
-        if (i.Kind == "Skill" && SkillManager.CannotRemove(i) == null) sp.Children.Add(IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(_x, i)));
-        else if (i.Kind == "Plugin" && _x.S.Def(i.App) is { PluginCommands: not null } d) sp.Children.Add(IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(_x, d, i)));
+        if (i.Kind == "Skill" && SkillManager.CannotRemove(i) == null)
+        {
+            sp.Children.Add(IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(_x, i)));
+        }
+        else if (i.Kind == "Plugin" && _x.S.Def(i.App) is { PluginCommands: not null } d)
+        {
+            sp.Children.Add(IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(_x, d, i)));
+        }
+
         return sp;
     }
 

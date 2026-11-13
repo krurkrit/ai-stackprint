@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -8,11 +11,11 @@ namespace AiStackprint.Core.Tests;
 public class SkillMatchTests
 {
     static Item Skill(string level, params string[] invokers) => new("Skill", "s", "", "App", level, "p") { Invokers = invokers };
-    static readonly Item AgentOnly = Skill("User", "Agent"), UserOnly = Skill("User", "User"), Both = Skill("User", "Agent", "User");
-    static readonly HashSet<string> None = new();
+    static readonly Item _agentOnly = Skill("User", "Agent"), _userOnly = Skill("User", "User"), _both = Skill("User", "Agent", "User");
+    static readonly HashSet<string> _none = new();
 
     static string[] Shown(string invoked) =>
-        new[] { AgentOnly, UserOnly, Both }.Where(i => SkillMatch.Shows(i, None, invoked, "")).Select(SkillMatch.Label).ToArray();
+        new[] { _agentOnly, _userOnly, _both }.Where(i => SkillMatch.Shows(i, _none, invoked, "")).Select(SkillMatch.Label).ToArray();
 
     [Fact]
     public void Invoked_by_is_one_choice_matched_exactly()

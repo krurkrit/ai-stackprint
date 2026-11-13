@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -10,7 +13,7 @@ public class LimitsTests : IDisposable
 {
     readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() { Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null); Directory.Delete(_tmp, true); }
-    static readonly DateTime Now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
+    static readonly DateTime _now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
 
     [Fact]
     public void Claude_reply_windows_plan_and_extra_usage()
@@ -19,7 +22,7 @@ public class LimitsTests : IDisposable
             { "five_hour": { "utilization": 35.0, "resets_at": "2026-11-12T05:00:00+00:00" }, "seven_day": { "utilization": 49.5, "resets_at": null },
               "seven_day_opus": null, "seven_day_sonnet": { "utilization": 1.0 }, "iguana_necktie": null,
               "extra_usage": { "is_enabled": true, "monthly_limit": 100000, "used_credits": 0.0, "utilization": null } }
-            """, Now);
+            """, _now);
         Assert.Equal(new[] { "5-hour", "Weekly", "Weekly · Sonnet" }, s.Windows.Select(w => w.Name));
         Assert.Equal(35, s.Windows[0].UsedPercent);
         Assert.NotNull(s.Windows[0].ResetsAt);
@@ -49,10 +52,10 @@ public class LimitsTests : IDisposable
             { "plan_type": "plus", "rate_limit": { "allowed": true,
               "primary_window": { "used_percent": 42, "limit_window_seconds": 18000, "reset_at": 1794470400 },
               "secondary_window": { "used_percent": 7, "limit_window_seconds": 604800, "reset_after_seconds": 3600 } } }
-            """, Now);
+            """, _now);
         Assert.Equal("Plus", s.Plan);
         Assert.Equal(new[] { ("5-hour", 42.0), ("Weekly", 7.0) }, s.Windows.Select(w => (w.Name, w.UsedPercent)));
-        Assert.Equal(Now.AddHours(1), s.Windows[1].ResetsAt);
+        Assert.Equal(_now.AddHours(1), s.Windows[1].ResetsAt);
     }
 
     [Fact]
@@ -62,7 +65,7 @@ public class LimitsTests : IDisposable
             { "copilot_plan": "individual_pro", "quota_reset_date": "2026-12-01",
               "quota_snapshots": { "chat": { "unlimited": true }, "completions": { "entitlement": 200, "remaining": 150, "unlimited": false },
                                    "premium_interactions": { "entitlement": 300, "remaining": 240, "percent_remaining": 80, "unlimited": false } } }
-            """, Now);
+            """, _now);
         Assert.Equal("Individual pro", s.Plan);
         Assert.Equal(new[] { ("Premium requests", 20.0), ("Completions", 25.0) }, s.Windows.Select(w => (w.Name, w.UsedPercent)));
         Assert.Equal(new DateTime(2026, 12, 1), s.Windows[0].ResetsAt!.Value.Date);
@@ -71,15 +74,15 @@ public class LimitsTests : IDisposable
     [Fact]
     public void Gemini_buckets_and_cursor_figures()
     {
-        var g = GeminiLimits.Parse("""{ "buckets": [ { "modelId": "gemini-2.5-pro", "remainingFraction": 0.75, "resetTime": "2026-11-13T00:00:00Z" }, { "remainingFraction": 1 } ] }""", Now);
+        var g = GeminiLimits.Parse("""{ "buckets": [ { "modelId": "gemini-2.5-pro", "remainingFraction": 0.75, "resetTime": "2026-11-13T00:00:00Z" }, { "remainingFraction": 1 } ] }""", _now);
         Assert.Equal(new[] { ("gemini-2.5-pro", 25.0), ("Requests", 0.0) }, g.Windows.Select(w => (w.Name, w.UsedPercent)));
 
-        var c = CursorLimits.Parse("""{ "membershipType": "pro", "billingCycleEnd": "2026-12-01T00:00:00Z", "individualUsage": { "plan": { "used": 500, "limit": 2000 } } }""", Now);
+        var c = CursorLimits.Parse("""{ "membershipType": "pro", "billingCycleEnd": "2026-12-01T00:00:00Z", "individualUsage": { "plan": { "used": 500, "limit": 2000 } } }""", _now);
         Assert.Equal("Pro", c.Plan);
         var w = Assert.Single(c.Windows);
         Assert.Equal(25, w.UsedPercent);
         Assert.NotNull(w.ResetsAt);
-        Assert.NotNull(CursorLimits.Parse("{}", Now).Note);   // nothing recognized: says so instead of guessing
+        Assert.NotNull(CursorLimits.Parse("{}", _now).Note);   // nothing recognized: says so instead of guessing
     }
 
     [Fact]
@@ -89,7 +92,7 @@ public class LimitsTests : IDisposable
         Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1893456000).UtcDateTime, LimitProviders.JwtExpiry($"{B64("{}")}.{B64("{\"exp\":1893456000}")}.sig"));
         Assert.Null(LimitProviders.JwtExpiry("not-a-jwt"));
 
-        var t0 = Now; var t1 = Now.AddHours(1);
+        var t0 = _now; var t1 = _now.AddHours(1);
         Assert.Equal(t1.AddHours(8), LimitsService.FullAt(new("5-hour", 10, null), t0, new("5-hour", 20, null), t1));
         Assert.Null(LimitsService.FullAt(new("5-hour", 10, null), t0, new("5-hour", 20, t1.AddHours(2)), t1));   // resets first
         Assert.Null(LimitsService.FullAt(new("5-hour", 20, null), t0, new("5-hour", 20, null), t1));             // not rising
@@ -101,7 +104,7 @@ public class LimitsTests : IDisposable
         var settings = new Settings();
         var svc = new LimitsService(() => settings);
         var done = new ManualResetEventSlim();
-        svc.Updated += _ => { if (!svc.Status("claude-code").Busy) done.Set(); };
+        svc.Updated += _ => { if (!svc.Status("claude-code").Busy) { done.Set(); } };
         svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, Array.Empty<string>());
         Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
         var st = svc.Status("claude-code");

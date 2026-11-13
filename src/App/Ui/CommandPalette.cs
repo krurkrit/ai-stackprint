@@ -1,4 +1,5 @@
-using AiStackprint.Models;
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Avalonia;
 using Avalonia.Controls;
@@ -67,11 +68,26 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
             new("document_text", "Logs", "Page", () => go("Logs")), new("warning", "Health", "Page", () => go("Health")), new("settings", "Settings", "Page", () => go("Settings")),
             new("arrow_sync", "Rescan", "Action", x.Rescan), new("folder_add", "Add project folder", "Action", x.AddProject), new("add", "Add app", "Action", x.AddApp),
         };
-        foreach (var a in x.ShownApps.OrderBy(a => a.Name)) e.Add(new(Icons.ForCategory(a.Category), a.Name, a.Installed ? "App" : "App · not found", () => go("App:" + a.Id)));
-        foreach (var d in x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id))) e.Add(new("document_text", d.Name + " logs", "Logs", () => go("Logs:" + d.Id)));
-        foreach (var p in x.S.Projects) e.Add(new("folder", Ctx.ProjectName(p), "Project · " + p, () => go("Project:" + p)));
+        foreach (var a in x.ShownApps.OrderBy(a => a.Name))
+        {
+            e.Add(new(Icons.ForCategory(a.Category), a.Name, a.Installed ? "App" : "App · not found", () => go("App:" + a.Id)));
+        }
+
+        foreach (var d in x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id)))
+        {
+            e.Add(new("document_text", d.Name + " logs", "Logs", () => go("Logs:" + d.Id)));
+        }
+
+        foreach (var p in x.S.Projects)
+        {
+            e.Add(new("folder", Ctx.ProjectName(p), "Project · " + p, () => go("Project:" + p)));
+        }
+
         foreach (var i in x.S.Items.Where(i => i.Kind is "Skill" or "Plugin").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
+        {
             e.Add(new(i.Kind == "Skill" ? "sparkle" : "puzzle_piece", i.Name, $"{i.Kind} · {i.Source} · {i.Level}", () => x.Open(i)));
+        }
+
         return e;
     }
 
@@ -94,11 +110,18 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
                 Background = Brushes.Transparent,
                 Child = Row(Icon(en.Icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(en.Title, 14, true), Txt(en.Sub, 12, false, Muted))
             };
-            if (i == _pick) row.Themed(Border.BackgroundProperty, Selected);
+            if (i == _pick)
+            {
+                row.Themed(Border.BackgroundProperty, Selected);
+            }
+
             row.PointerReleased += (_, _) => { _pick = at; Run(); };
             _list.Children.Add(row);
         }
-        if (_shown.Count == 0) _list.Children.Add(Txt("Nothing found.", 13, false, Muted).With(t => t.Margin = new Thickness(10, 6)));
+        if (_shown.Count == 0)
+        {
+            _list.Children.Add(Txt("Nothing found.", 13, false, Muted).With(t => t.Margin = new Thickness(10, 6)));
+        }
     }
 
     void Keys(object? s, KeyEventArgs e)
@@ -111,7 +134,11 @@ class CommandPalette(Ctx x, Panel layer, Action<string> go)
 
     void Run()
     {
-        if (_pick < 0 || _pick >= _shown.Count) return;
+        if (_pick < 0 || _pick >= _shown.Count)
+        {
+            return;
+        }
+
         var en = _shown[_pick];
         Close();
         en.Run();

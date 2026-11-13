@@ -1,5 +1,5 @@
 # AI Stackprint
-Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project / User / System). Avalonia 12 + .NET 10, free (MIT).
+Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project / User / System). Avalonia 12 + .NET 10, free (MIT, see `LICENSE`).
 
 `dotnet run --project src/App` (needs the .NET 10 SDK). See `AGENTS.md` for contributor rules and `docs/` for architecture and adding apps.
 

@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -24,13 +27,24 @@ public static class LogSearch
         while (r.ReadLine() is { } line)
         {
             n++;
-            if ((n & 1023) == 0) ct.ThrowIfCancellationRequested();
+            if ((n & 1023) == 0)
+            {
+                ct.ThrowIfCancellationRequested();
+            }
+
             Match m;
             try { m = pattern.Match(line); }
             catch (RegexMatchTimeoutException) { continue; }
-            if (!m.Success) continue;
+            if (!m.Success)
+            {
+                continue;
+            }
+
             hits.Add(new SearchHit(n, Snippet(line, m.Index, m.Length), m.Index, m.Length));
-            if (hits.Count >= max) break;
+            if (hits.Count >= max)
+            {
+                break;
+            }
         }
         return hits;
     }
@@ -38,7 +52,11 @@ public static class LogSearch
     /// <summary>Up to 160 characters around the match.</summary>
     static string Snippet(string line, int at, int len)
     {
-        if (line.Length <= 160) return line.Trim();
+        if (line.Length <= 160)
+        {
+            return line.Trim();
+        }
+
         int start = Math.Max(0, at - 60), end = Math.Min(line.Length, Math.Max(at + len + 60, start + 160));
         return (start > 0 ? "…" : "") + line[start..end].Trim() + (end < line.Length ? "…" : "");
     }
@@ -53,8 +71,16 @@ public static class LogSearch
         while (r.ReadLine() is { } line)
         {
             n++;
-            if (n < first) continue;
-            if (n > around + after) break;
+            if (n < first)
+            {
+                continue;
+            }
+
+            if (n > around + after)
+            {
+                break;
+            }
+
             sb.Append(line).Append('\n');
         }
         return (sb.ToString(), first);
@@ -68,8 +94,19 @@ public static class LogSearch
         while (left > 0)
         {
             int n = fs.Read(buf, 0, (int)Math.Min(buf.Length, left));
-            if (n <= 0) break;
-            for (int i = 0; i < n; i++) if (buf[i] == (byte)'\n') count++;
+            if (n <= 0)
+            {
+                break;
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                if (buf[i] == (byte)'\n')
+                {
+                    count++;
+                }
+            }
+
             left -= n;
         }
         return count;

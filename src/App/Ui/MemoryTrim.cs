@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
@@ -8,12 +11,12 @@ namespace AiStackprint.Ui;
 /// </summary>
 static class MemoryTrim
 {
-    static DispatcherTimer? s_timer;
+    static DispatcherTimer? _timer;
 
     public static void Request()
     {
-        s_timer ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) => { s_timer!.Stop(); Compact(); });
-        s_timer.Stop(); s_timer.Start();
+        _timer ??= new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Background, (_, _) => { _timer!.Stop(); Compact(); });
+        _timer.Stop(); _timer.Start();
     }
 
     static void Compact()

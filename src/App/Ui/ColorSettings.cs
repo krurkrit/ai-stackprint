@@ -1,8 +1,10 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 
@@ -46,7 +48,11 @@ static class ColorSettings
 
     static Color Default(bool dark, int which)
     {
-        if (which >= 3) return Theme.LevelDefault(dark, which - 3, Theme.Defaults(dark).Accent);
+        if (which >= 3)
+        {
+            return Theme.LevelDefault(dark, which - 3, Theme.Defaults(dark).Accent);
+        }
+
         var d = Theme.Defaults(dark); return which switch { 0 => d.Accent, 1 => d.Hover, _ => d.Selection };
     }
 
@@ -67,14 +73,17 @@ static class ColorSettings
             Color? rgb = t == "" ? null : Theme.ParseHex(t.StartsWith('#') ? t : "#" + t);
             if (t != "" && rgb == null) { box.Text = value == null ? "" : Rgb(current); return; }   // invalid hex: put the old value back
             int pct = (int)Math.Clamp(opacity.Value ?? defaultPct, 0, 100);
-            if (rgb == null && pct == defaultPct) { if (value != null) set(null); return; }
+            if (rgb == null && pct == defaultPct) { if (value != null) { set(null); } return; }
             var c = rgb ?? fallback;
             var next = Hex(Color.FromArgb((byte)Math.Round(pct * 2.55), c.R, c.G, c.B));
-            if (next != value) set(next);
+            if (next != value)
+            {
+                set(next);
+            }
         }
         box.LostFocus += (_, _) => Commit();
-        box.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) Commit(); };
-        opacity.ValueChanged += (_, e) => { if (e.NewValue is { } v && (int)v != (int)Math.Round(current.A / 255.0 * 100)) Commit(); };
+        box.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) { Commit(); } };
+        opacity.ValueChanged += (_, e) => { if (e.NewValue is { } v && (int)v != (int)Math.Round(current.A / 255.0 * 100)) { Commit(); } };
 
         var view = new ColorView { Color = Color.FromRgb(current.R, current.G, current.B), IsAlphaVisible = false, IsAlphaEnabled = false, IsColorSpectrumVisible = true, IsComponentTextInputVisible = false, IsHexInputVisible = true };
         var swatches = new WrapPanel { Width = 240, Margin = new Thickness(0, 8, 0, 0) };
@@ -95,7 +104,11 @@ static class ColorSettings
         reset.IsEnabled = value != null;
 
         var sp = new StackPanel { Spacing = 4, Children = { Row(preview, box, opacity, Txt("%", 13, false, Muted), reset) } };
-        if (Note(current, dark, which) is { } note) sp.Children.Add(Txt(note, 11, false, Muted));
+        if (Note(current, dark, which) is { } note)
+        {
+            sp.Children.Add(Txt(note, 11, false, Muted));
+        }
+
         return sp;
     }
 

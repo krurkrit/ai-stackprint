@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
@@ -18,7 +21,11 @@ public class AiStackprintApp : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d) d.MainWindow = new MainWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d)
+        {
+            d.MainWindow = new MainWindow();
+        }
+
         base.OnFrameworkInitializationCompleted();
     }
 }

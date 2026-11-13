@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -18,12 +21,12 @@ namespace AiStackprint.Ui;
 /// </summary>
 class CodeView : Border
 {
-    static RegistryOptions? s_registry;
-    static SharedGrammars? s_shared;
-    static RegistryOptions Registry => s_registry ??= new RegistryOptions(ThemeName.LightPlus);
+    static RegistryOptions? _registry;
+    static SharedGrammars? _shared;
+    static RegistryOptions Registry => _registry ??= new RegistryOptions(ThemeName.LightPlus);
     /// <summary>Every view's highlighter reads grammars through this, so each grammar is parsed once, not once per view (Markdown and shell embed dozens of languages: ~15 MB each).</summary>
-    static SharedGrammars Shared => s_shared ??= new SharedGrammars(Registry);
-    static int s_live;   // installed highlighters; the grammars are dropped when the last one goes
+    static SharedGrammars Shared => _shared ??= new SharedGrammars(Registry);
+    static int _live;   // installed highlighters; the grammars are dropped when the last one goes
     bool _disposed;
 
     /// <summary>
@@ -59,13 +62,22 @@ class CodeView : Border
         _editor.TextArea.Themed(TextArea.SelectionBrushProperty, W.SelectionKey);
         _editor.TextArea.SelectionForeground = null;   // keep syntax colors readable inside the selection
         if (lineNumbers)
+        {
             foreach (var m in _editor.TextArea.LeftMargins.OfType<LineNumberMargin>())
+            {
                 m.Margin = new Thickness(10, 0, 8, 0);   // space from the edge and from the text
-        if (compact) MaxHeight = 420;
+            }
+        }
+
+        if (compact)
+        {
+            MaxHeight = 420;
+        }
+
         _scope = Language(path) is { } lang ? Registry.GetScopeByLanguageId(lang.Id) : null;
         ActualThemeVariantChanged += (_, _) => ApplyTheme();
         AttachedToVisualTree += (_, _) => Install();
-        DetachedFromVisualTree += (_, _) => { if (!KeepOnDetach) Uninstall(); };
+        DetachedFromVisualTree += (_, _) => { if (!KeepOnDetach) { Uninstall(); } };
         Child = _editor;
     }
 
@@ -80,24 +92,40 @@ class CodeView : Border
 
     void Install()
     {
-        if (_disposed || _textMate != null) return;
+        if (_disposed || _textMate != null)
+        {
+            return;
+        }
+
         _textMate = _editor.InstallTextMate(Shared);
-        if (_scope != null) _textMate.SetGrammar(_scope);
-        s_live++;
+        if (_scope != null)
+        {
+            _textMate.SetGrammar(_scope);
+        }
+
+        _live++;
         ApplyTheme();
     }
 
     void Uninstall()
     {
-        if (_textMate == null) return;
+        if (_textMate == null)
+        {
+            return;
+        }
+
         _textMate.Dispose(); _textMate = null;
-        if (--s_live <= 0) { s_live = 0; s_registry = null; s_shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
+        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
     }
 
     /// <summary>Releases the highlighter for good and, with the last view, the loaded grammars. Safe to call twice.</summary>
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
         _flashTimer?.Stop();
         Uninstall();
@@ -119,7 +147,11 @@ class CodeView : Border
     /// <summary>Tints lines from <paramref name="fromLine"/> (1-based) to the end and fades the tint out over <paramref name="seconds"/>.</summary>
     public void Flash(int fromLine, double seconds)
     {
-        if (seconds <= 0 || _disposed) return;
+        if (seconds <= 0 || _disposed)
+        {
+            return;
+        }
+
         var tv = _editor.TextArea.TextView;
         if (_flash == null) { _flash = new Flasher(); tv.BackgroundRenderers.Add(_flash); }
         _flash.From = Math.Max(1, fromLine); _flash.Start = DateTime.UtcNow; _flash.Seconds = seconds;
@@ -127,7 +159,10 @@ class CodeView : Border
         _flashTimer ??= new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(60), Avalonia.Threading.DispatcherPriority.Render, (_, _) =>
         {
             tv.InvalidateLayer(AvaloniaEdit.Rendering.KnownLayer.Background);
-            if (_disposed || _flash!.Done) _flashTimer!.Stop();
+            if (_disposed || _flash!.Done)
+            {
+                _flashTimer!.Stop();
+            }
         });
         _flashTimer.Start();
     }
@@ -142,11 +177,21 @@ class CodeView : Border
 
         public void Draw(AvaloniaEdit.Rendering.TextView tv, Avalonia.Media.DrawingContext dc)
         {
-            if (Brush == null || Done || !tv.VisualLinesValid) return;
+            if (Brush == null || Done || !tv.VisualLinesValid)
+            {
+                return;
+            }
+
             using (dc.PushOpacity(Math.Clamp(1 - Progress, 0, 1)))
+            {
                 foreach (var vl in tv.VisualLines)
+                {
                     if (vl.FirstDocumentLine.LineNumber >= From)
+                    {
                         dc.FillRectangle(Brush, new Rect(0, vl.VisualTop - tv.ScrollOffset.Y, tv.Bounds.Width, vl.Height));
+                    }
+                }
+            }
         }
     }
 
@@ -159,7 +204,11 @@ class CodeView : Border
     public void Reveal(int line, int column, int length)
     {
         var doc = _editor.Document;
-        if (doc == null || doc.LineCount == 0) return;
+        if (doc == null || doc.LineCount == 0)
+        {
+            return;
+        }
+
         var l = doc.GetLineByNumber(Math.Clamp(line, 1, doc.LineCount));
         int start = l.Offset + Math.Clamp(column, 0, l.Length);
         _editor.Select(start, Math.Clamp(length, 0, l.Offset + l.Length - start));

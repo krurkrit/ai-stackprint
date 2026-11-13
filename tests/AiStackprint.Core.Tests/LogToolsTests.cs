@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -15,7 +18,11 @@ public class LogToolsTests : IDisposable
         var p = Path.Combine(_tmp, name);
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, text);
-        if (when != null) File.SetLastWriteTime(p, when.Value);
+        if (when != null)
+        {
+            File.SetLastWriteTime(p, when.Value);
+        }
+
         var fi = new FileInfo(p);
         return new LogFile("app", "Logs", p, fi.Length, fi.LastWriteTime, null, format);
     }
@@ -138,6 +145,9 @@ public class LogToolsTests : IDisposable
     static void Wait(Func<bool> done)
     {
         var until = DateTime.Now.AddSeconds(5);
-        while (!done() && DateTime.Now < until) Thread.Sleep(50);
+        while (!done() && DateTime.Now < until)
+        {
+            Thread.Sleep(50);
+        }
     }
 }

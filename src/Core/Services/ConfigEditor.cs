@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Text;
 using System.Text.Json;
 
@@ -30,7 +33,11 @@ public static class ConfigEditor
     /// <summary>Error message when the text is not valid for its file type, else null. JSON is checked (comments and trailing commas allowed); other formats are not.</summary>
     public static string? Validate(string path, string text)
     {
-        if (!Path.GetExtension(path).ToLowerInvariant().StartsWith(".json")) return null;
+        if (!Path.GetExtension(path).ToLowerInvariant().StartsWith(".json"))
+        {
+            return null;
+        }
+
         try
         {
             using var _ = JsonDocument.Parse(text, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
@@ -42,8 +49,16 @@ public static class ConfigEditor
     /// <summary>Validates, checks the file is unchanged since <paramref name="opened"/>, copies the original to BackupRoot/timestamp/, then writes. Returns the backup path.</summary>
     public static string Save(string path, string text, Stamp opened, string? backupRoot = null)
     {
-        if (Validate(path, text) is { } error) throw new InvalidOperationException(error);
-        if (StampOf(path) != opened) throw new FileChangedException(path);
+        if (Validate(path, text) is { } error)
+        {
+            throw new InvalidOperationException(error);
+        }
+
+        if (StampOf(path) != opened)
+        {
+            throw new FileChangedException(path);
+        }
+
         var backup = Path.Combine(backupRoot ?? BackupRoot, DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"), Path.GetFileName(path));
         Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
         File.Copy(path, backup);

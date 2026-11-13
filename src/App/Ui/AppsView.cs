@@ -1,6 +1,7 @@
-using AiStackprint.Services;
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Avalonia;
+using AiStackprint.Services;
 using Avalonia.Controls;
 
 using static AiStackprint.Ui.W;
@@ -40,17 +41,31 @@ class AppsView(Ctx x)
         var found = x.ShownApps.Where(a => _q == "" || a.Name.Contains(_q, StringComparison.OrdinalIgnoreCase)).ToList();
         int inst = found.Count(a => a.Installed);
         var statuses = new List<string>();
-        if (inst > 0) statuses.Add("Installed");
-        if (inst < found.Count) statuses.Add("Not found");
+        if (inst > 0)
+        {
+            statuses.Add("Installed");
+        }
+
+        if (inst < found.Count)
+        {
+            statuses.Add("Not found");
+        }
+
         KeepOffered(_offStatus, statuses);
         var byStatus = found.Where(a => !_offStatus.Contains(a.Installed ? "Installed" : "Not found")).ToList();
 
         // Counts follow the search (and status for categories); a category with no apps is not listed
         var f = new StackPanel { Spacing = 10 };
         if (statuses.Count > 1)
+        {
             f.Children.Add(FilterRow("Status", Checks(new (Control, string)[] { (Counted(Txt("Installed", 14), inst), "Installed"), (Counted(Txt("Not found", 14), found.Count - inst), "Not found") }, _offStatus, Fill)));
+        }
+
         if (cats.Count > 1)
+        {
             f.Children.Add(FilterRow("Category", Checks(cats.Select(c => (Counted(Txt(Plural(c), 14), byStatus.Count(a => a.Category == c)), c)).ToList(), _offCats, Fill)));
+        }
+
         var groupRow = new List<Control> { Check("Category", _byCat, v => { _byCat = v; Fill(); }), Check("Status", _byStatus, v => { _byStatus = v; Fill(); }) };
         if (_byCat || _byStatus)
         {
@@ -69,11 +84,11 @@ class AppsView(Ctx x)
     {
         TableRow Row(Models.AppInfo a) => new(new Control[]
         {
-            AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) n.Opacity = 0.6; }), Txt(Cap(a.Category), 13, false, Muted),
+            AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) { n.Opacity = 0.6; } }), Txt(Cap(a.Category), 13, false, Muted),
             a.Installed ? Status("Installed") : Txt("Not found", 13, false, Muted),
             Count(a.Id, "Plugin", a.Installed), Count(a.Id, "Skill", a.Installed), Count(a.Id, "Config", a.Installed)
         }, () => x.Go("App:" + a.Id));
-        if (!_byCat && !_byStatus) { foreach (var a in apps) yield return Row(a); yield break; }
+        if (!_byCat && !_byStatus) { foreach (var a in apps) { yield return Row(a); } yield break; }
         foreach (var g in apps.GroupBy(Key).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
             bool open = !_collapsed.Contains(g.Key); string key = g.Key;
@@ -84,9 +99,19 @@ class AppsView(Ctx x)
                 _byCat ? Icon(Icons.ForCategory(first.Category), 16) : new Panel(), Title(name, 14),
                 Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", 13, false, Muted));
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
-            for (int c = 1; c < cols; c++) cells[c] = new Panel();
-            yield return new TableRow(cells, () => { if (!_collapsed.Remove(key)) _collapsed.Add(key); Fill(); });
-            if (open) foreach (var a in g) yield return Row(a);
+            for (int c = 1; c < cols; c++)
+            {
+                cells[c] = new Panel();
+            }
+
+            yield return new TableRow(cells, () => { if (!_collapsed.Remove(key)) { _collapsed.Add(key); } Fill(); });
+            if (open)
+            {
+                foreach (var a in g)
+                {
+                    yield return Row(a);
+                }
+            }
         }
     }
 

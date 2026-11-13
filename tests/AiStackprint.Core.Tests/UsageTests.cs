@@ -1,3 +1,6 @@
+// Copyright (c) AI Stackprint contributors.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using AiStackprint.Models;
 using AiStackprint.Services;
 
@@ -9,7 +12,7 @@ namespace AiStackprint.Core.Tests;
 
 public class UsageTests
 {
-    static readonly string[] ClaudeLines =
+    static readonly string[] _claudeLines =
     {
         """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","cwd":"C:\\Work\\app-one","requestId":"r1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":20,"cache_read_input_tokens":1000,"cache_creation_input_tokens":300},"content":[{"type":"text","text":"a"}]}}""",
         """{"type":"assistant","timestamp":"2026-11-11T05:00:01Z","cwd":"C:\\Work\\app-one","requestId":"r1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":20,"cache_read_input_tokens":1000,"cache_creation_input_tokens":300},"content":[{"type":"tool_use","id":"t","name":"Bash","input":{"command":"ls"}}]}}""",
@@ -21,7 +24,7 @@ public class UsageTests
     [Fact]
     public void Claude_usage_counts_a_streamed_message_once_and_reads_cache_tokens()
     {
-        var events = LogParsers.Find("claude-session")!.Usage(ClaudeLines).ToList();
+        var events = LogParsers.Find("claude-session")!.Usage(_claudeLines).ToList();
         Assert.Equal(2, events.Count);
         var a = events[0];
         Assert.Equal(("claude-opus-5-5", "app-one", 10L, 20L, 1000L, 300L, false), (a.Model, a.Project, a.Input, a.Output, a.CacheRead, a.CacheWrite, a.SubAgent));
@@ -32,7 +35,7 @@ public class UsageTests
     [Fact]
     public void Claude_session_tokens_do_not_double_count_a_streamed_message()
     {
-        var s = LogParsers.Find("claude-session")!.Parse(ClaudeLines);
+        var s = LogParsers.Find("claude-session")!.Parse(_claudeLines);
         Assert.Equal(20, s.InputTokens);    // m1 once (10) + m2 (1) + m3 (9)
         Assert.Equal(31, s.OutputTokens);   // 20 + 2 + 9
     }
@@ -76,7 +79,7 @@ public class UsageTests
         try
         {
             var path = Path.Combine(dir, "s.jsonl");
-            File.WriteAllLines(path, ClaudeLines);
+            File.WriteAllLines(path, _claudeLines);
             var info = new FileInfo(path);
             var file = new LogFile("claude", "Sessions", path, info.Length, info.LastWriteTime, null, "claude-session");
             var all = UsageStats.Compute(new[] { file }, DateTime.MinValue);
