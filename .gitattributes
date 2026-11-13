@@ -1,0 +1,5 @@
+# Text files are stored and checked out with LF, so diffs show real changes only.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
