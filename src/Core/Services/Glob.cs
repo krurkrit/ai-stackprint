@@ -47,7 +47,8 @@ public static class Glob
         }
     }
 
-    public static Regex ToRegex(string pattern)
+    /// <param name="anchored">Match from the start only, even without a / (.gitignore "/name").</param>
+    public static Regex ToRegex(string pattern, bool anchored = false)
     {
         var p = pattern.Replace('\\', '/').TrimStart('/');
         if (p.StartsWith("./", StringComparison.Ordinal))
@@ -56,7 +57,7 @@ public static class Glob
         }
 
         var sb = new StringBuilder("^");
-        if (!p.Contains('/'))
+        if (!anchored && !p.Contains('/'))
         {
             sb.Append("(?:.*/)?");   // "*.ts" matches at any depth
         }
@@ -99,7 +100,7 @@ public static class Glob
 
     /// <summary>True when any of <paramref name="patterns"/> matches one of <paramref name="files"/>.</summary>
     public static bool AnyMatch(IEnumerable<string> patterns, IReadOnlyList<string> files) =>
-        patterns.Select(ToRegex).Any(r => files.Any(r.IsMatch));
+        patterns.Select(p => ToRegex(p)).Any(r => files.Any(r.IsMatch));
 }
 
 /// <summary>The files of a project folder, for checks that need them. Read-only.</summary>

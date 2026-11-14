@@ -23,9 +23,9 @@ public static class ScanDiff
 
     private static long Stamp(Item i)
     {
-        if (i.Kind != "Config")
+        if (i.Kind != "Config" || i.AppWritten)
         {
-            return 0;
+            return 0;   // AppWritten: the app saves it on its own, so only added or removed counts
         }
 
         try { return System.IO.File.GetLastWriteTimeUtc(i.Path).Ticks; }

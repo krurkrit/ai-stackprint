@@ -20,7 +20,8 @@ public record ProjectCheck(List<(AppDefinition App, ContextReport Report)> Conte
 /// <summary>
 /// Checks of one project's AI files, beyond each app's context limits (<see cref="ContextBudget"/>): rules whose file patterns match nothing,
 /// the same text loaded twice at launch, empty files, links to missing files, and in the project's config files (apps.json configs at
-/// Project or Local level) secrets, MCP servers and hooks that run programs, and permission settings that skip prompts. Read-only.
+/// Project or Local level) secrets, MCP servers and hooks that run programs, and permission settings that skip prompts; personal files that
+/// git does not ignore. Read-only.
 /// </summary>
 public static partial class ProjectChecks
 {
@@ -35,6 +36,7 @@ public static partial class ProjectChecks
         Duplicates(context, issues);
         Empty(project, context, issues);
         Links(project, context, issues);
+        Personal(project, context, defs, home, issues);
         var programs = new List<ProjectProgram>();
         Configs(project, defs, issues, programs);
         return new(context, issues, programs);

@@ -146,6 +146,11 @@ public sealed class ScanAndHealthTests : IDisposable
         Assert.NotNull(r.Since);
         Assert.Equal([("Added", "b"), ("Edited", "CLAUDE.md"), ("Removed", "a")], r.Changes.Select(x => (x.What, x.Name)).OrderBy(x => x.What));
         Assert.Empty(ScanDiff.Update([b, c], file).Changes);
+
+        var state = c with { Name = ".claude.json", AppWritten = true };   // the app saves it on its own: edits are not changes
+        ScanDiff.Update([state], file);
+        File.SetLastWriteTimeUtc(cfg, DateTime.UtcNow.AddMinutes(2));
+        Assert.Empty(ScanDiff.Update([state], file).Changes);
     }
 
     [Fact]

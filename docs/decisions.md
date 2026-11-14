@@ -49,6 +49,11 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Checks the project's AI files: rules that never load (their patterns match no file), text loaded twice at launch, empty files, broken links, secrets in config files, `bypassPermissions` and `Bash(*)`. Findings also appear on Health under Projects.
 - Lists the MCP servers and hooks the project's config files start, with unpinned packages flagged. Secret values are never shown, only where they are (JSON path); flags like `--api-key` show `•••`.
 - Only documented limits are shown (Claude Code 40,000 characters, Codex 32 KiB, Cursor 500 lines); apps without one show sizes only.
+- Warns about personal files (CLAUDE.local.md, settings.local.json, …) that git does not ignore, read from the ignore files without running git.
+
+## MCP servers
+- One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
+- Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.

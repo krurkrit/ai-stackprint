@@ -27,6 +27,7 @@ internal partial class MainWindow : Window
     private readonly LibraryView _skills, _plugins;
     private readonly AppsView _apps;
     private readonly HealthView _health;
+    private readonly McpView _mcp;
     private readonly AppDetailView _detail;
     private readonly ProjectView _project;
     private readonly SettingsView _settings;
@@ -51,7 +52,7 @@ internal partial class MainWindow : Window
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
         _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
-        _project = new ProjectView(_x, RemoveProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x);
+        _project = new ProjectView(_x, RemoveProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
         {
@@ -158,7 +159,7 @@ internal partial class MainWindow : Window
 
     private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
 
-    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
+    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Mcp, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
     private void Go(string view)
     {
         if (view != _view) { _back.Push(_view); _forward.Clear(); }
@@ -219,6 +220,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
+        nav.Children.Add(Go("server", "MCP servers", "Mcp"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));
         var warnings = _s.Health.Count(h => h.Finding.Warning);
         nav.Children.Add(Go("warning", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));

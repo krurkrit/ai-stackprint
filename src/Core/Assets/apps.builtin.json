@@ -26,7 +26,8 @@
       {"path": "C:/Program Files/ClaudeCode/managed-settings.json", "level": "System", "kind": "settings", "os": "windows", "label": "Managed"},
       {"path": "/Library/Application Support/ClaudeCode/managed-settings.json", "level": "System", "kind": "settings", "os": "macos", "label": "Managed"},
       {"path": "/etc/claude-code/managed-settings.json", "level": "System", "kind": "settings", "os": "linux", "label": "Managed"},
-      {"path": ".mcp.json", "level": "Project", "kind": "mcp"}
+      {"path": ".mcp.json", "level": "Project", "kind": "mcp"},
+      {"path": "~/.claude.json", "level": "User", "kind": "mcp", "label": "User and local MCP", "appWritten": true}
     ],
     "pluginFormat": "claude",
     "pluginManifest": "~/.claude/plugins/installed_plugins.json",
@@ -182,7 +183,11 @@
       {"path": ".github/copilot-instructions.md", "level": "Project", "kind": "instructions", "label": "Repository"},
       {"path": ".github/instructions", "level": "Project", "kind": "instructions", "label": "Repository"},
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Repository"},
-      {"path": ".vscode/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace (VS Code)"}
+      {"path": ".vscode/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace (VS Code)"},
+      {"path": "~/.copilot/mcp-config.json", "level": "User", "kind": "mcp", "label": "Copilot CLI"},
+      {"path": "%APPDATA%/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "windows", "label": "VS Code"},
+      {"path": "~/Library/Application Support/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "macos", "label": "VS Code"},
+      {"path": "~/.config/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "linux", "label": "VS Code"}
     ],
     "plugins": [
       {"format": "folders", "path": "~/.copilot/state/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]},
@@ -339,7 +344,8 @@
     ],
     "configs": [
       {"path": ".roo/rules", "level": "Project", "kind": "instructions"},
-      {"path": "~/.roo/rules", "level": "User", "kind": "instructions"}
+      {"path": "~/.roo/rules", "level": "User", "kind": "instructions"},
+      {"path": ".roo/mcp.json", "level": "Project", "kind": "mcp"}
     ],
     "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort."
   },

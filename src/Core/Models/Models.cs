@@ -19,6 +19,7 @@ public record Item(string Kind, string Name, string Description, string Source, 
     public string? Author { get; init; }          // plugin manifest author, or SKILL.md author / metadata.author
     public IReadOnlyList<string> Keywords { get; init; } = [];   // plugins: keywords from the manifest (search)
     public IReadOnlyList<string> Provides { get; init; } = [];   // plugins: what it adds, PluginParts keys (skills, commands, agents, hooks, mcp, lsp)
+    public bool AppWritten { get; init; }        // config files the app rewrites on its own: edits are not listed as changes
 }
 
 public record AppInfo(string Id, string Name, string Category, string? Logo, bool Installed, string? Folder);
@@ -47,6 +48,7 @@ public class ConfigFile
     public string? Os { get; set; }
     public string? Label { get; set; }
     public bool Nested { get; set; }                   // Project files: also look in sub-folders
+    public bool AppWritten { get; set; }               // the app rewrites it on its own (state, counters): edits are not listed as changes
 }
 
 /// <summary>Where an app writes logs: a file, or a folder searched for <see cref="Pattern"/> up to <see cref="Depth"/> levels down.</summary>
@@ -158,6 +160,7 @@ public class AppState
     public List<AppInfo> Apps { get; set; } = [];
     public Services.ScanChanges Changes { get; set; } = new([], null);   // since the scan before this one (saved between runs)
     public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan
+    public List<Services.McpServer> Mcp { get; set; } = [];                      // MCP servers in the config files of the last scan
 
     public AppDefinition? Def(string id) => Defs.FirstOrDefault(d => d.Id == id);
 }

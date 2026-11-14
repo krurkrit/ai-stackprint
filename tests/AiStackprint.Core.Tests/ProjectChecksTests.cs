@@ -117,10 +117,10 @@ public sealed class ProjectChecksTests : IDisposable
         Assert.Contains(r.Issues, i => i.Finding.Text.Contains("\"Bash(*)\""));
 
         var servers = r.Programs.Where(p => p.Kind == "MCP server").ToDictionary(p => p.Name);
-        Assert.Equal("Not pinned: @modelcontextprotocol/server-github · env: GITHUB_TOKEN", servers["github"].Note);
+        Assert.Equal("Not pinned: @modelcontextprotocol/server-github · Key in plain text · env: GITHUB_TOKEN", servers["github"].Note);
         Assert.Null(servers["pinned"].Note);
-        Assert.Equal("Not pinned: tool@latest", servers["win"].Note);
-        Assert.EndsWith("--api-key " + ProjectChecks.Hidden, servers["win"].What);
+        Assert.Equal("Not pinned: tool@latest · Key in plain text", servers["win"].Note);
+        Assert.EndsWith("--api-key " + ConfigJson.Hidden, servers["win"].What);
         var hook = Assert.Single(r.Programs, p => p.Kind == "Hook");
         Assert.Equal("PostToolUse · Edit", hook.Name);
     }
@@ -133,7 +133,7 @@ public sealed class ProjectChecksTests : IDisposable
     [InlineData("apiKey", "your-api-key-goes-here", false)]
     [InlineData("description", "a long description of the server", false)]
     public void Secret_values_are_told_from_references(string name, string value, bool secret) =>
-        Assert.Equal(secret, ProjectChecks.LooksSecret(name, value));
+        Assert.Equal(secret, ConfigJson.LooksSecret(name, value));
 
     [Fact]
     public void New_apps_read_their_rule_files()
@@ -154,5 +154,23 @@ public sealed class ProjectChecksTests : IDisposable
         Assert.Equal(["AGENTS.md", "style.md"], ctx["opencode"].Files.Select(f => Path.GetFileName(f.Path)));
         Assert.Contains(ctx["opencode"].Findings, f => f.Text.Contains("https://x.org/rules.md"));
         Assert.Equal(["AGENTS.md"], ctx["kiro"].Files.Select(f => Path.GetFileName(f.Path)));
+    }
+
+    [Fact]
+    public void Personal_files_git_does_not_ignore_are_reported()
+    {
+        Write("CLAUDE.local.md", "mine");
+        Write(".claude/settings.local.json", "{}");
+        Write("AGENTS.local.md", "mine");   // Windsurf reads it
+        Write(".gitignore", "AGENTS.local.md\n");
+        Write(".gitconfig", "[core]\n\texcludesFile = ~/my-ignore\n", _home);   // the global excludes file
+        Write("my-ignore", "*.local.json\n", _home);
+        var personal = Run().Issues.Where(i => i.Finding.Text.Contains("personal file")).ToList();
+        var one = Assert.Single(personal);
+        Assert.Equal("CLAUDE.local.md", Path.GetFileName(one.File));
+        Assert.Contains("claude-code", one.Apps);
+
+        Directory.Delete(Path.Combine(_project, ".git"));   // not a git repository: nothing to commit
+        Assert.DoesNotContain(Run().Issues, i => i.Finding.Text.Contains("personal file"));
     }
 }

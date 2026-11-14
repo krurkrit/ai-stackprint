@@ -65,7 +65,7 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         var e = new List<Entry>
         {
             new("board", "Dashboard", "Page", () => go("Dashboard")), new("apps", "Apps", "Page", () => go("Apps")),
-            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")),
+            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")), new("server", "MCP servers", "Page", () => go("Mcp")),
             new("document_text", "Logs", "Page", () => go("Logs")), new("warning", "Health", "Page", () => go("Health")), new("settings", "Settings", "Page", () => go("Settings")),
             new("arrow_sync", "Rescan", "Action", x.Rescan), new("folder_add", "Add project folder", "Action", x.AddProject), new("add", "Add app", "Action", x.AddApp),
         };

@@ -147,6 +147,6 @@ public static partial class Scanner
 
         var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", _ => "Instructions" };
         rows.Add(new Item("Config", Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar)), kind, d.Name, c.Level, path)
-        { App = d.Id, Project = project, LevelLabel = c.Label });
+        { App = d.Id, Project = project, LevelLabel = c.Label, AppWritten = c.AppWritten });
     }
 }

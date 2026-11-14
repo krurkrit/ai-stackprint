@@ -44,6 +44,7 @@ internal partial class MainWindow
             "Plugin" => _plugins.Build(),
             "Skill" => _skills.Build(),
             "Health" => _health.Build(),
+            "Mcp" => _mcp.Build(),
             "Logs" => _logs.Build(null),
             _ when _view.StartsWith("Logs:") => _logs.Build(_view[5..]),
             _ when _view.StartsWith("App:") => _detail.Build(_view[4..]),
@@ -99,7 +100,8 @@ internal partial class MainWindow
         var r = await Task.Run(() => Scanner.Collect(defs, projects));
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
-        (_s.Changes, _s.Health) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File), Health.Compute(items).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList()));
+        (_s.Changes, _s.Health, _s.Mcp) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File),
+            Health.Compute(items).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList(), McpServers.Read(items)));
         var first = !_scanned;
         _scanning = false; _scanned = true;
         Refresh();
