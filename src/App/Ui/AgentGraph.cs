@@ -94,7 +94,7 @@ internal static class AgentGraph
         return Section("flow", "Sub-agents", new StackPanel { Spacing = 8, Children = { rows, axis, legend } });
     }
 
-    private static Control Lane(string label, Control bar)
+    private static Grid Lane(string label, Control bar)
     {
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("150,*"), ColumnSpacing = 8 };
         var t = Txt(label, 12, false, Muted).With(x => { x.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; x.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; x.VerticalAlignment = VerticalAlignment.Center; });

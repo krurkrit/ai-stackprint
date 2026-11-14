@@ -54,7 +54,7 @@ internal static class DashboardView
     }
 
     /// <summary>Installed apps by category as a donut, with a legend that also lists categories with nothing installed ("0 of 3").</summary>
-    private static Control Categories(List<AppInfo> apps, Action open)
+    private static Border Categories(List<AppInfo> apps, Action open)
     {
         var cats = apps.GroupBy(a => a.Category).OrderByDescending(g => g.Count(a => a.Installed)).ThenBy(g => g.Key).ToList();
         var inst = apps.Count(a => a.Installed);
@@ -181,7 +181,7 @@ internal static class DashboardView
     }
 
     /// <summary>Skills, plugins and config files added, removed or edited since the scan before (saved between runs).</summary>
-    private static Control Recent(Ctx x)
+    private static Border Recent(Ctx x)
     {
         var c = x.S.Changes;
         var title = c.Since is { } since ? $"Changed since {(since.Date == DateTime.Today ? since.ToString("HH:mm") : since.ToString("yyyy-MM-dd HH:mm"))}" : "Changes";
@@ -210,7 +210,7 @@ internal static class DashboardView
         return Section("arrow_sync", title, body);
     }
 
-    private static Control Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)
+    private static Border Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)
     {
         var grid = new Grid { Height = 10, ColumnSpacing = 2 };
         var legend = new WrapPanel();

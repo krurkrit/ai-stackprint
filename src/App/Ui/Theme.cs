@@ -115,10 +115,10 @@ internal static class Theme
     {
         Color fg = C(p.Fg), bg = C(p.Bg);
         var custom = ParseHex(o.Accent);
-        Color primary = custom ?? C(p.Primary);
-        Color onPrimary = custom == null ? C(p.OnPrimary) : W.BestText(primary, C(White), C(AccentTextDark));   // keep accent buttons readable
-        Color hover = ParseHex(o.Hover) ?? A(fg, p.HoverAlpha);
-        Color selection = ParseHex(o.Selection) ?? A(C(p.Selection), p.SelectionAlpha);
+        var primary = custom ?? C(p.Primary);
+        var onPrimary = custom == null ? C(p.OnPrimary) : W.BestText(primary, C(White), C(AccentTextDark));   // keep accent buttons readable
+        var hover = ParseHex(o.Hover) ?? A(fg, p.HoverAlpha);
+        var selection = ParseHex(o.Selection) ?? A(C(p.Selection), p.SelectionAlpha);
         fluent.Accent = primary;
         var d = new ResourceDictionary
         {
@@ -243,5 +243,5 @@ internal static class Theme
 
     private static Color C(string hex) => Color.Parse(hex);
     private static Color A(Color c, double a) => Color.FromArgb((byte)Math.Round(a * 255), c.R, c.G, c.B);
-    private static IBrush B(Color c) => new ImmutableSolidColorBrush(c);
+    private static Avalonia.Media.Immutable.ImmutableSolidColorBrush B(Color c) => new ImmutableSolidColorBrush(c);
 }

@@ -75,7 +75,7 @@ public static class LimitProviders
 }
 
 /// <summary>Claude Code: ~/.claude/.credentials.json (claudeAiOauth), GET api.anthropic.com/api/oauth/usage — the reply /usage shows.</summary>
-public class ClaudeLimits : ILimitProvider
+public partial class ClaudeLimits : ILimitProvider
 {
     public string Id => "claude";
     public string Host => "api.anthropic.com";
@@ -103,7 +103,7 @@ public class ClaudeLimits : ILimitProvider
             return null;
         }
 
-        var mult = tier is { } t && System.Text.RegularExpressions.Regex.Match(t, @"(\d+x)\b") is { Success: true } m ? " " + m.Groups[1].Value : "";
+        var mult = tier is { } t && TierMultiplier().Match(t) is { Success: true } m ? " " + m.Groups[1].Value : "";
         return LimitProviders.Cap(type) + mult;
     }
 
@@ -137,6 +137,9 @@ public class ClaudeLimits : ILimitProvider
         }
         return new(null, windows, now, note);
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"(\d+x)\b")]
+    private static partial System.Text.RegularExpressions.Regex TierMultiplier();
 }
 
 /// <summary>Codex: the rate_limits it writes in its session logs (no network); with live limits on, also GET chatgpt.com/backend-api/wham/usage with ~/.codex/auth.json.</summary>

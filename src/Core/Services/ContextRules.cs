@@ -12,7 +12,7 @@ namespace AiStackprint.Services;
 /// the user file and rules, managed policy, @imports (four hops), auto memory (first 200 lines or 25 KB) at launch; CLAUDE.md in sub-folders on demand;
 /// rules with paths: front matter only for matching files. Warns above 40,000 characters.
 /// </summary>
-internal class ClaudeContext : IContextRule
+internal partial class ClaudeContext : IContextRule
 {
     public string Id => "claude";
     public const int WarnChars = 40_000, MaxHops = 4, MemoryLines = 200, MemoryBytes = 25 * 1024;
@@ -51,7 +51,7 @@ internal class ClaudeContext : IContextRule
             Add(Path.Combine(dir, "CLAUDE.local.md"), LoadWhen.Always, "Local (personal)");
         }
         Rules(Path.Combine(project, ".claude", "rules"), "Project rule");
-        Memory(Path.Combine(claudeHome, "projects", Regex.Replace(start, "[^A-Za-z0-9]", "-"), "memory", "MEMORY.md"));
+        Memory(Path.Combine(claudeHome, "projects", NotLetterOrDigit().Replace(start, "-"), "memory", "MEMORY.md"));
         foreach (var f in Below(start, ["CLAUDE.md", "CLAUDE.local.md"]))
         {
             Add(f, LoadWhen.OnDemand, "When Claude reads files in that folder");
@@ -93,6 +93,8 @@ internal class ClaudeContext : IContextRule
     }
 
     private static bool PathOk(string p) => Path.IsPathRooted(p) && (OperatingSystem.IsWindows() ? p.Contains(':') : !p.Contains(':'));
+    [GeneratedRegex("[^A-Za-z0-9]")]
+    private static partial Regex NotLetterOrDigit();
 }
 
 /// <summary>
@@ -100,21 +102,22 @@ internal class ClaudeContext : IContextRule
 /// (nearest .git) down to the start folder: AGENTS.override.md, AGENTS.md, then project_doc_fallback_filenames. Empty files are skipped.
 /// Project files stop at project_doc_max_bytes (32 KiB by default) without a warning.
 /// </summary>
-internal class CodexContext : IContextRule
+internal partial class CodexContext : IContextRule
 {
     public string Id => "codex";
     public const int DefaultMaxBytes = 32 * 1024;
+    private static readonly string[] _agentsFiles = ["AGENTS.override.md", "AGENTS.md"];   // in this order, per folder
 
     public ContextReport Read(string project, string start, string home)
     {
         var codexHome = Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } c ? c : Path.Combine(home, ".codex");
         var config = ReadText(Path.Combine(codexHome, "config.toml"));
-        var max = Regex.Match(config, @"(?m)^\s*project_doc_max_bytes\s*=\s*(\d+)") is { Success: true } m && long.TryParse(m.Groups[1].Value, out var n) ? n : DefaultMaxBytes;
-        var fallbacks = Regex.Match(config, @"(?m)^\s*project_doc_fallback_filenames\s*=\s*\[(.*?)\]") is { Success: true } f
-            ? Regex.Matches(f.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : [];
+        var max = MaxBytesSetting().Match(config) is { Success: true } m && long.TryParse(m.Groups[1].Value, out var n) ? n : DefaultMaxBytes;
+        var fallbacks = FallbackSetting().Match(config) is { Success: true } f
+            ? Quoted().Matches(f.Groups[1].Value).Select(x => x.Groups[1].Value).ToList() : [];
         var files = new List<ContextFile>(); var findings = new List<Finding>();
 
-        var global = new[] { "AGENTS.override.md", "AGENTS.md" }.Select(n => Path.Combine(codexHome, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
+        var global = _agentsFiles.Select(n => Path.Combine(codexHome, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
         if (global != null)
         {
             files.Add(Measure(global, LoadWhen.Always, null, "Global · not counted in project_doc_max_bytes") with { Counted = false });
@@ -124,7 +127,7 @@ internal class CodexContext : IContextRule
         long used = 0;
         foreach (var dir in Chain(root, start))
         {
-            var pick = new[] { "AGENTS.override.md", "AGENTS.md" }.Concat(fallbacks).Select(n => Path.Combine(dir, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
+            var pick = _agentsFiles.Concat(fallbacks).Select(n => Path.Combine(dir, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
             if (pick == null)
             {
                 continue;
@@ -145,4 +148,10 @@ internal class CodexContext : IContextRule
     }
 
     private static string Rel(string p, string root) => Path.GetRelativePath(root, p);
+    [GeneratedRegex(@"(?m)^\s*project_doc_max_bytes\s*=\s*(\d+)")]
+    private static partial Regex MaxBytesSetting();
+    [GeneratedRegex(@"(?m)^\s*project_doc_fallback_filenames\s*=\s*\[(.*?)\]")]
+    private static partial Regex FallbackSetting();
+    [GeneratedRegex("\"([^\"]+)\"")]
+    private static partial Regex Quoted();
 }

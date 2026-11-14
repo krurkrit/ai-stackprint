@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// Gemini CLI (geminicli.com/docs/cli/gemini-md): ~/.gemini/GEMINI.md, then the context files from the project root down to the start folder,
 /// @imports; files in sub-folders when a tool reads there. File names from settings.json context.fileName. No size limit is documented.
 /// </summary>
-internal class GeminiContext : IContextRule
+internal partial class GeminiContext : IContextRule
 {
     public string Id => "gemini";
 
@@ -54,10 +54,15 @@ internal class GeminiContext : IContextRule
     /// <summary>context.fileName: a string or a list; GEMINI.md when not set.</summary>
     private static List<string> Names(string settings)
     {
-        var m = Regex.Match(settings, "\"fileName\"\\s*:\\s*(\\[[^\\]]*\\]|\"[^\"]*\")");
-        var list = m.Success ? Regex.Matches(m.Groups[1].Value, "\"([^\"]+)\"").Select(x => x.Groups[1].Value).ToList() : [];
+        var m = FileNameSetting().Match(settings);
+        var list = m.Success ? Quoted().Matches(m.Groups[1].Value).Select(x => x.Groups[1].Value).ToList() : [];
         return list.Count > 0 ? list : ["GEMINI.md"];
     }
+
+    [GeneratedRegex("\"fileName\"\\s*:\\s*(\\[[^\\]]*\\]|\"[^\"]*\")")]
+    private static partial Regex FileNameSetting();
+    [GeneratedRegex("\"([^\"]+)\"")]
+    private static partial Regex Quoted();
 }
 
 /// <summary>GitHub Copilot: .github/copilot-instructions.md and the nearest AGENTS.md always; .github/instructions/*.instructions.md by their applyTo pattern.</summary>

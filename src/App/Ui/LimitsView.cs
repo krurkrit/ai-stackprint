@@ -65,7 +65,7 @@ internal static class LimitsView
         return card;
     }
 
-    private static Control Body(Ctx x, AppDefinition d, bool compact)
+    private static StackPanel Body(Ctx x, AppDefinition d, bool compact)
     {
         var st = x.Limits.Status(d.Id);
         var on = x.Limits.Enabled(d.Id);
@@ -127,7 +127,7 @@ internal static class LimitsView
     private const string AccentKeyForPlan = Accent;
 
     /// <summary>One window: name, percent used, reset, and when it fills at the current pace.</summary>
-    private static Control Window(LimitWindow w, LimitSnapshot? prev, LimitSnapshot now, bool compact)
+    private static StackPanel Window(LimitWindow w, LimitSnapshot? prev, LimitSnapshot now, bool compact)
     {
         var pct = Math.Clamp(w.UsedPercent, 0, 100);
         var bar = new Grid { Height = compact ? 6 : 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(pct, 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };

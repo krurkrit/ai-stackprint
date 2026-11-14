@@ -99,7 +99,7 @@ internal partial class LogViewer
 
     private static string Snip(string s) { var l = s.Replace('\n', ' ').Trim(); return l.Length > 140 ? l[..140] + "…" : l; }
 
-    private static Control Panel(Control head, IEnumerable<Control>? rows = null)
+    private static Border Panel(Control head, IEnumerable<Control>? rows = null)
     {
         var sp = new StackPanel { Spacing = 2, Children = { head.With(h => h.Margin = new Thickness(4, 0, 0, 6)) } };
         if (rows != null)
@@ -110,7 +110,7 @@ internal partial class LogViewer
         return new Border { Width = 300, CornerRadius = new CornerRadius(6), Padding = new Thickness(6), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
     }
 
-    private static Control Hit(string where, string text, Action go)
+    private static Border Hit(string where, string text, Action go)
     {
         var b = new Border
         {

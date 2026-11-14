@@ -67,7 +67,7 @@ internal class ContextSection(Ctx x)
         x.Refresh();
     }
 
-    private Control Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
+    private StackPanel Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
     {
         var sp = new StackPanel { Spacing = 22 };
         foreach (var (app, r) in reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true))
@@ -83,7 +83,7 @@ internal class ContextSection(Ctx x)
         return sp;
     }
 
-    private Control App(AppDefinitionRef app, ContextReport r)
+    private StackPanel App(AppDefinitionRef app, ContextReport r)
     {
         var sp = new StackPanel { Spacing = 10 };
         var launch = r.Files.Count(f => f.Load is LoadWhen.Always or LoadWhen.Imported);
@@ -148,7 +148,7 @@ internal class ContextSection(Ctx x)
     };
 
     /// <summary>Use of the limit: accent up to 75 %, warning to 100 %, error over it.</summary>
-    private static Control Bar(long used, long limit, ContextReport r)
+    private static StackPanel Bar(long used, long limit, ContextReport r)
     {
         var pct = limit == 0 ? 0 : 100.0 * used / limit;
         var g = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(Math.Min(pct, 100), 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
@@ -162,7 +162,7 @@ internal class ContextSection(Ctx x)
         : ContextBudget.Inside(path, PathUtil.Home) ? "~" + Path.DirectorySeparatorChar + Path.GetRelativePath(PathUtil.Home, path) : path;
 
     /// <summary>The clicked file, rendered; its links open in the same preview.</summary>
-    private Control Preview(string path)
+    private Border Preview(string path)
     {
         var view = FileView.Show(path, false, link =>
         {
@@ -180,7 +180,7 @@ internal class ContextSection(Ctx x)
             }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { }
         }, out var scrolls);
-        Control body = scrolls ? new ScrollViewer { Content = view, MaxHeight = 420 } : view.With(v => v.Height = 380);
+        var body = scrolls ? new ScrollViewer { Content = view, MaxHeight = 420 } : view.With(v => v.Height = 380);
         return new Border
         {
             CornerRadius = new CornerRadius(8),

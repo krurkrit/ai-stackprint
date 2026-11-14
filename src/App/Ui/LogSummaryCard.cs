@@ -68,7 +68,7 @@ internal class LogSummaryCard
         }
     }
 
-    private static Control Show(LogStats s)
+    private static StackPanel Show(LogStats s)
     {
         var w = new WrapPanel();
         void Add(string t, string? key = null) => w.Children.Add(Chip(t, key).With(c => c.Margin = new Thickness(0, 0, 8, 8)));

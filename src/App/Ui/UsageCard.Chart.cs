@@ -14,6 +14,9 @@ namespace AiStackprint.Ui;
 internal partial class UsageCard
 {
     /// <summary>Per-day bars, stacked by token type (or one bar of cost). At most the last 90 days; gaps are empty days.</summary>
+    private static readonly string[] _costKeys = [Accent], _tokenKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
+    private static readonly string[] _costNames = ["Estimated cost"], _tokenNames = ["Input", "Output", "Cache write", "Cache read"];
+
     private Control Chart(List<UsageBucket> b, bool cost, bool priced, bool reads, bool writes, out Control legend)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -25,8 +28,8 @@ internal partial class UsageCard
 
         var byDay = b.Where(v => v.Day >= first).GroupBy(v => v.Day).ToDictionary(g => g.Key, g => g.ToList());
         var keep = cost ? new[] { true } : [true, true, writes, reads];
-        var keys = (cost ? new[] { Accent } : [ChartIn, ChartOut, ChartWrite, ChartRead]).Where((_, k) => keep[k]).ToArray();
-        var names = (cost ? new[] { "Estimated cost" } : ["Input", "Output", "Cache write", "Cache read"]).Where((_, k) => keep[k]).ToArray();
+        var keys = (cost ? _costKeys : _tokenKeys).Where((_, k) => keep[k]).ToArray();
+        var names = (cost ? _costNames : _tokenNames).Where((_, k) => keep[k]).ToArray();
         legend = new WrapPanel { Children = { } };
         for (var k = 0; k < names.Length; k++)
         {
@@ -75,7 +78,7 @@ internal partial class UsageCard
     }
 
     /// <summary>Limits the app reports (Codex) and use in the last 5 hours / 7 days / current 5-hour block (all apps with usage logs).</summary>
-    private Control Limits()
+    private StackPanel Limits()
     {
         var live = _live;
         if (live == null)

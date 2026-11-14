@@ -136,7 +136,7 @@ internal static partial class W
         new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, key);
 
     /// <summary>Hollow dot: Local level (personal, same color family as Project).</summary>
-    private static Control Ring(string key) =>
+    private static Border Ring(string key) =>
         new Border { Width = 9, Height = 9, CornerRadius = new CornerRadius(5), BorderThickness = new Thickness(2), VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BorderBrushProperty, key);
 
     public static Control LevelDot(string level) => level == "Local" ? Ring(LevelKey(level)) : Dot(LevelKey(level));
@@ -190,7 +190,7 @@ internal static partial class W
     /// <summary>Vector icon; fills with the inherited foreground so it follows text color, buttons and theme.</summary>
     public static Control Icon(string name, double size = 18) => Glyph(Icons.Get(name), size);
 
-    private static Control Glyph(Icons.Shape[] shapes, double size)
+    private static Viewbox Glyph(Icons.Shape[] shapes, double size)
     {
         var canvas = new Canvas { Width = 24, Height = 24 };
         foreach (var s in shapes)

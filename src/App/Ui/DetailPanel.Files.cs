@@ -13,7 +13,7 @@ namespace AiStackprint.Ui;
 /// <summary>The right side of the panel: Content (the open file) and Files (everything in the folder), with Back for followed links.</summary>
 internal partial class DetailPanel
 {
-    private Control Content()
+    private DockPanel Content()
     {
         var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v => { _tab = v; Render(); });
         var bar = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };

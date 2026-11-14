@@ -14,6 +14,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal static class Icons
 {
+    private static readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
     public record Part(string D, double? O);
     public record Shape(Geometry Data, double Opacity);
 
@@ -38,7 +39,7 @@ internal static class Icons
     private static Dictionary<string, Shape[]> Load(string resource)
     {
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource)!;
-        var raw = JsonSerializer.Deserialize<Dictionary<string, Part[]>>(s, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        var raw = JsonSerializer.Deserialize<Dictionary<string, Part[]>>(s, _json)!;
         return raw.ToDictionary(kv => kv.Key, kv => kv.Value.Select(p => new Shape(Geometry.Parse(p.D), p.O ?? 1)).ToArray());
     }
 }

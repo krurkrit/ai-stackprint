@@ -25,13 +25,11 @@ internal partial class ReadableLog
     internal static Control Code(string text, string ext) =>
         new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = new CodeView(ext, lineNumbers: false, compact: true) { Text = text.TrimEnd('\n') } };
 
-    private static readonly Regex _fence = new(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline);
-
     /// <summary>Splits markdown into prose and fenced code blocks; the fence language picks the grammar.</summary>
     internal static IEnumerable<(string Text, string? Lang)> Fences(string md)
     {
         var at = 0;
-        foreach (Match m in _fence.Matches(md))
+        foreach (Match m in FenceBlock().Matches(md))
         {
             if (m.Index > at && md[at..m.Index].Trim() != "")
             {
@@ -132,7 +130,7 @@ internal partial class ReadableLog
     }
 
     /// <summary>Markdown in the body font; a Source toggle shows the text as written.</summary>
-    private static Control Rendered(string md)
+    private static StackPanel Rendered(string md)
     {
         var view = new ContentControl { Content = MarkdownView.Document(md) };
         var source = false;
@@ -146,11 +144,11 @@ internal partial class ReadableLog
         return new StackPanel { Spacing = 4, Children = { toggle, view } };
     }
 
-    private static Control Plain(string text) =>
+    private static SelectableTextBlock Plain(string text) =>
         new SelectableTextBlock { Text = text, FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, Text);
 
     /// <summary>Shell output with its colors. Palette follows the theme at the time the step is opened.</summary>
-    private static Control AnsiText(List<TextDecode.AnsiRun> runs)
+    private static SelectableTextBlock AnsiText(List<TextDecode.AnsiRun> runs)
     {
         var tb = new SelectableTextBlock { FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, Text);
         var dark = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -189,4 +187,7 @@ internal partial class ReadableLog
     }
 
     private static string FirstLine(string s) { var l = s.TrimStart().Split('\n')[0]; return l.Length > 120 ? l[..120] + "…" : l; }
+
+    [GeneratedRegex(@"```([\w+#.-]*)[^\n]*\n(.*?)```", RegexOptions.Singleline)]
+    private static partial Regex FenceBlock();
 }

@@ -59,7 +59,7 @@ internal static class ColorSettings
     private static string Hex(Color c) => c.A == 255 ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
 
     /// <summary>[swatch: opens the picker][#RRGGBB][opacity %][↺] plus a contrast note. Opacity is its own 0–100% setting; the stored value is #RRGGBB or #AARRGGBB.</summary>
-    private static Control Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
+    private static StackPanel Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
     {
         var current = Theme.ParseHex(value) ?? fallback;
         var box = new TextBox { Text = value == null ? "" : Rgb(current), PlaceholderText = Rgb(fallback), Width = 110, FontFamily = Theme.Mono };
@@ -70,7 +70,7 @@ internal static class ColorSettings
         void Commit()
         {
             var t = (box.Text ?? "").Trim();
-            Color? rgb = t == "" ? null : Theme.ParseHex(t.StartsWith('#') ? t : "#" + t);
+            var rgb = t == "" ? null : Theme.ParseHex(t.StartsWith('#') ? t : "#" + t);
             if (t != "" && rgb == null) { box.Text = value == null ? "" : Rgb(current); return; }   // invalid hex: put the old value back
             var pct = (int)Math.Clamp(opacity.Value ?? defaultPct, 0, 100);
             if (rgb == null && pct == defaultPct) { if (value != null) { set(null); } return; }

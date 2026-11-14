@@ -55,7 +55,7 @@ internal static class AppearanceSection
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var r = grid.RowDefinitions.Count - 1;
             var l = Txt(label, 14, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-            Control v = hint == null ? c : Row(c, Txt(hint, 12, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
+            var v = hint == null ? c : Row(c, Txt(hint, 12, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
             Grid.SetRow(l, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
             grid.Children.Add(l); grid.Children.Add(v);
         }

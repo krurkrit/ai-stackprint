@@ -50,7 +50,7 @@ internal class AppDetailView(Ctx x)
         return Txt(label, 13).With(t => ToolTip.SetTip(t, tip));
     }
 
-    private Control Header(AppDefinition d, AppInfo? info)
+    private StackPanel Header(AppDefinition d, AppInfo? info)
     {
         var installed = info?.Installed == true;
         var chips = Row(Chip(d.Category),
@@ -97,7 +97,7 @@ internal class AppDetailView(Ctx x)
     /// <summary>Usage card for apps whose session logs have a usage parser; nothing for the others.</summary>
     private Control Usage(AppDefinition d) => UsageCard.Supports(d) ? new UsageCard(x, d, _usage).Build() : new Panel();
 
-    private Control Configs(List<Item> items)
+    private Border Configs(List<Item> items)
     {
         var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Description).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var rows = cfg.Select(i => new TableRow(
@@ -139,7 +139,7 @@ internal class AppDetailView(Ctx x)
             manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : Array.Empty<Control>());
     }
 
-    private Control Skills(AppDefinition d, List<Item> items)
+    private Border Skills(AppDefinition d, List<Item> items)
     {
         if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); }
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => Levels.Rank(i.Level)).ThenBy(i => i.Name).ToList();

@@ -15,6 +15,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal class SkillFilter
 {
+    private static readonly string[] _invokedValues = ["Agent only", "User only", "Agent and User"];
     private readonly HashSet<string> _offLevels = [];   // unchecked levels; empty = all checked
     private string _invoked = "", _from = "";   // "" = all
     private bool _byInvoked, _byFrom;                  // Group by check boxes
@@ -37,7 +38,7 @@ internal class SkillFilter
     {
         _changed = changed;
         var levels = Levels.Order.Where(l => items.Any(s => s.Level == l)).ToList();
-        var invoked = skill ? new[] { "Agent only", "User only", "Agent and User" }.Where(v => items.Any(s => SkillMatch.Label(s) == v)).ToList() : [];
+        var invoked = skill ? _invokedValues.Where(v => items.Any(s => SkillMatch.Label(s) == v)).ToList() : [];
         var froms = skill ? items.Select(AppDetailView.From).Distinct().OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList() : [];
         // Values no longer offered would hide items with no control left to undo it
         KeepOffered(_offLevels, levels);

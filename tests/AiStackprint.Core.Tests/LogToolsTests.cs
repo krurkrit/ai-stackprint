@@ -107,7 +107,7 @@ public sealed class LogToolsTests : IDisposable
         File.WriteAllText(file, "a");
         var batches = new System.Collections.Concurrent.ConcurrentQueue<LogFolderWatcher.Batch>();
         using var w = new LogFolderWatcher([(dir, "*.log", false)], file, TimeSpan.FromMilliseconds(300)) { Quiet = TimeSpan.FromMilliseconds(150) };
-        w.Changed += b => batches.Enqueue(b);
+        w.Changed += batches.Enqueue;
         File.WriteAllText(Path.Combine(dir, "notes.txt"), "x");   // not a log file: ignored
         Thread.Sleep(600);
         Assert.Empty(batches);

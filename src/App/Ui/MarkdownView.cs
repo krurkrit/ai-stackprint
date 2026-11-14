@@ -82,7 +82,7 @@ internal static class MarkdownView
             }
 
             built = true;
-            IBrush? link = tb.TryFindResource(Link, tb.ActualThemeVariant, out var o) ? o as IBrush : null;
+            var link = tb.TryFindResource(Link, tb.ActualThemeVariant, out var o) ? o as IBrush : null;
             tb.Inlines ??= [];
             var links = new List<(int Start, int Length, string Url)>();
             var at = 0;

@@ -19,7 +19,7 @@ internal partial class MainWindow
     private Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!;
     private WindowState _beforeFullScreen = WindowState.Normal;
 
-    private Control TitleBar()
+    private Border TitleBar()
     {
         var mac = OperatingSystem.IsMacOS();
         ExtendClientAreaToDecorationsHint = true;

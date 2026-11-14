@@ -40,7 +40,7 @@ internal static class PieChart
     }
 
     /// <summary>Ring segment from <paramref name="a0"/> to <paramref name="a1"/> degrees (0 = top, clockwise); a card-colored edge leaves a gap between slices.</summary>
-    private static Control Slice(double c, double a0, double a1, string key)
+    private static Avalonia.Controls.Shapes.Path Slice(double c, double a0, double a1, string key)
     {
         Point P(double r, double deg) { var a = (deg - 90) * Math.PI / 180; return new Point(c + r * Math.Cos(a), c + r * Math.Sin(a)); }
         var large = a1 - a0 > 180;

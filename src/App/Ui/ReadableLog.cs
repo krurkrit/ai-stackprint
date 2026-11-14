@@ -134,7 +134,7 @@ internal partial class ReadableLog
         }
     }
 
-    private static Control Summary(Session s)
+    private static WrapPanel Summary(Session s)
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
@@ -167,7 +167,7 @@ internal partial class ReadableLog
     private static TextBlock L(string s, bool bold = false, string key = Text, double delta = 0) =>
         new TextBlock { Text = s, FontSize = Theme.MonoSize + delta, FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, key);
 
-    private static Control LogChip(string s) =>
+    private static Border LogChip(string s) =>
         new Border { CornerRadius = new CornerRadius(999), Padding = new Thickness(10, 4), Child = L(s, true), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 8, 8) }
             .Themed(Border.BackgroundProperty, Subtle);
 
@@ -184,7 +184,7 @@ internal partial class ReadableLog
     };
 
     /// <param name="mine">Your own message: indented 20 px from the left; the assistant's keeps 20 px free on the right. Both read left to right.</param>
-    private static Control Message(string icon, string who, LogEntry e, string bg, bool mine = false)
+    private static Border Message(string icon, string who, LogEntry e, string bg, bool mine = false)
     {
         var time = L(e.Time?.ToString("HH:mm:ss") ?? "", false, Muted, -1).With(t => t.VerticalAlignment = VerticalAlignment.Center);
         var head = Row(Icon(icon, 16).Themed(TextElement.ForegroundProperty, Accent), L(who, true), time);

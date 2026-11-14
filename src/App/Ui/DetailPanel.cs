@@ -57,7 +57,7 @@ internal partial class DetailPanel(Ctx x)
         _host.Content = new DockPanel { Margin = new Thickness(32, 12, 32, 16), Children = { head, grid } };
     }
 
-    private Control Header()
+    private DockPanel Header()
     {
         var d = x.S.Def(It.App);
         var chips = new WrapPanel { ItemSpacing = 6, LineSpacing = 6, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
@@ -96,7 +96,7 @@ internal partial class DetailPanel(Ctx x)
     }
 
     /// <summary>Left column: description, where it is, who can start it, front matter, size, checks.</summary>
-    private Control Meta()
+    private StackPanel Meta()
     {
         var sp = new StackPanel { Spacing = 12 };
         SkillDoc? doc = null;
@@ -203,7 +203,7 @@ internal partial class DetailPanel(Ctx x)
         return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = 6, Children = { Txt("Contains", 13, false, Muted), parts } };
     }
 
-    private static Control Findings(List<Finding> f)
+    private static StackPanel Findings(List<Finding> f)
     {
         var sp = new StackPanel { Spacing = 6, Children = { Txt("Checks", 13, false, Muted) } };
         foreach (var x in f)

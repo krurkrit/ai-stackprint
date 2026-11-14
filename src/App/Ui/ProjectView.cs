@@ -52,7 +52,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
     }
 
     /// <summary>Instruction/settings files read in this project, one row per file with every app that reads it.</summary>
-    private static Control Configs(List<Item> all)
+    private static Border Configs(List<Item> all)
     {
         var rows = all.Where(i => i.Kind == "Config").GroupBy(i => i.Path)
             .OrderBy(g => Array.IndexOf(_order, g.First().Level)).ThenBy(g => g.First().Name)

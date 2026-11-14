@@ -32,7 +32,7 @@ internal class SettingsView(Ctx x)
                     st.HiddenApps.Add(d.Id);
                 }
             });
-            Control status = hidden ? Txt("Not scanned", 13, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", 13, false, Muted);
+            var status = hidden ? Txt("Not scanned", 13, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", 13, false, Muted);
             var origin = d.Origin switch { AppOrigin.Custom => "Custom", AppOrigin.Override => "Customised", _ => "Built-in" };
             return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), 13, false, Muted), Txt(origin, 13, false, Muted), status, shown]);
         });

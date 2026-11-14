@@ -119,7 +119,7 @@ internal class AppsView(Ctx x)
     private string Key(Models.AppInfo a) => (_byCat ? a.Category : "") + "|" + (_byStatus ? (a.Installed ? "0" : "1") : "");
     private IEnumerable<string> Keys(IEnumerable<Models.AppInfo> apps) => apps.Select(Key).Distinct();
 
-    private Control Count(string id, string kind, bool installed)
+    private TextBlock Count(string id, string kind, bool installed)
     {
         var n = x.Count(id, kind);
         return Txt(n == 0 && !installed ? "-" : n.ToString());

@@ -159,7 +159,7 @@ internal class ItemBrowser
         Actions(i)
     ], () => Pick(i), _sel != null && Same(i, _sel));
 
-    private Control Actions(Item i)
+    private StackPanel Actions(Item i)
     {
         var sp = (StackPanel)W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(_x.Owner, i.Path)));
         sp.Spacing = 0;

@@ -96,7 +96,7 @@ public class CopilotLimits : ILimitProvider
 /// Cursor: the session token the IDE keeps in state.vscdb (read-only), GET cursor.com/api/usage-summary as its dashboard does.
 /// The reply's shape is not published: only percentages and used/limit pairs found in it are shown.
 /// </summary>
-public class CursorLimits : ILimitProvider
+public partial class CursorLimits : ILimitProvider
 {
     public string Id => "cursor";
     public string Host => "cursor.com";
@@ -184,5 +184,8 @@ public class CursorLimits : ILimitProvider
         return new(plan == null ? null : LimitProviders.Cap(plan), list, now, list.Count == 0 ? "Cursor's reply had no usage figures this app recognizes." : null);
     }
 
-    private static string Name(string key) => LimitProviders.Cap(System.Text.RegularExpressions.Regex.Replace(key, "(?<=[a-z])([A-Z])", " $1").ToLowerInvariant());
+    private static string Name(string key) => LimitProviders.Cap(WordStart().Replace(key, " $1").ToLowerInvariant());
+
+    [System.Text.RegularExpressions.GeneratedRegex("(?<=[a-z])([A-Z])")]
+    private static partial System.Text.RegularExpressions.Regex WordStart();
 }

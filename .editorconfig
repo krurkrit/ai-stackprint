@@ -365,6 +365,8 @@ dotnet_diagnostic.S6444.severity = none
 dotnet_diagnostic.S6966.severity = none
 
 [tests/**.cs]
+# CA1861: inline expected arrays keep each test readable; tests run once, so there is nothing to cache
+dotnet_diagnostic.CA1861.severity = none
 # S2925: the file-watcher tests wait for real file system events
 dotnet_diagnostic.S2925.severity = none
 # CA1018: Mark attributes with AttributeUsageAttribute

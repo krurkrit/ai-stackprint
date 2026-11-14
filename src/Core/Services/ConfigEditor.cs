@@ -33,7 +33,7 @@ public static class ConfigEditor
     /// <summary>Error message when the text is not valid for its file type, else null. JSON is checked (comments and trailing commas allowed); other formats are not.</summary>
     public static string? Validate(string path, string text)
     {
-        if (!Path.GetExtension(path).ToLowerInvariant().StartsWith(".json"))
+        if (!Path.GetExtension(path).StartsWith(".json", StringComparison.OrdinalIgnoreCase))
         {
             return null;
         }
