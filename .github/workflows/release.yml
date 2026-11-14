@@ -48,7 +48,7 @@ jobs:
       - name: Version is the tag
         shell: pwsh
         run: |
-          $v = (dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion).Trim()
+          $v = (dotnet msbuild src/App/AiStackprint.App.csproj -restore -t:MinVer -getProperty:MinVerVersion).Trim()
           if ("v$v" -ne "${{ github.ref_name }}") { throw "MinVer worked out $v, not the tag ${{ github.ref_name }}" }
       - name: Test
         run: dotnet test AiStackprint.slnx -c Release

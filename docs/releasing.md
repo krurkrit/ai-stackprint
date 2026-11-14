@@ -3,7 +3,7 @@
 Installers are built with [Velopack](https://velopack.io) (MIT): `vpk` packs the published app, and the app calls `VelopackApp.Build().Run()` first thing in `Main` so the installer can run its install, update and uninstall hooks.
 
 ## Publish a release
-The version is the git tag; no file holds it. [MinVer](https://github.com/adamralph/minver) (Apache-2.0, build-only) reads the latest `v*` tag on every build: a tagged commit builds as that version (`0.2.0`), later commits as the next patch with a pre-release label (`0.2.1-alpha.0.3`: 3 commits after `v0.2.0`), so a test build never looks like a release. Check what this checkout builds as: `dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion`.
+The version is the git tag; no file holds it. [MinVer](https://github.com/adamralph/minver) (Apache-2.0, build-only) reads the latest `v*` tag on every build: a tagged commit builds as that version (`0.2.0`), later commits as the next patch with a pre-release label (`0.2.1-alpha.0.3`: 3 commits after `v0.2.0`), so a test build never looks like a release. Check what this checkout builds as: `dotnet msbuild src/App/AiStackprint.App.csproj -restore -t:MinVer -getProperty:MinVerVersion`.
 
 1. Tag the commit on `main` and push the tag:
    ```bash

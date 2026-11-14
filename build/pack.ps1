@@ -11,7 +11,7 @@ $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
 # MinVer works out the version from the git tag (v1.2.3); the target has to run, a plain -getProperty:Version only sees the SDK default
-$version = (dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion).Trim()
+$version = (dotnet msbuild src/App/AiStackprint.App.csproj -restore -t:MinVer -getProperty:MinVerVersion).Trim()
 if ($LASTEXITCODE -or -not $version) { throw "Could not work out the version (MinVer)" }
 $publish = "artifacts/publish/$Runtime"
 $work = "artifacts/icons"
