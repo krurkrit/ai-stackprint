@@ -12,6 +12,9 @@ The version is the git tag; no file holds it. [MinVer](https://github.com/adamra
    ```
 2. `.github/workflows/release.yml` runs on the tag. It checks that MinVer works out the tag's version, runs the tests, builds on Windows, Linux and macOS, and publishes one GitHub release with all three and its release notes.
 
+## Old releases
+After publishing, the workflow keeps the newest 5 releases (`KEEP` in the "Delete old releases" step) and deletes older ones with their files. Tags stay: history, git-cliff and MinVer use them. Drafts are not touched.
+
 ## Release notes
 [git-cliff](https://git-cliff.org) writes them from the commits since the previous `v*` tag (`cliff.toml`). They go into the installer packages (`vpk pack --releaseNotes`) and the GitHub release text.
 

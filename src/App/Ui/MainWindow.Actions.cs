@@ -111,7 +111,7 @@ internal partial class MainWindow
 
         if (first && CrashLog.TakeNew())
         {
-            Toast.Show("AI Stackprint closed unexpectedly last time. The details are in " + CrashLog.File, "warning", 12);
+            CrashNotice.Show(_x);
         }
     }
 }
