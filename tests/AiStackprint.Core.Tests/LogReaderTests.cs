@@ -30,7 +30,7 @@ public sealed class LogReaderTests : IDisposable
         Write("logs/sub/deep/c.log", "c", new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Local));
         Write("logs/notes.txt", "x", new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Local));
         var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = Path.Combine(_tmp, "logs"), Depth = 1 } } };
-        var found = LogReader.Find(d, Array.Empty<string>());
+        var found = LogReader.Find(d, []);
         Assert.Equal(["b.log", "a.log"], found.Select(f => Path.GetFileName(f.Path)));
     }
 

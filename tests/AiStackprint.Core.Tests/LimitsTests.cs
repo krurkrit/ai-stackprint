@@ -105,12 +105,12 @@ public sealed class LimitsTests : IDisposable
         var svc = new LimitsService(() => settings);
         var done = new ManualResetEventSlim();
         svc.Updated += _ => { if (!svc.Status("claude-code").Busy) { done.Set(); } };
-        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, Array.Empty<string>());
+        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, []);
         Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
         var st = svc.Status("claude-code");
         Assert.Equal(LimitState.Off, st.State);
         Assert.Null(st.Data);
-        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, Array.Empty<string>(), force: true);
+        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, [], force: true);
         Assert.False(svc.Status("claude-code").Busy);   // at most once a minute, even when forced
     }
 }
@@ -154,7 +154,7 @@ public sealed class ScanAndHealthTests : IDisposable
         var plugin = new Item("Plugin", "gone@market", "", "Claude Code", "User", Path.Combine(_tmp, "nope")) { App = "claude-code" };
         var skills = Enumerable.Range(0, 12).Select(i => new Item("Skill", $"s{i}", new string('d', 900), "Claude Code", "User", Path.Combine(_tmp, $"s{i}", "SKILL.md"))
         { App = "claude-code", Invokers = ["Agent", "User"] }).ToList();
-        var issues = Health.Compute(skills.Append(plugin).ToList());
+        var issues = Health.Compute([.. skills, plugin]);
         Assert.Contains(issues, h => h.Area == "Plugins" && h.Finding.Warning && h.Finding.Text.Contains("folder is missing"));
         Assert.Contains(issues, h => h.Subject == "Claude Code skill list" && h.Finding.Warning);
     }

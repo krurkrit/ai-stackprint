@@ -99,7 +99,7 @@ public static partial class Scanner
         }
 
         IEnumerable<string> dirs;
-        try { dirs = Directory.EnumerateDirectories(root).ToList(); }
+        try { dirs = [.. Directory.EnumerateDirectories(root)]; }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { yield break; }
         foreach (var d in dirs)
         {

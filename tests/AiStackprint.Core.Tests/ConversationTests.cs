@@ -62,7 +62,7 @@ public class ConversationTests
         var l0 = t.Lanes[0];
         Assert.Equal((T(5), T(10), T(30), T(50)), (l0.Fork, l0.Start, l0.End, l0.Merge));
         Assert.Equal(new[] { (T(10), T(40)) }, t.Waits);
-        Assert.Null(AgentTimelines.Build(e.Where(v => !v.SubAgent).ToList()));
+        Assert.Null(AgentTimelines.Build([.. e.Where(v => !v.SubAgent)]));
     }
 
     [Fact]

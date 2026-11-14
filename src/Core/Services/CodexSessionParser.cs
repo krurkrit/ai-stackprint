@@ -37,7 +37,7 @@ internal class CodexSessionParser : ILogParser
 
                             break;
                         case "reasoning":
-                            var sum = string.Join("\n", p.Get("summary") is { ValueKind: JsonValueKind.Array } s ? s.EnumerateArray().Select(x => x.Str("text")) : Array.Empty<string>());
+                            var sum = string.Join("\n", p.Get("summary") is { ValueKind: JsonValueKind.Array } s ? s.EnumerateArray().Select(x => x.Str("text")) : []);
                             if (sum != "")
                             {
                                 list.Add(new("thinking", sum, time, false));

@@ -136,7 +136,7 @@ internal class AppDetailView(Ctx x)
         ], () => x.Open(p)));
         var cols = new[] { new Col("Plugin", "3*"), new Col("Level", "1.2*"), new Col("Version", "1*"), new Col("Skills", ".6*", true), new Col("", "80") };
         return Section("puzzle_piece", $"Plugins · {plugins.Count}", Table.Build(cols, rows, "No plugins installed."),
-            manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : Array.Empty<Control>());
+            manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : []);
     }
 
     private Border Skills(AppDefinition d, List<Item> items)

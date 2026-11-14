@@ -74,7 +74,7 @@ internal static class FileView
         return r.ReadToEnd();
     }
 
-    private static StackPanel TooBig(string path, long len, bool binary = false) => new StackPanel
+    private static StackPanel TooBig(string path, long len, bool binary = false) => new()
     {
         Spacing = 10,
         Children = { Txt(binary ? "This file is not text." : $"This file is {LogViewer.Size(len)}, too large to show here.", 13, false, Muted),

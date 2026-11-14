@@ -138,10 +138,10 @@ internal static class DashboardView
 
         var max = top.Max(t => t.Skills + t.Plugins);
         var sp = new StackPanel { Spacing = 8 };
-        foreach (var t in top)
+        foreach (var (name, skills, plugins, other) in top)
         {
-            sp.Children.Add(Bar(Txt(t.Name, 13, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(t.Skills, ChartIn), (t.Plugins, ChartOut)], t.Skills + t.Plugins, max,
-                t.Other ? null : () => x.Browse(t.Skills >= t.Plugins ? "Skill" : "Plugin", null, t.Name), $"{t.Name}\nSkills: {t.Skills}\nPlugins: {t.Plugins}"));
+            sp.Children.Add(Bar(Txt(name, 13, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(skills, ChartIn), (plugins, ChartOut)], skills + plugins, max,
+                other ? null : () => x.Browse(skills >= plugins ? "Skill" : "Plugin", null, name), $"{name}\nSkills: {skills}\nPlugins: {plugins}"));
         }
 
         sp.Children.Add(Row(DotText("Skills", ChartIn), DotText("Plugins", ChartOut)).With(r => r.Margin = new Thickness(0, 4, 0, 0)));

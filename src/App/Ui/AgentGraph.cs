@@ -41,11 +41,11 @@ internal static class AgentGraph
             Grid.SetColumn(b, main.ColumnDefinitions.Count - 1);
             main.Children.Add(b);
         }
-        foreach (var w in t.Waits)
+        foreach (var (from, to) in t.Waits)
         {
-            Seg(at, F(w.From), ChartIn, "Main session");
-            Seg(F(w.From), Math.Max(F(w.To), F(w.From) + .004), ChartOut, $"Sub-agent running {w.From:HH:mm:ss} – {w.To:HH:mm:ss}");
-            at = Math.Max(F(w.To), F(w.From) + .004);
+            Seg(at, F(from), ChartIn, "Main session");
+            Seg(F(from), Math.Max(F(to), F(from) + .004), ChartOut, $"Sub-agent running {from:HH:mm:ss} – {to:HH:mm:ss}");
+            at = Math.Max(F(to), F(from) + .004);
         }
         Seg(at, 1, ChartIn, "Main session");
         rows.Children.Add(Lane("Main", main));

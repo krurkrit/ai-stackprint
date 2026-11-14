@@ -14,7 +14,7 @@ public record Item(string Kind, string Name, string Description, string Source, 
     public string? Scope { get; init; }           // raw plugin scope (user | project | local | managed)
     public bool Bundled { get; init; }            // ships with the app itself (e.g. Codex system skills)
     public string? LevelLabel { get; init; }      // the app's own word for the level (REPO, ADMIN, Workspace)
-    public IReadOnlyList<string> Invokers { get; init; } = Array.Empty<string>();   // skills: who can start it, "Agent" and/or "User" (from SKILL.md front matter)
+    public IReadOnlyList<string> Invokers { get; init; } = [];   // skills: who can start it, "Agent" and/or "User" (from SKILL.md front matter)
     public string? Version { get; init; }         // plugins: version from the app's plugin registry
     public string? Author { get; init; }          // plugin manifest author, or SKILL.md author / metadata.author
 }

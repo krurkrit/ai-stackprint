@@ -51,7 +51,7 @@ public sealed class LimitsService(Func<Settings> settings)
 
     private sealed class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
     private readonly Dictionary<string, Entry> _cache = [];
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <summary>Raised (on a worker thread) with the app id when its status changes.</summary>
     public event Action<string>? Updated;

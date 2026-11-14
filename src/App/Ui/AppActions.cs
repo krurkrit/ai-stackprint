@@ -110,8 +110,8 @@ internal static class AppActions
             return;
         }
 
-        var s = scopes[a.Choice];
-        await Run(x, "Install plugin", () => PluginManager.Install(d, a.Text, s.Scope, s.Project));
+        var (_, scope, project) = scopes[a.Choice];
+        await Run(x, "Install plugin", () => PluginManager.Install(d, a.Text, scope, project));
     }
 
     public static async void RemovePlugin(Ctx x, AppDefinition d, Item plugin)

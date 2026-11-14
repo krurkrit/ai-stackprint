@@ -29,6 +29,6 @@ public class PluginManagerTests
     public void Build_rejects_unknown_scope_and_empty_template()
     {
         Assert.Throws<ArgumentException>(() => PluginManager.Build(_template, "fmt", "managed"));
-        Assert.Throws<InvalidOperationException>(() => PluginManager.Build(Array.Empty<string>(), "fmt", "user"));
+        Assert.Throws<InvalidOperationException>(() => PluginManager.Build([], "fmt", "user"));
     }
 }

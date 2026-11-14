@@ -18,7 +18,7 @@ internal class LogSummaryCard
     /// <summary>Range shown: 7, 30 or 0 (all). Kept when the Logs page replaces the card.</summary>
     public int Days { get; set; } = 7;
     private CancellationTokenSource? _cts;
-    private IReadOnlyList<LogFile> _files = Array.Empty<LogFile>();
+    private IReadOnlyList<LogFile> _files = [];
 
     public Control Build(IReadOnlyList<LogFile> files)
     {
@@ -31,7 +31,7 @@ internal class LogSummaryCard
     }
 
     /// <summary>Leaving the page: stop any calculation and drop the shown result.</summary>
-    public void Release() { _cts?.Cancel(); _cts = null; _body.Content = null; _files = Array.Empty<LogFile>(); }
+    public void Release() { _cts?.Cancel(); _cts = null; _body.Content = null; _files = []; }
 
     /// <summary>Recomputes, e.g. after the watcher saw new files.</summary>
     public void Update(IReadOnlyList<LogFile> files) { _files = files; Refresh(); }
@@ -42,10 +42,7 @@ internal class LogSummaryCard
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _cts = new CancellationTokenSource();
 #pragma warning restore S2930
-        if (_body.Content == null)
-        {
-            _body.Content = Txt("Calculating…", 13, false, Muted);
-        }
+        _body.Content ??= Txt("Calculating…", 13, false, Muted);
 
         var files = _files; var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
         try

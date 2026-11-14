@@ -108,7 +108,7 @@ public sealed class LogFolderWatcher : IDisposable
         Batch b;
         lock (_lock)
         {
-            b = new Batch(_paths.ToList(), _structure);
+            b = new Batch([.. _paths], _structure);
             _paths.Clear(); _structure = false; _pending = false;
         }
         Changed?.Invoke(b);

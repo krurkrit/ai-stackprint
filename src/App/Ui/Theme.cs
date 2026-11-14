@@ -6,7 +6,6 @@ using AiStackprint.Models;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 
@@ -243,5 +242,5 @@ internal static class Theme
 
     private static Color C(string hex) => Color.Parse(hex);
     private static Color A(Color c, double a) => Color.FromArgb((byte)Math.Round(a * 255), c.R, c.G, c.B);
-    private static Avalonia.Media.Immutable.ImmutableSolidColorBrush B(Color c) => new ImmutableSolidColorBrush(c);
+    private static Avalonia.Media.Immutable.ImmutableSolidColorBrush B(Color c) => new(c);
 }

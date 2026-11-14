@@ -16,10 +16,10 @@ public class ThemeTests
     [InlineData(true)]
     public void Status_colors_read_on_both_backgrounds(bool dark)
     {
-        var s = Theme.Status(dark);
-        foreach (var c in new[] { s.Error, s.Warning, s.Success })
+        var (error, warning, success, background, main) = Theme.Status(dark);
+        foreach (var c in new[] { error, warning, success })
         {
-            foreach (var bg in new[] { s.Background, s.Main })
+            foreach (var bg in new[] { background, main })
             {
                 Assert.True(Contrast.Ratio(c.ToUInt32(), bg.ToUInt32()) >= 4.5, $"{c} on {bg}");
             }

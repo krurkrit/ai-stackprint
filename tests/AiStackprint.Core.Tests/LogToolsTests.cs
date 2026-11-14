@@ -133,7 +133,7 @@ public sealed class LogToolsTests : IDisposable
         var f = Log("sessions/p1/s.jsonl", "{}\n");
         var def = new AppDefinition { Id = "app", Logs = { new LogSource { Path = Path.Combine(_tmp, "sessions"), Pattern = "*.jsonl", Depth = 2 }, new LogSource { Path = Path.Combine(_tmp, "one.log") } } };
         File.WriteAllText(Path.Combine(_tmp, "one.log"), "x");
-        var roots = LogReader.Roots(def, Array.Empty<string>());
+        var roots = LogReader.Roots(def, []);
         Assert.Contains((Path.Combine(_tmp, "sessions"), "*.jsonl", true), roots);
         Assert.Contains((_tmp, "one.log", false), roots);
         File.AppendAllText(f.Path, "{}\n");

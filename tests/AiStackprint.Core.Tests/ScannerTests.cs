@@ -74,7 +74,7 @@ public sealed class ScannerTests : IDisposable
             Name = "Codex",
             Roots = { new ScanRoot { Path = home }, new ScanRoot { Path = Path.Combine(home, ".system"), Bundled = true } }
         };
-        var skills = Scanner.Collect([d], Array.Empty<string>()).Items.Where(i => i.Kind == "Skill").ToList();
+        var skills = Scanner.Collect([d], []).Items.Where(i => i.Kind == "Skill").ToList();
         Assert.True(Assert.Single(skills, s => s.Name == "skill-creator").Bundled);
         Assert.False(Assert.Single(skills, s => s.Name == "mine").Bundled);
         Assert.NotNull(SkillManager.CannotRemove(skills.First(s => s.Bundled)));

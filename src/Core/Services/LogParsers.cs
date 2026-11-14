@@ -20,7 +20,7 @@ public interface ILogParser
     Session Parse(IEnumerable<string> lines);
 
     /// <summary>Billed responses in the session (for the Usage card). Formats without usage data return nothing.</summary>
-    IEnumerable<UsageEvent> Usage(IEnumerable<string> lines) => Array.Empty<UsageEvent>();
+    IEnumerable<UsageEvent> Usage(IEnumerable<string> lines) => [];
 
     /// <summary>Usage of one file. Line formats read its newest <see cref="LogSummary.SessionBytes"/>; a database reads it whole.</summary>
     IEnumerable<UsageEvent> UsageFile(string path) => Usage(LogReader.Lines(path, LogSummary.SessionBytes));
@@ -29,7 +29,7 @@ public interface ILogParser
     bool WholeFile => false;
 
     /// <summary>Usage-limit readings the app wrote into the log (used % per window, reset time). Formats without them return nothing.</summary>
-    IEnumerable<LimitSample> Limits(IEnumerable<string> lines) => Array.Empty<LimitSample>();
+    IEnumerable<LimitSample> Limits(IEnumerable<string> lines) => [];
 }
 
 public static class LogParsers
