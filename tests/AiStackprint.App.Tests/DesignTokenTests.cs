@@ -28,16 +28,24 @@ public partial class DesignTokenTests
                 continue;
             }
 
+            // The whole file as one text (strings, comments and const lines blanked), so a call that spans lines is read whole
             var lines = File.ReadAllLines(file);
+            var code = lines.Select(Code).Select(l => Const().IsMatch(l) ? "" : l).ToArray();
+            var starts = new int[code.Length];
+            for (var i = 1; i < code.Length; i++)
+            {
+                starts[i] = starts[i - 1] + code[i - 1].Length + 1;
+            }
+
+            foreach (var (at, why) in Problems(string.Join('\n', code)))
+            {
+                var line = Array.FindLastIndex(starts, s => s <= at);
+                bad.Add($"{name}:{line + 1}: {why}: {lines[line].Trim()}");
+            }
+
             for (var i = 0; i < lines.Length; i++)
             {
-                var code = Code(lines[i]);
-                if (Const().IsMatch(code))
-                {
-                    continue;
-                }
-
-                foreach (var why in Problems(code, lines[i]))
+                foreach (var why in GridSizes(lines[i]))
                 {
                     bad.Add($"{name}:{i + 1}: {why}: {lines[i].Trim()}");
                 }
@@ -47,36 +55,40 @@ public partial class DesignTokenTests
         Assert.True(bad.Count == 0, $"{bad.Count} literal sizes in views; use the tokens in Tokens.cs:\n" + string.Join("\n", bad));
     }
 
-    private static IEnumerable<string> Problems(string code, string raw)
+    /// <summary>Each literal size in <paramref name="code"/>: where it starts and what it is.</summary>
+    private static IEnumerable<(int At, string Why)> Problems(string code)
     {
         foreach (Match m in Assign().Matches(code))
         {
-            yield return m.Groups[1].Value;
+            yield return (m.Index, m.Groups[1].Value);
         }
 
         foreach (var call in _exprCalls)
         {
-            foreach (var args in Calls(code, call))
+            foreach (var (at, args) in Calls(code, call))
             {
                 if (args.Any(a => Number().Matches(a).Any(n => n.Value != "0")))
                 {
-                    yield return call;
+                    yield return (at, call);
                 }
             }
         }
 
         foreach (var call in _sizeCalls)
         {
-            foreach (var args in Calls(code, call))
+            foreach (var (at, args) in Calls(code, call))
             {
                 if (args.Skip(1).Any(a => Number().IsMatch(a) && Number().Match(a).Value == a && a != "0"))
                 {
-                    yield return call;
+                    yield return (at, call);
                 }
             }
         }
+    }
 
-        // Grid sizes written as text: "170,*,48" (stars and Auto are proportions, not sizes)
+    /// <summary>Grid sizes written as text: "170,*,48" (stars and Auto are proportions, not sizes).</summary>
+    private static IEnumerable<string> GridSizes(string raw)
+    {
         foreach (Match m in GridText().Matches(raw))
         {
             if (m.Groups[1].Value.Split(',').Any(p => double.TryParse(p.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var v) && v != 0))
@@ -87,7 +99,7 @@ public partial class DesignTokenTests
     }
 
     /// <summary>Top-level arguments of each call to <paramref name="name"/> in <paramref name="code"/> (strings already removed).</summary>
-    private static IEnumerable<List<string>> Calls(string code, string name)
+    private static IEnumerable<(int At, List<string> Args)> Calls(string code, string name)
     {
         foreach (Match m in Regex.Matches(code, $@"(?<![\w.]){Regex.Escape(name)}\("))
         {
@@ -108,7 +120,7 @@ public partial class DesignTokenTests
                 }
             }
 
-            yield return args;
+            yield return (m.Index, args);
         }
     }
 

@@ -128,7 +128,7 @@ internal partial class UsageCard
         }
 
         sp.Children.Add(Txt(limits.Count > 0 ? "Percent and reset time are what the app wrote in its log; they update when the app runs. Tokens exclude cache reads."
-            : "A block starts at the first message after a 5-hour gap. Tokens exclude cache reads.", 12, false, Muted));
+            : "A block starts at the first message after a 5-hour gap. Tokens exclude cache reads.", TextSize.Caption, false, Muted));
         return sp;
     }
 

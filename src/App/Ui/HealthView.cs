@@ -25,7 +25,7 @@ internal class HealthView(Ctx x)
         head.Children.Add(pills);
         head.Children.Add(H1("Health"));
         var intro = Txt("Skills checked against the Agent Skills format (agentskills.io), Claude Code's skill-list budget, duplicate names, and plugins that are missing or run programs. " +
-            "Context limits per project are on each project page.", 13, false, Muted);
+            "Context limits per project are on each project page.", TextSize.Small, false, Muted);
 
         var page = new List<Control> { head, intro };
         var shown = issues.Where(i => _all || i.Finding.Warning).ToList();

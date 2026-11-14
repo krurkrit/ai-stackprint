@@ -36,7 +36,7 @@ internal static class UpdateView
             Children =
             {
                 Txt($"This is version {UpdateCheck.Label}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo}; nothing about you or this computer is sent. " +
-                    "Off until you turn it on. New versions are downloaded from the release page, not by this app.", 13, false, Muted),
+                    "Off until you turn it on. New versions are downloaded from the release page, not by this app.", TextSize.Small, false, Muted),
                 daily,
                 Row(Btn("Check now", () => CheckNow(x, result), false, "arrow_sync"), result)
             }
