@@ -16,7 +16,7 @@ namespace AiStackprint.Ui;
 /// Project page: for each app with a context rule, the instruction files it loads in this project, in order, when (at launch, on demand,
 /// for matching files), their size and the running total against the app's limit, with warnings. Click a file to read it here; @imports are listed under it.
 /// </summary>
-internal class ContextSection(Ctx x)
+internal partial class ContextSection(Ctx x)
 {
     private string? _project, _start, _preview;
     private object? _scan;   // the scan the cached reports belong to: a rescan reads the files again
@@ -70,7 +70,19 @@ internal class ContextSection(Ctx x)
     private StackPanel Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
     {
         var sp = new StackPanel { Spacing = Space.XXXL };
-        foreach (var (app, r) in reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true))
+        var shown = reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true).ToList();
+        if (shown.Count(r => r.Report.Files.Count > 0) > 1)
+        {
+            sp.Children.Add(Pills([("By app", "app"), ("By file", "file")], _byFile ? "file" : "app", v => { _byFile = v == "file"; _host.Content = Show(reports); }));
+        }
+
+        if (_byFile && shown.Count(r => r.Report.Files.Count > 0) > 1)
+        {
+            sp.Children.Add(Matrix(shown));
+            return sp;
+        }
+
+        foreach (var (app, r) in shown)
         {
             sp.Children.Add(App(app, r));
         }

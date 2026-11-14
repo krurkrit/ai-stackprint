@@ -29,6 +29,12 @@
       {"path": ".mcp.json", "level": "Project", "kind": "mcp"},
       {"path": "~/.claude.json", "level": "User", "kind": "mcp", "label": "User and local MCP", "appWritten": true}
     ],
+    "parts": [
+      {"path": "~/.claude/commands", "kind": "command"},
+      {"path": "~/.claude/agents", "kind": "agent"},
+      {"path": ".claude/commands", "level": "Project", "kind": "command"},
+      {"path": ".claude/agents", "level": "Project", "kind": "agent"}
+    ],
     "pluginFormat": "claude",
     "pluginManifest": "~/.claude/plugins/installed_plugins.json",
     "pluginCommands": {"install": ["claude", "plugin", "install", "{plugin}", "--scope", "{scope}"], "remove": ["claude", "plugin", "uninstall", "{plugin}", "--scope", "{scope}"]},
@@ -54,6 +60,16 @@
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions"},
       {"path": "~/.config/opencode/opencode.json", "level": "User", "kind": "settings"},
       {"path": "opencode.json", "level": "Project", "kind": "settings"}
+    ],
+    "parts": [
+      {"path": "~/.config/opencode/commands", "kind": "command"},
+      {"path": "~/.config/opencode/command", "kind": "command"},
+      {"path": "~/.config/opencode/agents", "kind": "agent"},
+      {"path": "~/.config/opencode/agent", "kind": "agent"},
+      {"path": ".opencode/commands", "level": "Project", "kind": "command"},
+      {"path": ".opencode/command", "level": "Project", "kind": "command"},
+      {"path": ".opencode/agents", "level": "Project", "kind": "agent"},
+      {"path": ".opencode/agent", "level": "Project", "kind": "agent"}
     ],
     "plugins": [
       {"format": "opencode-files", "path": "~/.config/opencode/plugins"},
@@ -86,6 +102,9 @@
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "nested": true, "label": "REPO"},
       {"path": "~/.codex/config.toml", "level": "User", "kind": "settings"}
     ],
+    "parts": [
+      {"path": "~/.codex/prompts", "kind": "command", "depth": 0, "label": "Prompts"}
+    ],
     "plugins": [
       {"format": "codex", "path": "~/.codex/config.toml"}
     ],
@@ -108,7 +127,13 @@
       {"path": ".cursor/rules", "level": "Project", "kind": "instructions", "label": "Workspace"},
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Workspace"},
       {"path": "~/.cursor/mcp.json", "level": "User", "kind": "mcp", "label": "Global"},
-      {"path": ".cursor/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
+      {"path": ".cursor/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"},
+      {"path": ".cursorignore", "level": "Project", "kind": "ignore", "label": "Workspace"},
+      {"path": ".cursorindexingignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
+    ],
+    "parts": [
+      {"path": "~/.cursor/commands", "kind": "command", "label": "Global"},
+      {"path": ".cursor/commands", "level": "Project", "kind": "command", "label": "Workspace"}
     ],
     "plugins": [
       {"format": "folders", "path": "~/.cursor/plugins", "depth": 4, "manifests": [".cursor-plugin/plugin.json", ".claude-plugin/plugin.json"]},
@@ -119,7 +144,7 @@
       {"path": "~/Library/Application Support/Cursor/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Cursor/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Plugin (~/.cursor/plugins) and extension paths are best-effort."
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Plugin (~/.cursor/plugins) and extension paths are best-effort. Command folders (.cursor/commands, ~/.cursor/commands) are best-effort."
   },
   {
     "id": "gemini-cli", "context": "gemini", "limits": "gemini", "name": "Gemini CLI", "category": "agent", "logo": "geminicli",
@@ -134,7 +159,12 @@
       {"path": "~/.gemini/GEMINI.md", "level": "User", "kind": "instructions"},
       {"path": "GEMINI.md", "level": "Project", "kind": "instructions", "nested": true, "label": "Workspace"},
       {"path": "~/.gemini/settings.json", "level": "User", "kind": "settings"},
-      {"path": ".gemini/settings.json", "level": "Project", "kind": "settings", "label": "Workspace"}
+      {"path": ".gemini/settings.json", "level": "Project", "kind": "settings", "label": "Workspace"},
+      {"path": ".geminiignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
+    ],
+    "parts": [
+      {"path": "~/.gemini/commands", "kind": "command", "pattern": "*.toml"},
+      {"path": ".gemini/commands", "level": "Project", "kind": "command", "pattern": "*.toml", "label": "Workspace"}
     ],
     "plugins": [
       {"format": "folders", "path": "~/.gemini/extensions", "depth": 1, "manifests": ["gemini-extension.json"], "label": "Extensions"},
@@ -158,7 +188,12 @@
       {"path": "~/.codeium/windsurf/memories/global_rules.md", "level": "User", "kind": "instructions", "label": "Global"},
       {"path": ".windsurf/rules", "level": "Project", "kind": "instructions", "label": "Workspace"},
       {"path": ".devin/rules", "level": "Project", "kind": "instructions", "label": "Workspace (Devin Desktop)"},
-      {"path": "~/.codeium/windsurf/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"}
+      {"path": "~/.codeium/windsurf/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"},
+      {"path": ".codeiumignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
+    ],
+    "parts": [
+      {"path": "~/.codeium/windsurf/global_workflows", "kind": "command", "label": "Global workflows"},
+      {"path": ".windsurf/workflows", "level": "Project", "kind": "command", "label": "Workflows"}
     ],
     "plugins": [
       {"format": "vscode", "path": "~/.windsurf/extensions", "label": "Extensions"}
@@ -168,7 +203,7 @@
       {"path": "~/Library/Application Support/Windsurf/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Windsurf/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort (from the skills CLI agent table); edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Extension path is best-effort."
+    "notes": "Skill paths are best-effort (from the skills CLI agent table); edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Extension path is best-effort. The global workflows folder is best-effort."
   },
   {
     "id": "github-copilot", "context": "copilot", "limits": "copilot", "name": "GitHub Copilot", "category": "agent", "logo": "githubcopilot",
@@ -188,6 +223,12 @@
       {"path": "%APPDATA%/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "windows", "label": "VS Code"},
       {"path": "~/Library/Application Support/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "macos", "label": "VS Code"},
       {"path": "~/.config/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "linux", "label": "VS Code"}
+    ],
+    "parts": [
+      {"path": "~/.copilot/agents", "kind": "agent", "label": "Copilot CLI"},
+      {"path": ".github/prompts", "level": "Project", "kind": "command", "pattern": "*.prompt.md", "label": "Prompts"},
+      {"path": ".github/agents", "level": "Project", "kind": "agent", "label": "Repository"},
+      {"path": ".github/chatmodes", "level": "Project", "kind": "agent", "pattern": "*.chatmode.md", "label": "Chat modes (legacy)"}
     ],
     "plugins": [
       {"format": "folders", "path": "~/.copilot/state/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]},
@@ -254,6 +295,12 @@
       {"path": "~/.qwen/settings.json", "level": "User", "kind": "settings"},
       {"path": ".qwen/settings.json", "level": "Project", "kind": "settings"}
     ],
+    "parts": [
+      {"path": "~/.qwen/commands", "kind": "command", "pattern": "*.md;*.toml"},
+      {"path": "~/.qwen/agents", "kind": "agent"},
+      {"path": ".qwen/commands", "level": "Project", "kind": "command", "pattern": "*.md;*.toml"},
+      {"path": ".qwen/agents", "level": "Project", "kind": "agent"}
+    ],
     "plugins": [
       {"format": "folders", "path": "~/.qwen/extensions", "depth": 1, "manifests": ["qwen-extension.json", "gemini-extension.json"], "label": "Extensions"},
       {"format": "folders", "path": ".qwen/extensions", "level": "Project", "depth": 1, "manifests": ["qwen-extension.json", "gemini-extension.json"], "label": "Extensions"}
@@ -261,13 +308,19 @@
     "logs": [
       {"path": "~/.qwen/tmp", "label": "Sessions", "pattern": "*.json", "depth": 3}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort."
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Command and agent folders are best-effort."
   },
   {
     "id": "factory-droid", "name": "Factory Droid", "category": "agent",
     "detect": ["~/.factory"],
     "roots": [
       {"path": "~/.factory/skills", "level": "User"}
+    ],
+    "parts": [
+      {"path": "~/.factory/commands", "kind": "command"},
+      {"path": "~/.factory/droids", "kind": "agent", "label": "Droids"},
+      {"path": ".factory/commands", "level": "Project", "kind": "command"},
+      {"path": ".factory/droids", "level": "Project", "kind": "agent", "label": "Droids"}
     ],
     "plugins": [
       {"format": "enabled-list", "path": "~/.factory/settings.json"},
@@ -276,7 +329,7 @@
     "logs": [
       {"path": "~/.factory/sessions", "label": "Sessions", "pattern": "*.jsonl", "depth": 2}
     ],
-    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Plugin settings and session paths are best-effort."
+    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Plugin settings and session paths are best-effort. Command and droid folders are best-effort."
   },
   {
     "id": "mistral-vibe", "name": "Mistral Vibe", "category": "agent", "logo": "mistral",
@@ -368,7 +421,8 @@
     ],
     "configs": [
       {"path": ".continue/rules", "level": "Project", "kind": "instructions"},
-      {"path": "~/.continue/config.yaml", "level": "User", "kind": "settings"}
+      {"path": "~/.continue/config.yaml", "level": "User", "kind": "settings"},
+      {"path": ".continueignore", "level": "Project", "kind": "ignore"}
     ],
     "logs": [
       {"path": "~/.continue/logs", "label": "Logs"}

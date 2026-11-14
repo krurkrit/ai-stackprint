@@ -84,9 +84,9 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
             e.Add(new("folder", Ctx.ProjectName(p), "Project · " + p, () => go("Project:" + p)));
         }
 
-        foreach (var i in x.S.Items.Where(i => i.Kind is "Skill" or "Plugin").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
+        foreach (var i in x.S.Items.Where(i => i.Kind is "Skill" or "Plugin" or "Command" or "Agent").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
         {
-            e.Add(new(i.Kind == "Skill" ? "sparkle" : "puzzle_piece", i.Name, $"{i.Kind} · {i.Source} · {i.Level}", () => x.Open(i)));
+            e.Add(new(i.Kind == "Plugin" ? "puzzle_piece" : "sparkle", i.Name, $"{i.Kind} · {i.Source} · {i.Level}", () => x.Open(i)));
         }
 
         return e;

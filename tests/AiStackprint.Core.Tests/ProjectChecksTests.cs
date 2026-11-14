@@ -75,7 +75,7 @@ public sealed class ProjectChecksTests : IDisposable
         Write("AGENTS.md", "   \n");
         var issues = Run().Issues;
 
-        var twice = Assert.Single(issues, i => i.Finding.Text.Contains("share"));
+        var twice = Assert.Single(issues, i => i.Finding.Text.Contains(" share "));
         Assert.Contains("claude-code", twice.Apps);
         Assert.Contains("share 10 lines", twice.Finding.Text);
         Assert.Contains(issues, i => i.Finding.Text == "AGENTS.md is empty.");
@@ -172,5 +172,26 @@ public sealed class ProjectChecksTests : IDisposable
 
         Directory.Delete(Path.Combine(_project, ".git"));   // not a git repository: nothing to commit
         Assert.DoesNotContain(Run().Issues, i => i.Finding.Text.Contains("personal file"));
+    }
+
+    [Fact]
+    public void Own_files_next_to_AGENTS_md_that_do_not_point_to_it_are_suggested()
+    {
+        Write("AGENTS.md", "Shared rules for every agent here.");
+        Write("CLAUDE.md", "Claude only rules.");
+        Write("GEMINI.md", "See @AGENTS.md for the rules.");
+        var shared = Run().Issues.Where(i => !i.Finding.Warning && i.Finding.Text.Contains("does not point to AGENTS.md")).ToList();
+        var one = Assert.Single(shared);
+        Assert.Contains("CLAUDE.md", one.Finding.Text);
+        Assert.Contains("@AGENTS.md", one.Finding.Text);
+    }
+
+    [Fact]
+    public void Apps_that_read_no_file_here_are_listed_once_when_others_do()
+    {
+        Write("AGENTS.md", "Shared rules for every agent here.");
+        var idle = Assert.Single(Run().Issues, i => i.Finding.Text.StartsWith("No instruction file here for", StringComparison.Ordinal));
+        Assert.Contains("Claude Code (reads CLAUDE.md", idle.Finding.Text);
+        Assert.DoesNotContain("Codex", idle.Finding.Text);
     }
 }

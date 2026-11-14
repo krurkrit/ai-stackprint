@@ -15,7 +15,7 @@ public record ProjectIssue(IReadOnlyList<string> Apps, string? File, Finding Fin
 public record ProjectProgram(string Kind, string Name, string What, string File, string? Note);
 
 /// <param name="Context">What each app loads in the project, as the context section shows it.</param>
-public record ProjectCheck(List<(AppDefinition App, ContextReport Report)> Context, List<ProjectIssue> Issues, List<ProjectProgram> Programs);
+public record ProjectCheck(List<(AppDefinition App, ContextReport Report)> Context, List<ProjectIssue> Issues, List<ProjectProgram> Programs, List<ProjectIgnore> Ignores);
 
 /// <summary>
 /// Checks of one project's AI files, beyond each app's context limits (<see cref="ContextBudget"/>): rules whose file patterns match nothing,
@@ -37,9 +37,17 @@ public static partial class ProjectChecks
         Empty(project, context, issues);
         Links(project, context, issues);
         Personal(project, context, defs, home, issues);
+        Shared(project, context, defs, issues);
+        var ignores = new List<ProjectIgnore>();
+        var files = ProjectFiles.List(project, out var complete);
+        if (complete)
+        {
+            Ignores(project, defs, files, issues, ignores);
+            Paths(project, context, files, issues);
+        }
         var programs = new List<ProjectProgram>();
         Configs(project, defs, issues, programs);
-        return new(context, issues, programs);
+        return new(context, issues, programs, ignores);
     }
 
     /// <summary>Health page: every project's checks and the apps' own context findings, as issues of the Projects area.</summary>

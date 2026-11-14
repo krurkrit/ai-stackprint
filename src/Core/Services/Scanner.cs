@@ -53,6 +53,11 @@ public static partial class Scanner
                 AddConfig(rows, d, c, PathUtil.Expand(c.Path), null);
             }
 
+            foreach (var s in d.Parts.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+            {
+                Tagged(rows, () => ReadParts(PathUtil.Expand(s.Path), s, d.Name, rows), i => i with { App = d.Id });
+            }
+
             foreach (var p in projectList)
             {
                 foreach (var r in d.ProjectRoots.Where(r => PathUtil.OsMatches(r.Os)))
@@ -74,6 +79,11 @@ public static partial class Scanner
                     {
                         AddConfig(rows, d, c, path, p);
                     }
+                }
+
+                foreach (var s in d.Parts.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+                {
+                    Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with { App = d.Id, Project = p });
                 }
             }
         }
@@ -145,7 +155,7 @@ public static partial class Scanner
             return;
         }
 
-        var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", _ => "Instructions" };
+        var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", "ignore" => "Ignore", _ => "Instructions" };
         rows.Add(new Item("Config", Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar)), kind, d.Name, c.Level, path)
         { App = d.Id, Project = project, LevelLabel = c.Label, AppWritten = c.AppWritten });
     }

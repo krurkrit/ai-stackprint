@@ -55,6 +55,18 @@ internal class ProjectChecksSection(Ctx x)
             sp.Children.Add(Table.Build([new Col("", "24"), new Col("Finding", "5*"), new Col("Apps", "1.4*"), new Col("", "40")], rows));
         }
 
+        if (r.Ignores.Count > 0)
+        {
+            sp.Children.Add(Title($"Ignore files · {r.Ignores.Count}", TextSize.Subtitle));
+            sp.Children.Add(Txt("Files an app's ignore file keeps out of its view of this project.", TextSize.Small, false, Muted));
+            var ignored = r.Ignores.Select(i => new TableRow(
+            [
+                Mono(ProjectChecks.Rel(_project!, i.File), TextSize.Small), Txt(string.Join(", ", i.Apps.Select(a => x.S.Def(a)?.Name ?? a)), TextSize.Small, false, Muted),
+                Txt($"{i.Hidden:N0} of {i.Total:N0} files", TextSize.Small), IconBtn("open", "Open file", () => PathUtil.OpenFile(i.File))
+            ]));
+            sp.Children.Add(Table.Build([new Col("File", "2*"), new Col("App", "2*"), new Col("Hides", "1.4*"), new Col("", "40")], ignored));
+        }
+
         sp.Children.Add(Title($"MCP servers and hooks · {r.Programs.Count}", TextSize.Subtitle));
         sp.Children.Add(Txt("Programs this project's config files start when an app uses them. They run with your rights; secret-looking values are hidden.", TextSize.Small, false, Muted));
         var programs = r.Programs.Select(p => new TableRow(

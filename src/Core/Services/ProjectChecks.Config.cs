@@ -39,7 +39,7 @@ public static partial class ProjectChecks
                 if (doc.RootElement.ValueKind == JsonValueKind.Object)
                 {
                     programs.AddRange(McpServers.Parse(doc.RootElement, path).Select(s => new ProjectProgram("MCP server", s.Name, s.What, path, s.Note)));
-                    Hooks(doc.RootElement, path, programs);
+                    Hooks(doc.RootElement, project, path, apps, programs, issues);
                     Permissions(doc.RootElement, g.Key, path, apps, issues);
                 }
             }
@@ -95,7 +95,7 @@ public static partial class ProjectChecks
     }
 
     /// <summary>Hooks: every "command" under a top-level "hooks" object, named by its event (and matcher).</summary>
-    private static void Hooks(JsonElement root, string path, List<ProjectProgram> programs)
+    private static void Hooks(JsonElement root, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues)
     {
         if (!root.TryGetProperty("hooks", out var hooks) || hooks.ValueKind != JsonValueKind.Object)
         {
@@ -122,6 +122,10 @@ public static partial class ProjectChecks
                 if (Str(e, "command") is { } cmd)
                 {
                     programs.Add(new("Hook", n, Mask(cmd), path, Str(e, "type") is { } t && t != "command" ? t : null));
+                    if (HookScript.Missing(cmd, project, PathUtil.Home) is { } missing)
+                    {
+                        issues.Add(new(apps, path, new($"Hook {n} in {Rel(project, path)} runs {Mask(missing)}, which does not exist.")));
+                    }
                 }
 
                 foreach (var p in e.EnumerateObject().Where(p => p.Value.ValueKind is JsonValueKind.Array or JsonValueKind.Object))

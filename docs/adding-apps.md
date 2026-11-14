@@ -41,7 +41,8 @@ Three ways, easiest first.
 - An app is "installed" when any `detect` folder exists.
 - `category`: `agent`, `orchestrator`, `editor`, `chat`, `runtime`, `shared` or `custom`.
 - `logo`: optional key from `src/App/Assets/logos.json`. Without it the category icon is shown.
-- `configs`: instruction, settings or MCP files (or rules folders) the app reads. `kind`: `instructions`, `settings` or `mcp`. Project paths are relative to each project folder. Shown on the app page with a read-only preview.
+- `configs`: instruction, settings or MCP files (or rules folders) the app reads. `kind`: `instructions`, `settings`, `mcp` or `ignore` (an ignore file such as `.cursorignore`). Project paths are relative to each project folder. Shown on the app page with a read-only preview.
+- `parts`: folders of command or agent files (`.claude/commands`, `.github/prompts`, `.gemini/commands`). `kind`: `command` or `agent`; `pattern`: file name patterns separated by `;` (default `*.md`); `depth`: sub-folders read below the path (their names prefix the command: `team:review`); `level`, `os`, `label` as above. The description comes from the front matter, or `description = "…"` in a `.toml` file; an agent's `name` overrides the file name. Project paths are relative to each project folder.
 - `pluginCommands`: the app's own CLI for installing/removing plugins. Each item is one argument; `{plugin}` and `{scope}` (`user`, `project`, `local`) are filled in. Project scopes run in the project folder. Without it, plugins are listed but not managed.
 - Skills are added to the first non-bundled `skill-folders` root at User level, or the first project root for a project.
 - Skill invocation is read from `SKILL.md` front matter: `disable-model-invocation: true` = user only, `user-invocable: false` = agent only, otherwise agent + user.

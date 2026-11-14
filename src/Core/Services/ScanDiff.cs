@@ -35,7 +35,7 @@ public static class ScanDiff
     /// <summary>Compares <paramref name="items"/> with the saved scan, then saves them as the new one.</summary>
     public static ScanChanges Update(IEnumerable<Item> items, string file)
     {
-        var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i))).DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
+        var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i))).DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
         Snapshot? old = null;
         try
         {

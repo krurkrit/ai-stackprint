@@ -13,7 +13,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public sealed partial class GitIgnore
 {
-    private sealed record Rule(Regex Rx, bool Negate, bool DirOnly);
+    private sealed record Rule(Regex Rx, bool Negate, bool DirOnly, string Text);
 
     private readonly string _repo;
     private readonly List<Rule> _base;   // global excludes, then info/exclude: relative to the repository root
@@ -48,6 +48,38 @@ public sealed partial class GitIgnore
         }
 
         return false;
+    }
+
+    /// <summary>How many of <paramref name="files"/> (paths relative to the folder the ignore file sits in, with /) the patterns in <paramref name="text"/> hide, and the patterns that match none of them.</summary>
+    public static IgnoreResult Apply(string text, IReadOnlyList<string> files)
+    {
+        var rules = Parse(text);
+        var dirs = files.SelectMany(Ancestors).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var hidden = files.Count(f => Hides(rules, f));
+        var dead = rules.Where(r => !r.Negate && !files.Any(f => r.Rx.IsMatch(f) && !r.DirOnly) && !dirs.Any(d => r.Rx.IsMatch(d))).Select(r => r.Text).Distinct().ToList();
+        return new(hidden, dead);
+    }
+
+    private static IEnumerable<string> Ancestors(string file)
+    {
+        var parts = file.Split('/');
+        for (var i = 1; i < parts.Length; i++)
+        {
+            yield return string.Join('/', parts[..i]);
+        }
+    }
+
+    private static bool Hides(List<Rule> rules, string file)
+    {
+        foreach (var dir in Ancestors(file))
+        {
+            if (Match(rules, dir, true) == true)
+            {
+                return true;   // an ignored folder cannot be re-included
+            }
+        }
+
+        return Match(rules, file, false) == true;
     }
 
     private static bool? Match(List<Rule> rules, string path, bool dir)
@@ -91,7 +123,7 @@ public sealed partial class GitIgnore
             l = l.TrimEnd('/');
             if (l.Length > 0)
             {
-                res.Add(new(Glob.ToRegex(l, anchored: l.Contains('/')), negate, dirOnly));   // a / at the start or in the middle: from this folder only
+                res.Add(new(Glob.ToRegex(l, anchored: l.Contains('/')), negate, dirOnly, (negate ? "!" : "") + l + (dirOnly ? "/" : "")));   // a / at the start or in the middle: from this folder only
             }
         }
 
@@ -112,3 +144,7 @@ public sealed partial class GitIgnore
 
     [GeneratedRegex(@"(?im)^\s*excludesfile\s*=\s*(.+?)\s*$")] private static partial Regex ExcludesFile();
 }
+
+/// <param name="Hidden">Files the patterns hide.</param>
+/// <param name="Dead">Patterns that match no file or folder.</param>
+public record IgnoreResult(int Hidden, List<string> Dead);

@@ -44,11 +44,23 @@ public class ConfigFile
 {
     public string Path { get; set; } = "";
     public string Level { get; set; } = "User";
-    public string Kind { get; set; } = "instructions"; // instructions | settings | mcp
+    public string Kind { get; set; } = "instructions"; // instructions | settings | mcp | ignore
     public string? Os { get; set; }
     public string? Label { get; set; }
     public bool Nested { get; set; }                   // Project files: also look in sub-folders
     public bool AppWritten { get; set; }               // the app rewrites it on its own (state, counters): edits are not listed as changes
+}
+
+/// <summary>A folder of command or agent files (one file each: .claude/commands, .github/prompts, .gemini/commands …). Project paths are relative to a project folder.</summary>
+public class PartSource
+{
+    public string Path { get; set; } = "";
+    public string Level { get; set; } = "User";
+    public string Kind { get; set; } = "command";       // command | agent
+    public string Pattern { get; set; } = "*.md";       // file name patterns, separated by ;
+    public int Depth { get; set; } = 2;                 // sub-folders read below Path (their names prefix the command: team:review)
+    public string? Os { get; set; }
+    public string? Label { get; set; }                  // the app's own word (Prompts, Workflows, Droids)
 }
 
 /// <summary>Where an app writes logs: a file, or a folder searched for <see cref="Pattern"/> up to <see cref="Depth"/> levels down.</summary>
@@ -101,6 +113,7 @@ public class AppDefinition
     public List<ScanRoot> Roots { get; set; } = [];        // user/system-level locations
     public List<ScanRoot> ProjectRoots { get; set; } = []; // paths relative to a project folder
     public List<ConfigFile> Configs { get; set; } = [];
+    public List<PartSource> Parts { get; set; } = [];      // command and agent folders
     public string? PluginFormat { get; set; }                 // key of an IPluginReader
     public string? PluginManifest { get; set; }
     public PluginCommands? PluginCommands { get; set; }

@@ -21,6 +21,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
     private readonly ItemBrowser _browser = new(x, "Skill");
     private readonly ContextSection _context = new(x);
     private readonly ProjectChecksSection _checks = new(x);
+    private readonly ClaudeSettingsSection _claude = new(x);
     private string? _project;   // project the list state belongs to: reset when another opens
 
     /// <summary>Rows that take effect in <paramref name="project"/>: rows from that project, or rows not tied to any project.</summary>
@@ -48,7 +49,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
             summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => c.Margin = new Avalonia.Thickness(0, 0, 8, 0)));
         }
 
-        var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
+        var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), _claude.Build(project), AiFoldersSection.Build(x, project, all), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
         return _browser.Build(top, skills);
     }
 

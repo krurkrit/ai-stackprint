@@ -50,6 +50,10 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Lists the MCP servers and hooks the project's config files start, with unpinned packages flagged. Secret values are never shown, only where they are (JSON path); flags like `--api-key` show `•••`.
 - Only documented limits are shown (Claude Code 40,000 characters, Codex 32 KiB, Cursor 500 lines); apps without one show sizes only.
 - Warns about personal files (CLAUDE.local.md, settings.local.json, …) that git does not ignore, read from the ignore files without running git.
+- AI folders card: the hidden folders apps keep in the project, what is inside, size; then the commands and agents that apply (project and user level).
+- "Loaded into context" has By app / By file: the by-file view shows which app loads each file and how.
+- Info (not warnings): a CLAUDE.md/GEMINI.md/QWEN.md next to AGENTS.md that never mentions it; apps that read no file here; ignore-file patterns that match nothing; stale paths in instruction files. Warning: a hook that runs a script that does not exist.
+- "Claude Code settings" card (only when a settings file exists): permission rules and settings by level, highest priority first; a deny anywhere wins; env shows names only.
 
 ## MCP servers
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
