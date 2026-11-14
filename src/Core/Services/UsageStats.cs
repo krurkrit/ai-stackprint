@@ -33,6 +33,9 @@ public static class UsageStats
 {
     private static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> _cache = new();
 
+    /// <summary>The app has a log or database whose usage can be read.</summary>
+    public static bool Supports(AppDefinition d) => d.Logs.Concat(d.Usage).Any(l => LogParsers.Find(l.Format) != null);
+
     /// <param name="since">Only usage from this day on; DateTime.MinValue = all.</param>
     public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct = default)
     {

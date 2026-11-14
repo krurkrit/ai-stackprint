@@ -45,6 +45,7 @@ internal partial class MainWindow
             "Skill" => _skills.Build(),
             "Health" => _health.Build(),
             "Mcp" => _mcp.Build(),
+            "Usage" => _usage.Build(),
             "Logs" => _logs.Build(null),
             _ when _view.StartsWith("Logs:") => _logs.Build(_view[5..]),
             _ when _view.StartsWith("App:") => _detail.Build(_view[4..]),

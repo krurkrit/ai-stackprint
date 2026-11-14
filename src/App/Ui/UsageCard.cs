@@ -21,7 +21,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
     /// <summary>What the user picked; kept by the page so it survives rebuilds.</summary>
     public class Prefs { public int Days = 7; public bool Cost; public bool CacheReads; public string Account = ""; }
 
-    public static bool Supports(AppDefinition d) => d.Logs.Concat(d.Usage).Any(l => LogParsers.Find(l.Format) != null);
+    public static bool Supports(AppDefinition d) => UsageStats.Supports(d);
 
     private readonly ContentControl _body = new();
     private CancellationTokenSource? _cts;

@@ -5,7 +5,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
 
@@ -13,7 +12,6 @@ namespace AiStackprint.Ui;
 
 internal partial class UsageCard
 {
-    private const double ColumnWidth = 28;   // widest column of the daily chart
     /// <summary>Per-day bars, stacked by token type (or one bar of cost). At most the last 90 days; gaps are empty days.</summary>
     private static readonly string[] _costKeys = [Accent], _tokenKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
     private static readonly string[] _costNames = ["Estimated cost"], _tokenNames = ["Input", "Output", "Cache write", "Cache read"];
@@ -52,30 +50,7 @@ internal partial class UsageCard
             return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", TextSize.Small, false, Muted);
         }
 
-        const double barHeight = 140;
-        var grid = new Grid { ColumnSpacing = Space.XS, Height = barHeight + 22, Margin = new Thickness(0, Space.S, 0, 0) };
-        var step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
-        for (var i = 0; i < bars.Count; i++)
-        {
-            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
-            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = ColumnWidth };
-            for (var j = bars[i].Parts.Length - 1; j >= 0; j--)
-            {
-                if (bars[i].Parts[j] > 0)
-                {
-                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(Radius.XS) }.Themed(Border.BackgroundProperty, keys[j]));
-                }
-            }
-
-            var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", TextSize.Tiny, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
-            Grid.SetRow(label, 1);
-            col.Children.Add(stack); col.Children.Add(label);
-            ToolTip.SetTip(col, bars[i].Tip);
-            Grid.SetColumn(col, i);
-            grid.Children.Add(col);
-        }
-        return grid;
+        return DayBars.Build(bars, keys);
     }
 
     /// <summary>Limits the app reports (Codex) and use in the last 5 hours / 7 days / current 5-hour block (all apps with usage logs).</summary>
@@ -145,7 +120,7 @@ internal partial class UsageCard
         return any ? sum : null;
     }
 
-    private static Border Stat(string label, string value) =>
+    internal static Border Stat(string label, string value) =>
         new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.XL, Space.L), MinWidth = Widths.FieldS, Child = new StackPanel { Spacing = Space.XXS, Children = { Title(value, TextSize.Title), Txt(label, TextSize.Caption, false, Muted) } } }
             .Themed(Border.BackgroundProperty, Subtle);
 

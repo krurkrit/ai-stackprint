@@ -69,6 +69,9 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Export to AGENTS.md
 - A button on the project page combines the loaded instruction files into one AGENTS.md. It always shows the text first; replacing an existing AGENTS.md needs the confirm and makes a backup. The sources stay as they are: edit them and export again.
 
+## Usage page
+- A "Usage" page in the menu after MCP servers: cost and tokens across all apps for 7 or 30 days, with the same figures and caveats as an app's Usage card (estimates unless the app logs its own cost).
+
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.
 - Watching and tailing:
