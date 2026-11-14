@@ -9,7 +9,14 @@ Installers are built with [Velopack](https://velopack.io) (MIT): `vpk` packs the
    git tag v0.2.0
    git push origin v0.2.0
    ```
-3. `.github/workflows/release.yml` runs on the tag. It checks that the tag matches `<Version>`, runs the tests, builds on Windows, Linux and macOS, and publishes one GitHub release with all three.
+3. `.github/workflows/release.yml` runs on the tag. It checks that the tag matches `<Version>`, runs the tests, builds on Windows, Linux and macOS, and publishes one GitHub release with all three and its release notes.
+
+## Release notes
+[git-cliff](https://git-cliff.org) writes them from the commits since the previous `v*` tag (`cliff.toml`). They go into the installer packages (`vpk pack --releaseNotes`) and the GitHub release text.
+
+- Merge PRs with squash, and title them as [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `feat:` → New, `fix:` → Fixed, `perf:` → Faster; `refactor`, `style`, `test`, `build`, `ci`, `chore` and `docs` are left out. `feat!:` or a `BREAKING CHANGE:` footer marks a breaking change.
+- Commits from before this (plain "Add …", "Fix …") are sorted by their first word.
+- Preview the next release's notes: `npx git-cliff --unreleased --strip all` (or install git-cliff).
 
 Users with the update check turned on (Settings › Updates) then see the new version and a link to its release page.
 

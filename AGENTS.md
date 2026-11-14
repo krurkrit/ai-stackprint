@@ -9,7 +9,7 @@ AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAM
 - Run: `dotnet run --project src/App`
 - Build: `dotnet build` (the solution `AiStackprint.slnx`: all projects)
 - Publish: `dotnet publish src/App -c Release -r <win-x64|linux-x64|osx-arm64> --self-contained false`
-- Installer: `pwsh build/pack.ps1 -Runtime <win-x64|linux-x64|osx-arm64>` (Velopack, self-contained; on that platform). Releases: push tag `v<Version>`; `.github/workflows/release.yml` builds all three and publishes the GitHub release. See `docs/releasing.md`.
+- Installer: `pwsh build/pack.ps1 -Runtime <win-x64|linux-x64|osx-arm64>` (Velopack, self-contained; on that platform). Releases: push tag `v<Version>`; `.github/workflows/release.yml` builds all three and publishes the GitHub release with notes from git-cliff (`cliff.toml`). See `docs/releasing.md`.
 - Test: `dotnet test` (all), or `dotnet test tests/AiStackprint.Core.Tests` (services; builds Core only, no UI). If you add logic to `src/Core/Services`, add tests for it. UI tests run headless (Avalonia.Headless.XUnit, xUnit v3): mark them `[AvaloniaFact]`; `TestApp` starts the real app styles without a window or scan; helpers in `Ui` (show, find texts and buttons, click, wait for background work). Pass `TestContext.Current.CancellationToken` where a method takes a token.
 - Format: `dotnet format` before committing. Style and analyzers follow dotnet/aspnetcore's `.editorconfig`: braces on every `if`/loop, Allman braces, `_camelCase` private and internal fields (static too), PascalCase constants, `var`, file-scoped namespaces, System usings first, no unused usings, `ConfigureAwait(false)` in Core (not in UI code). Sonar's default C# rules also run on build (`SonarAnalyzer.CSharp`, a build-only package); the few turned off are listed with reasons in `.editorconfig`, and a single justified exception uses `#pragma warning disable Sxxx // reason`. Analyzer and style warnings show on build; keep it at 0 warnings.
 - Every `.cs` file starts with the license header (`file_header_template` in `.editorconfig`; `dotnet format` adds it). The license is MIT (`LICENSE`).
@@ -42,6 +42,7 @@ AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAM
 - A control kept in a field and shown again on a rebuilt page must be taken from its old parent first (`.Free()`); otherwise Avalonia throws "already has a parent" and the app closes.
 - Items are records whose lists compare by reference: to find "the same" skill or plugin after a rescan use `ItemBrowser.Same`, not `==` or `Contains`.
 - Keep one class per concern; keep files under about 250 lines. Split a larger class into partial files named `Class.Topic.cs` (e.g. `LogViewer.Search.cs`, `Widgets.Inputs.cs`).
+- Commit messages (squash-merged PR titles) follow Conventional Commits: `feat:`, `fix:`, `perf:`, `refactor:`, `test:`, `build:`, `ci:`, `docs:`, `chore:`; they become the release notes.
 - Verify with `dotnet build` before finishing. Report what could not be verified.
 
 ## Do not guess

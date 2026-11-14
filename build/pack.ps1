@@ -3,7 +3,8 @@
 # Output: Releases/ (Setup, portable zip, update packages). Upload is done by .github/workflows/release.yml, not here.
 param(
     [Parameter(Mandatory)][ValidateSet('win-x64', 'win-arm64', 'linux-x64', 'linux-arm64', 'osx-arm64', 'osx-x64')][string]$Runtime,
-    [string]$Output = 'Releases'
+    [string]$Output = 'Releases',
+    [string]$ReleaseNotes   # Markdown file (git-cliff output in the release workflow); shown by Velopack and on the GitHub release
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -20,6 +21,7 @@ if ($LASTEXITCODE) { throw "dotnet publish failed" }
 
 $svg = 'src/App/Assets/app-icon.svg'
 $common = @('-u', 'AiStackprint', '-v', $version, '-p', $publish, '-o', $Output, '--packTitle', 'AI Stackprint', '--packAuthors', 'AI Stackprint contributors')
+if ($ReleaseNotes) { $common += @('--releaseNotes', $ReleaseNotes) }
 switch -Wildcard ($Runtime) {
     'win-*' {
         vpk pack @common -e AiStackprint.exe -i src/App/Assets/app-icon.ico -r $Runtime

@@ -1,5 +1,6 @@
 # Release: push a tag v<Version> (the <Version> in Directory.Build.props) and this builds the Velopack installers
-# for Windows, Linux and macOS and publishes them as one GitHub release. Runs only on such tags. See docs/releasing.md.
+# for Windows, Linux and macOS and publishes them as one GitHub release, with notes from git-cliff (cliff.toml).
+# Runs only on such tags. See docs/releasing.md.
 name: Release
 
 on:
@@ -10,7 +11,26 @@ permissions:
   contents: read
 
 jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # all commits and tags, to find the previous release
+      # The commits since the previous v* tag, grouped as cliff.toml says
+      - uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip all
+        env:
+          OUTPUT: release-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
   pack:
+    needs: notes
     strategy:
       matrix:
         include:
@@ -37,9 +57,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install librsvg
       - run: dotnet tool install -g vpk --version 1.2.161
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
       - name: Pack
         shell: pwsh
-        run: ./build/pack.ps1 -Runtime ${{ matrix.rid }}
+        run: ./build/pack.ps1 -Runtime ${{ matrix.rid }} -ReleaseNotes release-notes.md
       - uses: actions/upload-artifact@v4
         with:
           name: releases-${{ matrix.channel }}
@@ -57,7 +80,11 @@ jobs:
       - run: dotnet tool install -g vpk --version 1.2.161
       - uses: actions/download-artifact@v4
         with:
+          pattern: releases-*
           path: packs
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
       # One release, three channels; uploaded one after another so they merge instead of racing
       - name: Upload to GitHub release
         env:
@@ -67,3 +94,7 @@ jobs:
             vpk upload github -o "packs/releases-$c" -c "$c" --repoUrl "${{ github.server_url }}/${{ github.repository }}" \
               --token "$GH_TOKEN" --tag "${{ github.ref_name }}" --releaseName "AI Stackprint ${{ github.ref_name }}" --merge --publish
           done
+      - name: Release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --notes-file release-notes.md
