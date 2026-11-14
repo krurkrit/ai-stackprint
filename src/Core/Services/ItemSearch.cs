@@ -121,6 +121,7 @@ public sealed class ItemSearch
             "level" => Has(e.Level) || (e.LevelLabel != "" && Has(e.LevelLabel)),
             "keyword" => e.Keywords.Any(Has),
             "path" => Has(e.Path),
+            "has" => e.Item.Provides.Any(k => Has(k) || Has(PluginParts.Name(k))),
             _ => false
         };
     }

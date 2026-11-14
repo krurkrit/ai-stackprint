@@ -131,6 +131,7 @@ internal partial class DetailPanel(Ctx x)
         AddText("Plugin", It.Plugin);
         AddText("Scope", It.Kind == "Plugin" ? It.Scope : null);
         AddText("Author", It.Author);
+        AddText("Keywords", It.Keywords.Count == 0 ? null : string.Join(", ", It.Keywords));
         if (doc != null)
         {
             foreach (var (k, v) in doc.Front.Where(f => f.Value != "" && f.Key is not ("name" or "description" or "author" or "metadata.author")))
@@ -150,7 +151,7 @@ internal partial class DetailPanel(Ctx x)
 
         if (It.Kind == "Plugin")
         {
-            sp.Children.Add(PluginParts());
+            sp.Children.Add(Contents());
         }
 
         var dup = x.S.Items.Where(i => i.Kind == It.Kind && i.Name == It.Name && !ItemBrowser.Same(i, It)).Select(i => $"{i.Level} ({i.Source})").Distinct().ToList();
@@ -175,29 +176,35 @@ internal partial class DetailPanel(Ctx x)
         return k.Length == 0 ? key : char.ToUpperInvariant(k[0]) + k[1..];
     }
 
-    /// <summary>What a plugin brings, from its folder. Hooks and MCP servers run programs on this computer, so they are flagged.</summary>
-    private Control PluginParts()
+    /// <summary>
+    /// What a plugin brings (<see cref="PluginParts"/>: its manifest or its folders), with counts where its folder has them.
+    /// Hooks, MCP and LSP servers run programs on this computer, so they are flagged.
+    /// </summary>
+    private Control Contents()
     {
         int Count(string dir, string pattern) { var p = Path.Combine(Root, dir); return Directory.Exists(p) ? Directory.EnumerateFiles(p, pattern, SearchOption.AllDirectories).Count() : 0; }
+        bool Has(string key) => It.Provides.Contains(key);
         var skills = x.S.Items.Count(i => i.Kind == "Skill" && i.Plugin == It.Name && i.App == It.App);
-        bool hooks = File.Exists(Path.Combine(Root, "hooks", "hooks.json")), mcp = File.Exists(Path.Combine(Root, ".mcp.json"));
         var parts = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
-        foreach (var (label, n) in new[] { ("skills", skills), ("commands", Count("commands", "*.md")), ("agents", Count("agents", "*.md")) })
+        foreach (var (key, label, n) in new[] { ("skills", "skills", skills), ("commands", "commands", Count("commands", "*.md")), ("agents", "agents", Count("agents", "*.md")) })
         {
-            if (n > 0)
+            if (n > 0 || Has(key))
             {
-                parts.Children.Add(Chip($"{n} {label}"));
+                parts.Children.Add(Chip(n > 0 ? $"{n} {label}" : PluginParts.Name(key)));   // named in the manifest at another place: no count
             }
         }
 
-        if (hooks)
+        foreach (var (key, label, tip) in new[]
         {
-            parts.Children.Add(Chip("Hooks · runs commands", WarningKey).With(c => ToolTip.SetTip(c, "Hooks run commands on this computer when the app does certain things.")));
-        }
-
-        if (mcp)
+            ("hooks", "Hooks · runs commands", "Hooks run commands on this computer when the app does certain things."),
+            ("mcp", "MCP servers · runs programs", "MCP servers are programs the app starts on this computer."),
+            ("lsp", "LSP servers · runs programs", "Language servers are programs the app starts on this computer for code intelligence.")
+        })
         {
-            parts.Children.Add(Chip("MCP servers · runs programs", WarningKey).With(c => ToolTip.SetTip(c, "MCP servers are programs the app starts on this computer.")));
+            if (Has(key))
+            {
+                parts.Children.Add(Chip(label, WarningKey).With(c => ToolTip.SetTip(c, tip)));
+            }
         }
 
         return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = Space.S, Children = { Txt("Contains", TextSize.Small, false, Muted), parts } };

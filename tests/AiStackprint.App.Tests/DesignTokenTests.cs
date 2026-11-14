@@ -13,7 +13,7 @@ namespace AiStackprint.App.Tests;
 /// </summary>
 public partial class DesignTokenTests
 {
-    private static readonly string[] _sizeCalls = ["Txt", "Sel", "Title", "Mono", "WithDot", "DotText", "Icon", "IconTile", "AppLogo", "AppName", "SearchBox", "Spinner", "Loading"];
+    private static readonly string[] _sizeCalls = ["Txt", "Sel", "Title", "Mono", "WithDot", "DotText", "Icon", "IconTile", "AppLogo", "AppName", "SearchBox", "Spinner", "Loading", "Rich"];
     private static readonly string[] _exprCalls = ["new Thickness", "new CornerRadius", "Size", "new GridLength", "new Size"];
 
     [Fact]

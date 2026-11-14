@@ -15,7 +15,10 @@ public record MdBlock(MdKind Kind, string Text, int Level = 0, List<List<string>
 /// <param name="Url">Set for links.</param>
 public record MdSpan(string Text, bool Bold, bool Italic, bool Code, string? Url);
 
-/// <summary>Small Markdown reader for chat text: headings, lists, quotes, rules, tables and bold / italic / `code` / [links](url). Code fences are cut out by the caller.</summary>
+/// <summary>
+/// Small Markdown reader for chat text: headings, lists, quotes, rules, tables and bold / italic / `code` / [links](url). Code fences are cut out
+/// by the caller. Files that mix in HTML go through <see cref="FromHtml(string)"/> first; descriptions through <see cref="Plain"/>.
+/// </summary>
 public static partial class MarkdownLite
 {
     [GeneratedRegex(@"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")] private static partial Regex HeadingLine();

@@ -76,6 +76,10 @@ internal partial class ClaudeContext : IContextRule
             {
                 var paths = SkillDoc.Parse(ReadText(f)).Get("paths");
                 Add(f, paths == "" ? LoadWhen.Always : LoadWhen.Conditional, paths == "" ? note : $"{note} · for {paths}");
+                if (paths != "" && files.Count > 0 && files[^1].Path == f)
+                {
+                    files[^1] = files[^1] with { Patterns = Glob.Split(paths) };
+                }
             }
         }
 

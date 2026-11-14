@@ -95,11 +95,13 @@ public static partial class Scanner
                     else if (l.StartsWith("description:"))
                     {
                         desc = Clean(l[12..]);
-                        // YAML block scalar: the text is on the next line
-                        if (desc is "" or ">" or "|" or ">-" or "|-")
+                        // YAML block scalar (>, |): the text is on the indented lines that follow
+                        if (desc is "" or ">" or "|" or ">-" or "|-" or ">+" or "|+")
                         {
-                            desc = i + 1 < lines.Count ? lines[i + 1].Trim() : "";
+                            desc = string.Join(" ", lines.Skip(i + 1).TakeWhile(n => n.Trim() == "" || char.IsWhiteSpace(n[0])).Select(n => n.Trim()));
                         }
+
+                        desc = MarkdownLite.Plain(desc);   // descriptions may mix in HTML and Markdown: shown as one line of text
                     }
                     else if (l.StartsWith("disable-model-invocation:"))
                     {

@@ -28,11 +28,11 @@ internal static class MarkdownView
         return sp;
     }
 
-    /// <summary>A whole Markdown file: prose, plus fenced code highlighted by its language.</summary>
+    /// <summary>A whole Markdown file: prose, plus fenced code highlighted by its language. HTML in it (README badges, details, tables) is shown as Markdown.</summary>
     public static Control Document(string md, Action<string>? link = null)
     {
         var sp = new StackPanel { Spacing = Space.M };
-        foreach (var (text, lang) in ReadableLog.Fences(md))
+        foreach (var (text, lang) in ReadableLog.Fences(MarkdownLite.FromHtml(md)))
         {
             sp.Children.Add(lang == null ? Render(text, link) : ReadableLog.Code(text, lang));
         }
@@ -45,25 +45,25 @@ internal static class MarkdownView
         switch (b.Kind)
         {
             case MdKind.Heading:
-                return Rich(b.Text, b.Level switch { 1 => 20, 2 => 17, 3 => 15, _ => 14 }, Heading, link).With(t => t.Margin = new Thickness(0, Space.XS, 0, 0));
+                return Rich(b.Text, b.Level switch { 1 => TextSize.Title, 2 => TextSize.Subtitle, _ => TextSize.Body }, Heading, link).With(t => t.Margin = new Thickness(0, Space.XS, 0, 0));
             case MdKind.Bullet:
             case MdKind.Number:
                 var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = Space.M, Margin = new Thickness(Space.M + Space.XXL * b.Level, 0, 0, 0) };
                 var mark = Txt(b.Kind == MdKind.Bullet ? "•" : b.Num + ".", TextSize.Body, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Top);
-                var body = Rich(b.Text, 14, Body, link); Grid.SetColumn(body, 1);
+                var body = Rich(b.Text, TextSize.Body, Body, link); Grid.SetColumn(body, 1);
                 g.Children.Add(mark); g.Children.Add(body);
                 return g;
             case MdKind.Quote:
-                return new Border { BorderThickness = new Thickness(Space.XS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XS, 0, 0, 0), Child = Rich(b.Text, 14, Body, link) }
+                return new Border { BorderThickness = new Thickness(Space.XS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XS, 0, 0, 0), Child = Rich(b.Text, TextSize.Body, Body, link) }
                     .Themed(Border.BorderBrushProperty, BorderKey);
             case MdKind.Rule:
                 return new Border { Height = Stroke.Thin, Margin = new Thickness(0, Space.XS) }.Themed(Border.BackgroundProperty, BorderKey);
             case MdKind.Table when b.Rows is { Count: > 0 } rows:
                 var n = rows.Max(r => r.Count);
                 var cols = Enumerable.Range(0, n).Select(i => new Col(i < rows[0].Count ? Strip(rows[0][i]) : "", "1*")).ToArray();
-                return Table.Build(cols, rows.Skip(1).Select(r => new TableRow([.. Enumerable.Range(0, n).Select(i => (Control)Rich(i < r.Count ? r[i] : "", 13, Body, link))])));
+                return Table.Build(cols, rows.Skip(1).Select(r => new TableRow([.. Enumerable.Range(0, n).Select(i => (Control)Rich(i < r.Count ? r[i] : "", TextSize.Small, Body, link))])));
             default:
-                return Rich(b.Text, 14, Body, link);
+                return Rich(b.Text, TextSize.Body, Body, link);
         }
     }
 

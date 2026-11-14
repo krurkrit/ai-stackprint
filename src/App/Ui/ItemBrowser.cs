@@ -23,7 +23,7 @@ internal class ItemBrowser
 {
     private const double MinPanel = 160, MaxPanel = 2000;   // bottom panel height limits
     /// <summary>How to search skills and plugins (<see cref="ItemSearch"/>), as the search box's tooltip.</summary>
-    public const string SearchTip = "Words match separately; \"quotes\" match a phrase.\nname: desc: author: app: level: keyword: path: search one field; author:\"Jane Doe\" matches the whole value.\nBest matches first: name, then keywords, author, description, path.";
+    public const string SearchTip = "Words match separately; \"quotes\" match a phrase.\nname: desc: author: app: level: keyword: path: search one field, has:mcp (skills, commands, agents, hooks, mcp, lsp) what a plugin adds; author:\"Jane Doe\" matches the whole value.\nBest matches first: name, then keywords, author, description, path.";
     private static readonly TimeSpan _typing = TimeSpan.FromMilliseconds(150);   // search waits this long after the last key
     private readonly Ctx _x;
     private readonly string _kind;

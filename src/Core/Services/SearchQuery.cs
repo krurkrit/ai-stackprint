@@ -12,7 +12,7 @@ public sealed record SearchTerm(string? Field, string Text, bool Exact);
 
 /// <summary>
 /// A search for skills and plugins as typed: words match separately and all must match; "quoted words" match as one phrase;
-/// field:value matches one field only (name, desc, author, app, level, keyword or tag, path). See <see cref="ItemSearch"/>.
+/// field:value matches one field only (name, desc, author, app, level, keyword or tag, path; has: what a plugin adds, e.g. has:mcp). See <see cref="ItemSearch"/>.
 /// </summary>
 public sealed partial class SearchQuery
 {
@@ -30,6 +30,7 @@ public sealed partial class SearchQuery
         ["keywords"] = "keyword",
         ["tag"] = "keyword",
         ["path"] = "path",
+        ["has"] = "has",
     };
 
     public static readonly SearchQuery Empty = new([]);

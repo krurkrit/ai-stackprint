@@ -20,7 +20,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 
 ## Dashboard and Apps
 - Every card header is the same: icon on a tinted square, then the title in the heading weight (`W.Section`). Stat tiles use it too.
-- Dashboard shows summary charts of plugin and skill counts by app and by author. Don't add an "AI apps and orchestrators" list there; the Apps page already has it.
+- Dashboard shows summary charts of plugin and skill counts by app and by author, and what plugins add (skills, commands, agents, hooks, MCP and LSP servers, each out of all plugins) with their top keywords; a bar or keyword opens the Plugins list searched for it (has:mcp, keyword:"x"). Don't add an "AI apps and orchestrators" list there; the Apps page already has it.
 - The page and menu item are "Apps", not "AI apps": everything in the app is about AI, and the other menu items are one word.
 - Apps page has a Status filter and Group by Category, collapsible per category, like the Dashboard.
 - The app detail page shows per-app usage where logs have the data: tokens, a per-day chart, a cost estimate, and more.
@@ -32,18 +32,23 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Each row has icons to open the folder, copy the path, and remove the plugin.
   - Full-page list with the full path and no mandatory right panel.
   - The App column links to the app; there is no "Open app" button.
+  - Lists the plugins and extensions of every app that has them, not only Claude Code. Editor extensions (VS Code layout) and extensions an app calls by that name keep the word in the level column ("Extensions"). Disabled ones are listed, marked "disabled". Install and remove only through an app's own CLI (Claude Code today).
+- Descriptions never show raw HTML or Markdown marks: lists and the detail panel show one line of plain text; rendered SKILL.md and README files show their HTML as Markdown (badges as their alt text). Chat text in logs is shown as written.
 - Skills page matches the Plugins page. Clicking a skill opens a bottom panel (like Logs) with all skill info and rendered markdown. Linked references and scripts in that panel can be opened and viewed, with markdown supported.
 - Skill filters:
   - Level is check boxes for System, Local, Project and User, all checked by default.
   - Invoked by has four options: Agent or User (all), Agent only, User only, Agent and User.
   - App category is also a filter.
   - The same filters, and the same search, appear on an app's Skills section.
-- Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, app, level, keyword or tag, path) matches one field; author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
+- Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, app, level, keyword or tag, path, has) matches one field; author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
 
 ## Project page
 - Shows the skill list with the Skills-page features.
 - Shows context limits (e.g. Codex `project_doc_max_bytes` for AGENTS.md), with warnings when a file goes over.
 - Shows CLAUDE.md `@import` links, and which files load at session start and which don't.
+- Checks the project's AI files: rules that never load (their patterns match no file), text loaded twice at launch, empty files, broken links, secrets in config files, `bypassPermissions` and `Bash(*)`. Findings also appear on Health under Projects.
+- Lists the MCP servers and hooks the project's config files start, with unpinned packages flagged. Secret values are never shown, only where they are (JSON path); flags like `--api-key` show `•••`.
+- Only documented limits are shown (Claude Code 40,000 characters, Codex 32 KiB, Cursor 500 lines); apps without one show sizes only.
 
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.

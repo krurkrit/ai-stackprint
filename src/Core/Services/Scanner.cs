@@ -40,7 +40,12 @@ public static partial class Scanner
 
             if (d.PluginManifest != null)
             {
-                PluginReaders.Find(d.PluginFormat)?.Read(PathUtil.Expand(d.PluginManifest), d, rows);
+                PluginReaders.Find(d.PluginFormat)?.Read(PathUtil.Expand(d.PluginManifest), new PluginContext(d, "User", null, null), rows);
+            }
+
+            foreach (var src in d.Plugins.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+            {
+                PluginReaders.Find(src.Format)?.Read(PathUtil.Expand(src.Path), new PluginContext(d, src.Level, null, src), rows);
             }
 
             foreach (var c in d.Configs.Where(c => !InProject(c.Level) && PathUtil.OsMatches(c.Os)))
@@ -56,6 +61,11 @@ public static partial class Scanner
                     {
                         Tagged(rows, () => ReadRoot(path, r, d.Name, rows), i => i with { App = d.Id, Project = p, LevelLabel = r.Label });
                     }
+                }
+
+                foreach (var src in d.Plugins.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+                {
+                    PluginReaders.Find(src.Format)?.Read(Path.Combine(p, src.Path.Replace('/', Path.DirectorySeparatorChar)), new PluginContext(d, src.Level, p, src), rows);
                 }
 
                 foreach (var c in d.Configs.Where(c => InProject(c.Level) && PathUtil.OsMatches(c.Os)))

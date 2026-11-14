@@ -17,7 +17,7 @@ namespace AiStackprint.Ui;
 /// Overview: tiles that open their page, live limits, skills and plugins by app and by author (a bar opens the list filtered to it),
 /// and what changed since the scan before. The full app list is on the Apps page.
 /// </summary>
-internal static class DashboardView
+internal static partial class DashboardView
 {
     private const int TopAuthors = 10;
 
@@ -46,7 +46,7 @@ internal static class DashboardView
         for (var i = 0; i < cards.Length; i++) { Grid.SetColumn(cards[i], 2 + i % 2); Grid.SetRow(cards[i], i / 2); tiles.Children.Add(cards[i]); }
 
         var charts = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = Space.XL };
-        var left = new StackPanel { Spacing = Space.XL, Children = { Section("sparkle", "Skills by app", ByApp(x, "Skill")), Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")) } };
+        var left = new StackPanel { Spacing = Space.XL, Children = { Section("sparkle", "Skills by app", ByApp(x, "Skill")), Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")), Section("wrench_screwdriver", "What plugins add", PluginContents(x)) } };
         var right = new StackPanel { Spacing = Space.XL, Children = { Section("people", "Skills and plugins by author", ByAuthor(x)), Recent(x) } };
         Grid.SetColumn(right, 1);
         charts.Children.Add(left); charts.Children.Add(right);

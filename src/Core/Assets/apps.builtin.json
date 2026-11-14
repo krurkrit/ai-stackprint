@@ -37,7 +37,7 @@
     ]
   },
   {
-    "id": "opencode", "name": "OpenCode", "category": "agent", "logo": "opencode",
+    "id": "opencode", "context": "opencode", "name": "OpenCode", "category": "agent", "logo": "opencode",
     "detect": ["~/.config/opencode", "~/.opencode"],
     "roots": [
       {"path": "~/.config/opencode/skill", "level": "User"},
@@ -53,6 +53,15 @@
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions"},
       {"path": "~/.config/opencode/opencode.json", "level": "User", "kind": "settings"},
       {"path": "opencode.json", "level": "Project", "kind": "settings"}
+    ],
+    "plugins": [
+      {"format": "opencode-files", "path": "~/.config/opencode/plugins"},
+      {"format": "opencode-files", "path": "~/.config/opencode/plugin"},
+      {"format": "opencode-files", "path": ".opencode/plugins", "level": "Project"},
+      {"format": "opencode-files", "path": ".opencode/plugin", "level": "Project"},
+      {"format": "opencode-config", "path": "~/.config/opencode/opencode.json", "label": "npm"},
+      {"format": "opencode-config", "path": "~/.config/opencode/opencode.jsonc", "label": "npm"},
+      {"format": "opencode-config", "path": "opencode.json", "level": "Project", "label": "npm"}
     ],
     "logs": [
       {"path": "~/.local/share/opencode/log", "label": "Logs"}
@@ -76,6 +85,9 @@
       {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "nested": true, "label": "REPO"},
       {"path": "~/.codex/config.toml", "level": "User", "kind": "settings"}
     ],
+    "plugins": [
+      {"format": "codex", "path": "~/.codex/config.toml"}
+    ],
     "logs": [
       {"path": "~/.codex/log", "label": "Logs"},
       {"path": "~/.codex/sessions", "label": "Sessions", "pattern": "*.jsonl", "depth": 4, "format": "codex-session"}
@@ -97,12 +109,16 @@
       {"path": "~/.cursor/mcp.json", "level": "User", "kind": "mcp", "label": "Global"},
       {"path": ".cursor/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
     ],
+    "plugins": [
+      {"format": "folders", "path": "~/.cursor/plugins", "depth": 4, "manifests": [".cursor-plugin/plugin.json", ".claude-plugin/plugin.json"]},
+      {"format": "vscode", "path": "~/.cursor/extensions", "label": "Extensions"}
+    ],
     "logs": [
       {"path": "%APPDATA%/Cursor/logs", "label": "Logs", "depth": 4, "os": "windows"},
       {"path": "~/Library/Application Support/Cursor/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Cursor/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort."
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Plugin (~/.cursor/plugins) and extension paths are best-effort."
   },
   {
     "id": "gemini-cli", "context": "gemini", "limits": "gemini", "name": "Gemini CLI", "category": "agent", "logo": "geminicli",
@@ -119,13 +135,17 @@
       {"path": "~/.gemini/settings.json", "level": "User", "kind": "settings"},
       {"path": ".gemini/settings.json", "level": "Project", "kind": "settings", "label": "Workspace"}
     ],
+    "plugins": [
+      {"format": "folders", "path": "~/.gemini/extensions", "depth": 1, "manifests": ["gemini-extension.json"], "label": "Extensions"},
+      {"format": "folders", "path": ".gemini/extensions", "level": "Project", "depth": 1, "manifests": ["gemini-extension.json"], "label": "Extensions"}
+    ],
     "logs": [
       {"path": "~/.gemini/tmp", "label": "Sessions", "pattern": "*.json", "depth": 3}
     ],
     "notes": "Skill paths are best-effort; edit apps.json if yours differ. Log paths are best-effort."
   },
   {
-    "id": "windsurf", "name": "Windsurf", "category": "editor", "logo": "windsurf",
+    "id": "windsurf", "context": "windsurf", "name": "Windsurf", "category": "editor", "logo": "windsurf",
     "detect": ["~/.codeium/windsurf"],
     "roots": [
       {"path": "~/.codeium/windsurf/skills", "level": "User", "label": "Global"}
@@ -136,14 +156,18 @@
     "configs": [
       {"path": "~/.codeium/windsurf/memories/global_rules.md", "level": "User", "kind": "instructions", "label": "Global"},
       {"path": ".windsurf/rules", "level": "Project", "kind": "instructions", "label": "Workspace"},
+      {"path": ".devin/rules", "level": "Project", "kind": "instructions", "label": "Workspace (Devin Desktop)"},
       {"path": "~/.codeium/windsurf/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"}
+    ],
+    "plugins": [
+      {"format": "vscode", "path": "~/.windsurf/extensions", "label": "Extensions"}
     ],
     "logs": [
       {"path": "%APPDATA%/Windsurf/logs", "label": "Logs", "depth": 4, "os": "windows"},
       {"path": "~/Library/Application Support/Windsurf/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Windsurf/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort (from the skills CLI agent table); edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort."
+    "notes": "Skill paths are best-effort (from the skills CLI agent table); edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Extension path is best-effort."
   },
   {
     "id": "github-copilot", "context": "copilot", "limits": "copilot", "name": "GitHub Copilot", "category": "agent", "logo": "githubcopilot",
@@ -157,12 +181,17 @@
     "configs": [
       {"path": ".github/copilot-instructions.md", "level": "Project", "kind": "instructions", "label": "Repository"},
       {"path": ".github/instructions", "level": "Project", "kind": "instructions", "label": "Repository"},
-      {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Repository"}
+      {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Repository"},
+      {"path": ".vscode/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace (VS Code)"}
+    ],
+    "plugins": [
+      {"format": "folders", "path": "~/.copilot/state/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]},
+      {"format": "folders", "path": "~/.copilot/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]}
     ],
     "logs": [
       {"path": "~/.copilot/logs", "label": "Logs"}
     ],
-    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Config file paths are best-effort."
+    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Config file paths are best-effort. Plugin paths (installed-plugins/marketplace/name) are best-effort."
   },
   {
     "id": "amp", "name": "Amp", "category": "agent", "logo": "amp",
@@ -187,15 +216,26 @@
     "configs": [
       {"path": "~/.config/goose/.goosehints", "level": "User", "kind": "instructions"},
       {"path": ".goosehints", "level": "Project", "kind": "instructions"},
-      {"path": "~/.config/goose/config.yaml", "level": "User", "kind": "settings"}
+      {"path": "~/.config/goose/config.yaml", "level": "User", "kind": "settings", "os": "linux"},
+      {"path": "~/.config/goose/config.yaml", "level": "User", "kind": "settings", "os": "macos"},
+      {"path": "%APPDATA%/Block/goose/config/config.yaml", "level": "User", "kind": "settings", "os": "windows"}
+    ],
+    "plugins": [
+      {"format": "goose", "path": "~/.config/goose/config.yaml", "os": "linux", "label": "Extensions"},
+      {"format": "goose", "path": "~/.config/goose/config.yaml", "os": "macos", "label": "Extensions"},
+      {"format": "goose", "path": "%APPDATA%/Block/goose/config/config.yaml", "os": "windows", "label": "Extensions"}
     ],
     "logs": [
-      {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 2}
+      {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "linux"},
+      {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "macos"},
+      {"path": "%APPDATA%/Block/goose/data/logs", "label": "Logs", "depth": 3, "os": "windows"},
+      {"path": "%APPDATA%/Goose/logs", "label": "Desktop", "os": "windows"},
+      {"path": "~/Library/Logs/Goose", "label": "Desktop", "os": "macos"}
     ],
-    "notes": "Skill and detect paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort."
+    "notes": "Skill and detect paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths on macOS and Linux are best-effort."
   },
   {
-    "id": "qwen-code", "name": "Qwen Code", "category": "agent", "logo": "qwen",
+    "id": "qwen-code", "context": "qwen", "name": "Qwen Code", "category": "agent", "logo": "qwen",
     "detect": ["~/.qwen"],
     "roots": [
       {"path": "~/.qwen/skills", "level": "User"}
@@ -209,6 +249,10 @@
       {"path": "~/.qwen/settings.json", "level": "User", "kind": "settings"},
       {"path": ".qwen/settings.json", "level": "Project", "kind": "settings"}
     ],
+    "plugins": [
+      {"format": "folders", "path": "~/.qwen/extensions", "depth": 1, "manifests": ["qwen-extension.json", "gemini-extension.json"], "label": "Extensions"},
+      {"format": "folders", "path": ".qwen/extensions", "level": "Project", "depth": 1, "manifests": ["qwen-extension.json", "gemini-extension.json"], "label": "Extensions"}
+    ],
     "logs": [
       {"path": "~/.qwen/tmp", "label": "Sessions", "pattern": "*.json", "depth": 3}
     ],
@@ -220,7 +264,14 @@
     "roots": [
       {"path": "~/.factory/skills", "level": "User"}
     ],
-    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents."
+    "plugins": [
+      {"format": "enabled-list", "path": "~/.factory/settings.json"},
+      {"format": "enabled-list", "path": ".factory/settings.json", "level": "Project"}
+    ],
+    "logs": [
+      {"path": "~/.factory/sessions", "label": "Sessions", "pattern": "*.jsonl", "depth": 2}
+    ],
+    "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Plugin settings and session paths are best-effort."
   },
   {
     "id": "mistral-vibe", "name": "Mistral Vibe", "category": "agent", "logo": "mistral",
@@ -352,7 +403,13 @@
     "projectRoots": [
       {"path": ".hermes/skills", "level": "Project"}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ."
+    "plugins": [
+      {"format": "folders", "path": "~/.hermes/plugins", "depth": 1, "manifests": ["plugin.yaml", "plugin.yml"]}
+    ],
+    "logs": [
+      {"path": "~/.hermes/logs", "label": "Logs"}
+    ],
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Plugin and log paths are best-effort."
   },
   {
     "id": "openclaw", "name": "OpenClaw", "category": "agent", "logo": "openclaw",
@@ -362,7 +419,15 @@
       {"path": "~/.clawdbot/skills", "level": "User"},
       {"path": "~/.moltbot/skills", "level": "User"}
     ],
-    "notes": "Skill paths are best-effort. Workspace skills (a top-level skills folder) are not scanned."
+    "plugins": [
+      {"format": "folders", "path": "~/.openclaw/extensions", "depth": 1, "manifests": ["openclaw.plugin.json"]}
+    ],
+    "logs": [
+      {"path": "/tmp/openclaw", "label": "Logs", "os": "linux"},
+      {"path": "/tmp/openclaw", "label": "Logs", "os": "macos"},
+      {"path": "~/Library/Logs/openclaw", "label": "Logs", "os": "macos"}
+    ],
+    "notes": "Skill paths are best-effort. Workspace skills (a top-level skills folder) are not scanned. Plugin and log paths are best-effort."
   },
   {
     "id": "codebuddy", "name": "CodeBuddy", "category": "agent", "logo": "codebuddy",
@@ -376,7 +441,7 @@
     "notes": "Skill paths are best-effort; edit apps.json if yours differ."
   },
   {
-    "id": "kiro", "name": "Kiro", "category": "editor", "logo": "kiro",
+    "id": "kiro", "context": "kiro", "name": "Kiro", "category": "editor", "logo": "kiro",
     "detect": ["~/.kiro"],
     "roots": [
       {"path": "~/.kiro/skills", "level": "User", "label": "Global"}
@@ -389,6 +454,9 @@
       {"path": ".kiro/steering", "level": "Project", "kind": "instructions", "label": "Workspace"},
       {"path": "~/.kiro/settings/mcp.json", "level": "User", "kind": "mcp", "label": "Global"},
       {"path": ".kiro/settings/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
+    ],
+    "plugins": [
+      {"format": "vscode", "path": "~/.kiro/extensions", "label": "Extensions"}
     ],
     "logs": [
       {"path": "%APPDATA%/Kiro/logs", "label": "Logs", "depth": 4, "os": "windows"},
@@ -407,12 +475,15 @@
     "projectRoots": [
       {"path": ".agent/skills", "level": "Project", "label": "Workspace"}
     ],
+    "plugins": [
+      {"format": "vscode", "path": "~/.antigravity/extensions", "label": "Extensions"}
+    ],
     "logs": [
       {"path": "%APPDATA%/Antigravity/logs", "label": "Logs", "depth": 4, "os": "windows"},
       {"path": "~/Library/Application Support/Antigravity/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Antigravity/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort and have changed between versions; edit apps.json if yours differ. Log paths are best-effort."
+    "notes": "Skill paths are best-effort and have changed between versions; edit apps.json if yours differ. Log and extension paths are best-effort."
   },
   {
     "id": "trae", "name": "Trae", "category": "editor", "logo": "trae",
@@ -423,12 +494,15 @@
     "projectRoots": [
       {"path": ".trae/skills", "level": "Project", "label": "Workspace"}
     ],
+    "plugins": [
+      {"format": "vscode", "path": "~/.trae/extensions", "label": "Extensions"}
+    ],
     "logs": [
       {"path": "%APPDATA%/Trae/logs", "label": "Logs", "depth": 4, "os": "windows"},
       {"path": "~/Library/Application Support/Trae/logs", "label": "Logs", "depth": 4, "os": "macos"},
       {"path": "~/.config/Trae/logs", "label": "Logs", "depth": 4, "os": "linux"}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ."
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Extension path is best-effort."
   },
   {
     "id": "qoder", "name": "Qoder", "category": "editor", "logo": "qoder",
@@ -439,7 +513,10 @@
     "projectRoots": [
       {"path": ".qoder/skills", "level": "Project", "label": "Workspace"}
     ],
-    "notes": "Skill paths are best-effort; edit apps.json if yours differ."
+    "plugins": [
+      {"format": "vscode", "path": "~/.qoder/extensions", "label": "Extensions"}
+    ],
+    "notes": "Skill paths are best-effort; edit apps.json if yours differ. Extension path is best-effort."
   },
   {
     "id": "zed", "name": "Zed", "category": "editor", "logo": "zed",
@@ -448,6 +525,11 @@
       {"path": "~/.config/zed/settings.json", "level": "User", "kind": "settings"},
       {"path": ".zed/settings.json", "level": "Project", "kind": "settings"},
       {"path": ".rules", "level": "Project", "kind": "instructions"}
+    ],
+    "plugins": [
+      {"format": "folders", "path": "%LOCALAPPDATA%/Zed/extensions/installed", "os": "windows", "depth": 1, "manifests": ["extension.toml", "extension.json"], "label": "Extensions"},
+      {"format": "folders", "path": "~/Library/Application Support/Zed/extensions/installed", "os": "macos", "depth": 1, "manifests": ["extension.toml", "extension.json"], "label": "Extensions"},
+      {"format": "folders", "path": "~/.local/share/zed/extensions/installed", "os": "linux", "depth": 1, "manifests": ["extension.toml", "extension.json"], "label": "Extensions"}
     ],
     "logs": [
       {"path": "%LOCALAPPDATA%/Zed/logs", "label": "Logs", "os": "windows"},
@@ -483,7 +565,12 @@
     "projectRoots": [
       {"path": ".orca/skills", "level": "Project", "layout": "flat-md"}
     ],
-    "notes": "Orchestrator. Per-repo skills are Markdown files in .orca/skills. Detect paths are best-effort; edit apps.json if yours differ."
+    "logs": [
+      {"path": "%APPDATA%/orca/logs", "label": "Logs", "os": "windows"},
+      {"path": "~/Library/Application Support/orca/logs", "label": "Logs", "os": "macos"},
+      {"path": "~/.config/orca/logs", "label": "Logs", "os": "linux"}
+    ],
+    "notes": "Orchestrator. Per-repo skills are Markdown files in .orca/skills. Detect paths are best-effort; edit apps.json if yours differ. Log paths on macOS and Linux are best-effort."
   },
   {
     "id": "claude-desktop", "name": "Claude Desktop", "category": "chat", "logo": "claude",
@@ -492,11 +579,15 @@
       {"path": "%APPDATA%/Claude/claude_desktop_config.json", "level": "User", "kind": "mcp", "os": "windows"},
       {"path": "~/Library/Application Support/Claude/claude_desktop_config.json", "level": "User", "kind": "mcp", "os": "macos"}
     ],
+    "plugins": [
+      {"format": "folders", "path": "%APPDATA%/Claude/Claude Extensions", "os": "windows", "depth": 1, "manifests": ["manifest.json"], "label": "Extensions"},
+      {"format": "folders", "path": "~/Library/Application Support/Claude/Claude Extensions", "os": "macos", "depth": 1, "manifests": ["manifest.json"], "label": "Extensions"}
+    ],
     "logs": [
       {"path": "%APPDATA%/Claude/logs", "label": "Logs", "os": "windows"},
       {"path": "~/Library/Logs/Claude", "label": "Logs", "os": "macos"}
     ],
-    "notes": "No skills folder. Detect and config file paths are best-effort."
+    "notes": "No skills folder. Detect and config file paths are best-effort. Extensions (MCP bundles) path is best-effort."
   },
   {
     "id": "ollama", "name": "Ollama", "category": "runtime", "logo": "ollama",

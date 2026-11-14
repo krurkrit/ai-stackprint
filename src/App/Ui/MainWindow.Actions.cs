@@ -99,7 +99,7 @@ internal partial class MainWindow
         var r = await Task.Run(() => Scanner.Collect(defs, projects));
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
-        (_s.Changes, _s.Health) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File), Health.Compute(items)));
+        (_s.Changes, _s.Health) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File), Health.Compute(items).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList()));
         var first = !_scanned;
         _scanning = false; _scanned = true;
         Refresh();

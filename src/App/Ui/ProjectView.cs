@@ -12,7 +12,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// Everything that applies inside one project folder: what each app loads into context there (with limits), the instruction files,
+/// Everything that applies inside one project folder: what each app loads into context there (with limits), checks of its AI files, the instruction files,
 /// and its own skills plus user- and system-level ones in the same list as the Skills page (filters, bottom panel).
 /// </summary>
 internal class ProjectView(Ctx x, Action<string> removeProject)
@@ -20,6 +20,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
     private static readonly string[] _order = Levels.Order;
     private readonly ItemBrowser _browser = new(x, "Skill");
     private readonly ContextSection _context = new(x);
+    private readonly ProjectChecksSection _checks = new(x);
     private string? _project;   // project the list state belongs to: reset when another opens
 
     /// <summary>Rows that take effect in <paramref name="project"/>: rows from that project, or rows not tied to any project.</summary>
@@ -47,7 +48,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
             summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => c.Margin = new Avalonia.Thickness(0, 0, 8, 0)));
         }
 
-        var top = new List<Control> { head, summary, _context.Build(project), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
+        var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
         return _browser.Build(top, skills);
     }
 

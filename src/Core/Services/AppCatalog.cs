@@ -43,14 +43,16 @@ public static class AppCatalog
     }
     public static string UserFile => Path.Combine(Folder, "apps.json");
 
+    /// <summary>The built-in app definitions only (apps.builtin.json), without the user's apps.json.</summary>
+    public static List<AppDefinition> BuiltIn()
+    {
+        using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("apps.builtin.json")!;
+        return JsonSerializer.Deserialize<List<AppDefinition>>(s, _opt) ?? [];
+    }
+
     public static List<AppDefinition> Load()
     {
-        var defs = new List<AppDefinition>();
-        using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("apps.builtin.json")!)
-        {
-            defs.AddRange(JsonSerializer.Deserialize<List<AppDefinition>>(s, _opt) ?? []);
-        }
-
+        var defs = BuiltIn();
         foreach (var u in ReadUser())
         {
             u.Origin = defs.RemoveAll(d => d.Id == u.Id) > 0 ? AppOrigin.Override : AppOrigin.Custom;

@@ -12,7 +12,9 @@ public enum LoadWhen { Always, Imported, OnDemand, Conditional, AgentDecides, Ma
 /// <param name="Via">The file that imports this one (@path).</param>
 /// <param name="Kept">Bytes or characters the app keeps when it cuts the file (null = all of it; 0 = not loaded).</param>
 /// <param name="Counted">false when the app's limit does not count this file (Codex: the global AGENTS.md).</param>
-public record ContextFile(string Path, LoadWhen Load, long Bytes, int Chars, string? Via = null, string? Note = null, long? Kept = null, bool Counted = true)
+/// <param name="Patterns">For <see cref="LoadWhen.Conditional"/>: the file patterns it applies to, relative to the project.</param>
+public record ContextFile(string Path, LoadWhen Load, long Bytes, int Chars, string? Via = null, string? Note = null, long? Kept = null, bool Counted = true,
+    IReadOnlyList<string>? Patterns = null)
 {
     public int Tokens => Chars / 4;   // rough: about four characters per token
 }
@@ -39,7 +41,11 @@ public interface IContextRule
 /// <summary>Helpers shared by the rules: file sizes, @imports, folder walks. Read-only.</summary>
 public static partial class ContextBudget
 {
-    public static readonly IContextRule[] Rules = [new ClaudeContext(), new CodexContext(), new GeminiContext(), new CopilotContext(), new CursorContext()];
+    public static readonly IContextRule[] Rules =
+    [
+        new ClaudeContext(), new CodexContext(), new GeminiContext(), new CopilotContext(), new CursorContext(), new WindsurfContext(), new KiroContext(), new QwenContext(),
+        new OpenCodeContext(),
+    ];
     public static IContextRule? Find(string? id) => id == null ? null : Rules.FirstOrDefault(r => r.Id == id);
 
     private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
@@ -152,10 +158,13 @@ public static partial class ContextBudget
     [GeneratedRegex(@"`[^`\n]*`")] private static partial Regex CodeSpan();
     [GeneratedRegex(@"(?<![\w@`""'/])@((?:\\ |[^\s`""'<>(){}\[\]])+)")] private static partial Regex ImportToken();
 
+    /// <summary>Markdown without fenced blocks and code spans: what is left is prose, links and imports.</summary>
+    public static string Prose(string md) => CodeSpan().Replace(Fenced().Replace(md, ""), "");
+
     /// <summary>@path imports in Markdown: not inside code spans or fenced blocks, not quoted; "\ " is a space in the path.</summary>
     public static List<string> Imports(string md)
     {
-        var plain = CodeSpan().Replace(Fenced().Replace(md, ""), "");
+        var plain = Prose(md);
         return [.. ImportToken().Matches(plain).Select(m => m.Groups[1].Value.TrimEnd('.', ',', ';', ':', '!', '?').Replace("\\ ", " "))
             .Where(p => p.Length > 0).Distinct()];
     }

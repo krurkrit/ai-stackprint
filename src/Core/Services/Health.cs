@@ -5,9 +5,13 @@ using AiStackprint.Models;
 
 namespace AiStackprint.Services;
 
-/// <param name="Area">Skills or Plugins.</param>
-/// <param name="Subject">The skill, plugin or app it is about.</param>
-public record HealthIssue(string Area, string Subject, string App, Finding Finding, Item? Item = null);
+/// <param name="Area">Skills, Plugins or Projects.</param>
+/// <param name="Subject">The skill, plugin, app or project it is about.</param>
+public record HealthIssue(string Area, string Subject, string App, Finding Finding, Item? Item = null)
+{
+    /// <summary>The project folder, for issues of the Projects area.</summary>
+    public string? Project { get; init; }
+}
 
 /// <summary>
 /// Checks over the whole scan: each skill against the Agent Skills format (<see cref="SkillCheck"/>), the size of Claude Code's skill list,

@@ -123,7 +123,7 @@ internal class AppDetailView(Ctx x)
     private Control Plugins(AppDefinition d, List<Item> items)
     {
         var plugins = items.Where(i => i.Kind == "Plugin").OrderBy(i => i.Name).ToList();
-        if (d.PluginManifest == null && plugins.Count == 0)
+        if (d.PluginManifest == null && d.Plugins.Count == 0 && plugins.Count == 0)
         {
             return new Panel();
         }

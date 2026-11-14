@@ -18,6 +18,7 @@ public record Item(string Kind, string Name, string Description, string Source, 
     public string? Version { get; init; }         // plugins: version from the app's plugin registry
     public string? Author { get; init; }          // plugin manifest author, or SKILL.md author / metadata.author
     public IReadOnlyList<string> Keywords { get; init; } = [];   // plugins: keywords from the manifest (search)
+    public IReadOnlyList<string> Provides { get; init; } = [];   // plugins: what it adds, PluginParts keys (skills, commands, agents, hooks, mcp, lsp)
 }
 
 public record AppInfo(string Id, string Name, string Category, string? Logo, bool Installed, string? Folder);
@@ -70,6 +71,21 @@ public class PluginCommands
     public List<string> Remove { get; set; } = [];
 }
 
+/// <summary>
+/// Where an app keeps installed plugins or extensions, and how to read them (an <c>IPluginReader</c> format: codex, folders, vscode,
+/// opencode-files, opencode-config, goose, enabled-list). A Project-level path is relative to each project folder.
+/// </summary>
+public class PluginSource
+{
+    public string Format { get; set; } = "folders";
+    public string Path { get; set; } = "";
+    public string Level { get; set; } = "User";              // User | System | Project
+    public string? Os { get; set; }                          // windows | macos | linux; null = all
+    public string? Label { get; set; }                       // the app's own word: Extension, Plugin
+    public List<string> Manifests { get; set; } = [];        // folders: manifest files to look for, first found wins (default: PluginManifests.Known)
+    public int Depth { get; set; } = 2;                      // folders: how deep plugin folders sit under Path
+}
+
 public enum AppOrigin { BuiltIn, Custom, Override }
 
 /// <summary>Data-driven description of an AI app. Built-ins live in Assets/apps.builtin.json.</summary>
@@ -86,6 +102,7 @@ public class AppDefinition
     public string? PluginFormat { get; set; }                 // key of an IPluginReader
     public string? PluginManifest { get; set; }
     public PluginCommands? PluginCommands { get; set; }
+    public List<PluginSource> Plugins { get; set; } = [];   // more plugin and extension locations, read the same way for every app
     public List<LogSource> Logs { get; set; } = [];
     public List<LogSource> Usage { get; set; } = [];       // usage-only sources (an app's database): Usage card, not the Logs page
     public string? Context { get; set; }                       // IContextRule id: what the app loads into context in a project (claude, codex, gemini, copilot, cursor)

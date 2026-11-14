@@ -51,12 +51,12 @@ internal partial class GeminiContext : IContextRule
         return new ContextReport(Id, "characters", null, null, files, findings);
     }
 
-    /// <summary>context.fileName: a string or a list; GEMINI.md when not set.</summary>
-    private static List<string> Names(string settings)
+    /// <summary>context.fileName: a string or a list; <paramref name="fallback"/> when not set.</summary>
+    internal static List<string> Names(string settings, string fallback = "GEMINI.md")
     {
         var m = FileNameSetting().Match(settings);
         var list = m.Success ? Quoted().Matches(m.Groups[1].Value).Select(x => x.Groups[1].Value).ToList() : [];
-        return list.Count > 0 ? list : ["GEMINI.md"];
+        return list.Count > 0 ? list : [fallback];
     }
 
     [GeneratedRegex("\"fileName\"\\s*:\\s*(\\[[^\\]]*\\]|\"[^\"]*\")")]
@@ -87,7 +87,9 @@ internal class CopilotContext : IContextRule
         foreach (var f in FilesIn(Path.Combine(project, ".github", "instructions"), "*.instructions.md"))
         {
             var apply = SkillDoc.Parse(ReadText(f)).Get("applyTo");
-            files.Add(Measure(f, apply == "" ? LoadWhen.AgentDecides : LoadWhen.Conditional, null, apply == "" ? "No applyTo: used when relevant" : "For " + apply));
+            files.Add(Measure(f, apply == "" ? LoadWhen.AgentDecides : LoadWhen.Conditional, null, apply == "" ? "No applyTo: used when relevant" : "For " + apply)
+                with
+            { Patterns = apply == "" ? null : Glob.Split(apply) });
         }
         return new ContextReport(Id, "characters", null, null, files, []);
     }
@@ -114,7 +116,7 @@ internal class CursorContext : IContextRule
                 : globs != "" ? (LoadWhen.Conditional, "For " + globs)
                 : desc != "" ? (LoadWhen.AgentDecides, "The agent decides from its description")
                 : (LoadWhen.Manual, "Only when you @mention it");
-            files.Add(Measure(f, load, null, note));
+            files.Add(Measure(f, load, null, note) with { Patterns = load == LoadWhen.Conditional ? Glob.Split(globs) : null });
             if (doc.Lines > RuleLines)
             {
                 findings.Add(new($"{Path.GetFileName(f)} has {doc.Lines:N0} lines; Cursor suggests under {RuleLines}.", false));
