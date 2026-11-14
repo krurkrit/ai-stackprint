@@ -37,7 +37,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Level is check boxes for System, Local, Project and User, all checked by default.
   - Invoked by has four options: Agent or User (all), Agent only, User only, Agent and User.
   - App category is also a filter.
-  - The same filters appear on an app's Skills section.
+  - The same filters, and the same search, appear on an app's Skills section.
+- Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, app, level, keyword or tag, path) matches one field; author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
 
 ## Project page
 - Shows the skill list with the Skills-page features.
@@ -51,6 +52,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Changes in the log folder update the file list (size, modified time) live.
   - Deleting logs moves them to the Recycle Bin or Trash.
 - Search has a results list and jump-to-line. Search results use the log font size, and all search-row controls are the same height.
+  - Words match separately, in any order, on one line (Raw) or in one step (Conversation); "quotes" match a phrase; the regex toggle uses the whole text as one pattern. In Conversation, role:user and tool:bash keep only those steps. Matches are highlighted in the results; Enter / Shift+Enter go to the next / previous one ("3 of 120"). The search runs 250 ms after the last key.
+  - The Files card has a filter (words in the file name, type or folder).
 - Each app has a log summary.
 - Highlighting and rendering:
   - Session logs are readable, with syntax highlighting.

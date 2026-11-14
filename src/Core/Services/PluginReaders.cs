@@ -50,9 +50,9 @@ internal class ClaudePluginReader : IPluginReader
                     var scope = Str("scope") is "" ? "user" : Str("scope");
                     var level = scope switch { "project" => "Project", "local" => "Local", "managed" => "System", _ => "User" };
                     var project = Str("projectPath") is "" ? null : Str("projectPath");
-                    var (desc, author) = Manifest(path);
+                    var (desc, author, keywords) = Manifest(path);
                     rows.Add(new Item("Plugin", p.Name, desc, app.Name, level, path)
-                    { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name) });
+                    { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = author ?? Market(p.Name), Keywords = keywords });
                     if (path != "")
                     {
                         Scanner.Tagged(rows, () => Scanner.ReadRoot(path, new ScanRoot { Level = level, Depth = 6 }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
@@ -64,13 +64,13 @@ internal class ClaudePluginReader : IPluginReader
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { }
     }
 
-    /// <summary>Description and author from installPath/.claude-plugin/plugin.json; author is a string or { "name": … }.</summary>
-    public static (string Description, string? Author) Manifest(string installPath)
+    /// <summary>Description, author and keywords from installPath/.claude-plugin/plugin.json; author is a string or { "name": … }.</summary>
+    public static (string Description, string? Author, IReadOnlyList<string> Keywords) Manifest(string installPath)
     {
         var f = Path.Combine(installPath, ".claude-plugin", "plugin.json");
         if (installPath == "" || !File.Exists(f))
         {
-            return ("", null);
+            return ("", null, []);
         }
 
         try
@@ -84,9 +84,12 @@ internal class ClaudePluginReader : IPluginReader
                 JsonValueKind.Object when a.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String => n.GetString(),
                 _ => null
             } : null;
-            return (desc, string.IsNullOrWhiteSpace(author) ? null : author.Trim());
+            var keywords = r.TryGetProperty("keywords", out var k) && k.ValueKind == JsonValueKind.Array
+                ? k.EnumerateArray().Where(w => w.ValueKind == JsonValueKind.String).Select(w => w.GetString()!.Trim()).Where(w => w != "").Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+                : [];
+            return (desc, string.IsNullOrWhiteSpace(author) ? null : author.Trim(), keywords);
         }
-        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { return ("", null); }
+        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { return ("", null, []); }
     }
 
     /// <summary>The marketplace part of name@marketplace: the owner when the manifest names no author.</summary>

@@ -27,12 +27,13 @@ internal partial class LogsView(Ctx x)
     private ContentControl _table = new();
     private LogFolderWatcher? _watcher;
     private string? _watching;   // app whose folders are watched
+    private string _fileQuery = "";   // filters the Files list: words in the file name, type or folder
 
     private IEnumerable<AppDefinition> Apps => x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id));
 
     public Control Build(string? appId)
     {
-        if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); }
+        if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); _fileQuery = ""; }
         _app ??= Apps.FirstOrDefault(d => x.Info(d.Id)?.Installed == true)?.Id ?? Apps.FirstOrDefault()?.Id;
         var def = _app == null ? null : x.S.Def(_app);
         Relist(def);
@@ -75,7 +76,9 @@ internal partial class LogsView(Ctx x)
 
                 x.Go("Logs:" + _app);
             };
-            right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() }, [.. del.Prepend(follow)]));
+            var search = SearchBox("Filter files by name, type or folder").With(b => { b.Text = _fileQuery; ToolTip.SetTip(b, "Words match separately, in any order; \"quotes\" match a phrase."); })
+                .OnPause(q => { _fileQuery = q; FillTable(def); });
+            right.Children.Add(Section("document_text", "Files", new StackPanel { Spacing = Space.L, Children = { search, new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() } } }, [.. del.Prepend(follow)]));
             FillTable(def);
         }
         right.Children.Add(_viewer.Build(_file, () => x.Go("Logs:" + _app)));
@@ -104,7 +107,8 @@ internal partial class LogsView(Ctx x)
 
     private void FillTable(AppDefinition def)
     {
-        var rows = _files.Select(f =>
+        var q = SearchQuery.Parse(_fileQuery);
+        var rows = _files.Where(f => q.InText($"{Path.GetFileName(f.Path)} {f.Label} {Path.GetDirectoryName(f.Path)}")).Select(f =>
         {
             var check = new CheckBox { IsChecked = _checked.Contains(f.Path) };
             check.IsCheckedChanged += (_, _) =>
@@ -120,13 +124,13 @@ internal partial class LogsView(Ctx x)
             };
             return new TableRow(
             [
-                check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path)),   // type on the second line: the name needs the width
+                check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path), marks: q),   // type on the second line: the name needs the width
                 Txt(LogViewer.Size(f.Size), TextSize.Small), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), TextSize.Small),
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete([f]))
             ], () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });
         _table.Content = Table.Build([new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40")], rows,
-            "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
+            q.IsEmpty || _files.Count == 0 ? "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : "") : "No files match the filter.");
     }
 
     /// <summary>F5 on the Logs page: find the files again and re-read the open one.</summary>

@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
 
@@ -101,6 +102,15 @@ internal static partial class W
         PlaceholderText = placeholder,
         InnerLeftContent = Icon("search", IconSize.S).Themed(TextElement.ForegroundProperty, Muted).With(i => { i.Margin = new Thickness(Space.L, 0, 0, 0); i.VerticalAlignment = VerticalAlignment.Center; })
     }.With(t => { if (minHeight > 0) { t.MinHeight = minHeight; } });
+
+    /// <summary>Calls <paramref name="changed"/> with the text once typing pauses (150 ms), not on every key.</summary>
+    public static TextBox OnPause(this TextBox box, Action<string> changed)
+    {
+        var wait = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        wait.Tick += (_, _) => { wait.Stop(); changed(box.Text ?? ""); };
+        box.TextChanged += (_, _) => { wait.Stop(); wait.Start(); };
+        return box;
+    }
 
     /// <summary>
     /// One check box per value; <paramref name="off"/> holds the unchecked values (empty = all checked).

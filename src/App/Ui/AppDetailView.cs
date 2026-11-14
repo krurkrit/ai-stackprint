@@ -18,6 +18,7 @@ internal class AppDetailView(Ctx x)
     private readonly UsageCard.Prefs _usage = new();
     private readonly SkillFilter _skillFilter = new();
     private string? _skillsApp;   // app the skill filters belong to: reset when another app opens
+    private string _skillQuery = "";
 
     public Control Build(string appId)
     {
@@ -141,11 +142,13 @@ internal class AppDetailView(Ctx x)
 
     private Border Skills(AppDefinition d, List<Item> items)
     {
-        if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); }
+        if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); _skillQuery = ""; }
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => Levels.Rank(i.Level)).ThenBy(i => i.Name).ToList();
+        var index = new ItemSearch(skills, ItemAuthor.For(x.S.Items));
+        var query = SearchQuery.Empty;
         TableRow Row(Item s) => new(
         [
-            Table.NameDesc(s.Name, s.Description), LevelCell(s), InvokeCell(s), Txt(From(s), TextSize.Small, false, Muted),
+            Table.NameDesc(s.Name, s.Description, marks: query), LevelCell(s), InvokeCell(s), Txt(From(s), TextSize.Small, false, Muted),
             W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(s.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, s.Path)),
                 SkillManager.CannotRemove(s) == null ? IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, s)) : new Panel())
         ], () => x.Open(s));
@@ -160,11 +163,15 @@ internal class AppDetailView(Ctx x)
             }
 
             var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
-            var table = Table.Build(cols, _skillFilter.Rows([.. skills.Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match these filters.");
+            query = SearchQuery.Parse(_skillQuery);
+            var table = Table.Build(cols, _skillFilter.Rows([.. index.Find(query).Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match the search or these filters.");
             body.Content = new StackPanel { Spacing = Space.XL, Children = { filters, table } };
         }
         Fill();
+        // The search box stays outside the part Fill replaces, so it keeps the focus while you type
+        var search = SearchBox("Search skills, or author: level: name:").With(b => { b.Text = _skillQuery; b.IsVisible = skills.Count > 0; ToolTip.SetTip(b, ItemBrowser.SearchTip); })
+            .OnPause(q => { _skillQuery = q; Fill(); });
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();
-        return Section("sparkle", $"Skills · {skills.Count}", body, add);
+        return Section("sparkle", $"Skills · {skills.Count}", new StackPanel { Spacing = Space.XL, Children = { search, body } }, add);
     }
 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace AiStackprint.Services;
 
@@ -13,44 +12,84 @@ public record SearchHit(long Line, string Text, int Column, int Length);
 public static class LogSearch
 {
     public const int MaxHits = 1000;
+    private const int Block = 1 << 16;   // characters read at a time
 
-    /// <summary>Builds the matcher; throws ArgumentException for an invalid regex.</summary>
-    public static Regex Pattern(string query, bool matchCase, bool regex) =>
-        new(regex ? query : Regex.Escape(query), (matchCase ? RegexOptions.None : RegexOptions.IgnoreCase) | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
+    /// <summary>Builds the matcher for the raw file (<see cref="LogQuery"/>); throws ArgumentException for an invalid regex.</summary>
+    public static LogQuery Pattern(string query, bool matchCase, bool regex) =>
+        LogQuery.Parse(query, matchCase, regex) ?? throw new ArgumentException("Nothing to search for.", nameof(query));
 
-    public static List<SearchHit> File(string path, Regex pattern, int max = MaxHits, CancellationToken ct = default)
+    /// <summary>
+    /// Lines that match, with the first match in each line. Reads the file in blocks and tests each line in place:
+    /// only a matching line becomes a string, so a large file costs a block of memory, not a copy of every line.
+    /// </summary>
+    public static List<SearchHit> File(string path, LogQuery pattern, int max = MaxHits, CancellationToken ct = default)
     {
         var hits = new List<SearchHit>();
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         using var r = new StreamReader(fs, Encoding.UTF8, true);
+        var buf = new char[Block];
+        int len = 0;
         long n = 0;
-        while (r.ReadLine() is { } line)
+        bool Line(ReadOnlySpan<char> line)   // false when there are enough hits
         {
-            n++;
-            if ((n & 1023) == 0)
+            if ((++n & 1023) == 0)
             {
                 ct.ThrowIfCancellationRequested();
             }
 
-            Match m;
-            try { m = pattern.Match(line); }
-            catch (RegexMatchTimeoutException) { continue; }
-            if (!m.Success)
+            if (line.EndsWith("\r"))
             {
-                continue;
+                line = line[..^1];
             }
 
-            hits.Add(new SearchHit(n, Snippet(line, m.Index, m.Length), m.Index, m.Length));
-            if (hits.Count >= max)
+            if (!pattern.IsMatch(line))
             {
-                break;
+                return true;
+            }
+
+            var text = new string(line);
+            var (at, length) = pattern.First(text) ?? (0, 0);
+            hits.Add(new SearchHit(n, Snippet(text, at, length), at, length));
+            return hits.Count < max;
+        }
+
+        while (true)
+        {
+            var read = r.Read(buf, len, buf.Length - len);
+            if (read == 0)
+            {
+                if (len > 0)
+                {
+                    Line(buf.AsSpan(0, len));   // the last line has no line break
+                }
+
+                return hits;
+            }
+
+            len += read;
+            var start = 0;
+            for (int nl; (nl = buf.AsSpan(start, len - start).IndexOf('\n')) >= 0; start += nl + 1)
+            {
+                if (!Line(buf.AsSpan(start, nl)))
+                {
+                    return hits;
+                }
+            }
+
+            if (start > 0)
+            {
+                buf.AsSpan(start, len - start).CopyTo(buf);   // keep the unfinished line
+                len -= start;
+            }
+            else if (len == buf.Length)
+            {
+                Array.Resize(ref buf, buf.Length * 2);   // a line longer than the block
             }
         }
-        return hits;
     }
 
     /// <summary>Up to 160 characters around the match.</summary>
-    private static string Snippet(string line, int at, int len)
+    public static string Snippet(string line, int at, int len)
     {
         if (line.Length <= 160)
         {

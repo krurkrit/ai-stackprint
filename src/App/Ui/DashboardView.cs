@@ -124,15 +124,13 @@ internal static class DashboardView
     private static Control ByAuthor(Ctx x)
     {
         var items = x.S.Items.Where(i => i.Kind is "Skill" or "Plugin").ToList();
-        var pluginAuthor = items.Where(i => i.Kind == "Plugin" && i.Author != null).GroupBy(i => (i.App, i.Name)).ToDictionary(g => g.Key, g => g.First().Author!);
-        // A plugin's skills count for the plugin's author
-        string Author(Item i) => i.Author ?? (i.Plugin is { } p ? pluginAuthor.GetValueOrDefault((i.App, p)) ?? (p.Contains('@') ? p[(p.IndexOf('@') + 1)..] : p) : i.Bundled ? i.Source : "Local");
+        var author = ItemAuthor.For(items);   // a plugin's skills count for the plugin's author
         if (items.Count == 0)
         {
             return Txt("No skills or plugins found.", TextSize.Small, false, Muted);
         }
 
-        var groups = items.GroupBy(Author).OrderByDescending(g => g.Count()).ToList();
+        var groups = items.GroupBy(author).OrderByDescending(g => g.Count()).ToList();
         var top = groups.Take(TopAuthors).Select(g => (Name: g.Key, Skills: g.Count(i => i.Kind == "Skill"), Plugins: g.Count(i => i.Kind == "Plugin"), Other: false)).ToList();
         if (groups.Count > TopAuthors)
         {
@@ -144,7 +142,7 @@ internal static class DashboardView
         foreach (var (name, skills, plugins, other) in top)
         {
             sp.Children.Add(Bar(Txt(name, TextSize.Small, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(skills, ChartIn), (plugins, ChartOut)], skills + plugins, max,
-                other ? null : () => x.Browse(skills >= plugins ? "Skill" : "Plugin", null, name), $"{name}\nSkills: {skills}\nPlugins: {plugins}"));
+                other ? null : () => x.Browse(skills >= plugins ? "Skill" : "Plugin", null, $"author:\"{name}\""), $"{name}\nSkills: {skills}\nPlugins: {plugins}"));
         }
 
         sp.Children.Add(Row(DotText("Skills", ChartIn), DotText("Plugins", ChartOut)).With(r => r.Margin = new Thickness(0, Space.XS, 0, 0)));

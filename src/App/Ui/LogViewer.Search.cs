@@ -1,7 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Text.RegularExpressions;
 using AiStackprint.Services;
 
 using Avalonia;
@@ -14,31 +13,59 @@ namespace AiStackprint.Ui;
 
 internal partial class LogViewer
 {
-    private Regex? Pattern()
+    private LogQuery? Pattern()
     {
-        if (string.IsNullOrEmpty(_query.Text))
-        {
-            return null;
-        }
-
-        try { return LogSearch.Pattern(_query.Text, _case.IsChecked == true, _regex.IsChecked == true); }
+        try { return LogQuery.Parse(_query.Text, _case.IsChecked == true, _regex.IsChecked == true, steps: ShowReadable); }
         catch (ArgumentException) { return null; }
     }
 
     private readonly List<SearchHit> _hits = [];
+    private readonly List<Action> _jumps = [];   // one per result row, for Enter / Shift+Enter
+    private TextBlock? _count;
+    private int _at = -1;
+
+    /// <summary>Goes to the next (1) or previous (-1) result, round the end.</summary>
+    private void Next(int step)
+    {
+        if (_jumps.Count == 0)
+        {
+            return;
+        }
+
+        Go(((_at < 0 && step < 0 ? 0 : _at) + step + _jumps.Count) % _jumps.Count);
+    }
+
+    private void Go(int i)
+    {
+        _at = i;
+        _jumps[i]();
+        _count?.Text = $"{i + 1:N0} of {_count.Tag}";
+    }
 
     /// <summary>Raw: searches the whole file in the background. Conversation: searches the steps. Results go in the side panel.</summary>
     private async void Search()
     {
+        _wait.Stop();
         _search?.Cancel();
-        _hits.Clear();
+        _hits.Clear(); _jumps.Clear(); _at = -1; _count = null;
         var p = Pattern();
-        if (p == null || _file == null) { _results.Content = string.IsNullOrEmpty(_query.Text) ? null : Panel(Txt("Invalid pattern.", TextSize.Caption, false, Muted)); if (_only.IsChecked == true) { Render(false); } return; }
+        if (p == null || _file == null)
+        {
+            _results.Content = string.IsNullOrEmpty(_query.Text) || _regex.IsChecked != true ? null : Panel(Txt("Invalid pattern.", TextSize.Caption, false, Muted));
+            if (_only.IsChecked == true)
+            {
+                Render(false);
+            }
+
+            return;
+        }
+
         if (ShowReadable)
         {
-            var steps = _readable?.Steps.Where(e => p.IsMatch($"{e.Tool} {e.Text} {e.Detail}")).ToList() ?? [];
-            _results.Content = Panel(Txt(ReadableLog.Plural(steps.Count, "step"), TextSize.Caption, true),
-                steps.Take(500).Select(e => Hit($"{e.Time:HH:mm:ss} {e.Role}", Snip(e.Text), () => _readable!.Reveal(e))));
+            var steps = _readable?.Steps.Where(p.IsMatch).ToList() ?? [];
+            _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => _readable!.Reveal(e))));
+            _results.Content = Panel(Count(ReadableLog.Plural(steps.Count, "step")),
+                steps.Take(500).Select((e, i) => Hit($"{e.Time:HH:mm:ss} {e.Role}{(e.Tool is { } t ? " · " + t : "")}", Around($"{e.Text} {e.Detail}", p), p, i)));
             return;
         }
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
@@ -55,8 +82,9 @@ internal partial class LogViewer
             }
 
             _hits.AddRange(hits);
-            _results.Content = Panel(Txt(hits.Count >= LogSearch.MaxHits ? $"First {LogSearch.MaxHits} matches" : $"{hits.Count:N0} {(hits.Count == 1 ? "match" : "matches")}", TextSize.Caption, true),
-                hits.Select(h => Hit($"Line {h.Line:N0}", h.Text, () => Jump(h))));
+            _jumps.AddRange(hits.Select(h => (Action)(() => Jump(h))));
+            _results.Content = Panel(Count(hits.Count >= LogSearch.MaxHits ? $"first {LogSearch.MaxHits:N0} matches" : $"{hits.Count:N0} {(hits.Count == 1 ? "match" : "matches")}"),
+                hits.Select((h, i) => Hit($"Line {h.Line:N0}", h.Text, p, i)));
         }
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _results.Content = Panel(Txt("Cannot read: " + e.Message, TextSize.Caption, false, Muted)); }
@@ -97,7 +125,16 @@ internal partial class LogViewer
         Dispatcher.UIThread.Post(() => _code.Reveal(line, h.Column, h.Length), DispatcherPriority.Background);
     }
 
-    private static string Snip(string s) { var l = s.Replace('\n', ' ').Trim(); return l.Length > 140 ? l[..140] + "…" : l; }
+    /// <summary>A step's text on one line, cut around its first match.</summary>
+    private static string Around(string s, LogQuery q)
+    {
+        var line = s.ReplaceLineEndings(" ").Trim();
+        var first = q.Spans(line) is { Count: > 0 } sp ? sp[0] : (Start: 0, Length: 0);
+        return LogSearch.Snippet(line, first.Start, first.Length);
+    }
+
+    /// <summary>The results header: how many, then "3 of 120" once Enter or a click has gone to one.</summary>
+    private TextBlock Count(string total) => _count = Txt(total, TextSize.Caption, true).With(t => t.Tag = total);
 
     private static Border Panel(Control head, IEnumerable<Control>? rows = null)
     {
@@ -110,7 +147,8 @@ internal partial class LogViewer
         return new Border { Width = Widths.Popup, CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
     }
 
-    private static Border Hit(string where, string text, Action go)
+    /// <summary>A result row: where (line or time and role), the text with the matches highlighted; a click goes there.</summary>
+    private Border Hit(string where, string text, LogQuery q, int index)
     {
         var b = new Border
         {
@@ -121,12 +159,12 @@ internal partial class LogViewer
             Child = new StackPanel
             {
                 Children = { Txt(where, TextSize.Caption, false, Accent).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; }),
-                Txt(text, TextSize.Caption).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
+                Table.Marked(Txt(text, TextSize.Caption), text, q.Spans(text)).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
             }
         };
         b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);
         b.PointerExited += (_, _) => b.Background = Avalonia.Media.Brushes.Transparent;
-        b.PointerReleased += (_, _) => go();
+        b.PointerReleased += (_, _) => Go(index);
         return b;
     }
 

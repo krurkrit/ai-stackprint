@@ -95,6 +95,7 @@ Built in `W` (`Widgets*.cs`); use these instead of building the same thing again
 - **Buttons** (`W.Btn`): one input tall, side padding `XL`, `IconSize.S` icon. Primary uses the accent class; destructive uses `W.DangerBtn`; icon-only uses `W.IconBtn`.
 - **Pills** (`W.Pills`): `Sizes.CompactControl` tall, `Radius.Pill`, `S` apart; the selected one is accent.
 - **Inputs**: text, number and search boxes, drop-downs, check boxes and radio buttons share `Theme.InputHeight`; text sits in the middle and multi-line inputs keep equal gaps above the first and below the last line (`Theme.Inputs`).
+- **Search** (`W.SearchBox`): search icon inside, one input tall. Filter after typing pauses (`.OnPause`, 150 ms), not on every key; mark matches on `HighlightKey` with `Table.Marked` (or `Table.NameDesc(..., marks:)`).
 - **Chips and status** (`W.Chip`, `W.Status`): `Caption` text, `Radius.Pill`.
 - **Dots** (`W.Dot`, `W.DotText`): `Sizes.Dot`, sitting on the text baseline.
 - **Charts**: bars use `Sizes.Bar` and `Radius.S`; series colors are the `Chart*`, level and category keys in `Theme`. The donut (`PieChart`) animates in once and when its values change.

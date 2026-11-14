@@ -17,6 +17,7 @@ public record Item(string Kind, string Name, string Description, string Source, 
     public IReadOnlyList<string> Invokers { get; init; } = [];   // skills: who can start it, "Agent" and/or "User" (from SKILL.md front matter)
     public string? Version { get; init; }         // plugins: version from the app's plugin registry
     public string? Author { get; init; }          // plugin manifest author, or SKILL.md author / metadata.author
+    public IReadOnlyList<string> Keywords { get; init; } = [];   // plugins: keywords from the manifest (search)
 }
 
 public record AppInfo(string Id, string Name, string Category, string? Logo, bool Installed, string? Folder);

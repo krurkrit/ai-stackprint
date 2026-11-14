@@ -8,6 +8,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
+using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
 
@@ -21,9 +22,13 @@ namespace AiStackprint.Ui;
 internal class ItemBrowser
 {
     private const double MinPanel = 160, MaxPanel = 2000;   // bottom panel height limits
+    /// <summary>How to search skills and plugins (<see cref="ItemSearch"/>), as the search box's tooltip.</summary>
+    public const string SearchTip = "Words match separately; \"quotes\" match a phrase.\nname: desc: author: app: level: keyword: path: search one field; author:\"Jane Doe\" matches the whole value.\nBest matches first: name, then keywords, author, description, path.";
+    private static readonly TimeSpan _typing = TimeSpan.FromMilliseconds(150);   // search waits this long after the last key
     private readonly Ctx _x;
     private readonly string _kind;
-    private readonly TextBox _search = SearchBox("Search name, description, path or author");
+    private readonly TextBox _search = SearchBox("Search, or author: app: level: keyword:");
+    private readonly DispatcherTimer _wait = new() { Interval = _typing };
     private readonly ComboBox _app = new() { MinWidth = Widths.Field };
     private readonly SkillFilter _filter = new();
     private readonly DetailPanel _panel;
@@ -33,12 +38,16 @@ internal class ItemBrowser
     private Item? _sel;
     private bool _building, _max;
     private List<Item> _items = [];
+    private ItemSearch _index = new([]);
+    private SearchQuery _query = SearchQuery.Empty;
     private Grid? _grid;
 
     public ItemBrowser(Ctx ctx, string kind)
     {
         _x = ctx; _kind = kind; _panel = new DetailPanel(ctx);
-        _search.TextChanged += (_, _) => { _q = _search.Text ?? ""; Fill(); };
+        ToolTip.SetTip(_search, SearchTip);
+        _wait.Tick += (_, _) => { _wait.Stop(); Fill(); };
+        _search.TextChanged += (_, _) => { _q = _search.Text ?? ""; _wait.Stop(); _wait.Start(); };   // search after a short pause in typing
         _app.SelectionChanged += (_, _) => { if (_building) { return; } _appId = (_app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
     }
 
@@ -56,6 +65,7 @@ internal class ItemBrowser
     public Control Build(IEnumerable<Control> top, List<Item> items)
     {
         _items = items;
+        _index = new ItemSearch(items.OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase), ItemAuthor.For(_x.S.Items));   // lower-case text made once per scan, not per key
         if (_sel != null)
         {
             _sel = items.FirstOrDefault(i => Same(i, _sel));   // the same item after a rescan (a new record), or gone
@@ -137,9 +147,9 @@ internal class ItemBrowser
 
     private void Fill()
     {
-        var shown = _items.Where(i => (_appId == "" || i.App == _appId) && _filter.Match(i) &&
-            (_q.Length == 0 || $"{i.Name} {i.Description} {i.Path} {i.Author}".Contains(_q, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        _wait.Stop();
+        _query = SearchQuery.Parse(_q);
+        var shown = _index.Find(_query).Where(i => (_appId == "" || i.App == _appId) && _filter.Match(i)).ToList();   // best matches first
         _shown.Text = shown.Count == _items.Count ? $"{_items.Count:N0}" : $"{shown.Count:N0} of {_items.Count:N0}";
 
         var cols = _kind == "Plugin"
@@ -152,7 +162,7 @@ internal class ItemBrowser
 
     private TableRow Row(Item i) => new(
     [
-        Table.NameDesc(i.Name, i.Description),
+        Table.NameDesc(i.Name, i.Description, marks: _query),
         DetailPanel.AppLink(_x, i.App, i.Source),
         AppDetailView.LevelCell(i),
         _kind == "Plugin" ? Txt(i.Version ?? "", TextSize.Small) : AppDetailView.InvokeCell(i),

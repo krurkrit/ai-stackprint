@@ -19,6 +19,7 @@ internal partial class LogViewer
 {
     private readonly Ctx _x;
     private readonly TextBox _query = SearchBox("Search this file").With(t => t.MinWidth = Widths.Field);
+    private readonly DispatcherTimer _wait = new() { Interval = TimeSpan.FromMilliseconds(250) };   // search after a short pause in typing: a raw search reads the whole file
     private readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(Space.M, Space.XS) }, _regex = new() { Content = ".*", Padding = new Thickness(Space.M, Space.XS) }, _only = new() { Content = "Only matching", Padding = new Thickness(Space.M, Space.XS) };
     private readonly ContentControl _view = new(), _results = new();
     private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted);
@@ -43,10 +44,19 @@ internal partial class LogViewer
             t.VerticalContentAlignment = VerticalAlignment.Center;
         }
 
-        _query.TextChanged += (_, _) => Search();
+        ToolTip.SetTip(_query, "Words match separately, in any order, on one line (Raw) or in one step (Conversation); \"quotes\" match a phrase.\nConversation: role:user, role:assistant, tool:bash keep only those steps.\nEnter: next match · Shift+Enter: previous");
+        _wait.Tick += (_, _) => { _wait.Stop(); Search(); };
+        _query.TextChanged += (_, _) => { _wait.Stop(); _wait.Start(); };
         _case.IsCheckedChanged += (_, _) => Search(); _regex.IsCheckedChanged += (_, _) => Search();
         _only.IsCheckedChanged += (_, _) => Render(false);
-        _query.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && _hits.Count > 0) { Jump(_hits[0]); } };
+        _query.KeyDown += (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Enter)
+            {
+                Next(e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Shift) ? -1 : 1);
+                e.Handled = true;
+            }
+        };
         _newer = Btn("New lines", () => { _window = false; Load(true, update: true); }, true, "chevron_down")
             .With(b => { b.IsVisible = false; b.HorizontalAlignment = HorizontalAlignment.Right; b.VerticalAlignment = VerticalAlignment.Bottom; b.Margin = new Thickness(0, 0, Space.XXL, Space.XL); ToolTip.SetTip(b, "The file grew: show the newest lines"); });
     }
@@ -204,7 +214,7 @@ internal partial class LogViewer
         var text = _raw;
         if (_only.IsChecked == true && Pattern() is { } p)
         {
-            text = string.Join('\n', text.Split('\n').Where(l => p.IsMatch(l)));
+            text = string.Join('\n', text.Split('\n').Where(p.IsMatch));
         }
 
         _code.Text = text;

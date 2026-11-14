@@ -1,8 +1,11 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
@@ -100,15 +103,50 @@ internal static class Table
         return sp;
     }
 
-    /// <summary>Name with a one-line muted description under it.</summary>
-    public static Control NameDesc(string name, string desc, bool bold = true)
+    /// <summary>Name with a one-line muted description under it; words of <paramref name="marks"/> (a search) are highlighted in both.</summary>
+    public static Control NameDesc(string name, string desc, bool bold = true, SearchQuery? marks = null)
     {
-        var sp = new StackPanel { Spacing = Space.XXS, Children = { Txt(name, TextSize.Body, bold) } };
+        var sp = new StackPanel { Spacing = Space.XXS, Children = { Marked(Txt(name, TextSize.Body, bold), name, marks?.Marks("name")) } };
         if (desc != "")
         {
-            sp.Children.Add(Txt(desc, TextSize.Caption, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; }));
+            sp.Children.Add(Marked(Txt(desc, TextSize.Caption, false, Muted), desc, marks?.Marks("desc"))
+                .With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; }));
         }
 
         return sp;
+    }
+
+    /// <summary>The text with each occurrence of <paramref name="words"/> on the highlight color; the plain text when nothing matches.</summary>
+    public static TextBlock Marked(TextBlock tb, string text, IReadOnlyList<string>? words) =>
+        Marked(tb, text, words is { Count: > 0 } ? SearchQuery.Spans(text, words) : []);
+
+    /// <summary>The text with the <paramref name="spans"/> (start, length; in order, not overlapping) on the highlight color.</summary>
+    public static TextBlock Marked(TextBlock tb, string text, IReadOnlyList<(int Start, int Length)> spans)
+    {
+        if (spans.Count == 0)
+        {
+            return tb;
+        }
+
+        var inlines = new InlineCollection();
+        var at = 0;
+        foreach (var (start, length) in spans)
+        {
+            if (start > at)
+            {
+                inlines.Add(new Run(text[at..start]));
+            }
+
+            inlines.Add(new Run(text.Substring(start, length)).With(r => r.Bind(TextElement.BackgroundProperty, tb.GetResourceObservable(HighlightKey))));
+            at = start + length;
+        }
+
+        if (at < text.Length)
+        {
+            inlines.Add(new Run(text[at..]));
+        }
+
+        tb.Inlines = inlines;
+        return tb;
     }
 }

@@ -73,9 +73,9 @@ public sealed class SkillDocTests : IDisposable
     }
 
     [Fact]
-    public void Plugin_manifest_gives_description_and_author_and_skills_give_author()
+    public void Plugin_manifest_gives_description_author_and_keywords_and_skills_give_author()
     {
-        Write("plug/.claude-plugin/plugin.json", "{ \"description\": \"Formats code\", \"author\": { \"name\": \"Acme\" }, }");
+        Write("plug/.claude-plugin/plugin.json", "{ \"description\": \"Formats code\", \"author\": { \"name\": \"Acme\" }, \"keywords\": [\"format\", \"lint\", \"Format\", 3, \" \"], }");
         Write("plug2/.claude-plugin/plugin.json", "{ \"author\": \"Solo\" }");
         string Esc(string p) => Path.Combine(_tmp, p).Replace("\\", "\\\\");
         var registry = Write("installed_plugins.json", $$"""
@@ -87,7 +87,9 @@ public sealed class SkillDocTests : IDisposable
         PluginReaders.Find("claude")!.Read(registry, new AppDefinition { Id = "claude-code", Name = "Claude Code" }, found);
         var by = found.Where(i => i.Kind == "Plugin").ToDictionary(i => i.Name);
         Assert.Equal(("Formats code", "Acme", "2.5.1"), (by["fmt@acme-market"].Description, by["fmt@acme-market"].Author, by["fmt@acme-market"].Version));
+        Assert.Equal(["format", "lint"], by["fmt@acme-market"].Keywords);   // strings only, no blanks or repeats
         Assert.Equal(("", "Solo"), (by["solo@market"].Description, by["solo@market"].Author));
+        Assert.Empty(by["solo@market"].Keywords);
         Assert.Equal("shop", by["bare@shop"].Author);   // no manifest author: the marketplace
         Assert.Null(by["bare@shop"].Version);
 
