@@ -106,7 +106,7 @@ public sealed class LimitsTests : IDisposable
         var done = new ManualResetEventSlim();
         svc.Updated += _ => { if (!svc.Status("claude-code").Busy) { done.Set(); } };
         svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, []);
-        Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
+        Assert.True(done.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         var st = svc.Status("claude-code");
         Assert.Equal(LimitState.Off, st.State);
         Assert.Null(st.Data);

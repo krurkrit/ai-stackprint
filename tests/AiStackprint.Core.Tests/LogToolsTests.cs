@@ -31,11 +31,11 @@ public sealed class LogToolsTests : IDisposable
     public void Search_finds_matches_with_line_numbers_case_and_regex()
     {
         var f = Log("a.log", "ok\nERROR one\nfine\nerror two\n");
-        var hits = LogSearch.File(f.Path, LogSearch.Pattern("error", false, false));
+        var hits = LogSearch.File(f.Path, LogSearch.Pattern("error", false, false), ct: TestContext.Current.CancellationToken);
         Assert.Equal([2, 4], hits.Select(h => h.Line));
         Assert.Equal(0, hits[0].Column);
-        Assert.Single(LogSearch.File(f.Path, LogSearch.Pattern("error", true, false)));
-        Assert.Equal(2, LogSearch.File(f.Path, LogSearch.Pattern(@"(one|two)$", false, true)).Count);
+        Assert.Single(LogSearch.File(f.Path, LogSearch.Pattern("error", true, false), ct: TestContext.Current.CancellationToken));
+        Assert.Equal(2, LogSearch.File(f.Path, LogSearch.Pattern(@"(one|two)$", false, true), ct: TestContext.Current.CancellationToken).Count);
         Assert.ThrowsAny<ArgumentException>(() => LogSearch.Pattern("(", false, true));
     }
 
@@ -86,7 +86,7 @@ public sealed class LogToolsTests : IDisposable
             """{"type":"user","message":{"content":"hi"}}""" + "\n" +
             """{"type":"assistant","message":{"model":"m1","usage":{"input_tokens":10,"output_tokens":3},"content":[{"type":"tool_use","name":"Bash","input":{"command":"ls"}}]}}""" + "\n",
             now.AddHours(-2), "claude-session");
-        var s = LogSummary.Compute([plain, stale, session], now.AddDays(-7));
+        var s = LogSummary.Compute([plain, stale, session], now.AddDays(-7), TestContext.Current.CancellationToken);
         Assert.Equal(2, s.Files);
         Assert.Equal(1, s.Errors);
         Assert.Equal(1, s.Warnings);
@@ -96,7 +96,7 @@ public sealed class LogToolsTests : IDisposable
         Assert.Equal(("Bash", 1), Assert.Single(s.TopTools));
         Assert.Equal(10, s.InputTokens);
         Assert.Equal(new[] { "m1" }, s.Models);
-        Assert.Equal(3, LogSummary.Compute([plain, stale, session], null).Files);
+        Assert.Equal(3, LogSummary.Compute([plain, stale, session], null, TestContext.Current.CancellationToken).Files);
     }
 
     [Fact]

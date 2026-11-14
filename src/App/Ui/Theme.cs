@@ -53,9 +53,15 @@ internal static class Theme
     private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
     private static readonly Palette _dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
 
-    private static readonly ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
+    // Made with each theme: a palette belongs to one application (headless tests start one per test)
+    private static ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
 
-    public static FluentTheme Fluent() => new() { Palettes = { [ThemeVariant.Light] = _lightFluent, [ThemeVariant.Dark] = _darkFluent } };
+    public static FluentTheme Fluent()
+    {
+        _lightFluent = FluentPalette(_light);
+        _darkFluent = FluentPalette(_dark);
+        return new() { Palettes = { [ThemeVariant.Light] = _lightFluent, [ThemeVariant.Dark] = _darkFluent } };
+    }
 
     private static FontFamily Stack(string family) => new(family == "Inter" ? "Inter, Noto Sans, $Default" : $"{family}, Inter, Noto Sans, $Default");
     private static FontFamily MonoStack(string family) => new($"{family}, JetBrains Mono, Cascadia Mono, Consolas, Menlo, monospace");

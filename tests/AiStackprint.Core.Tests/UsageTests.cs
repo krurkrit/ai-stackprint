@@ -82,13 +82,13 @@ public class UsageTests
             File.WriteAllLines(path, _claudeLines);
             var info = new FileInfo(path);
             var file = new LogFile("claude", "Sessions", path, info.Length, info.LastWriteTime, null, "claude-session");
-            var all = UsageStats.Compute([file], DateTime.MinValue);
+            var all = UsageStats.Compute([file], DateTime.MinValue, TestContext.Current.CancellationToken);
             Assert.Equal(1, all.Sessions); Assert.Equal(1, all.Files);
             Assert.Equal(1330L, all.Buckets.Where(b => b.Model == "claude-opus-5-5").Sum(b => b.Input + b.Output + b.CacheRead + b.CacheWrite));
             Assert.Equal(2, all.Buckets.Sum(b => b.Messages));
-            var future = UsageStats.Compute([file], DateTime.Now.AddDays(2));
+            var future = UsageStats.Compute([file], DateTime.Now.AddDays(2), TestContext.Current.CancellationToken);
             Assert.Empty(future.Buckets);
-            var none = UsageStats.Compute([file with { Format = null }], DateTime.MinValue);
+            var none = UsageStats.Compute([file with { Format = null }], DateTime.MinValue, TestContext.Current.CancellationToken);
             Assert.Equal(0, none.Files);
         }
         finally { Directory.Delete(dir, true); }

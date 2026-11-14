@@ -13,8 +13,9 @@
     <PackageVersion Include="Velopack" Version="1.2.161" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.15" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.2" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />   <!-- 3.x: the version Avalonia.Headless.XUnit 12.1 is built against -->
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.6" />   <!-- UI tests without a window; same version as Avalonia -->
   </ItemGroup>
   <ItemGroup>
     <!-- Sonar's C# rules (default "Sonar way" set) in every project at build time; never shipped in the app (Sonar Source-Available License v1.0) -->
