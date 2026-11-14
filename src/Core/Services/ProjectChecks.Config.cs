@@ -52,7 +52,7 @@ public static partial class ProjectChecks
     }
 
     /// <summary>String values that look like keys or tokens, by their name (api_key, token, …) or their shape (sk-…, ghp_…).</summary>
-    private static void Secrets(JsonElement e, string at, string rel, string path, List<string> apps, bool local, List<ProjectIssue> issues)
+    internal static void Secrets(JsonElement e, string at, string rel, string path, List<string> apps, bool local, List<ProjectIssue> issues)
     {
         switch (e.ValueKind)
         {
@@ -95,7 +95,7 @@ public static partial class ProjectChecks
     }
 
     /// <summary>Hooks: every "command" under a top-level "hooks" object, named by its event (and matcher).</summary>
-    private static void Hooks(JsonElement root, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues)
+    internal static void Hooks(JsonElement root, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues)
     {
         if (!root.TryGetProperty("hooks", out var hooks) || hooks.ValueKind != JsonValueKind.Object)
         {
@@ -137,7 +137,7 @@ public static partial class ProjectChecks
     }
 
     /// <summary>Claude Code settings that skip permission prompts.</summary>
-    private static void Permissions(JsonElement root, string rel, string path, List<string> apps, List<ProjectIssue> issues)
+    internal static void Permissions(JsonElement root, string rel, string path, List<string> apps, List<ProjectIssue> issues)
     {
         if (!root.TryGetProperty("permissions", out var perm) || perm.ValueKind != JsonValueKind.Object)
         {

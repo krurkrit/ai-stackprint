@@ -59,6 +59,10 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
 - Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 
+## Safety
+- Health has a "Safety" area: findings to review in installed skills and plugins, never "safe" or "unsafe". It is offline pattern matching; nothing is run or fetched, and a clean result proves nothing. Warnings: hidden Unicode, text that tells the agent to hide things from you, download-and-run commands, a plugin hook that runs a missing script. Information: long encoded blocks, bare-IP and paste-site links, credential file names.
+- Health "Config files": your user-level settings and MCP files (JSON), with secrets in plain text as information (they are expected in a personal file) and permission settings that skip prompts as warnings.
+
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.
 - Watching and tailing:
