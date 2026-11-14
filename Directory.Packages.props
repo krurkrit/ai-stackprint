@@ -20,5 +20,7 @@
   <ItemGroup>
     <!-- Sonar's C# rules (default "Sonar way" set) in every project at build time; never shipped in the app (Sonar Source-Available License v1.0) -->
     <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
+    <!-- Version of every project from the latest v* git tag (Apache-2.0, build-only) -->
+    <GlobalPackageReference Include="MinVer" Version="8.0.0" />
   </ItemGroup>
 </Project>

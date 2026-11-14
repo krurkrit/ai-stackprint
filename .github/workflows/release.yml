@@ -1,4 +1,4 @@
-# Release: push a tag v<Version> (the <Version> in Directory.Build.props) and this builds the Velopack installers
+# Release: push a tag v<major>.<minor>.<patch> (the version itself: MinVer reads it) and this builds the Velopack installers
 # for Windows, Linux and macOS and publishes them as one GitHub release, with notes from git-cliff (cliff.toml).
 # Runs only on such tags. See docs/releasing.md.
 name: Release
@@ -40,14 +40,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MinVer needs the tags and history to work out the version
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - name: Tag matches the version
+      - name: Version is the tag
         shell: pwsh
         run: |
-          $v = (dotnet msbuild src/App/AiStackprint.App.csproj -getProperty:Version).Trim()
-          if ("v$v" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} does not match <Version> $v in Directory.Build.props" }
+          $v = (dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion).Trim()
+          if ("v$v" -ne "${{ github.ref_name }}") { throw "MinVer worked out $v, not the tag ${{ github.ref_name }}" }
       - name: Test
         run: dotnet test AiStackprint.slnx -c Release
       - name: Icon tools

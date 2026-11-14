@@ -1,8 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Reflection;
-
 namespace AiStackprint.Services;
 
 /// <summary>
@@ -33,8 +31,7 @@ public static class CrashLog
                 info.Delete();   // start over rather than grow without end
             }
 
-            var version = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version;   // the app's version, not Core's
-            System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} · {what} · v{version} · {Environment.OSVersion}\n{e}\n\n");
+            System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} · {what} · v{UpdateCheck.Label} · {Environment.OSVersion}\n{e}\n\n");
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException) { }   // nowhere to write: nothing more to do while closing
     }

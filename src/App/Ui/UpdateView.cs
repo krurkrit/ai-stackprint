@@ -35,7 +35,7 @@ internal static class UpdateView
             Spacing = 12,
             Children =
             {
-                Txt($"This is version {UpdateCheck.Current}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo}; nothing about you or this computer is sent. " +
+                Txt($"This is version {UpdateCheck.Label}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo}; nothing about you or this computer is sent. " +
                     "Off until you turn it on. New versions are downloaded from the release page, not by this app.", 13, false, Muted),
                 daily,
                 Row(Btn("Check now", () => CheckNow(x, result), false, "arrow_sync"), result)
@@ -74,7 +74,7 @@ internal static class UpdateView
             SettingsStore.Save(x.S.Settings);
             result.Content = newer != null
                 ? Row(Txt($"{newer.Version} is available.", 13), Btn("Release page", () => Open(x, newer), true, "open"))
-                : Txt(latest == null ? "No release has been published yet." : $"You have the latest version ({UpdateCheck.Current}).", 13, false, Muted);
+                : Txt(latest == null ? "No release has been published yet." : $"You have the latest version ({UpdateCheck.Label}).", 13, false, Muted);
         }
         catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException or OperationCanceledException)
         {

@@ -61,6 +61,14 @@ public class UpdateCheckTests
         Assert.Equal(newer, UpdateCheck.Newer(UpdateCheck.Parse(Reply(tag)), cur) != null);
     }
 
+    [Theory]
+    [InlineData("0.2.0+6f1591a0c2", "0.2.0")]
+    [InlineData("0.2.1-alpha.0.3+0fdb0f7", "0.2.1-alpha.0.3")]
+    [InlineData("1.0.0", "1.0.0")]
+    [InlineData(null, "0.0.0")]
+    [InlineData("", "0.0.0")]
+    public void Label_drops_the_commit(string? informational, string expected) => Assert.Equal(expected, UpdateCheck.LabelOf(informational));
+
     [Fact]
     public void No_release_is_never_newer() => Assert.Null(UpdateCheck.Newer(null, new Version(0, 1, 0)));
 

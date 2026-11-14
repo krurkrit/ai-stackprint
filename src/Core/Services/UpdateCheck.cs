@@ -1,6 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Reflection;
 using System.Text.Json;
 
 namespace AiStackprint.Services;
@@ -20,8 +21,14 @@ public static class UpdateCheck
     /// <summary>A release on GitHub: its version and its page.</summary>
     public record Release(Version Version, string Url);
 
-    /// <summary>This build's version (major.minor.patch), from &lt;Version&gt; in Directory.Build.props (shared by every project).</summary>
-    public static Version Current { get; } = Normalize(typeof(UpdateCheck).Assembly.GetName().Version ?? new Version(0, 0, 0));
+    /// <summary>This build's version as shown, e.g. "0.2.0" or "0.2.1-alpha.0.3" (MinVer, from the git tag; every project gets the same).</summary>
+    public static string Label { get; } = LabelOf(typeof(UpdateCheck).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion);
+
+    /// <summary>This build's version (major.minor.patch) for comparing with releases. Not the assembly version: MinVer keeps that at major.0.0.</summary>
+    public static Version Current { get; } = ParseTag(Label.Split('-')[0]) ?? new Version(0, 0, 0);
+
+    /// <summary>Informational version without the build metadata MinVer and the SDK add ("+commit").</summary>
+    public static string LabelOf(string? informational) => informational?.Split('+')[0].Trim() is { Length: > 0 } v ? v : "0.0.0";
 
     /// <summary>The automatic check is due: never checked, or the last check was at least <see cref="Interval"/> ago (or in the future: clock changed).</summary>
     public static bool Due(DateTime? lastUtc, DateTime nowUtc) => lastUtc is not { } t || nowUtc - t >= Interval || t > nowUtc;

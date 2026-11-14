@@ -3,13 +3,14 @@
 Installers are built with [Velopack](https://velopack.io) (MIT): `vpk` packs the published app, and the app calls `VelopackApp.Build().Run()` first thing in `Main` so the installer can run its install, update and uninstall hooks.
 
 ## Publish a release
-1. Raise `<Version>` in `Directory.Build.props` (e.g. `0.2.0`) and commit.
-2. Tag the commit with the same version and push the tag:
+The version is the git tag; no file holds it. [MinVer](https://github.com/adamralph/minver) (Apache-2.0, build-only) reads the latest `v*` tag on every build: a tagged commit builds as that version (`0.2.0`), later commits as the next patch with a pre-release label (`0.2.1-alpha.0.3`: 3 commits after `v0.2.0`), so a test build never looks like a release. Check what this checkout builds as: `dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion`.
+
+1. Tag the commit on `main` and push the tag:
    ```bash
    git tag v0.2.0
    git push origin v0.2.0
    ```
-3. `.github/workflows/release.yml` runs on the tag. It checks that the tag matches `<Version>`, runs the tests, builds on Windows, Linux and macOS, and publishes one GitHub release with all three and its release notes.
+2. `.github/workflows/release.yml` runs on the tag. It checks that MinVer works out the tag's version, runs the tests, builds on Windows, Linux and macOS, and publishes one GitHub release with all three and its release notes.
 
 ## Release notes
 [git-cliff](https://git-cliff.org) writes them from the commits since the previous `v*` tag (`cliff.toml`). They go into the installer packages (`vpk pack --releaseNotes`) and the GitHub release text.

@@ -10,7 +10,9 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
-$version = (dotnet msbuild src/App/AiStackprint.App.csproj -getProperty:Version).Trim()
+# MinVer works out the version from the git tag (v1.2.3); the target has to run, a plain -getProperty:Version only sees the SDK default
+$version = (dotnet msbuild src/App/AiStackprint.App.csproj -t:MinVer -getProperty:MinVerVersion).Trim()
+if ($LASTEXITCODE -or -not $version) { throw "Could not work out the version (MinVer)" }
 $publish = "artifacts/publish/$Runtime"
 $work = "artifacts/icons"
 Remove-Item $publish -Recurse -Force -ErrorAction SilentlyContinue
