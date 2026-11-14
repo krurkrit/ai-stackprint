@@ -7,8 +7,12 @@ using AiStackprint.Models;
 
 namespace AiStackprint.Services;
 
-/// <param name="What">Added, Removed or Edited (config files whose time changed).</param>
-public record Change(string What, string Kind, string Name, string App, string Path);
+/// <param name="What">Added, Removed or Edited (config files whose time changed; skills and plugins whose files or version changed; MCP servers whose definition changed).</param>
+public record Change(string What, string Kind, string Name, string App, string Path)
+{
+    /// <summary>What changed in an edit: "version 1.2 → 1.3", "files changed", "command or address changed"; null when only the time changed.</summary>
+    public string? Detail { get; init; }
+}
 
 /// <param name="Since">When the scan compared against was taken; null on the first run.</param>
 public record ScanChanges(List<Change> Changes, DateTime? Since);
@@ -18,7 +22,8 @@ public static class ScanDiff
 {
     public static string File => Path.Combine(AppCatalog.Folder, "last-scan.json");
 
-    private sealed record Entry(string Kind, string Name, string App, string Path, [property: System.Text.Json.Serialization.JsonPropertyName("Stamp")] long Ticks);   // "Stamp" in last-scan.json
+    // "Stamp" in last-scan.json. Hash: fingerprint of a skill, plugin or MCP server definition (never its content); null in older files = unknown
+    private sealed record Entry(string Kind, string Name, string App, string Path, [property: System.Text.Json.Serialization.JsonPropertyName("Stamp")] long Ticks, string? Hash = null, string? Version = null);
     private sealed record Snapshot(DateTime Time, List<Entry> Items);
 
     private static long Stamp(Item i)
@@ -32,10 +37,12 @@ public static class ScanDiff
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return 0; }
     }
 
-    /// <summary>Compares <paramref name="items"/> with the saved scan, then saves them as the new one.</summary>
-    public static ScanChanges Update(IEnumerable<Item> items, string file)
+    /// <summary>Compares <paramref name="items"/> and <paramref name="servers"/> with the saved scan, then saves them as the new one.</summary>
+    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers = null)
     {
-        var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i))).DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
+        var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i), i.Kind is "Skill" or "Plugin" ? Fingerprint.Of(i) : null, i.Version))
+            .Concat((servers ?? []).Select(s => new Entry("MCP server", s.Project == null ? s.Name : $"{s.Name} · {System.IO.Path.GetFileName(s.Project.TrimEnd(System.IO.Path.DirectorySeparatorChar, '/'))}", s.Apps.FirstOrDefault() ?? "", s.File, 0, s.Fingerprint)))
+            .DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
         Snapshot? old = null;
         try
         {
@@ -56,9 +63,9 @@ public static class ScanDiff
                 {
                     changes.Add(new("Added", e.Kind, e.Name, e.App, e.Path));
                 }
-                else if (b.Ticks != e.Ticks)
+                else if (Edit(b, e) is { } detail)
                 {
-                    changes.Add(new("Edited", e.Kind, e.Name, e.App, e.Path));
+                    changes.Add(new Change("Edited", e.Kind, e.Name, e.App, e.Path) { Detail = detail == "" ? null : detail });
                 }
             }
 
@@ -74,5 +81,26 @@ public static class ScanDiff
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         return new(changes, old?.Time);
+    }
+
+    /// <summary>Null when nothing changed; otherwise what changed ("" when only the time did).</summary>
+    private static string? Edit(Entry b, Entry e)
+    {
+        if (e.Kind == "MCP server")
+        {
+            return b.Hash != null && e.Hash != null && b.Hash != e.Hash ? "command or address changed" : null;
+        }
+
+        if (b.Version != null && e.Version != null && b.Version != e.Version)
+        {
+            return $"version {b.Version} → {e.Version}";
+        }
+
+        if (b.Hash != null && e.Hash != null && b.Hash != e.Hash)
+        {
+            return "files changed";
+        }
+
+        return b.Ticks != e.Ticks ? "" : null;
     }
 }

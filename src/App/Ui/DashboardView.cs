@@ -200,9 +200,9 @@ internal static partial class DashboardView
             var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(
             [
                 Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
-                Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted)
-            ], ch.What == "Removed" ? null : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
-            body = new StackPanel { Spacing = Space.S, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*")], rows) } };
+                Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted), Txt(ch.Detail ?? "", TextSize.Caption, false, Muted)
+            ], ch.What == "Removed" ? null : ch.Kind == "MCP server" ? () => x.Go("Mcp") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
+            body = new StackPanel { Spacing = Space.S, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*"), new Col("", "1.6*")], rows) } };
             if (c.Changes.Count > 12)
             {
                 ((StackPanel)body).Children.Add(Txt($"… and {c.Changes.Count - 12} more", TextSize.Caption, false, Muted));

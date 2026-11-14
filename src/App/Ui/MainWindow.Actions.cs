@@ -100,8 +100,12 @@ internal partial class MainWindow
         var r = await Task.Run(() => Scanner.Collect(defs, projects));
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
-        (_s.Changes, _s.Health, _s.Mcp) = await Task.Run(() => (ScanDiff.Update(items, ScanDiff.File),
-            Health.Compute(items).Concat(SafetyScan.Check(items, PathUtil.Home)).Concat(ConfigChecks.ForHealth(items, PathUtil.Home)).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList(), McpServers.Read(items)));
+        (_s.Changes, _s.Health, _s.Mcp) = await Task.Run(() =>
+        {
+            var mcp = McpServers.Read(items);
+            return (ScanDiff.Update(items, ScanDiff.File, mcp),
+            Health.Compute(items).Concat(SafetyScan.Check(items, PathUtil.Home)).Concat(ConfigChecks.ForHealth(items, PathUtil.Home)).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList(), mcp);
+        });
         var first = !_scanned;
         _scanning = false; _scanned = true;
         Refresh();

@@ -63,7 +63,7 @@ public static partial class SafetyScan
     }
 
     /// <summary>What to read for an item: a skill folder (its SKILL.md's folder), a single skill file, or an agent plugin's folder (those that add skills, commands, agents, hooks or servers; not editor extensions).</summary>
-    private static (string? Root, bool Single) Target(Item i)
+    internal static (string? Root, bool Single) Target(Item i)
     {
         if (i.Path == "")
         {

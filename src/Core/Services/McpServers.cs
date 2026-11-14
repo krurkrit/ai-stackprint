@@ -21,6 +21,8 @@ public sealed record McpServer(string Name, string What, string File, string? No
     public string? LevelLabel { get; init; }
     /// <summary>The project folder: for Project and Local files, and for servers an app keeps per project in a user file (~/.claude.json).</summary>
     public string? Project { get; init; }
+    /// <summary>SHA-256 of the server's definition as written in the file: a change means its command, address, arguments or environment changed. The text itself is not kept.</summary>
+    public string Fingerprint { get; init; } = "";
 }
 
 /// <summary>
@@ -152,7 +154,7 @@ public static partial class McpServers
             notes.Add("disabled");
         }
 
-        return new(name, parts.Count > 0 ? CommandLine(parts) : Mask(url!), path, notes.Count > 0 ? string.Join(" · ", notes) : null, warn);
+        return new(name, parts.Count > 0 ? CommandLine(parts) : Mask(url!), path, notes.Count > 0 ? string.Join(" · ", notes) : null, warn) { Fingerprint = Services.Fingerprint.Text(v.GetRawText()) };
     }
 
     /// <summary>The package a runner (npx, uvx, bunx, pnpx, pnpm dlx) or docker/podman run starts without a fixed version, or null.</summary>

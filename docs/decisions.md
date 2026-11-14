@@ -63,6 +63,9 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Health has a "Safety" area: findings to review in installed skills and plugins, never "safe" or "unsafe". It is offline pattern matching; nothing is run or fetched, and a clean result proves nothing. Warnings: hidden Unicode, text that tells the agent to hide things from you, download-and-run commands, a plugin hook that runs a missing script. Information: long encoded blocks, bare-IP and paste-site links, credential file names.
 - Health "Config files": your user-level settings and MCP files (JSON), with secrets in plain text as information (they are expected in a personal file) and permission settings that skip prompts as warnings.
 
+## Change alerts
+- "Changed since" also catches a skill or plugin whose files changed, a plugin version change and an MCP server whose command or address changed, using hashes only (nothing readable is saved). It is how a tool that was fine at install and later swapped shows up; it does not say the new version is bad.
+
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.
 - Watching and tailing:
