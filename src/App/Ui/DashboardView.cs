@@ -15,7 +15,7 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// Overview: tiles that open their page, live limits, skills and plugins by app and by author (a bar opens the list filtered to it),
-/// and what changed since the scan before. The full app list is on the AI apps page.
+/// and what changed since the scan before. The full app list is on the Apps page.
 /// </summary>
 internal static class DashboardView
 {
@@ -35,7 +35,7 @@ internal static class DashboardView
         var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = 16, RowSpacing = 16 };
         var cards = new[]
         {
-            Tile("apps", "AI apps installed", inst.ToString("N0"), () => x.Go("Apps"), ("Installed", inst, SuccessKey), ("Not found", apps.Count - inst, ErrorKey)),
+            Tile("apps", "Apps installed", inst.ToString("N0"), () => x.Go("Apps"), ("Installed", inst, SuccessKey), ("Not found", apps.Count - inst, ErrorKey)),
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
             Tile("warning", "Health warnings", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
@@ -74,7 +74,7 @@ internal static class DashboardView
         body.Children.Add(pie); body.Children.Add(legend.With(l => Grid.SetColumn(l, 1)));
         // Scales down (never up) when the card is narrower than donut + legend, instead of the legend running under the next cards
         var fit = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = body };
-        var card = Section("apps", "AI apps by category", new Border { Padding = new Thickness(0, 12), Child = fit });
+        var card = Section("apps", "Apps by category", new Border { Padding = new Thickness(0, 12), Child = fit });
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();
         return card;

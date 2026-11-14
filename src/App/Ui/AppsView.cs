@@ -28,7 +28,7 @@ internal class AppsView(Ctx x)
         var btns = Row(Btn("Open apps.json", () => PathUtil.OpenFolder(Path.GetDirectoryName(AppCatalog.UserFile)!), false, "document_edit"),
             Btn("Add app", x.AddApp, true, "add"));
         DockPanel.SetDock(btns, Dock.Right);
-        head.Children.Add(btns); head.Children.Add(H1("AI apps"));
+        head.Children.Add(btns); head.Children.Add(H1("Apps"));
         return Page(head, _search.Free(), _filters.Free(), Card(_table.Free()));
     }
 

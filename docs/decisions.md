@@ -17,9 +17,10 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Body and Emphasis weights share one list.
 - Dark-theme status is a green outline with normal foreground text, not a filled badge.
 
-## Dashboard and AI Apps
-- Dashboard shows summary charts of plugin and skill counts by app and by author. Don't add an "AI apps and orchestrators" list there; the AI Apps page already has it.
-- AI Apps page has a Status filter and Group by Category, collapsible per category, like the Dashboard.
+## Dashboard and Apps
+- Dashboard shows summary charts of plugin and skill counts by app and by author. Don't add an "AI apps and orchestrators" list there; the Apps page already has it.
+- The page and menu item are "Apps", not "AI apps": everything in the app is about AI, and the other menu items are one word.
+- Apps page has a Status filter and Group by Category, collapsible per category, like the Dashboard.
 - The app detail page shows per-app usage where logs have the data: tokens, a per-day chart, a cost estimate, and more.
 - Live usage limits (limit %, plan, and so on) come from each app's saved token plus its API. At most one call per app per refresh interval, with cached data shown in between. The interval is a setting in minutes, default 1.
 

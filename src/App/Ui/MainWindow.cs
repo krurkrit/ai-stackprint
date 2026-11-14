@@ -215,7 +215,7 @@ internal partial class MainWindow : Window
 
         var nav = new StackPanel { Spacing = 2 };
         nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
-        nav.Children.Add(Go("apps", "AI apps", "Apps"));
+        nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));

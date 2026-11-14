@@ -56,7 +56,7 @@ internal class AppDetailView(Ctx x)
         var chips = Row(Chip(d.Category),
             installed ? Status("Installed") : Chip("Not found", BorderKey),
             Chip(d.Origin switch { AppOrigin.Custom => "Custom app", AppOrigin.Override => "Customised in apps.json", _ => "Built-in" }));
-        var title = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Children = { H1("AI apps", "Apps", d.Name), chips } };
+        var title = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Children = { H1("Apps", "Apps", d.Name), chips } };
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Top };
         if (info?.Folder is { } folder)

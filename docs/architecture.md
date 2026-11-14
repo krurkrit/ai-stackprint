@@ -33,11 +33,11 @@ src/Core/Assets/apps.builtin.json ┐
 | New screen | class in `src/App/Ui`, add a nav button in `MainWindow` |
 
 ## Screens
-- Dashboard, AI apps (list), app page (`App:<id>`), Plugins, Skills, project page (`Project:<path>`), Health, Settings. `MainWindow.Go` routes and keeps back/forward history (Alt+←/→, mouse back/forward, and ← → buttons in the custom title bar, after the app name; F11 toggles full screen, no maximize button); views get a `Ctx`. The top bar shows where you are (the list part is clickable) and Search (Ctrl+K: pages, apps, projects, skills, plugins, actions). F5 rescans (on the Logs page: re-reads the files); Esc closes the bottom panel.
+- Dashboard, Apps (list), app page (`App:<id>`), Plugins, Skills, project page (`Project:<path>`), Health, Settings. `MainWindow.Go` routes and keeps back/forward history (Alt+←/→, mouse back/forward, and ← → buttons in the custom title bar, after the app name; F11 toggles full screen, no maximize button); views get a `Ctx`. The top bar shows where you are (the list part is clickable) and Search (Ctrl+K: pages, apps, projects, skills, plugins, actions). F5 rescans (on the Logs page: re-reads the files); Esc closes the bottom panel.
 - Lists are flat tables (`Table.Build`), not trees.
 - Project page: "Loaded into context" (below), the instruction/settings files, and the skills that apply in the project (that project's own rows + every User/System row) in the same list as the Skills page.
 - Dashboard: tiles (apps, plugins, skills, health warnings) open their page; Plan & limits; skills and plugins by app (stacked by level) and by author (top 10 + Other; plugin manifest author, else SKILL.md `author`/`metadata.author`, else the marketplace; skills with none are "Local"); a bar opens the list filtered to it. "Changed since …" lists skills, plugins and config files added, removed or edited since the scan before (`ScanDiff`, saved as `last-scan.json` next to settings.json).
-- AI apps page: search, Status (All / Installed / Not found), category check boxes, Group by Category with collapsible headings (Expand all / Collapse all).
+- Apps page: search, Status (All / Installed / Not found), category check boxes, Group by Category with collapsible headings (Expand all / Collapse all).
 
 ## Skills and Plugins pages
 - `ItemBrowser`: full-width list (name, app link, level, invoked by or version, full path wrapped with the name part emphasized, row icons: open folder, copy path, remove). Search covers name, description, path and author. One instance per page, so search, filters and selection are kept.
@@ -110,7 +110,7 @@ Settings › Appearance: font family (installed fonts), base size 12–18, body 
 - Plain `Txt` text is not selectable; right-click copies it (`MainWindow.CopyMenu`). Use `W.Sel` for text outside click targets (detail panels).
 - Skills / Plugins pages and an app's Skills section: level check boxes (all checked by default); skills also Invoked by as one choice (All, Agent only, User only, Agent and User, with counts that follow the level and source filters), From and Group by (Invoked by / From / both, collapsible headings). The last checked box cannot be unchecked. Only values present are offered; a filter with one value is left out; filters reset when another app opens. UI in `SkillFilter`, rules in `SkillMatch`.
 - Who can invoke a skill is a list (`Item.Invokers`: Agent and/or User from SKILL.md front matter), shown as "Agent only", "User only" or "Agent and User" in the filter, table and group headings.
-- AI apps page: category check boxes (plural labels, counts follow the search), kept while the app runs.
+- Apps page: category check boxes (plural labels, counts follow the search), kept while the app runs.
 - Rule: one value per item (level, category) → check boxes; a combination per item (invoked by) → one choice. Filter rows use `FilterRow` (fixed-width label column).
 - Alignment: `Row()` centers its children vertically; `Pills()` spaces with the panel (one line is 32 px); `SearchBox()` centers text and icon.
 - Dots beside text (`WithDot`: level, chips, legends) are an inline of the TextBlock standing on the baseline, so they line up with the letters.
