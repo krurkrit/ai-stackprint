@@ -15,6 +15,10 @@ src/Core/Assets/apps.builtin.json ┐
                                         ScanResult(Items, Apps) -> UI
 ```
 
+## File map
+- `src/Core/Services`: `AppCatalog` (built-in + user `apps.json`), `SettingsStore` (`settings.json`), `Scanner` (generic, read-only; `.Skills`: skill folders), `PluginReaders` (per-format), `SkillManager` (add/remove skills), `PluginManager` (runs the app's plugin CLI), `LogReader` (finds and tails log files), `LogParsers` (session logs → readable steps; one file per parser: `ClaudeSessionParser`, `CodexSessionParser`), `LogSearch`, `LogSummary`, `LogFolderWatcher` (watches an app's log folders), `LogTrash` (deletes logs to Recycle Bin/Trash), `ConfigEditor` (validated, backed-up saves of config files), `Contrast` (WCAG ratios), `SkillDoc` (front matter, links), `SkillCheck` + `Health` (checks), `ContextBudget` + `ContextRules` (what each app loads into context per project), `LimitsService` + `LimitProviders` (live plan and limits), `ScanDiff` (changes since the last scan), `UpdateCheck` (latest GitHub release vs this version), `CrashLog` (crash.log), `CrashReport` (prefilled GitHub issue link for the last crash)
+- `src/App/Ui`: `MainWindow` (nav + routing; `.Actions`: refresh, rescan, add project/app; `.Nav`: history, shortcuts, limits timer; `.TitleBar`: custom title bar: name, back/forward; F11 full screen), `CommandPalette` (Ctrl+K), `DashboardView`, `AppsView`, `AppDetailView` (+ `UsageCard`, `LimitsView`), `AppActions`, `LibraryView` (plugins/skills page) + `ItemBrowser` (list, filters, bottom panel) + `DetailPanel` + `FileView`, `ProjectView` (+ `ContextSection`), `HealthView`, `LogsView`, `LogViewer`, `LogSummaryCard`, `ReadableLog`, `Levels` (order + explanations), `SettingsView`, `AppearanceSection`, `ColorSettings`, `CodeView` (the only AvaloniaEdit user), `ConfigPanel`, `Dialogs`, `AddAppDialog`, `Table`, `W` (widget helpers), `Busy` (the one loading indicator), `MemoryTrim` (debounced GC after a page or the last code view closes), `UpdateView` (Settings › Updates, new-version notice), `CrashNotice` (after a crash: report, open crash.log), `Toast`, `Theme` (colors + fonts), `Icons`, `Ctx`
+
 ## Levels
 - System: managed or machine-wide folders (`level: "System"`, usually with `os`)
 - User: folders under the home directory
@@ -74,7 +78,7 @@ src/Core/Assets/apps.builtin.json ┐
   - Search covers the whole file (case, regex, "only matching lines"); results list with line numbers; clicking jumps to the line, loading the part of the file around it when it is outside the tail.
 
 ## Crashes
-`CrashLog` writes any error that closes the app (and failed background work nobody waited for) to `crash.log` next to settings.json, with the version and OS; it does not keep the app running. On the next start a notice says so once.
+`CrashLog` writes any error that closes the app (and failed background work nobody waited for) to `crash.log` next to settings.json, with the version and OS; it does not keep the app running. On the next start `CrashNotice` shows a card once: Report on GitHub opens a prefilled new-issue page (`CrashReport`: last entry, home folder and user name removed, cut to fit the link); the user submits it in the browser, the app sends nothing.
 
 ## Appearance
 Settings › Appearance: font family (installed fonts), base size 12–18, body and emphasis weight (one list, 300–700), log & code font and size (typed number, 10–18, default 14; search results in the log viewer use the same size), log line numbers, and accent / hover / selection colors for each theme (hex or Snowy Owl swatches; a hint shows when contrast drops below 7.1:1). `Theme.Appearance` applies them; the UI is rebuilt so sizes take effect.
