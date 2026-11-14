@@ -17,27 +17,27 @@ internal class ConfigPanel : StackPanel
     private readonly Ctx _x;
     private readonly string _path;
     private readonly CodeView? _code;
-    private readonly StackPanel _bar = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    private readonly TextBlock _status = Txt("", 12, false, Muted).With(t => { t.VerticalAlignment = VerticalAlignment.Center; t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; });
+    private readonly StackPanel _bar = new() { Orientation = Orientation.Horizontal, Spacing = Space.M };
+    private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted).With(t => { t.VerticalAlignment = VerticalAlignment.Center; t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; });
     private ConfigEditor.Stamp? _stamp;
     private string _original = "";
 
     public ConfigPanel(Ctx x, string path)
     {
-        _x = x; _path = path; Spacing = 8;
+        _x = x; _path = path; Spacing = Space.M;
         if (Directory.Exists(path))
         {
-            Children.Add(Txt("Folder contents", 12, false, Muted));
-            Children.Add(Mono(Entries(path), 12));
+            Children.Add(Txt("Folder contents", TextSize.Caption, false, Muted));
+            Children.Add(Mono(Entries(path), TextSize.Caption));
             return;
         }
-        _code = new CodeView(path) { Height = 340 };
+        _code = new CodeView(path) { Height = Heights.ViewerS };
         try { (_original, _stamp) = ConfigEditor.Read(path); _code.Text = _original; }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _status.Text = "Cannot read: " + e.Message; }
         _code.Changed += (_, _) => { if (!_code.ReadOnly) { _status.Text = _code.Text == _original ? "Editing" : "Unsaved changes"; } };
-        var head = new DockPanel { Children = { _bar.With(b => DockPanel.SetDock(b, Dock.Right)), Row(Title(Path.GetFileName(path), 14), _status) } };
+        var head = new DockPanel { Children = { _bar.With(b => DockPanel.SetDock(b, Dock.Right)), Row(Title(Path.GetFileName(path), TextSize.Body), _status) } };
         Children.Add(head);
-        Children.Add(new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = _code });
+        Children.Add(new Border { CornerRadius = new CornerRadius(Radius.M), ClipToBounds = true, Child = _code });
         ShowBar();
     }
 

@@ -17,10 +17,11 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
 {
+    private const double TopOffset = 72;   // the palette opens below the title bar, like a search box
     private sealed record Entry(string Icon, string Title, string Sub, Action Run);
 
-    private readonly TextBox _box = SearchBox("Go to an app, skill, plugin, project or action", 44);
-    private readonly StackPanel _list = new() { Spacing = 2 };
+    private readonly TextBox _box = SearchBox("Go to an app, skill, plugin, project or action", Sizes.LargeControl);
+    private readonly StackPanel _list = new() { Spacing = Space.XXS };
     private List<Entry> _all = [], _shown = [];
     private int _pick;
     private bool _wired;
@@ -40,15 +41,15 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         Filter();
         var card = new Border
         {
-            Width = 640,
-            MaxHeight = 520,
+            Width = Widths.DialogL,
+            MaxHeight = Heights.ViewerL,
             VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 72, 0, 0),
-            CornerRadius = new CornerRadius(12),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(12),
-            Child = new DockPanel { Children = { _box.Free().With(b => { DockPanel.SetDock(b, Dock.Top); b.Margin = new Thickness(0, 0, 0, 10); }), new ScrollViewer { Content = _list.Free() } } }
+            Margin = new Thickness(0, TopOffset, 0, 0),
+            CornerRadius = new CornerRadius(Radius.XL),
+            BorderThickness = new Thickness(Stroke.Thin),
+            Padding = new Thickness(Space.L),
+            Child = new DockPanel { Children = { _box.Free().With(b => { DockPanel.SetDock(b, Dock.Top); b.Margin = new Thickness(0, 0, 0, Space.L); }), new ScrollViewer { Content = _list.Free() } } }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         card.PointerPressed += (_, e) => e.Handled = true;   // clicks inside do not close it
         var dim = new Border { Child = card }.Themed(Border.BackgroundProperty, ScrimKey);
@@ -104,11 +105,11 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
             var en = _shown[i]; var at = i;
             var row = new Border
             {
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(10, 6),
+                CornerRadius = new CornerRadius(Radius.M),
+                Padding = new Thickness(Space.L, Space.S),
                 Cursor = Hand,
                 Background = Brushes.Transparent,
-                Child = Row(Icon(en.Icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(en.Title, 14, true), Txt(en.Sub, 12, false, Muted))
+                Child = Row(Icon(en.Icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(en.Title, TextSize.Body, true), Txt(en.Sub, TextSize.Caption, false, Muted))
             };
             if (i == _pick)
             {
@@ -120,7 +121,7 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         }
         if (_shown.Count == 0)
         {
-            _list.Children.Add(Txt("Nothing found.", 13, false, Muted).With(t => t.Margin = new Thickness(10, 6)));
+            _list.Children.Add(Txt("Nothing found.", TextSize.Small, false, Muted).With(t => t.Margin = new Thickness(Space.L, Space.S)));
         }
     }
 

@@ -14,14 +14,14 @@ internal static class Dialogs
 {
     private static Window Shell(string title, Control body, params Button[] buttons)
     {
-        var w = new Window { Title = title, Width = 480, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
+        var w = new Window { Title = title, Width = Widths.DialogM, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right };
         foreach (var b in buttons)
         {
             bar.Children.Add(b);
         }
 
-        w.Content = new StackPanel { Margin = new Thickness(20), Spacing = 14, Children = { Txt(title, 18, true), body, bar } };
+        w.Content = new StackPanel { Margin = new Thickness(Space.XXL), Spacing = Space.XL, Children = { Txt(title, TextSize.Title, true), body, bar } };
         return w;
     }
 
@@ -36,7 +36,7 @@ internal static class Dialogs
     public static Task Message(Window owner, string title, string text, bool mono = false)
     {
         Window? w = null;
-        Control body = mono ? new ScrollViewer { MaxHeight = 320, Content = Mono(text == "" ? "(no output)" : text) } : Txt(text);
+        Control body = mono ? new ScrollViewer { MaxHeight = Heights.ViewerS, Content = Mono(text == "" ? "(no output)" : text) } : Txt(text);
         w = Shell(title, body, Btn("Close", () => w!.Close(), true).With(b => { b.IsDefault = true; b.IsCancel = true; }));
         return w.ShowDialog(owner);
     }
@@ -47,13 +47,13 @@ internal static class Dialogs
         Window? w = null;
         var text = new TextBox { PlaceholderText = textLabel ?? "" };
         var pick = new ComboBox { ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
-        var body = new StackPanel { Spacing = 8, Children = { Txt(intro, 13, false, Muted) } };
+        var body = new StackPanel { Spacing = Space.M, Children = { Txt(intro, TextSize.Small, false, Muted) } };
         if (textLabel != null)
         {
             body.Children.Add(text);
         }
 
-        body.Children.Add(Txt(choiceLabel, 12, false, Muted));
+        body.Children.Add(Txt(choiceLabel, TextSize.Caption, false, Muted));
         body.Children.Add(pick);
         var go = Btn(ok, () => { if (textLabel == null || !string.IsNullOrWhiteSpace(text.Text)) { w!.Close(true); } }, true);
         go.IsDefault = true;

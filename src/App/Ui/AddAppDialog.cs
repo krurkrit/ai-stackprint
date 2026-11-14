@@ -22,7 +22,7 @@ internal class AddAppDialog : Window
 
     public AddAppDialog()
     {
-        Title = "Add app"; Width = 520; SizeToContent = SizeToContent.Height; WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        Title = "Add app"; Width = Widths.DialogM; SizeToContent = SizeToContent.Height; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var browse = Btn("Browse...", async () =>
         {
             var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "App config folder" });
@@ -35,15 +35,15 @@ internal class AddAppDialog : Window
         ok.IsDefault = true;
         Content = new StackPanel
         {
-            Margin = new Thickness(20),
-            Spacing = 10,
+            Margin = new Thickness(Space.XXL),
+            Spacing = Space.L,
             Children =
             {
-                Txt("Add an app to scan", 18, true), _name, _cat,
-                new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8, Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) } },
+                Txt("Add an app to scan", TextSize.Title, true), _name, _cat,
+                new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = Space.M, Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) } },
                 _proj,
-                Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", 12, false, Muted),
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right,
+                Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted),
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right,
                     Children = { Btn("Cancel", () => Close(null)), ok } }
             }
         };

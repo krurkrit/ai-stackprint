@@ -15,6 +15,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal partial class MainWindow
 {
+    private const double MacButtons = 78;   // room for the macOS window buttons on the left
     private const double TitleBarHeight = 40;
     private Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!;
     private WindowState _beforeFullScreen = WindowState.Normal;
@@ -37,10 +38,10 @@ internal partial class MainWindow
         var left = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = 2,
+            Spacing = Space.XXS,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(mac ? 78 : 14, 0, 0, 0),   // macOS draws its window buttons on the left
-            Children = { Title("AI Stackprint", 13).With(t => t.Margin = new Thickness(0, 0, 10, 0)), _backBtn, _forwardBtn }
+            Margin = new Thickness(mac ? MacButtons : Space.XL, 0, 0, 0),   // macOS draws its window buttons on the left
+            Children = { Title("AI Stackprint", TextSize.Small).With(t => t.Margin = new Thickness(0, 0, Space.L, 0)), _backBtn, _forwardBtn }
         };
         var row = new DockPanel { Height = TitleBarHeight };
         if (!mac)
@@ -50,8 +51,8 @@ internal partial class MainWindow
             var right = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Spacing = 2,
-                Margin = new Thickness(0, 0, 8, 0),
+                Spacing = Space.XXS,
+                Margin = new Thickness(0, 0, Space.M, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 Children = { TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized), _maxBtn, CloseHover(TitleBtn("dismiss", "Close", Close)) }
             };
@@ -90,7 +91,7 @@ internal partial class MainWindow
     /// <summary>Title-bar icon button: muted icon, Rescan colors (accent fill, accent text) under the pointer.</summary>
     private static Button TitleBtn(string icon, string tip, Action a)
     {
-        var b = new Button { Content = Icon(icon, 16), Padding = new Thickness(8), Background = Avalonia.Media.Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
+        var b = new Button { Content = Icon(icon, IconSize.S), Padding = new Thickness(Space.M), Background = Avalonia.Media.Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
         b.Themed(ForegroundProperty, Muted);   // the icon inherits it, so the hover text color applies too
         HoverStyle(b);
         ToolTip.SetTip(b, tip);
@@ -139,7 +140,7 @@ internal partial class MainWindow
     private void UpdateMaxButton()
     {
         var max = WindowState == WindowState.Maximized;
-        _maxBtn.Content = Icon(max ? "restore" : "maximize", 16);
+        _maxBtn.Content = Icon(max ? "restore" : "maximize", IconSize.S);
         ToolTip.SetTip(_maxBtn, max ? "Restore" : "Maximize");
     }
 

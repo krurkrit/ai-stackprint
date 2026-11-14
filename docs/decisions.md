@@ -15,9 +15,11 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Appearance settings: fonts, sizes, weights, log font and size, log line numbers (hidden by default), and accent, hover and selection colors per theme. There is no Theme row; the theme switch lives in the side menu.
 - UI and log font sizes both use a typed number input, not a dropdown. Log size defaults to 14, range 10–18.
 - Body and Emphasis weights share one list.
+- Inputs (text, number and search boxes, drop-downs, check boxes, radio buttons) share one height, and one-line text sits in the middle. Multi-line inputs start their first line where a one-line input shows its text and leave the same gap below the last line. The gaps come from the font's line height (`Theme.Inputs`), so this holds at any font and size; do not set a fixed `MinHeight` or padding on an input.
 - Dark-theme status is a green outline with normal foreground text, not a filled badge.
 
 ## Dashboard and Apps
+- Every card header is the same: icon on a tinted square, then the title in the heading weight (`W.Section`). Stat tiles use it too.
 - Dashboard shows summary charts of plugin and skill counts by app and by author. Don't add an "AI apps and orchestrators" list there; the Apps page already has it.
 - The page and menu item are "Apps", not "AI apps": everything in the app is about AI, and the other menu items are one word.
 - Apps page has a Status filter and Group by Category, collapsible per category, like the Dashboard.

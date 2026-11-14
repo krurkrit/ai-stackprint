@@ -55,22 +55,22 @@ internal class AppsView(Ctx x)
         var byStatus = found.Where(a => !_offStatus.Contains(a.Installed ? "Installed" : "Not found")).ToList();
 
         // Counts follow the search (and status for categories); a category with no apps is not listed
-        var f = new StackPanel { Spacing = 10 };
+        var f = new StackPanel { Spacing = Space.L };
         if (statuses.Count > 1)
         {
-            f.Children.Add(FilterRow("Status", Checks([(Counted(Txt("Installed", 14), inst), "Installed"), (Counted(Txt("Not found", 14), found.Count - inst), "Not found")], _offStatus, Fill)));
+            f.Children.Add(FilterRow("Status", Checks([(Counted(Txt("Installed", TextSize.Body), inst), "Installed"), (Counted(Txt("Not found", TextSize.Body), found.Count - inst), "Not found")], _offStatus, Fill)));
         }
 
         if (cats.Count > 1)
         {
-            f.Children.Add(FilterRow("Category", Checks(cats.Select(c => (Counted(Txt(Plural(c), 14), byStatus.Count(a => a.Category == c)), c)).ToList(), _offCats, Fill)));
+            f.Children.Add(FilterRow("Category", Checks(cats.Select(c => (Counted(Txt(Plural(c), TextSize.Body), byStatus.Count(a => a.Category == c)), c)).ToList(), _offCats, Fill)));
         }
 
         var groupRow = new List<Control> { Check("Category", _byCat, v => { _byCat = v; Fill(); }), Check("Status", _byStatus, v => { _byStatus = v; Fill(); }) };
         if (_byCat || _byStatus)
         {
-            groupRow.Add(Btn("Expand all", () => { _collapsed.Clear(); Fill(); }, false, "chevron_down").With(b => b.MinHeight = 32));
-            groupRow.Add(Btn("Collapse all", () => { _collapsed.UnionWith(Keys(x.ShownApps)); Fill(); }, false, "chevron_right").With(b => b.MinHeight = 32));
+            groupRow.Add(Btn("Expand all", () => { _collapsed.Clear(); Fill(); }, false, "chevron_down").With(b => b.MinHeight = Sizes.CompactControl));
+            groupRow.Add(Btn("Collapse all", () => { _collapsed.UnionWith(Keys(x.ShownApps)); Fill(); }, false, "chevron_right").With(b => b.MinHeight = Sizes.CompactControl));
         }
         f.Children.Add(FilterRow("Group by", [.. groupRow]));
         _filters.Content = f;
@@ -84,8 +84,8 @@ internal class AppsView(Ctx x)
     {
         TableRow Row(Models.AppInfo a) => new(
         [
-            AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) { n.Opacity = 0.6; } }), Txt(Cap(a.Category), 13, false, Muted),
-            a.Installed ? Status("Installed") : Txt("Not found", 13, false, Muted),
+            AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) { n.Opacity = 0.6; } }), Txt(Cap(a.Category), TextSize.Small, false, Muted),
+            a.Installed ? Status("Installed") : Txt("Not found", TextSize.Small, false, Muted),
             Count(a.Id, "Plugin", a.Installed), Count(a.Id, "Skill", a.Installed), Count(a.Id, "Config", a.Installed)
         ], () => x.Go("App:" + a.Id));
         if (!_byCat && !_byStatus) { foreach (var a in apps) { yield return Row(a); } yield break; }
@@ -95,9 +95,9 @@ internal class AppsView(Ctx x)
             var first = g.First();
             var name = _byCat ? Plural(first.Category) + (_byStatus ? " · " + StatusName(first) : "") : StatusName(first);
             var cells = new Control[cols];
-            cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", 14).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
-                _byCat ? Icon(Icons.ForCategory(first.Category), 16) : new Panel(), Title(name, 14),
-                Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", 13, false, Muted));
+            cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
+                _byCat ? Icon(Icons.ForCategory(first.Category), IconSize.S) : new Panel(), Title(name, TextSize.Body),
+                Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", TextSize.Small, false, Muted));
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
             for (var c = 1; c < cols; c++)
             {

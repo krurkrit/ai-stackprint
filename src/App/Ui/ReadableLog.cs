@@ -27,7 +27,7 @@ internal partial class ReadableLog
     public ReadableLog(Session s, bool toEnd)
     {
         Steps = [.. s.Entries.TakeLast(MaxSteps)];
-        var list = new StackPanel { Spacing = 8, Margin = new Thickness(14) };
+        var list = new StackPanel { Spacing = Space.M, Margin = new Thickness(Space.XL) };
         list.Children.Add(Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
         {
@@ -36,7 +36,7 @@ internal partial class ReadableLog
 
         if (s.Entries.Count > MaxSteps)
         {
-            list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", 12, false, Muted));
+            list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", TextSize.Caption, false, Muted));
         }
 
         bool? wasSub = null;
@@ -44,7 +44,7 @@ internal partial class ReadableLog
         {
             if (e.SubAgent && wasSub != true)
             {
-                list.Children.Add(Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(24, 6, 0, 0)));
+                list.Children.Add(Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
             }
 
             wasSub = e.SubAgent;
@@ -52,7 +52,7 @@ internal partial class ReadableLog
             _controls[e] = step;
             if (e.SubAgent)
             {
-                step = new Border { BorderThickness = new Thickness(2, 0, 0, 0), Padding = new Thickness(12, 0, 0, 0), Margin = new Thickness(24, 0, 0, 0), Child = step }
+                step = new Border { BorderThickness = new Thickness(Space.XXS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XXXL, 0, 0, 0), Child = step }
                     .Themed(Border.BorderBrushProperty, Accent);
             }
 
@@ -62,7 +62,7 @@ internal partial class ReadableLog
         }
         if (Steps.Count == 0)
         {
-            list.Children.Add(Txt("No readable steps in this file.", 14, false, Muted));
+            list.Children.Add(Txt("No readable steps in this file.", TextSize.Body, false, Muted));
         }
 
         _scroll.Content = list;
@@ -117,8 +117,8 @@ internal partial class ReadableLog
 
             var margin = step.Margin;   // the step's own indent (20 px sides, sub-agent indent), so the highlight lines up with it
             // Fill behind the step (text keeps its contrast) and a ring on top (visible on opaque bubbles too)
-            var fill = new Border { CornerRadius = new CornerRadius(8), Margin = margin, IsHitTestVisible = false }.Themed(Border.BackgroundProperty, HighlightKey);
-            var ring = new Border { CornerRadius = new CornerRadius(8), Margin = margin, BorderThickness = new Thickness(2), IsHitTestVisible = false }.Themed(Border.BorderBrushProperty, HighlightRingKey);
+            var fill = new Border { CornerRadius = new CornerRadius(Radius.L), Margin = margin, IsHitTestVisible = false }.Themed(Border.BackgroundProperty, HighlightKey);
+            var ring = new Border { CornerRadius = new CornerRadius(Radius.L), Margin = margin, BorderThickness = new Thickness(Stroke.Medium), IsHitTestVisible = false }.Themed(Border.BorderBrushProperty, HighlightRingKey);
             holder.Children.Insert(0, fill);
             holder.Children.Add(ring);
             foreach (var b in new[] { fill, ring })
@@ -168,7 +168,7 @@ internal partial class ReadableLog
         new TextBlock { Text = s, FontSize = Theme.MonoSize + delta, FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, key);
 
     private static Border LogChip(string s) =>
-        new Border { CornerRadius = new CornerRadius(999), Padding = new Thickness(10, 4), Child = L(s, true), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 8, 8) }
+        new Border { CornerRadius = new CornerRadius(Radius.Pill), Padding = new Thickness(Space.L, Space.XS), Child = L(s, true), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, Space.M, Space.M) }
             .Themed(Border.BackgroundProperty, Subtle);
 
     public static string Plural(int n, string word) => $"{n:N0} {word}{(n == 1 ? "" : "s")}";
@@ -187,8 +187,8 @@ internal partial class ReadableLog
     private static Border Message(string icon, string who, LogEntry e, string bg, bool mine = false)
     {
         var time = L(e.Time?.ToString("HH:mm:ss") ?? "", false, Muted, -1).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-        var head = Row(Icon(icon, 16).Themed(TextElement.ForegroundProperty, Accent), L(who, true), time);
-        var body = new StackPanel { Spacing = 6, Children = { head } };
+        var head = Row(Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, Accent), L(who, true), time);
+        var body = new StackPanel { Spacing = Space.S, Children = { head } };
         foreach (var part in ContextBlocks.Split(TextDecode.Strip(e.Text)))
         {
             if (part.Label != null) { body.Children.Add(Injected(part)); continue; }
@@ -197,7 +197,7 @@ internal partial class ReadableLog
                 body.Children.Add(lang == null ? MarkdownView.Render(text) : Code(text, lang));
             }
         }
-        return new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(12, 10), Child = body, Margin = mine ? new Thickness(20, 0, 0, 0) : new Thickness(0, 0, 20, 0) }
+        return new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.L, Space.L), Child = body, Margin = mine ? new Thickness(Space.XXL, 0, 0, 0) : new Thickness(0, 0, Space.XXL, 0) }
             .Themed(Border.BackgroundProperty, bg);
     }
 }

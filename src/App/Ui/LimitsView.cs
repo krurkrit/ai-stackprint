@@ -45,14 +45,14 @@ internal static class LimitsView
             return new Panel();
         }
 
-        var host = new StackPanel { Spacing = 14 };
+        var host = new StackPanel { Spacing = Space.XL };
         void Render()
         {
             host.Children.Clear();
             foreach (var d in apps)
             {
-                var g = new Grid { ColumnDefinitions = new ColumnDefinitions("220,*"), ColumnSpacing = 16 };
-                g.Children.Add(new Border { Background = Avalonia.Media.Brushes.Transparent, Cursor = Hand, Child = AppName(d.Logo, d.Category, d.Name, 24), VerticalAlignment = VerticalAlignment.Top }
+                var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.LabelL},*"), ColumnSpacing = Space.XL };
+                g.Children.Add(new Border { Background = Avalonia.Media.Brushes.Transparent, Cursor = Hand, Child = AppName(d.Logo, d.Category, d.Name, Sizes.LogoS), VerticalAlignment = VerticalAlignment.Top }
                     .With(b => b.PointerReleased += (_, _) => x.Go("App:" + d.Id)));
                 g.Children.Add(Body(x, d, compact: true).With(c => Grid.SetColumn(c, 1)));
                 host.Children.Add(g);
@@ -75,7 +75,7 @@ internal static class LimitsView
             if (st.Busy) { sp.Children.Add(Busy.Loading($"Asking {LimitProviders.Find(d.Limits)!.Host}…")); return sp; }
             if (!on)
             {
-                sp.Children.Add(Row(Txt("Live limits are off for this app.", 13, false, Muted), Btn("Turn on…", () => Consent(x, d), false, "data_pie").With(b => b.MinHeight = 30)));
+                sp.Children.Add(Row(Txt("Live limits are off for this app.", TextSize.Small, false, Muted), Btn("Turn on…", () => Consent(x, d), false, "data_pie").With(b => b.MinHeight = Sizes.CompactControl)));
                 return sp;
             }
         }
@@ -89,7 +89,7 @@ internal static class LimitsView
 
             if (s.FromLogs)
             {
-                head.Add(Txt("from the app's own log", 12, false, Muted));
+                head.Add(Txt("from the app's own log", TextSize.Caption, false, Muted));
             }
 
             if (head.Count > 0)
@@ -104,16 +104,16 @@ internal static class LimitsView
 
             if (s.Windows.Count == 0)
             {
-                sp.Children.Add(Txt(s.Note ?? "No limits reported.", 13, false, Muted));
+                sp.Children.Add(Txt(s.Note ?? "No limits reported.", TextSize.Small, false, Muted));
             }
             else if (s.Note != null && !compact)
             {
-                sp.Children.Add(Txt(s.Note, 12, false, Muted));
+                sp.Children.Add(Txt(s.Note, TextSize.Caption, false, Muted));
             }
         }
         if (st.Message != null && st.State != LimitState.Ok)
         {
-            sp.Children.Add(Row(Icon(st.State is LimitState.Off ? "info" : "warning", 14).Themed(TextElement.ForegroundProperty, st.State is LimitState.Off ? Muted : WarningKey), Txt(st.Message, 12, false, Muted)));
+            sp.Children.Add(Row(Icon(st.State is LimitState.Off ? "info" : "warning", IconSize.S).Themed(TextElement.ForegroundProperty, st.State is LimitState.Off ? Muted : WarningKey), Txt(st.Message, TextSize.Caption, false, Muted)));
         }
 
         if (x.Limits.Fetched(d.Id) is { } at)
@@ -131,15 +131,15 @@ internal static class LimitsView
     {
         var pct = Math.Clamp(w.UsedPercent, 0, 100);
         var bar = new Grid { Height = compact ? 6 : 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(pct, 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
-        bar.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
-        bar.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
+        bar.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
+        bar.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
         var text = $"{w.UsedPercent:0.#}% used" + (w.ResetsAt is { } r ? $" · resets {Reset(r)}" : "");
         if (prev?.Windows.FirstOrDefault(p => p.Name == w.Name) is { } before && LimitsService.FullAt(before, prev.FetchedAt, w, now.FetchedAt) is { } full)
         {
             text += $" · full about {full:HH:mm} at this pace";
         }
 
-        return new StackPanel { Spacing = 3, Children = { Row(Txt(w.Name, 13, true), Txt(text, 12, false, Muted)), bar } };
+        return new StackPanel { Spacing = Space.XS, Children = { Row(Txt(w.Name, TextSize.Small, true), Txt(text, TextSize.Caption, false, Muted)), bar } };
     }
 
     private static string Reset(DateTime t)
@@ -188,7 +188,7 @@ internal static class LimitsView
     public static Control Settings(Ctx x)
     {
         var st = x.S.Settings;
-        var every = new NumericUpDown { Minimum = 1, Maximum = 60, Increment = 1, FormatString = "0", MinWidth = 120, Value = Math.Clamp(st.LimitsRefreshMinutes, 1, 60) };
+        var every = new NumericUpDown { Minimum = 1, Maximum = 60, Increment = 1, FormatString = "0", MinWidth = Widths.FieldS, Value = Math.Clamp(st.LimitsRefreshMinutes, 1, 60) };
         every.ValueChanged += (_, e) => { if (e.NewValue is { } v) { st.LimitsRefreshMinutes = (int)Math.Clamp(Math.Round(v), 1, 60); SettingsStore.Save(st); } };
         var rows = x.S.Defs.Where(Has).OrderBy(d => d.Name).Select(d =>
         {
@@ -198,15 +198,15 @@ internal static class LimitsView
                 if (sw.IsChecked == true && !st.LimitsEnabled.Contains(d.Id)) { sw.IsChecked = false; Consent(x, d); return; }
                 if (sw.IsChecked != true) { st.LimitsEnabled.Remove(d.Id); SettingsStore.Save(st); }
             };
-            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, 13, false, Muted), sw]);
+            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, TextSize.Small, false, Muted), sw]);
         });
         return Section("data_pie", "Usage limits", new StackPanel
         {
-            Spacing = 12,
+            Spacing = Space.L,
             Children =
         {
-            Txt("Plan and limits from each app's own sign-in, asked from the provider the app uses. Off until you turn it on per app. Codex limits also come from its session log without any call.", 13, false, Muted),
-            Row(Txt("Refresh every", 14, false, Muted), every, Txt("minutes (at least 1); pages show the last reading in between", 12, false, Muted)),
+            Txt("Plan and limits from each app's own sign-in, asked from the provider the app uses. Off until you turn it on per app. Codex limits also come from its session log without any call.", TextSize.Small, false, Muted),
+            Row(Txt("Refresh every", TextSize.Body, false, Muted), every, Txt("minutes (at least 1); pages show the last reading in between", TextSize.Caption, false, Muted)),
             Table.Build([new Col("App", "2*"), new Col("Asks", "1.4*"), new Col("Live limits", "1*")], rows)
         }
         });

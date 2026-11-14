@@ -57,7 +57,7 @@ internal sealed class CodeView : Border, IDisposable
             FontWeight = Ui.Theme.MonoWeight,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = compact ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto,
-            Padding = new Thickness(lineNumbers ? 0 : 8, 4, 4, 4)
+            Padding = new Thickness(lineNumbers ? 0 : Space.M, Space.XS, Space.XS, Space.XS)
         }.Themed(TemplatedControl.BackgroundProperty, W.Background).Themed(TemplatedControl.ForegroundProperty, W.Text);
         _editor.TextArea.Themed(TextArea.SelectionBrushProperty, W.SelectionKey);
         _editor.TextArea.SelectionForeground = null;   // keep syntax colors readable inside the selection
@@ -65,13 +65,13 @@ internal sealed class CodeView : Border, IDisposable
         {
             foreach (var m in _editor.TextArea.LeftMargins.OfType<LineNumberMargin>())
             {
-                m.Margin = new Thickness(10, 0, 8, 0);   // space from the edge and from the text
+                m.Margin = new Thickness(Space.L, 0, Space.M, 0);   // space from the edge and from the text
             }
         }
 
         if (compact)
         {
-            MaxHeight = 420;
+            MaxHeight = Heights.Viewer;
         }
 
         _scope = Language(path) is { } lang ? Registry.GetScopeByLanguageId(lang.Id) : null;

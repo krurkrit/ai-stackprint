@@ -23,7 +23,7 @@ internal partial class ReadableLog
     private static Control Injected(ContextBlocks.Part part) => Fold($"Injected · {part.Label} · ", part.Text, null, new Thickness(0), markdown: true);
 
     internal static Control Code(string text, string ext) =>
-        new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = new CodeView(ext, lineNumbers: false, compact: true) { Text = text.TrimEnd('\n') } };
+        new Border { CornerRadius = new CornerRadius(Radius.M), ClipToBounds = true, Child = new CodeView(ext, lineNumbers: false, compact: true) { Text = text.TrimEnd('\n') } };
 
     /// <summary>Splits markdown into prose and fenced code blocks; the fence language picks the grammar.</summary>
     internal static IEnumerable<(string Text, string? Lang)> Fences(string md)
@@ -64,8 +64,8 @@ internal partial class ReadableLog
 
     private static Control ToolCall(LogEntry e)
     {
-        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*"), ColumnSpacing = 8 };
-        line.Children.Add(Icon("wrench", 14).Themed(TextElement.ForegroundProperty, Muted));
+        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*"), ColumnSpacing = Space.M };
+        line.Children.Add(Icon("wrench", IconSize.S).Themed(TextElement.ForegroundProperty, Muted));
         line.Children.Add(L(e.Tool ?? "tool", true).With(t => { Grid.SetColumn(t, 1); t.VerticalAlignment = VerticalAlignment.Center; }));
         var args = new TextBlock { Text = TextDecode.Strip(e.Text.Split('\n')[0]), FontFamily = Theme.Mono, FontSize = Theme.MonoSize, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center }
             .Themed(TextBlock.ForegroundProperty, Muted);
@@ -73,14 +73,14 @@ internal partial class ReadableLog
         // No arrow when opening would show the same one line the header already shows
         if (string.IsNullOrEmpty(e.Detail) || SameAsHeader(e.Detail, args.Text ?? ""))
         {
-            return line.With(l => l.Margin = new Thickness(12, 2));
+            return line.With(l => l.Margin = new Thickness(Space.L, Space.XXS));
         }
         // Full input (command, JSON arguments, patch) highlighted when opened
-        return Lazy(new Expander { Header = line, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(12, 0, 0, 0) }, () => Code(e.Detail, e.Lang ?? ".txt"));
+        return Lazy(new Expander { Header = line, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(Space.L, 0, 0, 0) }, () => Code(e.Detail, e.Lang ?? ".txt"));
     }
 
     /// <summary>Collapsed by default; long tool output and thinking stay out of the way. Highlighted when opened.</summary>
-    private static Control Folded(string label, string text, string? lang, bool markdown = false) => Fold(label + " · ", text, lang, new Thickness(12, 0, 0, 0), markdown);
+    private static Control Folded(string label, string text, string? lang, bool markdown = false) => Fold(label + " · ", text, lang, new Thickness(Space.L, 0, 0, 0), markdown);
 
     /// <summary>An expander whose header is the label and first line; a plain line when the text is that one line (opening would add nothing).</summary>
     private static Control Fold(string label, string text, string? lang, Thickness margin, bool markdown = false)
@@ -89,7 +89,7 @@ internal partial class ReadableLog
         var header = L(label + first, false, Muted).With(t => { t.TextWrapping = TextWrapping.NoWrap; t.TextTrimming = TextTrimming.CharacterEllipsis; });
         if (SameAsHeader(text, first))
         {
-            return header.With(h => h.Margin = new Thickness(margin.Left + 12, 6, 0, 6));
+            return header.With(h => h.Margin = new Thickness(margin.Left + Space.L, Space.S, 0, Space.S));
         }
 
         return Lazy(new Expander { Header = header, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = margin }, () => markdown ? Rendered(TextDecode.Strip(text)) : StepBody(text, lang));
@@ -119,14 +119,14 @@ internal partial class ReadableLog
         }
 
         var formatted = true;
-        var toggle = new Button { Content = "Show original", Padding = new Thickness(8, 2), MinHeight = 0, FontSize = Size(12), HorizontalAlignment = HorizontalAlignment.Left };
+        var toggle = new Button { Content = "Show original", Padding = new Thickness(Space.M, Space.XXS), MinHeight = 0, FontSize = Size(TextSize.Caption), HorizontalAlignment = HorizontalAlignment.Left };
         toggle.Click += (_, _) =>
         {
             formatted = !formatted;
             view.Content = Show(formatted);
             toggle.Content = formatted ? "Show original" : "Show formatted";
         };
-        return new StackPanel { Spacing = 4, Children = { toggle, view } };
+        return new StackPanel { Spacing = Space.XS, Children = { toggle, view } };
     }
 
     /// <summary>Markdown in the body font; a Source toggle shows the text as written.</summary>
@@ -134,14 +134,14 @@ internal partial class ReadableLog
     {
         var view = new ContentControl { Content = MarkdownView.Document(md) };
         var source = false;
-        var toggle = new Button { Content = "Source", Padding = new Thickness(8, 2), MinHeight = 0, FontSize = Size(12), HorizontalAlignment = HorizontalAlignment.Left };
+        var toggle = new Button { Content = "Source", Padding = new Thickness(Space.M, Space.XXS), MinHeight = 0, FontSize = Size(TextSize.Caption), HorizontalAlignment = HorizontalAlignment.Left };
         toggle.Click += (_, _) =>
         {
             source = !source;
             view.Content = source ? Code(md, ".md") : MarkdownView.Document(md);
             toggle.Content = source ? "Rendered" : "Source";
         };
-        return new StackPanel { Spacing = 4, Children = { toggle, view } };
+        return new StackPanel { Spacing = Space.XS, Children = { toggle, view } };
     }
 
     private static SelectableTextBlock Plain(string text) =>

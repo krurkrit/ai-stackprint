@@ -38,15 +38,15 @@ internal partial class LogsView(Ctx x)
         Relist(def);
 
         var apps = Table.Build([new Col("App", "*")], Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
-            .Select(d => new TableRow([AppName(d.Logo, d.Category, d.Name, 24)], () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
+            .Select(d => new TableRow([AppName(d.Logo, d.Category, d.Name, Sizes.LogoS)], () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
 
-        var head = new StackPanel { Spacing = 6, Children = { def == null ? H1("Logs") : H1("Logs", "Logs", def.Name) } };
+        var head = new StackPanel { Spacing = Space.S, Children = { def == null ? H1("Logs") : H1("Logs", "Logs", def.Name) } };
         if (def != null)
         {
-            head.Children.Add(Txt("Looks in: " + string.Join("  ·  ", def.Logs.Where(l => PathUtil.OsMatches(l.Os)).Select(l => l.Path)) + "  ·  watching for changes · F5 reads again", 12, false, Muted));
+            head.Children.Add(Txt("Looks in: " + string.Join("  ·  ", def.Logs.Where(l => PathUtil.OsMatches(l.Os)).Select(l => l.Path)) + "  ·  watching for changes · F5 reads again", TextSize.Caption, false, Muted));
         }
 
-        var right = new StackPanel { Spacing = 14, Margin = new Thickness(12, 28, 32, 28), Children = { head } };
+        var right = new StackPanel { Spacing = Space.XL, Margin = new Thickness(Space.L, Space.XXXL, Space.Page, Space.XXXL), Children = { head } };
         if (def != null)
         {
             right.Children.Add(_summary.Build(_files));
@@ -75,13 +75,13 @@ internal partial class LogsView(Ctx x)
 
                 x.Go("Logs:" + _app);
             };
-            right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = 260, Content = _table.Free() }, [.. del.Prepend(follow)]));
+            right.Children.Add(Section("document_text", "Files", new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() }, [.. del.Prepend(follow)]));
             FillTable(def);
         }
         right.Children.Add(_viewer.Build(_file, () => x.Go("Logs:" + _app)));
 
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("260,*") };
-        var left = new ScrollViewer { Margin = new Thickness(32, 28, 12, 20), Content = Card(apps) };
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SideList},*") };
+        var left = new ScrollViewer { Margin = new Thickness(Space.Page, Space.XXXL, Space.L, Space.XXL), Content = Card(apps) };
         var scroll = new ScrollViewer { Content = right };
         Grid.SetColumn(scroll, 1);
         g.Children.Add(left); g.Children.Add(scroll);
@@ -121,7 +121,7 @@ internal partial class LogsView(Ctx x)
             return new TableRow(
             [
                 check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path)),   // type on the second line: the name needs the width
-                Txt(LogViewer.Size(f.Size), 13), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), 13),
+                Txt(LogViewer.Size(f.Size), TextSize.Small), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), TextSize.Small),
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete([f]))
             ], () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });

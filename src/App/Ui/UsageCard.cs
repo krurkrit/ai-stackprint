@@ -76,7 +76,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             Render();
         }
         catch (OperationCanceledException) { }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _body.Content = Txt("Cannot read logs: " + e.Message, 13, false, Muted); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _body.Content = Txt("Cannot read logs: " + e.Message, TextSize.Small, false, Muted); }
         finally
         {
             if (_cts == cts)
@@ -97,7 +97,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
 
         if (_accounts.Count < 2) { _body.Content = Show(_last); return; }
         var pills = Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v => { prefs.Account = v; Refresh(); });
-        _body.Content = new StackPanel { Spacing = 14, Children = { Row(Txt("Account", 13, false, Muted), pills), Show(_last) } };
+        _body.Content = new StackPanel { Spacing = Space.XL, Children = { Row(Txt("Account", TextSize.Small, false, Muted), pills), Show(_last) } };
     }
 
     private Control Show(UsageResult r)
@@ -105,7 +105,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         var b = r.Buckets;
         if (b.Count == 0)
         {
-            return Txt(r.Files == 0 ? "No session logs found for this app." : "No usage in this period.", 13, false, Muted);
+            return Txt(r.Files == 0 ? "No session logs found for this app." : "No usage in this period.", TextSize.Small, false, Muted);
         }
 
         long inp = b.Sum(v => v.Input), outp = b.Sum(v => v.Output), cw = b.Sum(v => v.CacheWrite), cr = b.Sum(v => v.CacheRead);
@@ -128,7 +128,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         var tiles = new WrapPanel();
         void Tile(string label, string value, string? tip = null)
         {
-            var t = Stat(label, value).With(s => s.Margin = new Thickness(0, 0, 10, 10));
+            var t = Stat(label, value).With(s => s.Margin = new Thickness(0, 0, Space.L, Space.L));
             if (tip != null)
             {
                 ToolTip.SetTip(t, tip);
@@ -159,45 +159,45 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
 
         var modelRows = b.GroupBy(v => v.Model).Select(g => (Name: g.Key, In: g.Sum(v => v.Input), Out: g.Sum(v => v.Output), CW: g.Sum(v => v.CacheWrite), CR: g.Sum(v => v.CacheRead), Cost: CostOf(g)))
             .OrderByDescending(m => m.In + m.Out + m.CW + m.CR).Take(10)
-            .Select(m => new TableRow([.. new Control?[] { Txt(m.Name, 13, true), Txt(Fmt(m.In), 13), Txt(Fmt(m.Out), 13), writes ? Txt(Fmt(m.CW), 13) : null, Txt(Fmt(m.CR), 13), priced ? Txt(m.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>()]));
+            .Select(m => new TableRow([.. new Control?[] { Txt(m.Name, TextSize.Small, true), Txt(Fmt(m.In), TextSize.Small), Txt(Fmt(m.Out), TextSize.Small), writes ? Txt(Fmt(m.CW), TextSize.Small) : null, Txt(Fmt(m.CR), TextSize.Small), priced ? Txt(m.Cost is { } c ? Money(c) : "–", TextSize.Small) : null }.OfType<Control>()]));
         var projectRows = b.GroupBy(v => v.Project).Select(g => (Name: g.Key, Msgs: g.Sum(v => v.Messages), Tok: g.Sum(v => v.Input + v.Output + v.CacheWrite), Cost: CostOf(g)))
             .OrderByDescending(p => p.Tok).Take(10)
-            .Select(p => new TableRow([.. new Control?[] { Txt(p.Name, 13, true), Txt(p.Msgs.ToString("N0"), 13), Txt(Fmt(p.Tok), 13), priced ? Txt(p.Cost is { } c ? Money(c) : "–", 13) : null }.OfType<Control>()]));
+            .Select(p => new TableRow([.. new Control?[] { Txt(p.Name, TextSize.Small, true), Txt(p.Msgs.ToString("N0"), TextSize.Small), Txt(Fmt(p.Tok), TextSize.Small), priced ? Txt(p.Cost is { } c ? Money(c) : "–", TextSize.Small) : null }.OfType<Control>()]));
 
-        var notes = new StackPanel { Spacing = 4 };
+        var notes = new StackPanel { Spacing = Space.XS };
         if (unpriced.Count > 0)
         {
-            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an empty entry for each; fill in the numbers.", 12, false, Muted));
+            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an empty entry for each; fill in the numbers.", TextSize.Caption, false, Muted));
         }
 
         if (r.Capped)
         {
-            notes.Children.Add(Txt("Files over 8 MB: only the newest 8 MB of each is counted.", 12, false, Muted));
+            notes.Children.Add(Txt("Files over 8 MB: only the newest 8 MB of each is counted.", TextSize.Caption, false, Muted));
         }
 
         if (r.Files >= LogReader.MaxFiles)
         {
-            notes.Children.Add(Txt($"Counts the newest {LogReader.MaxFiles} log files.", 12, false, Muted));
+            notes.Children.Add(Txt($"Counts the newest {LogReader.MaxFiles} log files.", TextSize.Caption, false, Muted));
         }
 
         if (priced)
         {
-            notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", 12, false, Muted));
+            notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", TextSize.Caption, false, Muted));
         }
 
         var edit = Btn("Edit prices", () => { Pricing.Ensure(); Pricing.AddMissing(unpriced); PathUtil.OpenFile(Pricing.FilePath); }, false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
 
         return new StackPanel
         {
-            Spacing = 14,
+            Spacing = Space.XL,
             Children =
             {
                 Limits(),
                 tiles,
                 Row(metric, cache),
                 chart, legend,
-                Title("By model", 14), Table.Build([.. new[] { new Col("Model", "2*"), new Col("Input", "1*", true), new Col("Output", "1*", true), writes ? new Col("Cache write", "1*", true) : null, new Col("Cache read", "1*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], modelRows),
-                Title("By project", 14), Table.Build([.. new[] { new Col("Project", "2*"), new Col("Messages", "1*", true), new Col("Tokens (no cache reads)", "1.4*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], projectRows),
+                Title("By model", TextSize.Body), Table.Build([.. new[] { new Col("Model", "2*"), new Col("Input", "1*", true), new Col("Output", "1*", true), writes ? new Col("Cache write", "1*", true) : null, new Col("Cache read", "1*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], modelRows),
+                Title("By project", TextSize.Body), Table.Build([.. new[] { new Col("Project", "2*"), new Col("Messages", "1*", true), new Col("Tokens (no cache reads)", "1.4*", true), priced ? new Col("Est. cost", "1*", true) : null }.OfType<Col>()], projectRows),
                 notes, edit
             }
         };

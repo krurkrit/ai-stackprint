@@ -19,7 +19,7 @@ internal static class MarkdownView
     /// <param name="link">When set, links are clickable and call it with their target; otherwise they show the target after the text.</param>
     public static Control Render(string md, Action<string>? link = null)
     {
-        var sp = new StackPanel { Spacing = 6 };
+        var sp = new StackPanel { Spacing = Space.S };
         foreach (var b in MarkdownLite.Blocks(md))
         {
             sp.Children.Add(Block(b, link));
@@ -31,7 +31,7 @@ internal static class MarkdownView
     /// <summary>A whole Markdown file: prose, plus fenced code highlighted by its language.</summary>
     public static Control Document(string md, Action<string>? link = null)
     {
-        var sp = new StackPanel { Spacing = 8 };
+        var sp = new StackPanel { Spacing = Space.M };
         foreach (var (text, lang) in ReadableLog.Fences(md))
         {
             sp.Children.Add(lang == null ? Render(text, link) : ReadableLog.Code(text, lang));
@@ -45,19 +45,19 @@ internal static class MarkdownView
         switch (b.Kind)
         {
             case MdKind.Heading:
-                return Rich(b.Text, b.Level switch { 1 => 20, 2 => 17, 3 => 15, _ => 14 }, Heading, link).With(t => t.Margin = new Thickness(0, 4, 0, 0));
+                return Rich(b.Text, b.Level switch { 1 => 20, 2 => 17, 3 => 15, _ => 14 }, Heading, link).With(t => t.Margin = new Thickness(0, Space.XS, 0, 0));
             case MdKind.Bullet:
             case MdKind.Number:
-                var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 8, Margin = new Thickness(8 + 18 * b.Level, 0, 0, 0) };
-                var mark = Txt(b.Kind == MdKind.Bullet ? "•" : b.Num + ".", 14, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Top);
+                var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = Space.M, Margin = new Thickness(Space.M + Space.XXL * b.Level, 0, 0, 0) };
+                var mark = Txt(b.Kind == MdKind.Bullet ? "•" : b.Num + ".", TextSize.Body, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Top);
                 var body = Rich(b.Text, 14, Body, link); Grid.SetColumn(body, 1);
                 g.Children.Add(mark); g.Children.Add(body);
                 return g;
             case MdKind.Quote:
-                return new Border { BorderThickness = new Thickness(3, 0, 0, 0), Padding = new Thickness(10, 0, 0, 0), Margin = new Thickness(4, 0, 0, 0), Child = Rich(b.Text, 14, Body, link) }
+                return new Border { BorderThickness = new Thickness(Space.XS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XS, 0, 0, 0), Child = Rich(b.Text, 14, Body, link) }
                     .Themed(Border.BorderBrushProperty, BorderKey);
             case MdKind.Rule:
-                return new Border { Height = 1, Margin = new Thickness(0, 4) }.Themed(Border.BackgroundProperty, BorderKey);
+                return new Border { Height = Stroke.Thin, Margin = new Thickness(0, Space.XS) }.Themed(Border.BackgroundProperty, BorderKey);
             case MdKind.Table when b.Rows is { Count: > 0 } rows:
                 var n = rows.Max(r => r.Count);
                 var cols = Enumerable.Range(0, n).Select(i => new Col(i < rows[0].Count ? Strip(rows[0][i]) : "", "1*")).ToArray();

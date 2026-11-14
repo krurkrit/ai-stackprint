@@ -69,7 +69,7 @@ internal class ContextSection(Ctx x)
 
     private StackPanel Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
     {
-        var sp = new StackPanel { Spacing = 22 };
+        var sp = new StackPanel { Spacing = Space.XXXL };
         foreach (var (app, r) in reports.Where(r => r.Report.Files.Count > 0 || x.Info(r.App.Id)?.Installed == true))
         {
             sp.Children.Add(App(app, r));
@@ -77,7 +77,7 @@ internal class ContextSection(Ctx x)
 
         if (sp.Children.Count == 0)
         {
-            sp.Children.Add(Txt("No instruction files found for the installed apps.", 13, false, Muted));
+            sp.Children.Add(Txt("No instruction files found for the installed apps.", TextSize.Small, false, Muted));
         }
 
         return sp;
@@ -85,11 +85,11 @@ internal class ContextSection(Ctx x)
 
     private StackPanel App(AppDefinitionRef app, ContextReport r)
     {
-        var sp = new StackPanel { Spacing = 10 };
+        var sp = new StackPanel { Spacing = Space.L };
         var launch = r.Files.Count(f => f.Load is LoadWhen.Always or LoadWhen.Imported);
         var total = r.AlwaysTotal;
-        sp.Children.Add(Row(AppName(app.Logo, app.Category, app.Name, 24),
-            Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens", 13, false, Muted)));
+        sp.Children.Add(Row(AppName(app.Logo, app.Category, app.Name, Sizes.LogoS),
+            Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens", TextSize.Small, false, Muted)));
         if (r.Limit is { } limit && r.Files.Count > 0)
         {
             sp.Children.Add(Bar(total, limit, r));
@@ -97,7 +97,7 @@ internal class ContextSection(Ctx x)
 
         foreach (var f in r.Findings)
         {
-            sp.Children.Add(Row(Icon(f.Warning ? "warning" : "info", 14).Themed(TextElement.ForegroundProperty, f.Warning ? WarningKey : Muted), Txt(f.Text, 13)));
+            sp.Children.Add(Row(Icon(f.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, f.Warning ? WarningKey : Muted), Txt(f.Text, TextSize.Small)));
         }
 
         if (r.Files.Count == 0)
@@ -114,7 +114,7 @@ internal class ContextSection(Ctx x)
                 running += r.Measure(f);
             }
 
-            var name = Txt(ShortPath(f.Path), 13, true).With(t => { t.FontFamily = Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
+            var name = Txt(ShortPath(f.Path), TextSize.Small, true).With(t => { t.FontFamily = Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(Space.XL, 0, 0, 0); } });
             if (f.Via != null)
             {
                 ToolTip.SetTip(name, "Imported by " + f.Via);
@@ -122,8 +122,8 @@ internal class ContextSection(Ctx x)
 
             return new TableRow(
             [
-                name, Txt(Label(f.Load), 13), Txt($"{(r.Unit == "bytes" ? f.Bytes : f.Chars):N0}", 13), Txt($"{f.Tokens:N0}", 13, false, Muted),
-                Txt(counted ? $"{running:N0}" : "", 13, false, r.Limit is { } l && running > l && counted ? ErrorKey : Muted), Txt(f.Note ?? "", 12, false, Muted)
+                name, Txt(Label(f.Load), TextSize.Small), Txt($"{(r.Unit == "bytes" ? f.Bytes : f.Chars):N0}", TextSize.Small), Txt($"{f.Tokens:N0}", TextSize.Small, false, Muted),
+                Txt(counted ? $"{running:N0}" : "", TextSize.Small, false, r.Limit is { } l && running > l && counted ? ErrorKey : Muted), Txt(f.Note ?? "", TextSize.Caption, false, Muted)
             ], () => { _preview = _preview == f.Path ? null : f.Path; if (_last != null) { _host.Content = Show(_last); } }, _preview == f.Path);
         }).ToList();
         sp.Children.Add(Table.Build([ new Col("File", "2.4*"), new Col("Loads", "1.1*"), new Col(r.Unit == "bytes" ? "Bytes" : "Characters", ".8*", true),
@@ -151,10 +151,10 @@ internal class ContextSection(Ctx x)
     private static StackPanel Bar(long used, long limit, ContextReport r)
     {
         var pct = limit == 0 ? 0 : 100.0 * used / limit;
-        var g = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(Math.Min(pct, 100), 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
-        g.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct > 100 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
-        g.Children.Add(new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
-        return new StackPanel { Spacing = 4, Children = { g, Txt($"{pct:0}% of {limit:N0} {r.Unit}. {r.LimitNote}", 12, false, Muted) } };
+        var g = new Grid { Height = Sizes.BarThin, ColumnDefinitions = new ColumnDefinitions($"{Math.Max(Math.Min(pct, 100), 0.01)}*,{Math.Max(100 - pct, 0.01)}*") };
+        g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct > 100 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
+        g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
+        return new StackPanel { Spacing = Space.XS, Children = { g, Txt($"{pct:0}% of {limit:N0} {r.Unit}. {r.LimitNote}", TextSize.Caption, false, Muted) } };
     }
 
     private string ShortPath(string path) =>
@@ -180,17 +180,17 @@ internal class ContextSection(Ctx x)
             }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { }
         }, out var scrolls);
-        var body = scrolls ? new ScrollViewer { Content = view, MaxHeight = 420 } : view.With(v => v.Height = 380);
+        var body = scrolls ? new ScrollViewer { Content = view, MaxHeight = Heights.Viewer } : view.With(v => v.Height = Heights.Viewer);
         return new Border
         {
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(14),
+            CornerRadius = new CornerRadius(Radius.L),
+            Padding = new Thickness(Space.XL),
             Child = new StackPanel
             {
-                Spacing = 8,
+                Spacing = Space.M,
                 Children =
         {
-            Row(Txt(ShortPath(path), 13, true).With(t => t.FontFamily = Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
+            Row(Txt(ShortPath(path), TextSize.Small, true).With(t => t.FontFamily = Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
             body
         }
             }

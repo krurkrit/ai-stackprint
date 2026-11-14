@@ -20,7 +20,7 @@ internal class SkillFilter
     private string _invoked = "", _from = "";   // "" = all
     private bool _byInvoked, _byFrom;                  // Group by check boxes
     private readonly HashSet<string> _collapsed = [];
-    private readonly ComboBox _fromBox = new() { MinWidth = 160 };
+    private readonly ComboBox _fromBox = new() { MinWidth = Widths.FieldM };
     private bool _building;
     private Action _changed = () => { };
 
@@ -52,10 +52,10 @@ internal class SkillFilter
             _from = "";
         }
 
-        var sp = new StackPanel { Spacing = 10 };
+        var sp = new StackPanel { Spacing = Space.L };
         if (levels.Count > 1)
         {
-            sp.Children.Add(FilterRow("Level", Checks(levels.Select(l => ((Control)Txt(l, 14), l)).ToList(), _offLevels, changed), Levels.InfoButton()));
+            sp.Children.Add(FilterRow("Level", Checks(levels.Select(l => ((Control)Txt(l, TextSize.Body), l)).ToList(), _offLevels, changed), Levels.InfoButton()));
         }
 
         if (invoked.Count > 1)
@@ -113,7 +113,7 @@ internal class SkillFilter
         {
             var open = !_collapsed.Contains(g.Key); var key = g.Key;
             var cells = new Control[cols];
-            cells[0] = Row(Txt(open ? "▾" : "▸", 13, false, Muted), Title(g.Key, 14), Txt(g.Count().ToString("N0"), 13, false, Muted));
+            cells[0] = Row(Txt(open ? "▾" : "▸", TextSize.Small, false, Muted), Title(g.Key, TextSize.Body), Txt(g.Count().ToString("N0"), TextSize.Small, false, Muted));
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
             for (var c = 1; c < cols; c++)
             {

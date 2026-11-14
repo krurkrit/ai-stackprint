@@ -16,7 +16,7 @@ namespace AiStackprint.Ui;
 /// plus the Fluent palette so built-in controls match. The only place colors are defined;
 /// Appearance settings may override accent, hover and selection per theme.
 /// </summary>
-internal static class Theme
+internal static partial class Theme
 {
     // Snowy Owl color tokens
     private const string White = "#F8F9FA", Black = "#34383C", DarkBlack = "#18191B";
@@ -105,6 +105,7 @@ internal static class Theme
         app.Resources["ContentControlThemeFontFamily"] = Font;
         W.Scale = Math.Clamp(s.FontSize, 12, 18) / 14.0;
         app.Resources["ControlContentThemeFontSize"] = W.Size(14);
+        Inputs(app, W.Size(14));
         W.Body = (FontWeight)Weight(s.BodyWeight, 400);
         W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 500);
         app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(_light, s.Light, _lightFluent);

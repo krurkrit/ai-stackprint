@@ -24,18 +24,18 @@ internal static class CrashNotice
         Toast.Unpin(_card);
         _card = new Border
         {
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(14, 10),
-            MaxWidth = 460,
+            CornerRadius = new CornerRadius(Radius.L),
+            BorderThickness = new Thickness(Stroke.Thin),
+            Padding = new Thickness(Space.XL, Space.L),
+            MaxWidth = Widths.Text,
             HorizontalAlignment = HorizontalAlignment.Right,
             Child = new StackPanel
             {
-                Spacing = 8,
+                Spacing = Space.M,
                 Children =
                 {
-                    Row(Icon("warning", 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt("AI Stackprint closed unexpectedly last time", 13, true)),
-                    Txt("Report opens a new GitHub issue in your browser with the error from crash.log (your home folder and user name removed). You can read and edit it before you submit; nothing is sent until you do.", 12, false, Muted),
+                    Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt("AI Stackprint closed unexpectedly last time", TextSize.Small, true)),
+                    Txt("Report opens a new GitHub issue in your browser with the error from crash.log (your home folder and user name removed). You can read and edit it before you submit; nothing is sent until you do.", TextSize.Caption, false, Muted),
                     Row(Btn("Report on GitHub", () => { Report(x); Toast.Unpin(_card); }, true, "open"),
                         Btn("Open crash.log", () => PathUtil.OpenFile(CrashLog.File)),
                         Btn("Close", () => Toast.Unpin(_card)))

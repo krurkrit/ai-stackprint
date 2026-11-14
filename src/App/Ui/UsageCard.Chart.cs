@@ -13,6 +13,7 @@ namespace AiStackprint.Ui;
 
 internal partial class UsageCard
 {
+    private const double ColumnWidth = 28;   // widest column of the daily chart
     /// <summary>Per-day bars, stacked by token type (or one bar of cost). At most the last 90 days; gaps are empty days.</summary>
     private static readonly string[] _costKeys = [Accent], _tokenKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
     private static readonly string[] _costNames = ["Estimated cost"], _tokenNames = ["Input", "Output", "Cache write", "Cache read"];
@@ -33,7 +34,7 @@ internal partial class UsageCard
         legend = new WrapPanel { Children = { } };
         for (var k = 0; k < names.Length; k++)
         {
-            ((WrapPanel)legend).Children.Add(DotText(names[k], keys[k]).With(s => s.Margin = new Thickness(0, 0, 14, 0)));
+            ((WrapPanel)legend).Children.Add(DotText(names[k], keys[k]).With(s => s.Margin = new Thickness(0, 0, Space.XL, 0)));
         }
 
         var bars = new List<(DateOnly Day, double[] Parts, string Tip)>();
@@ -48,26 +49,26 @@ internal partial class UsageCard
         var max = bars.Max(v => v.Parts.Sum());
         if (max <= 0)
         {
-            return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", 13, false, Muted);
+            return Txt(!cost ? "No tokens in this period." : "No cost to show: the models used in this period have no price.", TextSize.Small, false, Muted);
         }
 
         const double barHeight = 140;
-        var grid = new Grid { ColumnSpacing = 3, Height = barHeight + 22, Margin = new Thickness(0, 6, 0, 0) };
+        var grid = new Grid { ColumnSpacing = Space.XS, Height = barHeight + 22, Margin = new Thickness(0, Space.S, 0, 0) };
         var step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
         for (var i = 0; i < bars.Count; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
-            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = 28 };
+            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = ColumnWidth };
             for (var j = bars[i].Parts.Length - 1; j >= 0; j--)
             {
                 if (bars[i].Parts[j] > 0)
                 {
-                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(1) }.Themed(Border.BackgroundProperty, keys[j]));
+                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(Radius.XS) }.Themed(Border.BackgroundProperty, keys[j]));
                 }
             }
 
-            var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", 10, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
+            var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", TextSize.Tiny, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
             Grid.SetRow(label, 1);
             col.Children.Add(stack); col.Children.Add(label);
             ToolTip.SetTip(col, bars[i].Tip);
@@ -86,27 +87,27 @@ internal partial class UsageCard
             return new StackPanel();
         }
 
-        var sp = new StackPanel { Spacing = 8 };
+        var sp = new StackPanel { Spacing = Space.M };
         // Apps with live limits show them in the Plan & limits card above
         var limits = LimitsView.Has(def) ? [] : live.Limits;
-        sp.Children.Add(Title(limits.Count > 0 ? "Limits" : "Recent use", 14));
+        sp.Children.Add(Title(limits.Count > 0 ? "Limits" : "Recent use", TextSize.Body));
         foreach (var l in limits)
         {
             var stale = l.ResetsAt < DateTime.Now;   // window already reset: the reading is old
             var pct = stale ? 0 : Math.Clamp(l.UsedPercent, 0, 100);
-            var bar = new Grid { Height = 8, ColumnDefinitions = [] };
+            var bar = new Grid { Height = Sizes.BarThin, ColumnDefinitions = [] };
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(pct, 0.001), GridUnitType.Star));
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(100 - pct, 0.001), GridUnitType.Star));
-            var fill = new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent);
-            var rest = new Border { CornerRadius = new CornerRadius(4) }.Themed(Border.BackgroundProperty, Subtle);
+            var fill = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent);
+            var rest = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle);
             Grid.SetColumn(rest, 1);
             bar.Children.Add(fill); bar.Children.Add(rest);
             sp.Children.Add(new StackPanel
             {
-                Spacing = 3,
+                Spacing = Space.XS,
                 Children =
                 {
-                    Row(Txt($"{l.Name} limit", 13, true), Txt(stale ? "window has reset" : $"{l.UsedPercent:0.#}% used · resets {Reset(l.ResetsAt)}", 13, false, Muted)),
+                    Row(Txt($"{l.Name} limit", TextSize.Small, true), Txt(stale ? "window has reset" : $"{l.UsedPercent:0.#}% used · resets {Reset(l.ResetsAt)}", TextSize.Small, false, Muted)),
                     bar
                 }
             });
@@ -114,11 +115,11 @@ internal partial class UsageCard
         static string Win(WindowUse w) => $"{Fmt(w.Tokens)} tokens · {w.Messages:N0} messages" + (w.Cost is { } c ? " · " + Money(c) : "");
         var rows = new List<Control>
         {
-            Txt("Last 5 hours: " + Win(live.Last5h), 13), Txt("Last 7 days: " + Win(live.Last7d), 13)
+            Txt("Last 5 hours: " + Win(live.Last5h), TextSize.Small), Txt("Last 7 days: " + Win(live.Last7d), TextSize.Small)
         };
         if (live.Block != null && live.BlockStart is { } bs)
         {
-            rows.Add(Txt($"Current 5-hour block: {Win(live.Block)} · started {bs:HH:mm}, ends about {bs.AddHours(5):HH:mm}", 13));
+            rows.Add(Txt($"Current 5-hour block: {Win(live.Block)} · started {bs:HH:mm}, ends about {bs.AddHours(5):HH:mm}", TextSize.Small));
         }
 
         foreach (var r in rows)
@@ -145,7 +146,7 @@ internal partial class UsageCard
     }
 
     private static Border Stat(string label, string value) =>
-        new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(14, 10), MinWidth = 110, Child = new StackPanel { Spacing = 2, Children = { Title(value, 18), Txt(label, 12, false, Muted) } } }
+        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.XL, Space.L), MinWidth = Widths.FieldS, Child = new StackPanel { Spacing = Space.XXS, Children = { Title(value, TextSize.Title), Txt(label, TextSize.Caption, false, Muted) } } }
             .Themed(Border.BackgroundProperty, Subtle);
 
     /// <summary>1.2K / 3.4M / 5.6B.</summary>

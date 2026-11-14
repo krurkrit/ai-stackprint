@@ -23,7 +23,7 @@ internal static class AppearanceSection
     /// <summary>Typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
     private static NumericUpDown SizeBox(double value, int min, int max, Action<double> set)
     {
-        var box = new NumericUpDown { Minimum = min, Maximum = max, Increment = 1, FormatString = "0", MinWidth = 120, Value = (decimal)Math.Clamp(Math.Round(value), min, max) };
+        var box = new NumericUpDown { Minimum = min, Maximum = max, Increment = 1, FormatString = "0", MinWidth = Widths.FieldS, Value = (decimal)Math.Clamp(Math.Round(value), min, max) };
         box.ValueChanged += (_, e) =>
         {
             if (e.NewValue is not { } v)
@@ -49,17 +49,17 @@ internal static class AppearanceSection
         var monoKnown = new[] { "JetBrains Mono", "Cascadia Mono", "Cascadia Code", "Consolas", "Fira Code", "Fira Mono", "Source Code Pro", "Menlo", "Monaco", "SF Mono", "DejaVu Sans Mono", "Ubuntu Mono", "Courier New" };
         var monos = installed.Where(f => monoKnown.Contains(f, StringComparer.OrdinalIgnoreCase) || f.Contains("Mono", StringComparison.OrdinalIgnoreCase) || f.Contains("Code", StringComparison.OrdinalIgnoreCase)).ToList();
 
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("160,*"), RowSpacing = 12, ColumnSpacing = 16 };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*"), RowSpacing = Space.L, ColumnSpacing = Space.XL };
         void Add(string label, Control c, string? hint = null)
         {
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var r = grid.RowDefinitions.Count - 1;
-            var l = Txt(label, 14, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-            var v = hint == null ? c : Row(c, Txt(hint, 12, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
+            var l = Txt(label, TextSize.Body, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
+            var v = hint == null ? c : Row(c, Txt(hint, TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
             Grid.SetRow(l, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
             grid.Children.Add(l); grid.Children.Add(v);
         }
-        void Group(string name) { Add("", new Panel()); grid.Children.RemoveAt(grid.Children.Count - 2); grid.Children.Add(Title(name, 14).With(t => { Grid.SetRow(t, grid.RowDefinitions.Count - 1); Grid.SetColumnSpan(t, 2); })); }
+        void Group(string name) { Add("", new Panel()); grid.Children.RemoveAt(grid.Children.Count - 2); grid.Children.Add(Title(name, TextSize.Body).With(t => { Grid.SetRow(t, grid.RowDefinitions.Count - 1); Grid.SetColumnSpan(t, 2); })); }
 
         Group("Body");
         Add("Font family", FontCombo(installed, "Inter", st.FontFamily, f => Change(() => st.FontFamily = f)), installed.Contains("Inter") ? null : "Not installed: Noto Sans or the system font is used. Get Inter at rsms.me/inter");
@@ -83,15 +83,15 @@ internal static class AppearanceSection
 
         var preview = new Border
         {
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(14),
+            CornerRadius = new CornerRadius(Radius.M),
+            Padding = new Thickness(Space.XL),
             Child = new StackPanel
             {
-                Spacing = 6,
+                Spacing = Space.S,
                 Children =
         {
-            Title("Claude Code", 22), Txt("Skills that apply in this project, with their level and source.", 14),
-            Txt("Emphasis text · format-code · Project level", 14, true), Txt("Muted detail text", 12, false, Muted)
+            Title("Claude Code", TextSize.Page), Txt("Skills that apply in this project, with their level and source.", TextSize.Body),
+            Txt("Emphasis text · format-code · Project level", TextSize.Body, true), Txt("Muted detail text", TextSize.Caption, false, Muted)
         }
             }
         }.Themed(Border.BackgroundProperty, Background);
@@ -105,11 +105,11 @@ internal static class AppearanceSection
         }), false, "arrow_reset");
         var colors = new StackPanel
         {
-            Spacing = 8,
-            Children = { Title("Colors", 14), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", 12, false, Muted),
+            Spacing = Space.M,
+            Children = { Title("Colors", TextSize.Body), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", TextSize.Caption, false, Muted),
             ColorSettings.Build(st, Change) }
         };
-        return Section("text_font", "Appearance", new StackPanel { Spacing = 16, Children = { grid, preview, colors } }, reset);
+        return Section("text_font", "Appearance", new StackPanel { Spacing = Space.XL, Children = { grid, preview, colors } }, reset);
     }
 
     private const string NotInstalled = " (not installed)";
@@ -143,7 +143,7 @@ internal static class AppearanceSection
 
     internal static ComboBox Combo(List<string> items, string current, Action<string> pick)
     {
-        var c = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : items.FirstOrDefault(), MinWidth = 220 };
+        var c = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : items.FirstOrDefault(), MinWidth = Widths.Field };
         c.SelectionChanged += (_, _) => { if (c.SelectedItem is string s && s != current) { pick(s); } };
         return c;
     }

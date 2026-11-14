@@ -32,7 +32,7 @@ internal static class UpdateView
         var result = new ContentControl();
         return Section("arrow_sync", "Updates", new StackPanel
         {
-            Spacing = 12,
+            Spacing = Space.L,
             Children =
             {
                 Txt($"This is version {UpdateCheck.Label}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo}; nothing about you or this computer is sent. " +
@@ -73,14 +73,14 @@ internal static class UpdateView
             x.S.Settings.UpdateCheckedUtc = DateTime.UtcNow;
             SettingsStore.Save(x.S.Settings);
             result.Content = newer != null
-                ? Row(Txt($"{newer.Version} is available.", 13), Btn("Release page", () => Open(x, newer), true, "open"))
-                : Txt(latest == null ? "No release has been published yet." : $"You have the latest version ({UpdateCheck.Label}).", 13, false, Muted);
+                ? Row(Txt($"{newer.Version} is available.", TextSize.Small), Btn("Release page", () => Open(x, newer), true, "open"))
+                : Txt(latest == null ? "No release has been published yet." : $"You have the latest version ({UpdateCheck.Label}).", TextSize.Small, false, Muted);
         }
         catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException or OperationCanceledException)
         {
             var why = e is OperationCanceledException ? "GitHub did not answer in time." : e.Message;
-            result.Content = Row(Icon("warning", 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey),
-                Txt("Could not check: " + why, 13, false, Muted), Btn("Retry", () => CheckNow(x, result), false, "arrow_sync"));
+            result.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey),
+                Txt("Could not check: " + why, TextSize.Small, false, Muted), Btn("Retry", () => CheckNow(x, result), false, "arrow_sync"));
         }
     }
 
@@ -90,16 +90,16 @@ internal static class UpdateView
         Toast.Unpin(_notice);
         _notice = new Border
         {
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(14, 10),
+            CornerRadius = new CornerRadius(Radius.L),
+            BorderThickness = new Thickness(Stroke.Thin),
+            Padding = new Thickness(Space.XL, Space.L),
             HorizontalAlignment = HorizontalAlignment.Right,
             Child = new StackPanel
             {
-                Spacing = 8,
+                Spacing = Space.M,
                 Children =
                 {
-                    Row(Icon("arrow_sync", 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt($"AI Stackprint {r.Version} is available", 13, true)),
+                    Row(Icon("arrow_sync", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt($"AI Stackprint {r.Version} is available", TextSize.Small, true)),
                     Row(Btn("Release page", () => { Open(x, r); Toast.Unpin(_notice); }, true, "open"),
                         Btn("Later", () => { x.S.Settings.UpdateDismissed = r.Version.ToString(); SettingsStore.Save(x.S.Settings); Toast.Unpin(_notice); }))
                 }

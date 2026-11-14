@@ -35,11 +35,11 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
             Btn("Open folder", () => PathUtil.OpenFolder(project), false, "folder_open"),
             DangerBtn("Remove from list", () => removeProject(project), "dismiss"));
         actions.VerticalAlignment = VerticalAlignment.Top;
-        var title = new StackPanel { Spacing = 6, Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) } };
+        var title = new StackPanel { Spacing = Space.S, Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) } };
         var head = new DockPanel();
         DockPanel.SetDock(actions, Dock.Right);
         head.Children.Add(actions);
-        head.Children.Add(Row(IconTile("folder", 56), title));
+        head.Children.Add(Row(IconTile("folder", Sizes.LogoXL), title));
 
         var summary = new WrapPanel { Children = { Levels.InfoButton().With(b => b.Margin = new Avalonia.Thickness(0, 0, 4, 0)) } };
         foreach (var l in _order)
@@ -47,7 +47,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
             summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => c.Margin = new Avalonia.Thickness(0, 0, 8, 0)));
         }
 
-        var top = new List<Control> { head, summary, _context.Build(project), Configs(all), Title($"Skills · {skills.Count}", 18).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
+        var top = new List<Control> { head, summary, _context.Build(project), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
         return _browser.Build(top, skills);
     }
 
@@ -61,8 +61,8 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
                 var i = g.First();
                 return new TableRow(
                 [
-                    Txt(i.Name, 14, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), 13), Txt(i.Description, 13),
-                    AppDetailView.LevelCell(i), Mono(i.Path, 12),
+                    Txt(i.Name, TextSize.Body, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), TextSize.Small), Txt(i.Description, TextSize.Small),
+                    AppDetailView.LevelCell(i), Mono(i.Path, TextSize.Caption),
                     IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path))
                 ]);
             });

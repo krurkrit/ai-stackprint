@@ -20,14 +20,15 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal class ItemBrowser
 {
+    private const double MinPanel = 160, MaxPanel = 2000;   // bottom panel height limits
     private readonly Ctx _x;
     private readonly string _kind;
     private readonly TextBox _search = SearchBox("Search name, description, path or author");
-    private readonly ComboBox _app = new() { MinWidth = 200, MinHeight = 32 };
+    private readonly ComboBox _app = new() { MinWidth = Widths.Field };
     private readonly SkillFilter _filter = new();
     private readonly DetailPanel _panel;
     private readonly ContentControl _table = new();
-    private readonly TextBlock _shown = Txt("", 13, false, Muted);
+    private readonly TextBlock _shown = Txt("", TextSize.Small, false, Muted);
     private string _appId = "", _q = "";
     private Item? _sel;
     private bool _building, _max;
@@ -74,10 +75,10 @@ internal class ItemBrowser
         var own = _filter.Controls(items, _kind == "Skill", Fill);
         var search = new DockPanel
         {
-            Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(10, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
-            _shown.Free().With(t => { DockPanel.SetDock(t, Dock.Right); t.Margin = new Thickness(12, 0, 0, 0); t.VerticalAlignment = VerticalAlignment.Center; }), _search.Free() }
+            Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(Space.L, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
+            _shown.Free().With(t => { DockPanel.SetDock(t, Dock.Right); t.Margin = new Thickness(Space.L, 0, 0, 0); t.VerticalAlignment = VerticalAlignment.Center; }), _search.Free() }
         };
-        var list = new StackPanel { Spacing = 14, Margin = new Thickness(32, 28, 32, 20) };
+        var list = new StackPanel { Spacing = Space.XL, Margin = new Thickness(Space.Page, Space.XXXL, Space.Page, Space.XXL) };
         list.Children.AddRange(top);
         list.Children.Add(search);
         list.Children.Add(own);
@@ -85,7 +86,7 @@ internal class ItemBrowser
         Fill();
 
         var g = _grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto,0") };
-        _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = 6 }.Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, BorderKey);
+        _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = Sizes.Splitter }.Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, BorderKey);
         ToolTip.SetTip(_splitter, "Drag to resize · double-click to maximize or restore");
         _splitter.DragCompleted += (_, _) => { if (!_max) { _x.S.Settings.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); SettingsStore.Save(_x.S.Settings); } };
         _splitter.DoubleTapped += (_, _) => { _max = !_max; Layout(); };
@@ -122,7 +123,7 @@ internal class ItemBrowser
 
         var open = _sel != null;
         _grid.RowDefinitions[0].Height = open && _max ? new GridLength(0) : GridLength.Star;
-        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, 160, 2000));
+        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, MinPanel, MaxPanel));
     }
 
     private void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }
@@ -154,7 +155,7 @@ internal class ItemBrowser
         Table.NameDesc(i.Name, i.Description),
         DetailPanel.AppLink(_x, i.App, i.Source),
         AppDetailView.LevelCell(i),
-        _kind == "Plugin" ? Txt(i.Version ?? "", 13) : AppDetailView.InvokeCell(i),
+        _kind == "Plugin" ? Txt(i.Version ?? "", TextSize.Small) : AppDetailView.InvokeCell(i),
         PathCell(i.Path),
         Actions(i)
     ], () => Pick(i), _sel != null && Same(i, _sel));
@@ -185,7 +186,7 @@ internal class ItemBrowser
         var tb = new TextBlock
         {
             FontFamily = Theme.Mono,
-            FontSize = Size(12),
+            FontSize = Size(TextSize.Caption),
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             MaxLines = 4,
             TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis

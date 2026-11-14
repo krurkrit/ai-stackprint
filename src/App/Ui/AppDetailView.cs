@@ -23,7 +23,7 @@ internal class AppDetailView(Ctx x)
     {
         if (x.S.Def(appId) is not { } d)
         {
-            return Page(Txt("This app is hidden or no longer defined.", 14, false, Muted));
+            return Page(Txt("This app is hidden or no longer defined.", TextSize.Body, false, Muted));
         }
 
         var info = x.Info(appId);
@@ -47,7 +47,7 @@ internal class AppDetailView(Ctx x)
             "Agent only" => "user-invocable: false — the agent loads it when relevant; hidden from your command list",
             _ => "The agent loads it when relevant, and you can invoke it yourself"
         };
-        return Txt(label, 13).With(t => ToolTip.SetTip(t, tip));
+        return Txt(label, TextSize.Small).With(t => ToolTip.SetTip(t, tip));
     }
 
     private StackPanel Header(AppDefinition d, AppInfo? info)
@@ -56,9 +56,9 @@ internal class AppDetailView(Ctx x)
         var chips = Row(Chip(d.Category),
             installed ? Status("Installed") : Chip("Not found", BorderKey),
             Chip(d.Origin switch { AppOrigin.Custom => "Custom app", AppOrigin.Override => "Customised in apps.json", _ => "Built-in" }));
-        var title = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Children = { H1("Apps", "Apps", d.Name), chips } };
+        var title = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center, Children = { H1("Apps", "Apps", d.Name), chips } };
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Top };
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Top };
         if (info?.Folder is { } folder)
         {
             actions.Children.Add(Btn("Open config folder", () => PathUtil.OpenFolder(folder), false, "folder_open"));
@@ -78,17 +78,17 @@ internal class AppDetailView(Ctx x)
         var head = new DockPanel();
         DockPanel.SetDock(actions, Dock.Right);
         head.Children.Add(actions);
-        head.Children.Add(Row(AppLogo(d.Logo, d.Category, 56), title));
+        head.Children.Add(Row(AppLogo(d.Logo, d.Category, Sizes.LogoXL), title));
 
-        var sp = new StackPanel { Spacing = 16, Children = { head } };
+        var sp = new StackPanel { Spacing = Space.XL, Children = { head } };
         if (info?.Folder is { } f)
         {
-            sp.Children.Add(Row(Txt("Config folder", 13, false, Muted), Mono(f)));
+            sp.Children.Add(Row(Txt("Config folder", TextSize.Small, false, Muted), Mono(f)));
         }
 
         if (d.Notes != null)
         {
-            sp.Children.Add(Row(Icon("info", 16).Themed(TextElement.ForegroundProperty, Muted), Txt(d.Notes, 13, false, Muted)));
+            sp.Children.Add(Row(Icon("info", IconSize.S).Themed(TextElement.ForegroundProperty, Muted), Txt(d.Notes, TextSize.Small, false, Muted)));
         }
 
         return sp;
@@ -102,12 +102,12 @@ internal class AppDetailView(Ctx x)
         var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Description).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var rows = cfg.Select(i => new TableRow(
         [
-            Txt(i.Name, 14, true), Txt(i.Description, 13), LevelCell(i), Mono(i.Path, 12),
+            Txt(i.Name, TextSize.Body, true), Txt(i.Description, TextSize.Small), LevelCell(i), Mono(i.Path, TextSize.Caption),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
         ], () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
         var body = new StackPanel
         {
-            Spacing = 12,
+            Spacing = Space.L,
             Children = { Table.Build([new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112")], rows,
             "No instruction or settings files found. Add project folders to see project files.") }
         };
@@ -130,7 +130,7 @@ internal class AppDetailView(Ctx x)
         var manage = d.PluginCommands != null;
         var rows = plugins.Select(p => new TableRow(
         [
-            Table.NameDesc(p.Name, p.Description == "" ? p.Path : p.Description, true), LevelCell(p), Txt(p.Version ?? "", 13),
+            Table.NameDesc(p.Name, p.Description == "" ? p.Path : p.Description, true), LevelCell(p), Txt(p.Version ?? "", TextSize.Small),
             Txt(items.Count(i => i.Plugin == p.Name && i.Kind == "Skill").ToString()),
             Row(IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, p.Path)), manage ? IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(x, d, p)) : new Panel())
         ], () => x.Open(p)));
@@ -145,7 +145,7 @@ internal class AppDetailView(Ctx x)
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => Levels.Rank(i.Level)).ThenBy(i => i.Name).ToList();
         TableRow Row(Item s) => new(
         [
-            Table.NameDesc(s.Name, s.Description), LevelCell(s), InvokeCell(s), Txt(From(s), 13, false, Muted),
+            Table.NameDesc(s.Name, s.Description), LevelCell(s), InvokeCell(s), Txt(From(s), TextSize.Small, false, Muted),
             W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(s.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, s.Path)),
                 SkillManager.CannotRemove(s) == null ? IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, s)) : new Panel())
         ], () => x.Open(s));
@@ -161,7 +161,7 @@ internal class AppDetailView(Ctx x)
 
             var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
             var table = Table.Build(cols, _skillFilter.Rows([.. skills.Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match these filters.");
-            body.Content = new StackPanel { Spacing = 14, Children = { filters, table } };
+            body.Content = new StackPanel { Spacing = Space.XL, Children = { filters, table } };
         }
         Fill();
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();

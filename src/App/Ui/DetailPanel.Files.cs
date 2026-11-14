@@ -16,7 +16,7 @@ internal partial class DetailPanel
     private DockPanel Content()
     {
         var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v => { _tab = v; Render(); });
-        var bar = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
+        var bar = new DockPanel { Margin = new Thickness(0, 0, 0, Space.L) };
         DockPanel.SetDock(tabs, Dock.Right);
         bar.Children.Add(tabs);
         var crumbs = new List<Control>();
@@ -27,7 +27,7 @@ internal partial class DetailPanel
 
         if (_tab == "Content" && Current is { } cur)
         {
-            crumbs.Add(Txt(Rel(cur), 13, false, Muted).With(t => t.FontFamily = Theme.Mono));
+            crumbs.Add(Txt(Rel(cur), TextSize.Small, false, Muted).With(t => t.FontFamily = Theme.Mono));
             if (FileView.IsMarkdown(cur))
             {
                 crumbs.Add(Btn(_raw ? "Rendered" : "Source", () => { _raw = !_raw; Render(); }, false, _raw ? "document_text" : "code"));
@@ -45,7 +45,7 @@ internal partial class DetailPanel
         }
         else if (Current is not { } file)
         {
-            body = Txt("Nothing to show for this item.", 13, false, Muted);
+            body = Txt("Nothing to show for this item.", TextSize.Small, false, Muted);
         }
         else
         {
@@ -55,7 +55,7 @@ internal partial class DetailPanel
         var dock = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top);
         dock.Children.Add(bar);
-        dock.Children.Add(scrolls ? new ScrollViewer { Content = body, Padding = new Thickness(0, 0, 12, 0) } : body);
+        dock.Children.Add(scrolls ? new ScrollViewer { Content = body, Padding = new Thickness(0, 0, Space.L, 0) } : body);
         return dock;
     }
 
@@ -66,13 +66,13 @@ internal partial class DetailPanel
         var files = SkillDoc.Files(Root);
         if (files.Count == 0)
         {
-            return Txt("No files in this folder.", 13, false, Muted);
+            return Txt("No files in this folder.", TextSize.Small, false, Muted);
         }
 
         var rows = files.Select(f =>
         {
             var full = Path.Combine(Root, f.Rel);
-            return new TableRow([Mono(f.Rel, 13), Txt(LogViewer.Size(f.Size), 13, false, Muted)], () => Open(full), full == Current);
+            return new TableRow([Mono(f.Rel, TextSize.Small), Txt(LogViewer.Size(f.Size), TextSize.Small, false, Muted)], () => Open(full), full == Current);
         });
         return Table.Build([new Col("File", "*"), new Col("Size", "90", true)], rows);
     }

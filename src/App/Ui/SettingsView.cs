@@ -32,18 +32,18 @@ internal class SettingsView(Ctx x)
                     st.HiddenApps.Add(d.Id);
                 }
             });
-            var status = hidden ? Txt("Not scanned", 13, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", 13, false, Muted);
+            var status = hidden ? Txt("Not scanned", TextSize.Small, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", TextSize.Small, false, Muted);
             var origin = d.Origin switch { AppOrigin.Custom => "Custom", AppOrigin.Override => "Customised", _ => "Built-in" };
-            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), 13, false, Muted), Txt(origin, 13, false, Muted), status, shown]);
+            return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), TextSize.Small, false, Muted), Txt(origin, TextSize.Small, false, Muted), status, shown]);
         });
         var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);
 
         return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x), UpdateView.Settings(x),
             Section("eye_off", "App visibility", new StackPanel
             {
-                Spacing = 12,
+                Spacing = Space.L,
                 Children = {
-                Txt("Hidden apps are skipped when scanning and left out of the dashboard, lists and projects. Saved to " + SettingsStore.File, 13, false, Muted),
+                Txt("Hidden apps are skipped when scanning and left out of the dashboard, lists and projects. Saved to " + SettingsStore.File, TextSize.Small, false, Muted),
                 notInstalled, table }
             }));
     }

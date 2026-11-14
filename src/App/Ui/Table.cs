@@ -35,10 +35,10 @@ internal static class Table
             return d;
         }
         var sp = new StackPanel();
-        var head = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = 12, Margin = new Thickness(10, 0, 10, 6) };
+        var head = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = Space.L, Margin = new Thickness(Space.L, 0, Space.L, Space.S) };
         for (var c = 0; c < cols.Length; c++)
         {
-            head.Children.Add(Txt(cols[c].Head, 12, true, Muted).With(t =>
+            head.Children.Add(Txt(cols[c].Head, TextSize.Caption, true, Muted).With(t =>
             {
                 Grid.SetColumn(t, c); if (cols[c].Right)
                 {
@@ -55,7 +55,7 @@ internal static class Table
         var n = 0;
         foreach (var r in rows)
         {
-            var g = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = 12 };
+            var g = new Grid { ColumnDefinitions = Defs(), ColumnSpacing = Space.L };
             for (var c = 0; c < r.Cells.Length; c++)
             {
                 r.Cells[c].VerticalAlignment = VerticalAlignment.Center;
@@ -73,8 +73,8 @@ internal static class Table
                 g.Children.Add(r.Cells[c]);
             }
             // Straight divider on the outer border; only the inner highlight is rounded.
-            var row = new Border { Padding = new Thickness(10, 8), CornerRadius = new CornerRadius(6), Child = g, Background = Avalonia.Media.Brushes.Transparent };
-            sp.Children.Add(new Border { BorderThickness = new Thickness(0, 1, 0, 0), Padding = new Thickness(0, 2), Child = row }.Themed(Border.BorderBrushProperty, BorderKey));
+            var row = new Border { Padding = new Thickness(Space.L, Space.M), CornerRadius = new CornerRadius(Radius.M), Child = g, Background = Avalonia.Media.Brushes.Transparent };
+            sp.Children.Add(new Border { BorderThickness = new Thickness(0, Space.Hair, 0, 0), Padding = new Thickness(0, Space.XXS), Child = row }.Themed(Border.BorderBrushProperty, BorderKey));
             if (r.Selected)
             {
                 row.Themed(Border.BackgroundProperty, Selected);
@@ -94,7 +94,7 @@ internal static class Table
         }
         if (n == 0)
         {
-            sp.Children.Add(Txt(empty, 14, false, Muted).With(t => t.Margin = new Thickness(10, 8)));
+            sp.Children.Add(Txt(empty, TextSize.Body, false, Muted).With(t => t.Margin = new Thickness(Space.L, Space.M)));
         }
 
         return sp;
@@ -103,10 +103,10 @@ internal static class Table
     /// <summary>Name with a one-line muted description under it.</summary>
     public static Control NameDesc(string name, string desc, bool bold = true)
     {
-        var sp = new StackPanel { Spacing = 2, Children = { Txt(name, 14, bold) } };
+        var sp = new StackPanel { Spacing = Space.XXS, Children = { Txt(name, TextSize.Body, bold) } };
         if (desc != "")
         {
-            sp.Children.Add(Txt(desc, 12, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; }));
+            sp.Children.Add(Txt(desc, TextSize.Caption, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; }));
         }
 
         return sp;

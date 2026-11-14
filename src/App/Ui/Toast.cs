@@ -26,11 +26,11 @@ internal static class Toast
 
         var t = new Border
         {
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(14, 10),
+            CornerRadius = new CornerRadius(Radius.L),
+            BorderThickness = new Thickness(Stroke.Thin),
+            Padding = new Thickness(Space.XL, Space.L),
             HorizontalAlignment = HorizontalAlignment.Right,
-            Child = Row(Icon(icon, 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, 13)),
+            Child = Row(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, TextSize.Small)),
             Transitions = [new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(400) }]
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         Host.Children.Add(t);

@@ -20,6 +20,7 @@ namespace AiStackprint.Ui;
 internal static class Busy
 {
     private const int DelayMs = 300;
+    private const double ArcWidth = 2.5;   // spinner line, in the 24-unit icon box (scales with the spinner)
 
     private static readonly Animation _turn = new()
     {
@@ -45,15 +46,15 @@ internal static class Busy
         finally { cts.Dispose(); }   // the loop owns its source: done only after the last turn stopped
     }
 
-    public static Control Spinner(double size = 16)
+    public static Control Spinner(double size = IconSize.S)
     {
-        var arc = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse("M12,3 A9,9 0 1 1 3,12"), StrokeThickness = 2.5, StrokeLineCap = PenLineCap.Round }
+        var arc = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse("M12,3 A9,9 0 1 1 3,12"), StrokeThickness = ArcWidth, StrokeLineCap = PenLineCap.Round }
             .Themed(Avalonia.Controls.Shapes.Shape.StrokeProperty, Accent);
         var v = new Viewbox
         {
             Width = Size(size),
             Height = Size(size),
-            Child = new Canvas { Width = 24, Height = 24, Children = { arc } },
+            Child = new Canvas { Width = Sizes.IconBox, Height = Sizes.IconBox, Children = { arc } },
             RenderTransform = new RotateTransform(),
             VerticalAlignment = VerticalAlignment.Center
         };
@@ -64,18 +65,18 @@ internal static class Busy
     }
 
     /// <summary>Spinner with a muted label, shown after a short delay.</summary>
-    public static Control Loading(string text = "Loading…", double size = 18)
+    public static Control Loading(string text = "Loading…", double size = IconSize.M)
     {
-        var row = Row(Spinner(size), Txt(text, 13, false, Muted));
+        var row = Row(Spinner(size), Txt(text, TextSize.Small, false, Muted));
         row.Opacity = 0;
-        row.Margin = new Thickness(2, 6);
+        row.Margin = new Thickness(Space.XXS, Space.S);
         row.AttachedToVisualTree += (_, _) => DispatcherTimer.RunOnce(() => row.Opacity = 1, TimeSpan.FromMilliseconds(DelayMs));
         return row;
     }
 
     /// <summary>Spinner beside a "Updated 40 s ago" style note while a refresh runs; keeps the old data on screen.</summary>
     public static Control Inline(bool busy, string note) =>
-        busy ? Row(Spinner(12), Txt(note, 12, false, Muted)) : Txt(note, 12, false, Muted);
+        busy ? Row(Spinner(IconSize.XS), Txt(note, TextSize.Caption, false, Muted)) : Txt(note, TextSize.Caption, false, Muted);
 
     /// <summary>
     /// Runs <paramref name="work"/> off the UI thread with the spinner in <paramref name="host"/>, then shows the result.
@@ -95,7 +96,7 @@ internal static class Busy
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or HttpRequestException or System.Text.Json.JsonException)
         {
-            host.Content = Row(Icon("warning", 16).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt(e.Message, 13, false, Muted),
+            host.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt(e.Message, TextSize.Small, false, Muted),
                 Btn("Retry", () => Into(host, label, work, show, ct), false, "arrow_sync"));
         }
     }

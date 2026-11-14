@@ -49,18 +49,18 @@ internal partial class DetailPanel(Ctx x)
     {
         var head = Header();
         DockPanel.SetDock(head, Dock.Top);
-        var meta = new ScrollViewer { Content = Meta(), Padding = new Thickness(0, 0, 14, 0) };
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("340,*"), ColumnSpacing = 18 };
+        var meta = new ScrollViewer { Content = Meta(), Padding = new Thickness(0, 0, Space.XL, 0) };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SidePanel},*"), ColumnSpacing = Space.XXL };
         var content = Content();
         Grid.SetColumn(content, 1);
         grid.Children.Add(meta); grid.Children.Add(content);
-        _host.Content = new DockPanel { Margin = new Thickness(32, 12, 32, 16), Children = { head, grid } };
+        _host.Content = new DockPanel { Margin = new Thickness(Space.Page, Space.L, Space.Page, Space.XL), Children = { head, grid } };
     }
 
     private DockPanel Header()
     {
         var d = x.S.Def(It.App);
-        var chips = new WrapPanel { ItemSpacing = 6, LineSpacing = 6, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
+        var chips = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
         if (It.Version != null)
         {
             chips.Children.Add(Chip(It.Version));
@@ -73,10 +73,10 @@ internal partial class DetailPanel(Ctx x)
         }
 
         ((StackPanel)actions).Children.Add(IconBtn("dismiss", "Close (Esc)", () => _close()));
-        var dock = new DockPanel { Margin = new Thickness(0, 0, 0, 12) };
+        var dock = new DockPanel { Margin = new Thickness(0, 0, 0, Space.L) };
         DockPanel.SetDock(actions, Dock.Right);
         dock.Children.Add(actions);
-        dock.Children.Add(Row(AppLogo(d?.Logo, d?.Category ?? "custom", 32), Sel(It.Name, 18, true).With(t => t.VerticalAlignment = VerticalAlignment.Center), chips));
+        dock.Children.Add(Row(AppLogo(d?.Logo, d?.Category ?? "custom", Sizes.LogoL), Sel(It.Name, TextSize.Title, true).With(t => t.VerticalAlignment = VerticalAlignment.Center), chips));
         return dock;
     }
 
@@ -98,29 +98,29 @@ internal partial class DetailPanel(Ctx x)
     /// <summary>Left column: description, where it is, who can start it, front matter, size, checks.</summary>
     private StackPanel Meta()
     {
-        var sp = new StackPanel { Spacing = 12 };
+        var sp = new StackPanel { Spacing = Space.L };
         SkillDoc? doc = null;
         if (It.Kind == "Skill")
         {
             try { doc = SkillDoc.Read(It.Path); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { sp.Children.Add(Txt("Cannot read: " + e.Message, 13, false, Muted)); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { sp.Children.Add(Txt("Cannot read: " + e.Message, TextSize.Small, false, Muted)); }
         }
 
         if (It.Description != "")
         {
-            sp.Children.Add(Sel(It.Description, 14));
+            sp.Children.Add(Sel(It.Description, TextSize.Body));
         }
 
-        var kv = new Grid { ColumnDefinitions = new ColumnDefinitions("100,*"), RowSpacing = 6, ColumnSpacing = 10 };
+        var kv = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.LabelS},*"), RowSpacing = Space.S, ColumnSpacing = Space.L };
         void Add(string k, Control v)
         {
             kv.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var r = kv.RowDefinitions.Count - 1;
-            var a = Txt(k, 13, false, Muted);
+            var a = Txt(k, TextSize.Small, false, Muted);
             Grid.SetRow(a, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
             kv.Children.Add(a); kv.Children.Add(v);
         }
-        void AddText(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) { Add(k, Sel(v, 13)); } }
+        void AddText(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) { Add(k, Sel(v, TextSize.Small)); } }
         Add("App", AppLink(x, It.App, It.Source));
         if (It.LevelLabel != null)
         {
@@ -139,7 +139,7 @@ internal partial class DetailPanel(Ctx x)
             }
         }
 
-        Add("Path", Sel(It.Path, 12).With(t => t.FontFamily = Theme.Mono));
+        Add("Path", Sel(It.Path, TextSize.Caption).With(t => t.FontFamily = Theme.Mono));
         if (doc != null)
         {
             var chars = doc.Body.Length;
@@ -181,7 +181,7 @@ internal partial class DetailPanel(Ctx x)
         int Count(string dir, string pattern) { var p = Path.Combine(Root, dir); return Directory.Exists(p) ? Directory.EnumerateFiles(p, pattern, SearchOption.AllDirectories).Count() : 0; }
         var skills = x.S.Items.Count(i => i.Kind == "Skill" && i.Plugin == It.Name && i.App == It.App);
         bool hooks = File.Exists(Path.Combine(Root, "hooks", "hooks.json")), mcp = File.Exists(Path.Combine(Root, ".mcp.json"));
-        var parts = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
+        var parts = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
         foreach (var (label, n) in new[] { ("skills", skills), ("commands", Count("commands", "*.md")), ("agents", Count("agents", "*.md")) })
         {
             if (n > 0)
@@ -200,22 +200,22 @@ internal partial class DetailPanel(Ctx x)
             parts.Children.Add(Chip("MCP servers · runs programs", WarningKey).With(c => ToolTip.SetTip(c, "MCP servers are programs the app starts on this computer.")));
         }
 
-        return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = 6, Children = { Txt("Contains", 13, false, Muted), parts } };
+        return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = Space.S, Children = { Txt("Contains", TextSize.Small, false, Muted), parts } };
     }
 
     private static StackPanel Findings(List<Finding> f)
     {
-        var sp = new StackPanel { Spacing = 6, Children = { Txt("Checks", 13, false, Muted) } };
+        var sp = new StackPanel { Spacing = Space.S, Children = { Txt("Checks", TextSize.Small, false, Muted) } };
         foreach (var x in f)
         {
             sp.Children.Add(new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-                ColumnSpacing = 8,
+                ColumnSpacing = Space.M,
                 Children =
             {
-                Icon(x.Warning ? "warning" : "info", 14).Themed(TextElement.ForegroundProperty, x.Warning ? WarningKey : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
-                Txt(x.Text, 13).With(t => Grid.SetColumn(t, 1))
+                Icon(x.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, x.Warning ? WarningKey : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
+                Txt(x.Text, TextSize.Small).With(t => Grid.SetColumn(t, 1))
             }
             });
         }
@@ -232,7 +232,7 @@ internal partial class DetailPanel(Ctx x)
             Background = Avalonia.Media.Brushes.Transparent,
             Cursor = Hand,
             HorizontalAlignment = HorizontalAlignment.Left,
-            Child = AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? fallback, 22)
+            Child = AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? fallback, Sizes.LogoS)
         };
         ToolTip.SetTip(b, "Open the app page");
         b.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { e.Handled = true; x.Go("App:" + appId); } };

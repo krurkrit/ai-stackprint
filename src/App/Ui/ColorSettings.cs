@@ -15,12 +15,13 @@ namespace AiStackprint.Ui;
 /// <summary>Appearance › Colors: accent, hover and selection for Light and Dark. Hex box + Snowy Owl swatches, reset, contrast hint.</summary>
 internal static class ColorSettings
 {
+    private const double SwatchesWidth = 240;   // eight swatches per row
     public static Control Build(Settings st, Action<Action> change)
     {
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("160,*,*"), RowSpacing = 12, ColumnSpacing = 16 };
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*,*"), RowSpacing = Space.L, ColumnSpacing = Space.XL };
         g.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        g.Children.Add(Txt("Light theme", 13, true).With(t => Grid.SetColumn(t, 1)));
-        g.Children.Add(Txt("Dark theme", 13, true).With(t => Grid.SetColumn(t, 2)));
+        g.Children.Add(Txt("Light theme", TextSize.Small, true).With(t => Grid.SetColumn(t, 1)));
+        g.Children.Add(Txt("Dark theme", TextSize.Small, true).With(t => Grid.SetColumn(t, 2)));
         var rows = new (string Label, string Hint, Func<ThemeColors, string?> Get, Action<ThemeColors, string?> Set, int Which)[]
         {
             ("Accent", "Buttons, links, selected menu item", c => c.Accent, (c, v) => c.Accent = v, 0),
@@ -32,7 +33,7 @@ internal static class ColorSettings
         {
             g.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var row = g.RowDefinitions.Count - 1;
-            var label = new StackPanel { Children = { Txt(r.Label, 14, false, Muted), Txt(r.Hint, 11, false, Muted) } };
+            var label = new StackPanel { Children = { Txt(r.Label, TextSize.Body, false, Muted), Txt(r.Hint, TextSize.Tiny, false, Muted) } };
             Grid.SetRow(label, row); g.Children.Add(label);
             for (var t = 0; t < 2; t++)
             {
@@ -43,7 +44,7 @@ internal static class ColorSettings
             }
         }
         var reset = Btn("Reset level colors", () => change(() => { st.Light.Levels = null; st.Dark.Levels = null; }), false, "arrow_reset").With(b => b.HorizontalAlignment = HorizontalAlignment.Left);
-        return new StackPanel { Spacing = 12, Children = { g, reset } };
+        return new StackPanel { Spacing = Space.L, Children = { g, reset } };
     }
 
     private static Color Default(bool dark, int which)
@@ -62,8 +63,8 @@ internal static class ColorSettings
     private static StackPanel Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
     {
         var current = Theme.ParseHex(value) ?? fallback;
-        var box = new TextBox { Text = value == null ? "" : Rgb(current), PlaceholderText = Rgb(fallback), Width = 110, FontFamily = Theme.Mono };
-        var opacity = new NumericUpDown { Minimum = 0, Maximum = 100, Increment = 5, FormatString = "0", Width = 110, Value = (decimal)Math.Round(current.A / 255.0 * 100) };
+        var box = new TextBox { Text = value == null ? "" : Rgb(current), PlaceholderText = Rgb(fallback), Width = Widths.FieldS, FontFamily = Theme.Mono };
+        var opacity = new NumericUpDown { Minimum = 0, Maximum = 100, Increment = 5, FormatString = "0", Width = Widths.FieldS, Value = (decimal)Math.Round(current.A / 255.0 * 100) };
         ToolTip.SetTip(opacity, "Opacity, 0 to 100 %");
         var defaultPct = (int)Math.Round(fallback.A / 255.0 * 100);
 
@@ -86,27 +87,27 @@ internal static class ColorSettings
         opacity.ValueChanged += (_, e) => { if (e.NewValue is { } v && (int)v != (int)Math.Round(current.A / 255.0 * 100)) { Commit(); } };
 
         var view = new ColorView { Color = Color.FromRgb(current.R, current.G, current.B), IsAlphaVisible = false, IsAlphaEnabled = false, IsColorSpectrumVisible = true, IsComponentTextInputVisible = false, IsHexInputVisible = true };
-        var swatches = new WrapPanel { Width = 240, Margin = new Thickness(0, 8, 0, 0) };
+        var swatches = new WrapPanel { Width = SwatchesWidth, Margin = new Thickness(0, Space.M, 0, 0) };
         foreach (var (name, hex) in Theme.Swatches)
         {
             var sc = Color.Parse(hex);
-            var sw = new Button { Width = 28, Height = 28, Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(0), Background = new SolidColorBrush(sc), CornerRadius = new CornerRadius(6) };
+            var sw = new Button { Width = Sizes.Swatch, Height = Sizes.Swatch, Margin = new Thickness(0, 0, Space.S, Space.S), Padding = new Thickness(0), Background = new SolidColorBrush(sc), CornerRadius = new CornerRadius(Radius.M) };
             ToolTip.SetTip(sw, $"{name} {Rgb(sc)}");
             sw.Click += (_, _) => view.Color = sc;
             swatches.Children.Add(sw);
         }
         var flyout = new Flyout { Content = new StackPanel { Children = { view, swatches } } };
         flyout.Closed += (_, _) => { box.Text = Rgb(view.Color); Commit(); };   // committed on close: each change rebuilds the page, which would close the picker
-        var preview = new Button { Width = 32, Height = 32, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), Background = new SolidColorBrush(current), Flyout = flyout }
+        var preview = new Button { Width = Sizes.CompactControl, Height = Sizes.CompactControl, Padding = new Thickness(0), CornerRadius = new CornerRadius(Radius.M), BorderThickness = new Thickness(Stroke.Thin), Background = new SolidColorBrush(current), Flyout = flyout }
             .Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey);
         ToolTip.SetTip(preview, "Pick a color");
         var reset = IconBtn("arrow_reset", "Reset to Snowy Owl default", () => set(null));
         reset.IsEnabled = value != null;
 
-        var sp = new StackPanel { Spacing = 4, Children = { Row(preview, box, opacity, Txt("%", 13, false, Muted), reset) } };
+        var sp = new StackPanel { Spacing = Space.XS, Children = { Row(preview, box, opacity, Txt("%", TextSize.Small, false, Muted), reset) } };
         if (Note(current, dark, which) is { } note)
         {
-            sp.Children.Add(Txt(note, 11, false, Muted));
+            sp.Children.Add(Txt(note, TextSize.Tiny, false, Muted));
         }
 
         return sp;

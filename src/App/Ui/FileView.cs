@@ -28,7 +28,7 @@ internal static class FileView
         scrolls = true;
         if (!File.Exists(path))
         {
-            return Txt("File not found: " + path, 13, false, Muted);
+            return Txt("File not found: " + path, TextSize.Small, false, Muted);
         }
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
@@ -37,7 +37,7 @@ internal static class FileView
             if (_images.Contains(ext))
             {
                 using var s = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                return new Image { Source = new Bitmap(s), MaxHeight = 600, HorizontalAlignment = HorizontalAlignment.Left, Stretch = Avalonia.Media.Stretch.Uniform };
+                return new Image { Source = new Bitmap(s), MaxHeight = Heights.ViewerL, HorizontalAlignment = HorizontalAlignment.Left, Stretch = Avalonia.Media.Stretch.Uniform };
             }
             var len = new FileInfo(path).Length;
             if (len > MaxText)
@@ -62,7 +62,7 @@ internal static class FileView
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return Txt("Cannot show this file: " + e.Message, 13, false, Muted);
+            return Txt("Cannot show this file: " + e.Message, TextSize.Small, false, Muted);
         }
     }
 
@@ -76,8 +76,8 @@ internal static class FileView
 
     private static StackPanel TooBig(string path, long len, bool binary = false) => new()
     {
-        Spacing = 10,
-        Children = { Txt(binary ? "This file is not text." : $"This file is {LogViewer.Size(len)}, too large to show here.", 13, false, Muted),
+        Spacing = Space.L,
+        Children = { Txt(binary ? "This file is not text." : $"This file is {LogViewer.Size(len)}, too large to show here.", TextSize.Small, false, Muted),
             Btn("Open file", () => PathUtil.OpenFile(path), false, "open").With(b => b.HorizontalAlignment = HorizontalAlignment.Left) }
     };
 }

@@ -42,7 +42,7 @@ internal class LogSummaryCard
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _cts = new CancellationTokenSource();
 #pragma warning restore S2930
-        _body.Content ??= Txt("Calculating…", 13, false, Muted);
+        _body.Content ??= Txt("Calculating…", TextSize.Small, false, Muted);
 
         var files = _files; var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
         try
@@ -68,7 +68,7 @@ internal class LogSummaryCard
     private static StackPanel Show(LogStats s)
     {
         var w = new WrapPanel();
-        void Add(string t, string? key = null) => w.Children.Add(Chip(t, key).With(c => c.Margin = new Thickness(0, 0, 8, 8)));
+        void Add(string t, string? key = null) => w.Children.Add(Chip(t, key).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.M)));
         Add(ReadableLog.Plural(s.Files, "file") + " · " + LogViewer.Size(s.Bytes));
         if (s.Newest is { } n)
         {
@@ -105,20 +105,20 @@ internal class LogSummaryCard
                 Add(string.Join(", ", s.Models));
             }
         }
-        var sp = new StackPanel { Spacing = 6, Children = { w } };
+        var sp = new StackPanel { Spacing = Space.S, Children = { w } };
         if (s.TopTools.Count > 0)
         {
-            sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), 13, false, Muted));
+            sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), TextSize.Small, false, Muted));
         }
 
         if (s.Largest.Count > 0)
         {
-            sp.Children.Add(Txt("Largest: " + string.Join(" · ", s.Largest.Select(f => $"{Path.GetFileName(f.Path)} {LogViewer.Size(f.Size)}")), 13, false, Muted));
+            sp.Children.Add(Txt("Largest: " + string.Join(" · ", s.Largest.Select(f => $"{Path.GetFileName(f.Path)} {LogViewer.Size(f.Size)}")), TextSize.Small, false, Muted));
         }
 
         if (s.Files == 0)
         {
-            sp.Children.Add(Txt("No log files in this period.", 13, false, Muted));
+            sp.Children.Add(Txt("No log files in this period.", TextSize.Small, false, Muted));
         }
 
         return sp;

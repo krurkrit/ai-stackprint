@@ -18,10 +18,10 @@ namespace AiStackprint.Ui;
 internal partial class LogViewer
 {
     private readonly Ctx _x;
-    private readonly TextBox _query = SearchBox("Search this file", 0).With(t => t.MinWidth = 200);
-    private readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(8, 4) }, _regex = new() { Content = ".*", Padding = new Thickness(8, 4) }, _only = new() { Content = "Only matching", Padding = new Thickness(8, 4) };
+    private readonly TextBox _query = SearchBox("Search this file").With(t => t.MinWidth = Widths.Field);
+    private readonly ToggleButton _case = new() { Content = "Aa", Padding = new Thickness(Space.M, Space.XS) }, _regex = new() { Content = ".*", Padding = new Thickness(Space.M, Space.XS) }, _only = new() { Content = "Only matching", Padding = new Thickness(Space.M, Space.XS) };
     private readonly ContentControl _view = new(), _results = new();
-    private readonly TextBlock _status = Txt("", 12, false, Muted);
+    private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted);
     private readonly Button _newer;        // "New lines": the file grew while Follow is off
     private LogFile? _file;
     private CodeView? _code;
@@ -48,7 +48,7 @@ internal partial class LogViewer
         _only.IsCheckedChanged += (_, _) => Render(false);
         _query.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && _hits.Count > 0) { Jump(_hits[0]); } };
         _newer = Btn("New lines", () => { _window = false; Load(true, update: true); }, true, "chevron_down")
-            .With(b => { b.IsVisible = false; b.HorizontalAlignment = HorizontalAlignment.Right; b.VerticalAlignment = VerticalAlignment.Bottom; b.Margin = new Thickness(0, 0, 18, 14); ToolTip.SetTip(b, "The file grew: show the newest lines"); });
+            .With(b => { b.IsVisible = false; b.HorizontalAlignment = HorizontalAlignment.Right; b.VerticalAlignment = VerticalAlignment.Bottom; b.Margin = new Thickness(0, 0, Space.XXL, Space.XL); ToolTip.SetTip(b, "The file grew: show the newest lines"); });
     }
 
     private bool CanRead => _file != null && LogParsers.Find(_file.Format) != null;
@@ -60,7 +60,7 @@ internal partial class LogViewer
         _file = f;
         if (f == null)
         {
-            return Card(Txt("Select a log file.", 14, false, Muted));
+            return Card(Txt("Select a log file.", TextSize.Body, false, Muted));
         }
 
         var mode = CanRead ? Btn(ShowReadable ? "Raw" : "Conversation", () => { Readable = !Readable; rebuild(); }, false, ShowReadable ? "code" : "chat_multiple")
@@ -72,15 +72,15 @@ internal partial class LogViewer
         {
             if (c != null)
             {
-                tools.Children.Add(c.With(k => { k.Margin = new Thickness(0, 0, 6, 6); k.Height = 36; }));   // one height for every control in the row
+                tools.Children.Add(c.With(k => { k.Margin = new Thickness(0, 0, Space.S, Space.S); k.Height = Theme.InputHeight; }));   // one height for every control in the row
             }
         }
 
-        var head = new StackPanel { Spacing = 8, Margin = new Thickness(0, 0, 0, 6), Children = { Row(Title(Path.GetFileName(f.Path), 15), _status.Free().With(s => s.VerticalAlignment = VerticalAlignment.Center)), tools } };
+        var head = new StackPanel { Spacing = Space.M, Margin = new Thickness(0, 0, 0, Space.S), Children = { Row(Title(Path.GetFileName(f.Path), TextSize.Subtitle), _status.Free().With(s => s.VerticalAlignment = VerticalAlignment.Center)), tools } };
 
-        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 10, Height = 520 };
+        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = Space.L, Height = Heights.ViewerL };
         _newer.IsVisible = false;
-        body.Children.Add(new Border { CornerRadius = new CornerRadius(6), ClipToBounds = true, Child = new Panel { Children = { _view.Free(), _newer.Free() } } });
+        body.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.M), ClipToBounds = true, Child = new Panel { Children = { _view.Free(), _newer.Free() } } });
         body.Children.Add(_results.Free().With(r => Grid.SetColumn(r, 1)));
         var dock = new DockPanel();
         DockPanel.SetDock(head, Dock.Top);

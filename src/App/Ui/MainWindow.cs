@@ -18,6 +18,7 @@ namespace AiStackprint.Ui;
 
 internal partial class MainWindow : Window
 {
+    private const double StartWidth = 1280, StartHeight = 820, MinimumWidth = 900;
     private const double OpenWidth = 240, ClosedWidth = 64;
     private readonly AppState _s = new();
     private readonly Border _side;
@@ -35,7 +36,7 @@ internal partial class MainWindow : Window
 
     public MainWindow()
     {
-        Title = "AI Stackprint"; Width = 1280; Height = 820; MinWidth = 900;
+        Title = "AI Stackprint"; Width = StartWidth; Height = StartHeight; MinWidth = MinimumWidth;
         using (var icon = typeof(MainWindow).Assembly.GetManifestResourceStream("app-icon.ico"))
         {
             if (icon != null)
@@ -56,7 +57,7 @@ internal partial class MainWindow : Window
         {
             Width = OpenWidth,
             ClipToBounds = true,
-            Padding = new Thickness(10, 12),
+            Padding = new Thickness(Space.L, Space.L),
             Transitions = [new DoubleTransition { Property = WidthProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }]
         }.Themed(Border.BackgroundProperty, SideKey);
         var main = new DockPanel();
@@ -68,7 +69,7 @@ internal partial class MainWindow : Window
         GoAction = Go;
         Grid.SetColumn(main, 1);
         root.Children.Add(bar); root.Children.Add(_side); root.Children.Add(main);
-        Toast.Host = new StackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 24, 20) };
+        Toast.Host = new StackPanel { Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, Space.XXXL, Space.XXL) };
         Grid.SetColumnSpan(Toast.Host, 2); Grid.SetColumnSpan(_overlay, 2); Grid.SetRowSpan(Toast.Host, 2); Grid.SetRowSpan(_overlay, 2);
         root.Children.Add(Toast.Host); root.Children.Add(_overlay);
         Content = root;
@@ -98,8 +99,8 @@ internal partial class MainWindow : Window
     private Button NavBtn(string icon, string text, Action a, bool active = false, bool iconOnly = false)
     {
         var full = _navOpen && !iconOnly;
-        var glyph = Icon(icon, 20);
-        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Children = { glyph } };
+        var glyph = Icon(icon, IconSize.L);
+        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.L, Children = { glyph } };
         if (full)
         {
             content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
@@ -109,17 +110,17 @@ internal partial class MainWindow : Window
         {
             Content = content,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            MinHeight = 40,
+            MinHeight = Sizes.NavItem,
             Background = Brushes.Transparent,
             HorizontalContentAlignment = full ? HorizontalAlignment.Left : HorizontalAlignment.Center,
-            Padding = new Thickness(full ? 12 : 0, 0),
+            Padding = new Thickness(full ? Space.L : 0, 0),
             FontWeight = MenuWeight,
-            FontSize = Size(14)
+            FontSize = Size(TextSize.Body)
         };
         if (active)
         {
             b.Themed(BackgroundProperty, Surface).Themed(ForegroundProperty, Accent);
-            b.CornerRadius = new CornerRadius(8);
+            b.CornerRadius = new CornerRadius(Radius.L);
         }
         HoverStyle(b);
         if (!full)
@@ -134,7 +135,7 @@ internal partial class MainWindow : Window
     /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own hover and pressed colors.</summary>
     private static void HoverStyle(Button b)
     {
-        b.CornerRadius = new CornerRadius(8);
+        b.CornerRadius = new CornerRadius(Radius.L);
         var app = Application.Current!;
         foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
         {
@@ -194,18 +195,18 @@ internal partial class MainWindow : Window
     }
 
     private Control Section(string title) => _navOpen
-        ? Txt(title, 11, false, Muted).With(t => t.Margin = new Thickness(12, 16, 0, 4))
-        : new Border { Height = 1, Margin = new Thickness(8, 12) }.Themed(Border.BackgroundProperty, BorderKey);
+        ? Txt(title, TextSize.Tiny, false, Muted).With(t => t.Margin = new Thickness(Space.L, Space.XL, 0, Space.XS))
+        : new Border { Height = Stroke.Thin, Margin = new Thickness(Space.M, Space.L) }.Themed(Border.BackgroundProperty, BorderKey);
 
     private void RefreshNav()
     {
-        var head = new StackPanel { Orientation = _navOpen ? Orientation.Horizontal : Orientation.Vertical, Spacing = 8, Margin = new Thickness(0, 0, 0, 12) };
+        var head = new StackPanel { Orientation = _navOpen ? Orientation.Horizontal : Orientation.Vertical, Spacing = Space.M, Margin = new Thickness(0, 0, 0, Space.L) };
         var toggle = NavBtn("navigation", _navOpen ? "Collapse menu" : "Expand menu", () => { _navOpen = !_navOpen; _side.Width = _navOpen ? OpenWidth : ClosedWidth; RefreshNav(); }, iconOnly: true);
-        toggle.Width = 44;
+        toggle.Width = Sizes.LargeControl;
         head.Children.Add(toggle);
         if (_navOpen)
         {
-            var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = 36; b.Width = 160; b.Themed(BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
+            var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = Ui.Theme.InputHeight; b.Width = Widths.TitleSearch; b.Themed(BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
             head.Children.Add(box);
         }
         else
@@ -213,7 +214,7 @@ internal partial class MainWindow : Window
             head.Children.Add(IconBtn("search", "Search (Ctrl+K)", _palette.Open, Text).With(b => b.HorizontalAlignment = HorizontalAlignment.Center));
         }
 
-        var nav = new StackPanel { Spacing = 2 };
+        var nav = new StackPanel { Spacing = Space.XXS };
         nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
         nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
@@ -229,7 +230,7 @@ internal partial class MainWindow : Window
 
         nav.Children.Add(NavBtn("folder_add", "Add project folder", AddProject));
 
-        var foot = new StackPanel { Spacing = 8, Margin = new Thickness(0, 12, 0, 0) };
+        var foot = new StackPanel { Spacing = Space.M, Margin = new Thickness(0, Space.L, 0, 0) };
         foot.Children.Add(Go("settings", "Settings", "Settings"));
         foot.Children.Add(ThemeSwitch());
         var rescan = Btn(_navOpen ? "Rescan" : "", Scan, true, "arrow_sync");
@@ -238,7 +239,7 @@ internal partial class MainWindow : Window
             rescan.Content = Busy.Inline(true, "Scanning…");
         }
 
-        if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "") : Icon("arrow_sync", 20); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
+        if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "") : Icon("arrow_sync", IconSize.L); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
         rescan.HorizontalAlignment = HorizontalAlignment.Stretch; rescan.HorizontalContentAlignment = HorizontalAlignment.Center;
         foot.Children.Add(rescan);
 

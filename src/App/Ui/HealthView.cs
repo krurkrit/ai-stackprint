@@ -31,15 +31,15 @@ internal class HealthView(Ctx x)
         var shown = issues.Where(i => _all || i.Finding.Warning).ToList();
         if (shown.Count == 0)
         {
-            page.Add(Card(Row(Icon("info", 18).Themed(TextElement.ForegroundProperty, SuccessKey), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", 14))));
+            page.Add(Card(Row(Icon("info", IconSize.M).Themed(TextElement.ForegroundProperty, SuccessKey), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", TextSize.Body))));
         }
 
         foreach (var g in shown.GroupBy(i => i.Area))
         {
             var rows = g.OrderByDescending(i => i.Finding.Warning).ThenBy(i => i.Subject, StringComparer.OrdinalIgnoreCase).Select(i => new TableRow(
             [
-                Icon(i.Finding.Warning ? "warning" : "info", 16).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningKey : Muted),
-                Txt(i.Subject, 14, true), DetailPanel.AppLink(x, i.App, i.App), Txt(i.Finding.Text, 13)
+                Icon(i.Finding.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningKey : Muted),
+                Txt(i.Subject, TextSize.Body, true), DetailPanel.AppLink(x, i.App, i.App), Txt(i.Finding.Text, TextSize.Small)
             ], i.Item is { } it ? () => x.Open(it) : null));
             page.Add(Section(g.Key == "Skills" ? "sparkle" : "puzzle_piece", $"{g.Key} · {g.Count():N0}",
                 Table.Build([new Col("", "24"), new Col("Name", "1.4*"), new Col("App", "1.2*"), new Col("Finding", "4*")], rows)));

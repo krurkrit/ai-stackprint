@@ -28,13 +28,13 @@ internal static class Levels
     /// <summary>Small ⓘ button; click opens the levels explanation.</summary>
     public static Button InfoButton()
     {
-        var list = new StackPanel { Spacing = 12, Width = 380 };
-        list.Children.Add(Title("Levels, highest priority first", 15));
+        var list = new StackPanel { Spacing = Space.L, Width = Widths.DialogS };
+        list.Children.Add(Title("Levels, highest priority first", TextSize.Subtitle));
         foreach (var l in Order)
         {
             var (where, who, note) = Info[l];
-            var head = WithDot(LevelDot(l), l, 14, true);
-            list.Children.Add(new StackPanel { Spacing = 2, Children = { head, Txt(where, 13), Txt("Applies to: " + who, 13, false, Muted), Txt(note, 13, false, Muted) } });
+            var head = WithDot(LevelDot(l), l, TextSize.Body, true);
+            list.Children.Add(new StackPanel { Spacing = Space.XXS, Children = { head, Txt(where, TextSize.Small), Txt("Applies to: " + who, TextSize.Small, false, Muted), Txt(note, TextSize.Small, false, Muted) } });
         }
         list.Children.Add(Txt("Settings follow this order: a higher level wins for the same key. Instruction files and skills are combined; when they conflict, the more specific one usually wins. Apps use their own words for levels (ADMIN, REPO, Workspace); hover a level to see it.",
             12, false, Muted));

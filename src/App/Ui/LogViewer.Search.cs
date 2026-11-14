@@ -33,11 +33,11 @@ internal partial class LogViewer
         _search?.Cancel();
         _hits.Clear();
         var p = Pattern();
-        if (p == null || _file == null) { _results.Content = string.IsNullOrEmpty(_query.Text) ? null : Panel(Txt("Invalid pattern.", 12, false, Muted)); if (_only.IsChecked == true) { Render(false); } return; }
+        if (p == null || _file == null) { _results.Content = string.IsNullOrEmpty(_query.Text) ? null : Panel(Txt("Invalid pattern.", TextSize.Caption, false, Muted)); if (_only.IsChecked == true) { Render(false); } return; }
         if (ShowReadable)
         {
             var steps = _readable?.Steps.Where(e => p.IsMatch($"{e.Tool} {e.Text} {e.Detail}")).ToList() ?? [];
-            _results.Content = Panel(Txt(ReadableLog.Plural(steps.Count, "step"), 12, true),
+            _results.Content = Panel(Txt(ReadableLog.Plural(steps.Count, "step"), TextSize.Caption, true),
                 steps.Take(500).Select(e => Hit($"{e.Time:HH:mm:ss} {e.Role}", Snip(e.Text), () => _readable!.Reveal(e))));
             return;
         }
@@ -55,11 +55,11 @@ internal partial class LogViewer
             }
 
             _hits.AddRange(hits);
-            _results.Content = Panel(Txt(hits.Count >= LogSearch.MaxHits ? $"First {LogSearch.MaxHits} matches" : $"{hits.Count:N0} {(hits.Count == 1 ? "match" : "matches")}", 12, true),
+            _results.Content = Panel(Txt(hits.Count >= LogSearch.MaxHits ? $"First {LogSearch.MaxHits} matches" : $"{hits.Count:N0} {(hits.Count == 1 ? "match" : "matches")}", TextSize.Caption, true),
                 hits.Select(h => Hit($"Line {h.Line:N0}", h.Text, () => Jump(h))));
         }
         catch (OperationCanceledException) { }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _results.Content = Panel(Txt("Cannot read: " + e.Message, 12, false, Muted)); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _results.Content = Panel(Txt("Cannot read: " + e.Message, TextSize.Caption, false, Muted)); }
         finally
         {
             if (_search == cts)
@@ -101,27 +101,27 @@ internal partial class LogViewer
 
     private static Border Panel(Control head, IEnumerable<Control>? rows = null)
     {
-        var sp = new StackPanel { Spacing = 2, Children = { head.With(h => h.Margin = new Thickness(4, 0, 0, 6)) } };
+        var sp = new StackPanel { Spacing = Space.XXS, Children = { head.With(h => h.Margin = new Thickness(Space.XS, 0, 0, Space.S)) } };
         if (rows != null)
         {
             sp.Children.AddRange(rows);
         }
 
-        return new Border { Width = 300, CornerRadius = new CornerRadius(6), Padding = new Thickness(6), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
+        return new Border { Width = Widths.Popup, CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
     }
 
     private static Border Hit(string where, string text, Action go)
     {
         var b = new Border
         {
-            CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(6, 4),
+            CornerRadius = new CornerRadius(Radius.S),
+            Padding = new Thickness(Space.S, Space.XS),
             Cursor = Hand,
             Background = Avalonia.Media.Brushes.Transparent,
             Child = new StackPanel
             {
-                Children = { Txt(where, 12, false, Accent).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; }),
-                Txt(text, 12).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
+                Children = { Txt(where, TextSize.Caption, false, Accent).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; }),
+                Txt(text, TextSize.Caption).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
             }
         };
         b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);

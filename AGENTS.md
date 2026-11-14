@@ -26,6 +26,7 @@ Large files: search them, do not read them whole: `src/App/Assets/logos.json` (5
 - `build/pack.ps1`: Velopack installer for one platform; `.github/workflows/release.yml`: release on a version tag
 - `docs/`: architecture and how-to guides (`releasing.md`: versions, tags, installers)
 - `docs/decisions.md`: agreed product and UI decisions; read before UI work
+- `docs/design-system.md`: tokens (spacing, radius, type, icon and component sizes) and shared components; read before UI work
 
 ## Rules
 - Support a new app by adding data to `src/Core/Assets/apps.builtin.json`. Do not add per-app `if` branches in `Scanner`.
@@ -35,6 +36,7 @@ Large files: search them, do not read them whole: `src/App/Assets/logos.json` (5
 - Every API call or long operation shows `Busy` (spinner after 300 ms); a refresh keeps the last data on screen with a small spinner instead of blanking it. Errors replace the spinner with a message and Retry.
 - Colors: Snowy Owl tokens (`snowy-owl/docs/TOKENS.md`) are defined once in `Theme`; users may override accent, hover and selection per theme (Settings › Appearance). Views use `W` resource keys through `W.Themed` (light/dark automatic). No hex anywhere else.
 - Font and sizes: Appearance settings (default Inter → Noto Sans → platform default, 14 px, weights 400/500). Write sizes for a 14 px base through `W.Txt`/`W.Title`/`W.Size` so they scale; use `W.Body`/`W.Emphasis`/`W.Heading`, never fixed weights. Fonts are not bundled or downloaded.
+- Sizes, spacing, radii, type and icon sizes: tokens in `src/App/Ui/Tokens.cs` (`Space`, `Radius`, `TextSize`, `IconSize`, `Stroke`, `Sizes`, `Widths`, `Heights`; see `docs/design-system.md`). No literal sizes in views: `DesignTokenTests` fails on them. Cards with a title use `W.Section` (one header for all cards).
 - Levels are always listed highest priority first: System, Local, Project, User (`Levels.Order`).
 - The scanner is read-only. Only `SkillManager`, `PluginManager`, `ConfigEditor` and `LogTrash` change anything, and only after the user confirms in a dialog. Removed skills are moved to the backup folder, never deleted. Saved config files are copied to the backups folder first and refused if they changed on disk. Plugin changes go through the app's own CLI, run without a shell, with whitelisted arguments. Logs are viewed read-only; deleting moves only files the app listed as logs to the Recycle Bin/Trash.
 - Third-party UI code: AvaloniaEdit + TextMate (MIT) only inside `CodeView`.

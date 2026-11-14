@@ -35,16 +35,16 @@ internal partial class MainWindow
             var next = _themes[(i + 1) % _themes.Length];
             return NavBtn(_themes[i].Icon, $"{_themes[i].Tip} (click: {next.Mode.ToLowerInvariant()})", () => SetTheme(next.Mode));
         }
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = 4 };
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = Space.XS };
         for (var i = 0; i < _themes.Length; i++)
         {
             var t = _themes[i]; var on = t.Mode == cur;
             var b = new Button
             {
-                Content = Icon(t.Icon, 18),
+                Content = Icon(t.Icon, IconSize.M),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
-                MinHeight = 32,
+                MinHeight = Sizes.CompactControl,
                 Background = Brushes.Transparent
             };
             HoverStyle(b);
