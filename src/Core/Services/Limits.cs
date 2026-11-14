@@ -132,7 +132,7 @@ public sealed class LimitsService(Func<Settings> settings)
             {
                 next = new(LimitState.Expired, logs ?? old, old, $"The saved sign-in expired. Use {d.Name} once and it renews it.", false);
             }
-            else if (logs != null && DateTime.Now - logs.FetchedAt < TimeSpan.FromMinutes(10))
+            else if (logs != null && DateTime.UtcNow - logs.FetchedAt.ToUniversalTime() < TimeSpan.FromMinutes(10))
             {
                 next = new(LimitState.Ok, logs, old, null, false);   // the app's own log is fresh: no call
             }

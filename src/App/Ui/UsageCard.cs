@@ -75,6 +75,15 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         }
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _body.Content = Txt("Cannot read logs: " + e.Message, 13, false, Muted); }
+        finally
+        {
+            if (_cts == cts)
+            {
+                _cts = null;
+            }
+
+            cts.Dispose();   // finished or replaced: a newer refresh has its own
+        }
     }
 
     private void Render()

@@ -159,7 +159,7 @@ internal class CodeView : Border
         _flashTimer ??= new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(60), Avalonia.Threading.DispatcherPriority.Render, (_, _) =>
         {
             tv.InvalidateLayer(AvaloniaEdit.Rendering.KnownLayer.Background);
-            if (_disposed || _flash!.Done)
+            if (_disposed || _flash.Done)
             {
                 _flashTimer!.Stop();
             }

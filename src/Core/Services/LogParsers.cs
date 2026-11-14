@@ -57,7 +57,7 @@ public static class LogParsers
     internal static string Str(this JsonElement e, string k) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
     internal static JsonElement Get(this JsonElement e, string k) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(k, out var v) ? v : default;
     internal static long Num(this JsonElement e, string k) => e.Get(k) is { ValueKind: JsonValueKind.Number } v && v.TryGetInt64(out var n) ? n : 0;
-    internal static DateTime? Time(this JsonElement e) => DateTime.TryParse(e.Str("timestamp"), null, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t.ToLocalTime() : null;
+    internal static DateTime? Time(this JsonElement e) => DateTime.TryParse(e.Str("timestamp"), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t.ToLocalTime() : null;
 
     /// <summary>Text of a string or of a list of {type:text|input_text|output_text, text} blocks.</summary>
     internal static string Text(JsonElement content) => content.ValueKind switch

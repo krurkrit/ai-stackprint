@@ -58,6 +58,15 @@ internal partial class LogViewer
         }
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _results.Content = Panel(Txt("Cannot read: " + e.Message, 12, false, Muted)); }
+        finally
+        {
+            if (_search == cts)
+            {
+                _search = null;
+            }
+
+            cts.Dispose();   // finished or replaced: a newer search has its own
+        }
         if (_only.IsChecked == true)
         {
             Render(false);

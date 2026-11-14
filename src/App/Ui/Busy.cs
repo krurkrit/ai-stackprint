@@ -32,16 +32,17 @@ internal static class Busy
     };
 
     /// <summary>Looping animations cannot use RunAsync, so one turn is run again until the spinner leaves the screen.</summary>
-    private static async Task Spin(Animatable v, CancellationToken ct)
+    private static async Task Spin(Animatable v, CancellationTokenSource cts)
     {
         try
         {
-            while (!ct.IsCancellationRequested)
+            while (!cts.IsCancellationRequested)
             {
-                await _turn.RunAsync(v, ct);
+                await _turn.RunAsync(v, cts.Token);
             }
         }
         catch (OperationCanceledException) { }
+        finally { cts.Dispose(); }   // the loop owns its source: done only after the last turn stopped
     }
 
     public static Control Spinner(double size = 16)
@@ -57,8 +58,8 @@ internal static class Busy
             VerticalAlignment = VerticalAlignment.Center
         };
         CancellationTokenSource? cts = null;
-        v.AttachedToVisualTree += (_, _) => { cts?.Cancel(); cts = new(); _ = Spin(v, cts.Token); };
-        v.DetachedFromVisualTree += (_, _) => cts?.Cancel();
+        v.AttachedToVisualTree += (_, _) => { cts?.Cancel(); cts = new(); _ = Spin(v, cts); };
+        v.DetachedFromVisualTree += (_, _) => { cts?.Cancel(); cts = null; };   // Spin disposes it
         return v;
     }
 

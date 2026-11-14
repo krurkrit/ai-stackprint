@@ -56,6 +56,15 @@ internal class LogSummaryCard
             }
         }
         catch (OperationCanceledException) { }
+        finally
+        {
+            if (_cts == cts)
+            {
+                _cts = null;
+            }
+
+            cts.Dispose();   // finished or replaced: a newer refresh has its own
+        }
     }
 
     private static Control Show(LogStats s)
