@@ -15,9 +15,8 @@ namespace AiStackprint.Ui;
 internal class LogSummaryCard
 {
     private readonly ContentControl _body = new();
-    private int _days = 7;
     /// <summary>Range shown: 7, 30 or 0 (all). Kept when the Logs page replaces the card.</summary>
-    public int Days { get => _days; init => _days = value; }
+    public int Days { get; set; } = 7;
     private CancellationTokenSource? _cts;
     private IReadOnlyList<LogFile> _files = Array.Empty<LogFile>();
 
@@ -25,7 +24,7 @@ internal class LogSummaryCard
     {
         _files = files;
         var range = new ContentControl();
-        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], _days.ToString(), v => { _days = int.Parse(v); Pills(); Refresh(); });
+        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], Days.ToString(), v => { Days = int.Parse(v); Pills(); Refresh(); });
         Pills();
         Refresh();
         return Section("data_pie", "Summary", _body.Free(), range);
@@ -40,13 +39,15 @@ internal class LogSummaryCard
     private async void Refresh()
     {
         _cts?.Cancel();
+#pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _cts = new CancellationTokenSource();
+#pragma warning restore S2930
         if (_body.Content == null)
         {
             _body.Content = Txt("Calculating…", 13, false, Muted);
         }
 
-        var files = _files; var since = _days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-_days);
+        var files = _files; var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
         try
         {
             var s = await Task.Run(() => LogSummary.Compute(files, since, cts.Token), cts.Token);

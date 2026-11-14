@@ -48,7 +48,7 @@ internal static class Theme
     public static readonly string[] LightLevels = ["#7048E8", "#D6336C", "#2F9E44", "#1098AD"], DarkLevels = ["#9775FA", "#F06595", "#51CF66", "#3BC9DB"];
     public static readonly string[] LevelNames = ["System", "Local", "Project", "User"];
 
-    private record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
+    private sealed record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
         double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main);
 
     private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1

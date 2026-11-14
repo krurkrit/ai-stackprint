@@ -8,7 +8,7 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class SkillDocTests : IDisposable
+public sealed class SkillDocTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);

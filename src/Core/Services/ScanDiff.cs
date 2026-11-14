@@ -18,8 +18,8 @@ public static class ScanDiff
 {
     public static string File => Path.Combine(AppCatalog.Folder, "last-scan.json");
 
-    private record Entry(string Kind, string Name, string App, string Path, long Stamp);
-    private record Snapshot(DateTime Time, List<Entry> Items);
+    private sealed record Entry(string Kind, string Name, string App, string Path, [property: System.Text.Json.Serialization.JsonPropertyName("Stamp")] long Ticks);   // "Stamp" in last-scan.json
+    private sealed record Snapshot(DateTime Time, List<Entry> Items);
 
     private static long Stamp(Item i)
     {
@@ -56,7 +56,7 @@ public static class ScanDiff
                 {
                     changes.Add(new("Added", e.Kind, e.Name, e.App, e.Path));
                 }
-                else if (b.Stamp != e.Stamp)
+                else if (b.Ticks != e.Ticks)
                 {
                     changes.Add(new("Edited", e.Kind, e.Name, e.App, e.Path));
                 }

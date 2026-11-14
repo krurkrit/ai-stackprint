@@ -8,7 +8,7 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class LogToolsTests : IDisposable
+public sealed class LogToolsTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
@@ -68,7 +68,7 @@ public class LogToolsTests : IDisposable
     [Fact]
     public void Older_than_and_active_use_modified_time()
     {
-        var now = new DateTime(2026, 11, 11, 12, 0, 0);
+        var now = new DateTime(2026, 11, 11, 12, 0, 0, DateTimeKind.Local);
         var old = new LogFile("a", "Logs", "/x/old.log", 1, now.AddDays(-40), null);
         var fresh = new LogFile("a", "Logs", "/x/new.log", 1, now.AddSeconds(-10), null);
         Assert.Equal(new[] { old }, LogTrash.OlderThan([old, fresh], 30, now));

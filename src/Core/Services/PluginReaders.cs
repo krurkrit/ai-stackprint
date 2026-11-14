@@ -25,16 +25,16 @@ internal class ClaudePluginReader : IPluginReader
 {
     public string Format => "claude";
 
-    public void Read(string file, AppDefinition app, List<Item> rows)
+    public void Read(string manifestPath, AppDefinition app, List<Item> rows)
     {
-        if (!File.Exists(file))
+        if (!File.Exists(manifestPath))
         {
             return;
         }
 
         try
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            using var doc = JsonDocument.Parse(File.ReadAllText(manifestPath));
             if (!doc.RootElement.TryGetProperty("plugins", out var ps))
             {
                 return;

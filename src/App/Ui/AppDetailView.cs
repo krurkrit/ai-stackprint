@@ -153,9 +153,15 @@ internal class AppDetailView(Ctx x)
         var body = new ContentControl();
         void Fill()   // re-renders only this section, so the Usage card above is not recalculated
         {
+            if (skills.Count == 0)
+            {
+                body.Content = Table.Build(cols, [], "No skills found.");
+                return;
+            }
+
             var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
-            var table = Table.Build(cols, _skillFilter.Rows([.. skills.Where(_skillFilter.Match)], Row, cols.Length, Fill), skills.Count == 0 ? "No skills found." : "No skills match these filters.");
-            body.Content = skills.Count == 0 ? table : new StackPanel { Spacing = 14, Children = { filters, table } };
+            var table = Table.Build(cols, _skillFilter.Rows([.. skills.Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match these filters.");
+            body.Content = new StackPanel { Spacing = 14, Children = { filters, table } };
         }
         Fill();
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();

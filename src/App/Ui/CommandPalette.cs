@@ -17,7 +17,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
 {
-    private record Entry(string Icon, string Title, string Sub, Action Run);
+    private sealed record Entry(string Icon, string Title, string Sub, Action Run);
 
     private readonly TextBox _box = SearchBox("Go to an app, skill, plugin, project or action", 44);
     private readonly StackPanel _list = new() { Spacing = 2 };

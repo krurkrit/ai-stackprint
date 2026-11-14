@@ -19,7 +19,7 @@ namespace AiStackprint.Ui;
 /// Text area with syntax highlighting (AvaloniaEdit + TextMate grammars, both MIT).
 /// The only file that touches AvaloniaEdit; the rest of the UI uses this class.
 /// </summary>
-internal class CodeView : Border
+internal sealed class CodeView : Border, IDisposable
 {
     private static RegistryOptions? _registry;
     private static SharedGrammars? _shared;
@@ -103,7 +103,9 @@ internal class CodeView : Border
             _textMate.SetGrammar(_scope);
         }
 
+#pragma warning disable S2696 // the grammar cache and its user count are shared by all code views on purpose
         _live++;
+#pragma warning restore S2696
         ApplyTheme();
     }
 
@@ -115,7 +117,9 @@ internal class CodeView : Border
         }
 
         _textMate.Dispose(); _textMate = null;
-        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }   // the grammars are the largest thing the app loads
+#pragma warning disable S2696 // see Install
+        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }
+#pragma warning restore S2696   // the grammars are the largest thing the app loads
     }
 
     /// <summary>Releases the highlighter for good and, with the last view, the loaded grammars. Safe to call twice.</summary>
@@ -175,20 +179,20 @@ internal class CodeView : Border
         public bool Done => Seconds <= 0 || Progress >= 1;
         public AvaloniaEdit.Rendering.KnownLayer Layer => AvaloniaEdit.Rendering.KnownLayer.Background;
 
-        public void Draw(AvaloniaEdit.Rendering.TextView tv, Avalonia.Media.DrawingContext dc)
+        public void Draw(AvaloniaEdit.Rendering.TextView textView, Avalonia.Media.DrawingContext drawingContext)
         {
-            if (Brush == null || Done || !tv.VisualLinesValid)
+            if (Brush == null || Done || !textView.VisualLinesValid)
             {
                 return;
             }
 
-            using (dc.PushOpacity(Math.Clamp(1 - Progress, 0, 1)))
+            using (drawingContext.PushOpacity(Math.Clamp(1 - Progress, 0, 1)))
             {
-                foreach (var vl in tv.VisualLines)
+                foreach (var vl in textView.VisualLines)
                 {
                     if (vl.FirstDocumentLine.LineNumber >= From)
                     {
-                        dc.FillRectangle(Brush, new Rect(0, vl.VisualTop - tv.ScrollOffset.Y, tv.Bounds.Width, vl.Height));
+                        drawingContext.FillRectangle(Brush, new Rect(0, vl.VisualTop - textView.ScrollOffset.Y, textView.Bounds.Width, vl.Height));
                     }
                 }
             }

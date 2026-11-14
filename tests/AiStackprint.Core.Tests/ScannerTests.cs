@@ -8,12 +8,12 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class ScannerTests : IDisposable
+public sealed class ScannerTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    private void Skill(string dir, string name, string extra = "")
+    private static void Skill(string dir, string name, string extra = "")
     {
         Directory.CreateDirectory(Path.Combine(dir, name));
         File.WriteAllText(Path.Combine(dir, name, "SKILL.md"), $"---\nname: {name}\ndescription: d\n{extra}---\nbody\n");

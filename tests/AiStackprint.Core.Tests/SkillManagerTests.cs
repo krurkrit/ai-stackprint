@@ -8,12 +8,12 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class SkillManagerTests : IDisposable
+public sealed class SkillManagerTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    private string MakeSkill(string parent, string name)
+    private static string MakeSkill(string parent, string name)
     {
         var d = Path.Combine(parent, name);
         Directory.CreateDirectory(Path.Combine(d, "refs"));

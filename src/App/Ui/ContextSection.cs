@@ -23,7 +23,7 @@ internal class ContextSection(Ctx x)
     private readonly ContentControl _host = new();
     private List<(AppDefinitionRef App, ContextReport Report)>? _last;
 
-    private record AppDefinitionRef(string Id, string Name, string? Logo, string Category);
+    private sealed record AppDefinitionRef(string Id, string Name, string? Logo, string Category);
 
     public Control Build(string project)
     {
@@ -114,7 +114,7 @@ internal class ContextSection(Ctx x)
                 running += r.Measure(f);
             }
 
-            var name = Txt(Show(f.Path), 13, true).With(t => { t.FontFamily = Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
+            var name = Txt(ShortPath(f.Path), 13, true).With(t => { t.FontFamily = Theme.Mono; if (f.Via != null) { t.Margin = new Thickness(16, 0, 0, 0); } });
             if (f.Via != null)
             {
                 ToolTip.SetTip(name, "Imported by " + f.Via);
@@ -157,7 +157,7 @@ internal class ContextSection(Ctx x)
         return new StackPanel { Spacing = 4, Children = { g, Txt($"{pct:0}% of {limit:N0} {r.Unit}. {r.LimitNote}", 12, false, Muted) } };
     }
 
-    private string Show(string path) =>
+    private string ShortPath(string path) =>
         _project != null && ContextBudget.Inside(path, _project) ? Path.GetRelativePath(_project, path)
         : ContextBudget.Inside(path, PathUtil.Home) ? "~" + Path.DirectorySeparatorChar + Path.GetRelativePath(PathUtil.Home, path) : path;
 
@@ -190,7 +190,7 @@ internal class ContextSection(Ctx x)
                 Spacing = 8,
                 Children =
         {
-            Row(Txt(Show(path), 13, true).With(t => t.FontFamily = Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
+            Row(Txt(ShortPath(path), 13, true).With(t => t.FontFamily = Theme.Mono), IconBtn("open", "Open file", () => PathUtil.OpenFile(path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, path))),
             body
         }
             }

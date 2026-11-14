@@ -132,7 +132,7 @@ internal class ItemBrowser
     /// <summary>The same skill or plugin across scans. Records compare lists by reference, so a rescan would make every item look new.</summary>
     public static bool Same(Item a, Item b) => a.Kind == b.Kind && a.App == b.App && a.Level == b.Level && a.Name == b.Name && a.Path == b.Path && a.Project == b.Project;
 
-    private record AppOption(string Id, string Name) { public override string ToString() => Name; }
+    private sealed record AppOption(string Id, string Name) { public override string ToString() => Name; }
 
     private void Fill()
     {

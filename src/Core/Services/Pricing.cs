@@ -30,7 +30,7 @@ public static class Pricing
 
     private static PriceFile? _file;
     private static DateTime _stamp, _checked;
-    private static readonly object _gate = new();
+    private static readonly Lock _gate = new();
 
     public static PriceFile Defaults() => new()
     {

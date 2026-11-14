@@ -44,7 +44,9 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
     private async void Refresh()
     {
         _cts?.Cancel();
+#pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _cts = new CancellationTokenSource();
+#pragma warning restore S2930
         if (_last == null)
         {
             _body.Content = Busy.Loading("Calculating usage from the logs…");

@@ -16,7 +16,7 @@ public sealed class LogFolderWatcher : IDisposable
 
     private readonly List<FileSystemWatcher> _watchers = [];
     private readonly Timer _debounce, _poll;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _created = new(StringComparer.OrdinalIgnoreCase);
     private readonly DateTime _started = DateTime.UtcNow;

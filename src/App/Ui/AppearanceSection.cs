@@ -32,7 +32,7 @@ internal static class AppearanceSection
             }
 
             var n = Math.Clamp(Math.Round((double)v), min, max);
-            if (n != value) { value = n; set(n); }
+            if (Math.Abs(n - value) > 0.001) { value = n; set(n); }
         };
         return box;
     }
@@ -44,8 +44,8 @@ internal static class AppearanceSection
 
         var installed = FontManager.Current.SystemFonts.Select(f => f.Name).Distinct().Order(StringComparer.OrdinalIgnoreCase).ToList();
         var labels = _weights.Select(w => w.Label).ToList();
-        string WLabel(int v, int fallback) => _weights.FirstOrDefault(w => w.Value == v).Label ?? _weights.First(w => w.Value == fallback).Label;
-        int WValue(string l) => _weights.First(w => w.Label == l).Value;
+        static string WLabel(int v, int fallback) => _weights.FirstOrDefault(w => w.Value == v).Label ?? _weights.First(w => w.Value == fallback).Label;
+        static int WValue(string l) => _weights.First(w => w.Label == l).Value;
         var monoKnown = new[] { "JetBrains Mono", "Cascadia Mono", "Cascadia Code", "Consolas", "Fira Code", "Fira Mono", "Source Code Pro", "Menlo", "Monaco", "SF Mono", "DejaVu Sans Mono", "Ubuntu Mono", "Courier New" };
         var monos = installed.Where(f => monoKnown.Contains(f, StringComparer.OrdinalIgnoreCase) || f.Contains("Mono", StringComparison.OrdinalIgnoreCase) || f.Contains("Code", StringComparison.OrdinalIgnoreCase)).ToList();
 

@@ -21,7 +21,9 @@ internal static class MemoryTrim
 
     private static void Compact()
     {
+#pragma warning disable S1215 // the point of this class: give memory back after a large page closes (debounced, at most every 2 s)
         GC.Collect(); GC.WaitForPendingFinalizers();
         GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+#pragma warning restore S1215
     }
 }

@@ -5,6 +5,7 @@
 ; - CA2007 (ConfigureAwait) is off for the app: UI code must continue on the UI thread
 ; - aspnetcore-only sections (razor, resx, Shared/runtime, Verify files) are left out
 ; Apply fixes with `dotnet format`; warnings show on build (EnforceCodeStyleInBuild).
+; - SonarAnalyzer.CSharp (Directory.Packages.props) adds Sonar's default C# rules; the few turned off are listed with reasons under "Sonar" below
 
 ; EditorConfig to support per-solution formatting.
 ; Use the EditorConfig VS add-in to make this work.
@@ -345,7 +346,27 @@ dotnet_diagnostic.IDE0200.severity = warning
 dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_diagnostic.IDE2000.severity = warning
 
+# Sonar (SonarAnalyzer.CSharp, default "Sonar way" rules). Off here, with the reason; everything else stays at Sonar's default.
+# S108: empty blocks are catches of expected IO/JSON errors (AGENTS.md: catch only expected exceptions)
+dotnet_diagnostic.S108.severity = none
+# S127: hand-written parsers (MarkdownLite, TextDecode) move the loop index on purpose
+dotnet_diagnostic.S127.severity = none
+# S1075: provider endpoints are fixed by design: each limits provider calls only its own host
+dotnet_diagnostic.S1075.severity = none
+# S3168: async void is how Avalonia event handlers and UI actions start async work; they catch their own errors
+dotnet_diagnostic.S3168.severity = none
+# S3267: loops are kept where LINQ would allocate (aspnetcore style)
+dotnet_diagnostic.S3267.severity = none
+# S3358: nested conditional expressions are this codebase's style for short UI choices
+dotnet_diagnostic.S3358.severity = none
+# S6444: fixed patterns only; regexes from user input (log search) get a timeout in LogSearch.Pattern
+dotnet_diagnostic.S6444.severity = none
+# S6966: Cancel() runs on the UI thread before new work starts; awaiting CancelAsync would let a second refresh interleave
+dotnet_diagnostic.S6966.severity = none
+
 [tests/**.cs]
+# S2925: the file-watcher tests wait for real file system events
+dotnet_diagnostic.S2925.severity = none
 # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA1018.severity = suggestion
 # CA1507: Use nameof to express symbol names

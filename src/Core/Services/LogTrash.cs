@@ -63,9 +63,10 @@ public static class LogTrash
     private static string Unique(string folder, string name)
     {
         var p = Path.Combine(folder, name);
-        for (var i = 2; File.Exists(p) || Directory.Exists(p); i++)
+        var i = 2;
+        while (File.Exists(p) || Directory.Exists(p))
         {
-            p = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)}.{i}{Path.GetExtension(name)}");
+            p = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)}.{i++}{Path.GetExtension(name)}");
         }
 
         return p;

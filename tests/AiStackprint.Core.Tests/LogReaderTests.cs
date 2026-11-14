@@ -8,7 +8,7 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class LogReaderTests : IDisposable
+public sealed class LogReaderTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
@@ -25,10 +25,10 @@ public class LogReaderTests : IDisposable
     [Fact]
     public void Find_matches_pattern_and_depth_newest_first()
     {
-        Write("logs/a.log", "a", new DateTime(2026, 1, 1));
-        Write("logs/sub/b.log", "b", new DateTime(2026, 3, 1));
-        Write("logs/sub/deep/c.log", "c", new DateTime(2026, 2, 1));
-        Write("logs/notes.txt", "x", new DateTime(2026, 4, 1));
+        Write("logs/a.log", "a", new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Local));
+        Write("logs/sub/b.log", "b", new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Local));
+        Write("logs/sub/deep/c.log", "c", new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Local));
+        Write("logs/notes.txt", "x", new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Local));
         var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = Path.Combine(_tmp, "logs"), Depth = 1 } } };
         var found = LogReader.Find(d, Array.Empty<string>());
         Assert.Equal(["b.log", "a.log"], found.Select(f => Path.GetFileName(f.Path)));

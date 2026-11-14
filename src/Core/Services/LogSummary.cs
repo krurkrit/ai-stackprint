@@ -28,7 +28,7 @@ public static partial class LogSummary
     /// <summary>Only the newest part of a session file is parsed.</summary>
     public const int SessionBytes = 8 << 20;
 
-    private record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
+    private sealed record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
 
     private static readonly ConcurrentDictionary<(string, long, long), SessionTotals> _cache = new();
 

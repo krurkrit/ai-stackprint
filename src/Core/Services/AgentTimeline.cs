@@ -50,13 +50,13 @@ public static class AgentTimelines
         foreach (var steps in lanes.OrderBy(l => l.Min(e => e.Time)))
         {
             DateTime start = steps.Min(e => e.Time)!.Value, end = steps.Max(e => e.Time)!.Value;
-            var call = tasks.Where(t => t.Time <= start && !used.Contains(t)).LastOrDefault();
+            var call = tasks.LastOrDefault(t => t.Time <= start && !used.Contains(t));
             if (call != null)
             {
                 used.Add(call);
             }
 
-            var fork = call?.Time ?? main.Where(e => e.Time <= start).LastOrDefault()?.Time ?? start;
+            var fork = call?.Time ?? main.LastOrDefault(e => e.Time <= start)?.Time ?? start;
             var merge = main.FirstOrDefault(e => e.Time >= end)?.Time ?? end;
             var first = steps[0].Text.Trim().Split('\n')[0];
             result.Add(new($"#{++n} {(first.Length > 34 ? first[..34] + "…" : first)}".TrimEnd(), start, end, steps.Count, fork, merge));

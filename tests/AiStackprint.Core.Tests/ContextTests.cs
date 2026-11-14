@@ -8,7 +8,7 @@ using Xunit;
 namespace AiStackprint.Core.Tests;
 
 [Collection("Environment")]   // sets CODEX_HOME / CLAUDE_CONFIG_DIR
-public class ContextTests : IDisposable
+public sealed class ContextTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     private readonly string _home, _project;
@@ -27,12 +27,11 @@ public class ContextTests : IDisposable
         Directory.Delete(_tmp, true);
     }
 
-    private string Write(string dir, string rel, string text)
+    private static void Write(string dir, string rel, string text)
     {
         var p = Path.Combine(dir, rel.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(p)!);
         File.WriteAllText(p, text);
-        return p;
     }
 
     [Fact]

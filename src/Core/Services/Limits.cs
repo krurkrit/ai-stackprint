@@ -49,7 +49,7 @@ public sealed class LimitsService(Func<Settings> settings)
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
     public static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(1);
 
-    private class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
+    private sealed class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
     private readonly Dictionary<string, Entry> _cache = [];
     private readonly object _lock = new();
 

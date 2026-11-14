@@ -164,10 +164,10 @@ internal static class LimitsView
     public static async void Consent(Ctx x, AppDefinition d)
     {
         var p = LimitProviders.Find(d.Limits)!;
-        var min = x.Limits.Interval.TotalMinutes;
+        var min = (int)x.Limits.Interval.TotalMinutes;
         var ok = await Dialogs.Confirm(x.Owner, $"Live limits for {d.Name}",
             $"To show your plan and limits, AI Stackprint reads the sign-in {d.Name} saved on this computer and sends it only to {p.Host}, as {d.Name} itself does, " +
-            $"at most once every {min:0} minute{(min == 1 ? "" : "s")}.\n\nThe token stays in memory; it is never shown, saved or logged, and never renewed by this app.\n\n" +
+            $"at most once every {min} minute{(min == 1 ? "" : "s")}.\n\nThe token stays in memory; it is never shown, saved or logged, and never renewed by this app.\n\n" +
             "This endpoint is not documented by the provider and may stop working, and using it from another app may be against the provider's terms.", "Turn on");
         if (!ok)
         {

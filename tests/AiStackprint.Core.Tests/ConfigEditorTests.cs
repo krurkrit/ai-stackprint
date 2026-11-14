@@ -9,7 +9,7 @@ using Xunit;
 
 namespace AiStackprint.Core.Tests;
 
-public class ConfigEditorTests : IDisposable
+public sealed class ConfigEditorTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiprof-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);

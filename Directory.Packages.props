@@ -16,4 +16,8 @@
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Sonar's C# rules (default "Sonar way" set) in every project at build time; never shipped in the app (Sonar Source-Available License v1.0) -->
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
+  </ItemGroup>
 </Project>

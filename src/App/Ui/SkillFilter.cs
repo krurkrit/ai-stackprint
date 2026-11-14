@@ -132,5 +132,5 @@ internal class SkillFilter
 
     private static string InvokeLabel(Item i) => SkillMatch.Label(i);
 
-    private record Opt(string Id, string Name) { public override string ToString() => Name; }
+    private sealed record Opt(string Id, string Name) { public override string ToString() => Name; }
 }

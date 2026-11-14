@@ -65,8 +65,8 @@ internal static class AgentGraph
                 Grid.SetColumn(c, g.ColumnDefinitions.Count - 1);
                 g.Children.Add(c);
             }
-            Control Line() => new Border { Height = 2, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Muted);
-            Control Dotted(HorizontalAlignment h) => new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(4), HorizontalAlignment = h, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Text);
+            static Control Line() => new Border { Height = 2, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Muted);
+            static Control Dotted(HorizontalAlignment h) => new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(4), HorizontalAlignment = h, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Text);
             Col(fk, null);
             Col(s - fk, new Grid { Children = { Line(), Dotted(HorizontalAlignment.Left) } });
             Col(e - s, new Border { CornerRadius = new CornerRadius(3) }.Themed(Border.BackgroundProperty, ChartWrite));

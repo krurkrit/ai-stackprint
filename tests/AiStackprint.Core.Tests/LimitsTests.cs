@@ -9,7 +9,7 @@ using Xunit;
 namespace AiStackprint.Core.Tests;
 
 [Collection("Environment")]
-public class LimitsTests : IDisposable
+public sealed class LimitsTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() { Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null); Directory.Delete(_tmp, true); }
@@ -68,7 +68,7 @@ public class LimitsTests : IDisposable
             """, _now);
         Assert.Equal("Individual pro", s.Plan);
         Assert.Equal([("Premium requests", 20.0), ("Completions", 25.0)], s.Windows.Select(w => (w.Name, w.UsedPercent)));
-        Assert.Equal(new DateTime(2026, 12, 1), s.Windows[0].ResetsAt!.Value.Date);
+        Assert.Equal(new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Local), s.Windows[0].ResetsAt!.Value.Date);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class LimitsTests : IDisposable
     }
 }
 
-public class ScanAndHealthTests : IDisposable
+public sealed class ScanAndHealthTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);

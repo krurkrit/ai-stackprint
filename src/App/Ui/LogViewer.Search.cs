@@ -41,7 +41,9 @@ internal partial class LogViewer
                 steps.Take(500).Select(e => Hit($"{e.Time:HH:mm:ss} {e.Role}", Snip(e.Text), () => _readable!.Reveal(e))));
             return;
         }
+#pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _search = new CancellationTokenSource();
+#pragma warning restore S2930
         var path = _file.Path;
         _results.Content = Panel(Busy.Loading("Searching the whole file…", 14));
         try

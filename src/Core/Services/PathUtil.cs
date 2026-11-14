@@ -55,7 +55,7 @@ public static class PathUtil
         {
             if (OperatingSystem.IsWindows())
             {
-                Process.Start("explorer.exe", $"\"{dir}\"");
+                Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), $"\"{dir}\"");
             }
             else
             {
