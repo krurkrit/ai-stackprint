@@ -50,7 +50,9 @@ internal partial class ContextSection(Ctx x)
         var pick = Btn(ContextBudget.Same(start, project) ? "Start in…" : "Start in: " + Path.GetRelativePath(project, start), () => PickStart(project), false, "folder_open");
         ToolTip.SetTip(pick, "Which files load depends on the folder a session starts in. Pick a folder inside the project.");
         var reset = ContextBudget.Same(start, project) ? null : IconBtn("dismiss", "Start in the project folder", () => { _start = project; _last = null; x.Refresh(); });
-        return Section("brain_circuit", "Loaded into context", _host.Free(), reset == null ? [pick] : [pick, reset]);
+        var export = Btn("Export to AGENTS.md", () => Export(project), false, "document_edit");
+        ToolTip.SetTip(export, "Combine the instruction files the apps load here into one AGENTS.md. You see it first; an existing AGENTS.md is backed up before it is replaced.");
+        return Section("brain_circuit", "Loaded into context", _host.Free(), reset == null ? [export, pick] : [export, pick, reset]);
     }
 
     private async void PickStart(string project)

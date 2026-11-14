@@ -66,6 +66,9 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Change alerts
 - "Changed since" also catches a skill or plugin whose files changed, a plugin version change and an MCP server whose command or address changed, using hashes only (nothing readable is saved). It is how a tool that was fine at install and later swapped shows up; it does not say the new version is bad.
 
+## Export to AGENTS.md
+- A button on the project page combines the loaded instruction files into one AGENTS.md. It always shows the text first; replacing an existing AGENTS.md needs the confirm and makes a backup. The sources stay as they are: edit them and export again.
+
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.
 - Watching and tailing:

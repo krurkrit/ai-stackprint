@@ -66,6 +66,20 @@ public static class ConfigEditor
         return backup;
     }
 
+    /// <summary>Writes a new file (and its folder); refuses when it exists. Returns nothing to back up.</summary>
+    public static void Create(string path, string text)
+    {
+        if (File.Exists(path))
+        {
+            throw new IOException($"{Path.GetFileName(path)} already exists.");
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        using var fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);   // CreateNew: never overwrites, even if it appeared a moment ago
+        using var w = new StreamWriter(fs, new UTF8Encoding(false));
+        w.Write(text);
+    }
+
     private static bool HasBom(string path)
     {
         using var fs = File.OpenRead(path);

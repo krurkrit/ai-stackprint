@@ -33,6 +33,15 @@ internal static class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
+    /// <summary>Shows text that is about to be written, read-only, and asks to write it. True when confirmed.</summary>
+    public static async Task<bool> Preview(Window owner, string title, string intro, string text, string ok)
+    {
+        Window? w = null;
+        var body = new StackPanel { Spacing = Space.M, Children = { Txt(intro, TextSize.Small, false, Muted), new ScrollViewer { MaxHeight = Heights.Viewer, Content = Mono(text, TextSize.Small) } } };
+        w = Shell(title, body, Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), Btn(ok, () => w!.Close(true), true));
+        return await w.ShowDialog<bool>(owner);
+    }
+
     public static Task Message(Window owner, string title, string text, bool mono = false)
     {
         Window? w = null;
