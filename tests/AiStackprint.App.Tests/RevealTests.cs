@@ -45,4 +45,17 @@ public sealed class RevealTests
         Assert.Contains("Rescan", t);
         Assert.Contains("Skills by app", t);
     }
+
+    [AvaloniaFact]
+    public void A_control_faded_after_it_is_already_in_the_window_still_becomes_visible()
+    {
+        var w = new Window { Width = 400, Height = 300 };
+        var host = new ContentControl { Content = new Border() };
+        w.Content = host;
+        w.Show();
+        var b = (Border)host.Content;
+        Reveal.Fade(b);
+        Ui.WaitUntil(() => { Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return b.Opacity > 0; });   // the fade runs on the render clock
+        Assert.True(b.Opacity > 0);
+    }
 }
