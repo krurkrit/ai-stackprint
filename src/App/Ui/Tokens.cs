@@ -102,7 +102,7 @@ internal static class Widths
     public const double SidePanel = 340;   // details beside a list
     public const double Popup = 300;       // search results and small pop-ups
     public const double Legend = 180;      // chart legend
-    public const double TitleSearch = 160; // the search button in the title bar
+    public const double TitleSearch = 280; // the search box in the middle of the title bar
     public const double Text = 460;        // longest line of a message
 }
 

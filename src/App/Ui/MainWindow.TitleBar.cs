@@ -10,7 +10,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// Custom title bar: name and back/forward on the left, minimize and close on the right.
+/// Custom title bar: menu toggle, name and back/forward on the left, search in the middle, theme switch and window buttons on the right.
 /// F11 toggles full screen (there is no full-screen button). On macOS the system window buttons stay.
 /// </summary>
 internal partial class MainWindow
@@ -35,16 +35,31 @@ internal partial class MainWindow
 
         _backBtn = HistoryBtn(TitleBtn("arrow_left", "Back (Alt+←)", Back));
         _forwardBtn = HistoryBtn(TitleBtn("arrow_right", "Forward (Alt+→)", Forward));
+        Button menu = null!;
+        menu = TitleBtn("navigation", "Collapse menu", () =>
+        {
+            _navOpen = !_navOpen;
+            _side.Width = _navOpen ? OpenWidth : ClosedWidth;
+            ToolTip.SetTip(menu, _navOpen ? "Collapse menu" : "Expand menu");
+            RefreshNav();
+        });
         var left = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = Space.XXS,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(mac ? MacButtons : Space.XL, 0, 0, 0),   // macOS draws its window buttons on the left
-            Children = { Title("AI Stackprint", TextSize.Small).With(t => t.Margin = new Thickness(0, 0, Space.L, 0)), _backBtn, _forwardBtn }
+            Margin = new Thickness(mac ? MacButtons : Space.L, 0, 0, 0),   // macOS draws its window buttons on the left
+            Children = { menu, Title("AI Stackprint", TextSize.Small).With(t => t.Margin = new Thickness(Space.S, 0, Space.L, 0)), _backBtn, _forwardBtn }
         };
-        var row = new DockPanel { Height = TitleBarHeight };
-        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Margin = new Thickness(0, 0, Space.M, 0), VerticalAlignment = VerticalAlignment.Center };
+        var search = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b =>
+        {
+            b.MinHeight = 0; b.Height = Sizes.CompactControl; b.Padding = new Thickness(Space.L, 0); b.Width = Widths.TitleSearch; b.VerticalAlignment = VerticalAlignment.Center;   // shorter than the bar, like an input in it
+            b.HorizontalContentAlignment = HorizontalAlignment.Left; b.Themed(BackgroundProperty, SideKey);
+            ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions");
+        });
+        var row = new Grid { Height = TitleBarHeight, ColumnDefinitions = new ColumnDefinitions("*,Auto,*") };   // the search box stays in the middle of the window
+        Grid.SetColumn(search, 1);
+        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Margin = new Thickness(0, 0, Space.M, 0), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
         _themeHost.Content = ThemeSwitch();
         right.Children.Add(_themeHost);
         if (!mac)
@@ -57,9 +72,10 @@ internal partial class MainWindow
             right.Children.Add(CloseHover(TitleBtn("dismiss", "Close", Close)));
         }
 
-        DockPanel.SetDock(right, Dock.Right);
-        row.Children.Add(right);
+        Grid.SetColumn(right, 2);
         row.Children.Add(left);
+        row.Children.Add(search);
+        row.Children.Add(right);
         var bar = new Border { Height = TitleBarHeight, Child = row, Background = Avalonia.Media.Brushes.Transparent }.Themed(Border.BackgroundProperty, MainKey);
         // Drag and double-click handled here, not through Avalonia's title-bar role: with that role Windows took some button clicks as drags.
         // Buttons handle their own presses, so this only sees presses on the empty bar.

@@ -99,9 +99,9 @@ internal partial class MainWindow : Window
     }
 
     /// <summary>Sidebar row: icon + label when open, icon with tooltip when collapsed.</summary>
-    private Button NavBtn(string icon, string text, Action a, bool active = false, bool iconOnly = false)
+    private Button NavBtn(string icon, string text, Action a, bool active = false)
     {
-        var full = _navOpen && !iconOnly;
+        var full = _navOpen;
         var glyph = Icon(icon, IconSize.L);
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.L, Children = { glyph } };
         if (full)
@@ -203,20 +203,6 @@ internal partial class MainWindow : Window
 
     private void RefreshNav()
     {
-        var head = new StackPanel { Orientation = _navOpen ? Orientation.Horizontal : Orientation.Vertical, Spacing = Space.M, Margin = new Thickness(0, 0, 0, Space.L) };
-        var toggle = NavBtn("navigation", _navOpen ? "Collapse menu" : "Expand menu", () => { _navOpen = !_navOpen; _side.Width = _navOpen ? OpenWidth : ClosedWidth; RefreshNav(); }, iconOnly: true);
-        toggle.Width = Sizes.LargeControl;
-        head.Children.Add(toggle);
-        if (_navOpen)
-        {
-            var box = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b => { b.MinHeight = Ui.Theme.InputHeight; b.Width = Widths.TitleSearch; b.Themed(BackgroundProperty, MainKey); b.HorizontalContentAlignment = HorizontalAlignment.Left; ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions"); });
-            head.Children.Add(box);
-        }
-        else
-        {
-            head.Children.Add(IconBtn("search", "Search (Ctrl+K)", _palette.Open, Text).With(b => b.HorizontalAlignment = HorizontalAlignment.Center));
-        }
-
         var nav = new StackPanel { Spacing = Space.XXS };
         nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
         nav.Children.Add(Go("apps", "Apps", "Apps"));
@@ -248,8 +234,8 @@ internal partial class MainWindow : Window
         foot.Children.Add(rescan);
 
         var dock = new DockPanel();
-        DockPanel.SetDock(head, Dock.Top); DockPanel.SetDock(foot, Dock.Bottom);
-        dock.Children.Add(head); dock.Children.Add(foot);
+        DockPanel.SetDock(foot, Dock.Bottom);
+        dock.Children.Add(foot);
         dock.Children.Add(new ScrollViewer { Content = nav });
         _side.Child = dock;
     }
