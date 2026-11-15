@@ -31,13 +31,13 @@ internal static partial class DashboardView
         head.Children.Add(btns);
         head.Children.Add(H1("Dashboard"));
 
-        int inst = apps.Count(a => a.Installed), warn = s.Health.Count(h => h.Finding.Warning);
+        var warn = s.Health.Count(h => h.Finding.Warning);
         var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = Space.XL, RowSpacing = Space.XL };
         var cards = new[]
         {
-            Tile("apps", "Apps installed", inst.ToString("N0"), () => x.Go("Apps"), ("Installed", inst, SuccessKey), ("Not found", apps.Count - inst, ErrorKey)),
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
+            Tile("server", "MCP servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
             Tile("warning", "Health warnings", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
         };
         var radar = Categories(apps, () => x.Go("Apps"));
@@ -53,23 +53,28 @@ internal static partial class DashboardView
         return Page(head, tiles, LimitsView.Strip(x), charts);
     }
 
-    /// <summary>Installed apps by category as a donut, with a legend that also lists categories with nothing installed ("0 of 3").</summary>
+    /// <summary>What kinds of AI apps are installed: the installed apps by category as a donut, with the count of each (apps that are not installed do not count).</summary>
     private static Border Categories(List<AppInfo> apps, Action open)
     {
-        var cats = apps.GroupBy(a => a.Category).OrderByDescending(g => g.Count(a => a.Installed)).ThenBy(g => g.Key).ToList();
-        var inst = apps.Count(a => a.Installed);
-        var pie = new PieChart("categories", [.. cats.Select(g => ((double)g.Count(a => a.Installed), CategoryKey(g.Key), $"{AppsView.Cap(g.Key)}: {g.Count(a => a.Installed)} of {g.Count()}"))], inst, "installed");
+        var cats = apps.Where(a => a.Installed).GroupBy(a => a.Category).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToList();
+        if (cats.Count == 0)
+        {
+            return Section("apps", "Apps by category", Txt("No AI apps found on this computer.", TextSize.Small, false, Muted));
+        }
+
+        var inst = cats.Sum(g => g.Count());
+        var pie = new PieChart("categories", [.. cats.Select(g => ((double)g.Count(), CategoryKey(g.Key), $"{AppsView.Cap(g.Key)}: {g.Count()}"))], inst, inst == 1 ? "app" : "apps");
         var legend = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
         foreach (var g in cats)
         {
-            var n = g.Count(a => a.Installed);
+            var n = g.Count();
             var key = CategoryKey(g.Key);
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = Space.L, Background = Brushes.Transparent };
             row.PointerEntered += (_, _) => pie.Highlight(key);   // the legend row points at its slice
             row.PointerExited += (_, _) => pie.Highlight(null);
             row.Children.Add(Dot(CategoryKey(g.Key)));
-            row.Children.Add(Txt(AppsView.Cap(g.Key), TextSize.Small, n > 0, n > 0 ? Text : Muted).With(t => Grid.SetColumn(t, 1)));
-            row.Children.Add(Txt($"{n} of {g.Count()}", TextSize.Small, false, Muted).With(t => Grid.SetColumn(t, 2)));
+            row.Children.Add(Txt(AppsView.Cap(g.Key), TextSize.Small, true).With(t => Grid.SetColumn(t, 1)));
+            row.Children.Add(Txt(n.ToString("N0"), TextSize.Small, false, Muted).With(t => Grid.SetColumn(t, 2)));
             legend.Children.Add(row);
         }
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = Space.XXXL, HorizontalAlignment = HorizontalAlignment.Center };

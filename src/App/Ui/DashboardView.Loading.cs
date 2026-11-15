@@ -36,12 +36,16 @@ internal static partial class DashboardView
             labels.Add(l);
             return c;
         }
-        var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), ColumnSpacing = Space.XL };
-        var titles = new[] { ("apps", "Apps installed"), ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("warning", "Health warnings") };
+        // The same places as the finished dashboard: categories 2 x 2 on the left, four tiles on the right
+        var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = Space.XL, RowSpacing = Space.XL };
+        var cats = Card("apps", "Apps by category");
+        Grid.SetRowSpan(cats, 2); Grid.SetColumnSpan(cats, 2);
+        tiles.Children.Add(cats);
+        var titles = new[] { ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("server", "MCP servers"), ("warning", "Health warnings") };
         for (var i = 0; i < titles.Length; i++)
         {
             var c = Card(titles[i].Item1, titles[i].Item2);
-            Grid.SetColumn(c, i);
+            Grid.SetColumn(c, 2 + i % 2); Grid.SetRow(c, i / 2);
             tiles.Children.Add(c);
         }
 
