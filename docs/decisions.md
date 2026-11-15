@@ -95,6 +95,34 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Log detail doesn't show read time or file size.
 - The "Readable" view is called "Conversation". Both Assistant and "You" messages are left-aligned. Assistant messages have a 20 px right margin and "You" messages have a 20 px left margin.
 
+## Settings, models and data files
+- Defaults ship with the app as data in `default/` (built in, read-only): `settings.json` (every setting and its default; no defaults written in C#), `models.json` (with `models.schema.json`) and `apps.json` (today's `apps.builtin.json`).
+- The user folder is `~/.ai-stackprint/` on every OS (not `%APPDATA%`): one path for docs and support, next to `~/.claude` and `~/.codex`, and not synced by roaming profiles. The first start of the new version moves the files from the old folder and leaves a note there.
+  - `settings.json`: only settings that differ from the default; a missing key means the default, so a changed default reaches everyone who did not change it. Unknown keys are kept on save.
+  - `models.json`: only the model fields you changed, and models you added (`provider: "custom"`).
+  - `apps.json`: only custom apps (Add app). They never override a built-in app: a custom id gets the `custom.` prefix, a built-in id or name is refused ("already supported"), and when a later version supports the same tool the built-in wins, with a one-time note offering to remove the custom one.
+  - `projects.json`: the project folders (paths under home written as `~/…`). They are remembered across restarts. A folder that no longer exists is shown greyed with a bin icon to remove it; clicking it opens the folder picker and the chosen folder replaces the path (the project moved).
+  - `state.json`: machine-only memory (window and panel sizes, last update check, dismissed update). Never exported.
+  - `cache/` (downloaded models.json, scan cache, last scan), `logs/` (crash.log, perf.log), `backups/`.
+- The value used is the first found: your file, then the downloaded `cache/models.json` (models only), then the built-in default; between the built-in and the downloaded models the newer `updated` date wins.
+- Every file has `"version"`: the file's format version, not the app version. A new version is needed only to rename a key, change its type or meaning, or move it; adding or removing a setting is not. Old files are upgraded on load, one step at a time (v1→v2→v3), after a copy to `backups/` (`settings.v1.json`); every upgrade step is kept and tested with a real old file. A file newer than the app is read for the keys it knows and never written; a one-time notice says changes are not saved.
+- Format: JSON (System.Text.Json, no extra dependency), camelCase keys, indented, `"$schema"` for editor help. Read leniently (comments, trailing commas); the app owns these files, so saving drops comments.
+
+## Models
+- `default/models.json`: context window, max output, prices (USD per 1M tokens), long-context price tiers (`above`), price multipliers the logs can show (`fast`), retirement date and successor, source links. A missing value is unknown, not free.
+- Generated from LiteLLM's `model_prices_and_context_window.json` (BerriAI/litellm, MIT) by a GitHub Action: every chat model with text output from the direct providers in the schema (Anthropic, OpenAI, Gemini, xAI, …); dated duplicates with the same numbers dropped; the `gemini/` prefix removed. No list of model families to keep: new models arrive by themselves.
+- The Action runs on Sundays at 12:00 UTC and on demand. If LiteLLM cannot be reached it retries after 15, 45 and 90 minutes, then fails without a PR (GitHub emails the owner). Data that fails the schema or the sanity checks (each provider present, at least 80% of the current count, size limit) fails the run; price changes over 10x are pointed out in the PR. It reads the file at one LiteLLM commit (recorded in `source.commit`) and opens or updates one PR, only when something changed.
+- The app fetches `default/models.json` from this repo through api.github.com into `~/.ai-stackprint/cache/models.json`, only when the user turned on the one switch for updates and model data ("Check GitHub for updates and model data"), at most once a day, in the background, with `If-None-Match`. A failure keeps the last good copy and is shown in Settings (date of the data, last check, Check now); data over 60 days old is noted on the Usage page.
+- A logged model name uses the longest key it contains (so `claude-sonnet-4-5-20250929` and Bedrock/Vertex names find `claude-sonnet-4-5`); the result is cached per name. The Usage page shows "priced as …" when the names differ and "no price" when nothing matches.
+- A "Models" page lists every model with its values; any value can be overridden (marked, with Reset) and models can be added. Overrides are saved per field in `~/.ai-stackprint/models.json`.
+- Costs: tokens are summed per day and model, split by what changes the price (long-context tier, fast mode, US-only processing, 5-minute or 1-hour cache), and priced when shown, so a price change needs no new read of the logs; logs without these fields count as standard. The downloaded model data is kept per user (each user consents for themselves; nothing another user can write is trusted).
+- Uses: those cost estimates and web searches, context share on the project page, a session's peak context on the Logs page, Claude Code's skill-list budget, and a Health check for configs that pin a model being retired.
+
+## Export and import
+- Settings › Export writes one file with the parts you tick: Settings, Models, Apps, Projects. Settings and models export only your changes by default, or all values (defaults included) on request; apps export only custom apps; projects export your folders. `state.json`, caches and logs are never exported, and nothing secret is ever in these files.
+- Import shows what will change first, copies the current files to `backups/`, and merges: every value in the file becomes an override (so an all-values import stops following newer defaults; the dialog says so). Project folders that do not exist here can be located or skipped. An export from a newer format is refused ("update AI Stackprint").
+- Consents (live limits, update and model-data checks) are never imported as on: they stay off until turned on on that machine.
+
 ## Workflow
 - Write changes directly to the project folder.
 - Loading: a page's controls (titles, buttons, cards) are shown at once and fade in; a card whose data is not ready shows the loading icon (shown at once), and the data fades in (`Reveal.Fade`, 180 ms) when it arrives. A refresh of data already on screen keeps it and shows the small spinner.
