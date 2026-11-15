@@ -3,8 +3,12 @@
     <Project Path="src/App/AiStackprint.App.csproj" />
     <Project Path="src/Core/AiStackprint.Core.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ModelData/ModelData.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AiStackprint.App.Tests/AiStackprint.App.Tests.csproj" />
     <Project Path="tests/AiStackprint.Core.Tests/AiStackprint.Core.Tests.csproj" />
+    <Project Path="tests/ModelData.Tests/ModelData.Tests.csproj" />
   </Folder>
 </Solution>

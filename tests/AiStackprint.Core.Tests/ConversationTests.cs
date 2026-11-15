@@ -81,9 +81,10 @@ public class ConversationTests
     }
 
     [Fact]
-    public void An_all_zero_price_counts_as_no_price()
+    public void An_empty_price_counts_as_no_price_and_zero_as_free()
     {
-        var table = new PriceFile { Models = { ["m"] = new ModelPrice() } };
-        Assert.Null(Pricing.Cost("m-1", 100, 100, 0, 0, table));
+        var table = new ModelTable { Models = { ["m"] = new() { Price = new() }, ["free"] = new() { Price = new() { Input = 0, Output = 0 } } } };
+        Assert.Null(ModelCatalog.Cost("m-1", 100, 100, 0, 0, table));
+        Assert.Equal(0m, ModelCatalog.Cost("free-1", 100, 100, 0, 0, table));
     }
 }

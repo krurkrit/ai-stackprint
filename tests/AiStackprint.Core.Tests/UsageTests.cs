@@ -62,48 +62,67 @@ public class UsageTests
     [Fact]
     public void Pricing_uses_the_longest_matching_key_and_returns_null_without_a_price()
     {
-        var table = new PriceFile
-        {
-            Models = { ["claude"] = new() { Input = 1 }, ["claude-opus"] = new() { Input = 10, Output = 100, CacheRead = 1, CacheWrite = 12 } }
-        };
+        var table = Table(("claude", P(1, 0)), ("claude-opus", P(10, 100, 1, 12)));
         var b = new UsageBucket(new DateOnly(2026, 11, 11), "claude-opus-5-5", "p", 1_000_000, 500_000, 2_000_000, 100_000, 0, 1, 0);
-        Assert.Equal(10m + 50m + 2m + 1.2m, Pricing.Cost(b, table));
-        Assert.Equal(1m, Pricing.Cost(b with { Model = "claude-haiku", Input = 1_000_000, Output = 0, CacheRead = 0, CacheWrite = 0 }, table));
-        Assert.Null(Pricing.Cost(b with { Model = "other" }, table));
+        Assert.Equal(10m + 50m + 2m + 1.2m, ModelCatalog.Cost(b, table));
+        Assert.Equal(1m, ModelCatalog.Cost(b with { Model = "claude-haiku", Input = 1_000_000, Output = 0, CacheRead = 0, CacheWrite = 0 }, table));
+        Assert.Null(ModelCatalog.Cost(b with { Model = "other" }, table));
+    }
+
+    [Fact]
+    public void An_unknown_cache_price_counts_at_the_input_price_and_a_model_without_output_price_has_no_cost()
+    {
+        var table = Table(("gpt-x", P(2, 10)), ("half", new ModelPrice { Input = 1 }));
+        Assert.Equal((1_000_000m * 2 + 1_000_000m * 2) / 1_000_000m, ModelCatalog.Cost("gpt-x-1", 1_000_000, 0, 1_000_000, 0, table));
+        Assert.Null(ModelCatalog.Cost("half", 1, 1, 0, 0, table));   // unknown is not free
+        Assert.NotNull(ModelCatalog.Info("half", table));
     }
 
     [Fact]
     public void Pricing_looks_up_each_name_once_per_table_and_a_new_table_is_read_again()
     {
-        var table = new PriceFile { Models = { ["claude-opus"] = new() { Input = 10 } } };
-        var first = Pricing.For("claude-opus-5-5", table);
-        table.Models.Clear();   // a read table is not changed; this shows the second call does not scan it again
-        Assert.Same(first, Pricing.For("CLAUDE-OPUS-5-5", table));
-        Assert.Null(Pricing.For("claude-sonnet", table));   // a new name is looked up in the table as it is now
+        var table = Table(("claude-opus", P(10, 1)));
+        var first = ModelCatalog.For("claude-opus-5-5", table);
+        table.Models.Clear();   // a table is not changed once built; this shows the second call does not scan it again
+        Assert.Same(first, ModelCatalog.For("CLAUDE-OPUS-5-5", table));
+        Assert.Null(ModelCatalog.For("claude-sonnet", table));   // a new name is looked up in the table as it is now
 
-        var changed = new PriceFile { Models = { ["claude-opus"] = new() { Input = 20 } } };   // prices.json changed: a new table
-        Assert.Equal(20, Pricing.For("claude-opus-5-5", changed)!.Input);
+        var changed = Table(("claude-opus", P(20, 1)));   // the files changed: a new table
+        Assert.Equal(20, ModelCatalog.For("claude-opus-5-5", changed)!.Price!.Input);
     }
 
     [Fact]
     public void Pricing_finds_the_same_price_in_a_large_table()
     {
-        var small = new PriceFile { Models = { ["claude"] = new() { Input = 1 }, ["claude-opus-5-5"] = new() { Input = 4 }, ["gpt-6.1-sol"] = new() { Input = 2 } } };
-        var large = new PriceFile();
+        var small = Table(("claude", P(1, 1)), ("claude-opus-5-5", P(4, 1)), ("gpt-6.1-sol", P(2, 1)));
+        var large = Table();
         for (var i = 0; i < 5000; i++)
         {
-            large.Models[$"vendor{i % 7}-model-{i}"] = new() { Input = 9 };
+            large.Models[$"vendor{i % 7}-model-{i}"] = new() { Price = P(9, 9) };
         }
 
-        foreach (var (key, price) in small.Models)
+        foreach (var (key, info) in small.Models)
         {
-            large.Models[key] = price;
+            large.Models[key] = info;
         }
 
         foreach (var name in new[] { "claude-opus-5-5", "claude-opus-5-5-20261101", "us.anthropic.claude-opus-5-5-v1:0", "claude-haiku", "gpt-6.1-sol", "unknown" })
         {
-            Assert.Equal(Pricing.For(name, small)?.Input, Pricing.For(name, large)?.Input);
+            Assert.Equal(ModelCatalog.For(name, small)?.Price?.Input, ModelCatalog.For(name, large)?.Price?.Input);
         }
+    }
+
+    private static ModelPrice P(decimal input, decimal output, decimal? cacheRead = null, decimal? cacheWrite = null) =>
+        new() { Input = input, Output = output, CacheRead = cacheRead, CacheWrite = cacheWrite };
+
+    private static ModelTable Table(params (string Key, ModelPrice Price)[] models)
+    {
+        var t = new ModelTable();
+        foreach (var (key, price) in models)
+        {
+            t.Models[key] = new() { Price = price };
+        }
+        return t;
     }
 
     [Fact]

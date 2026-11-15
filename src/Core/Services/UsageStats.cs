@@ -142,7 +142,7 @@ public static class UsageStats
         foreach (var e in events)
         {
             tokens += e.Input + e.Output + e.CacheWrite; reads += e.CacheRead; n++;
-            if ((e.Cost ?? Pricing.Cost(e.Model, e.Input, e.Output, e.CacheRead, e.CacheWrite)) is { } c) { cost += c; priced = true; }
+            if ((e.Cost ?? ModelCatalog.Cost(e.Model, e.Input, e.Output, e.CacheRead, e.CacheWrite)) is { } c) { cost += c; priced = true; }
         }
         return new(tokens, reads, n, priced ? cost : null);
     }

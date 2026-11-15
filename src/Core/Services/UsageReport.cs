@@ -19,7 +19,7 @@ public record AppUsage(AppDefinition App, UsageResult Result)
         decimal? total = null;
         foreach (var b in buckets)
         {
-            if (Pricing.Cost(b) is { } c)
+            if (ModelCatalog.Cost(b) is { } c)
             {
                 total = (total ?? 0) + c;
             }

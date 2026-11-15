@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Builds default/models.json from LiteLLM's model_prices_and_context_window.json (run by .github/workflows/models.yml). Not part of the app. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>AiStackprint.ModelData</AssemblyName>
+    <RootNamespace>AiStackprint.ModelData</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

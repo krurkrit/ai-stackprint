@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\default\apps.json" LogicalName="default/apps.json" Link="default\apps.json" />   <!-- the apps AI Stackprint knows -->
+    <EmbeddedResource Include="..\..\default\models.json" LogicalName="default/models.json" Link="default\models.json" />   <!-- model sizes and prices (weekly from LiteLLM) -->
     <EmbeddedResource Include="..\..\default\settings.json" LogicalName="default/settings.json" Link="default\settings.json" />   <!-- every setting and its default -->
   </ItemGroup>
 </Project>

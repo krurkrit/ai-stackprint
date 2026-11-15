@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/krurkrit/ai-stackprint/default/models.schema.json",
+  "title": "AI Stackprint models",
+  "description": "Model context sizes, prices and retirement dates. default/models.json is generated weekly from LiteLLM by .github/workflows/models.yml (do not edit it by hand); ~/.ai-stackprint/models.json holds your changes in the same shape, every field optional.",
+  "type": "object",
+  "required": ["version", "models"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1, "description": "Format version of this file (not the app version)." },
+    "updated": { "type": "string", "format": "date", "description": "Date the data was taken (YYYY-MM-DD). Between the built-in and the downloaded copy, the newer one is used." },
+    "source": {
+      "type": "object",
+      "required": ["name", "url", "commit", "license"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "license": { "type": "string" }
+      }
+    },
+    "models": {
+      "type": "object",
+      "description": "Key = model name as the provider and the apps' logs write it. A logged name uses the longest key it contains.",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9._:@/-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/model" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "enum": ["anthropic", "openai", "gemini", "xai", "deepseek", "mistral", "custom"], "description": "custom: a model you added (your file only)." },
+        "contextWindow": { "type": "integer", "minimum": 1, "description": "Max input tokens." },
+        "maxOutput": { "type": "integer", "minimum": 1, "description": "Max output tokens per reply." },
+        "price": { "$ref": "#/$defs/price" },
+        "above": {
+          "type": "array",
+          "description": "Long-context tiers, lowest threshold first. A request whose input is over 'tokens' is priced at the tier for all of its tokens; a field the tier leaves out uses the base price.",
+          "items": { "$ref": "#/$defs/tier" }
+        },
+        "multipliers": {
+          "type": "object",
+          "description": "Price multipliers for modes the logs can show: fast (fast mode), us (US-only processing).",
+          "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]*$" },
+          "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "webSearch": { "$ref": "#/$defs/usd", "description": "USD per web search." },
+        "retires": { "type": "string", "format": "date", "description": "The provider stops serving the model on this date." },
+        "successor": { "type": "string", "description": "Suggested replacement (a key of models when known)." },
+        "retiresSource": { "type": "string", "format": "uri" },
+        "source": { "type": "string", "format": "uri", "description": "Provider page the price comes from." }
+      }
+    },
+    "price": {
+      "type": "object",
+      "description": "USD per 1,000,000 tokens. A missing field means unknown, not free; 0 means free. The generated file always has input and output.",
+      "additionalProperties": false,
+      "properties": {
+        "input": { "$ref": "#/$defs/usd" },
+        "output": { "$ref": "#/$defs/usd", "description": "Includes reasoning tokens." },
+        "cacheRead": { "$ref": "#/$defs/usd" },
+        "cacheWrite": { "$ref": "#/$defs/usd", "description": "Short cache (Anthropic: 5 minutes)." },
+        "cacheWrite1h": { "$ref": "#/$defs/usd", "description": "Anthropic 1-hour cache." }
+      }
+    },
+    "tier": {
+      "type": "object",
+      "required": ["tokens"],
+      "additionalProperties": false,
+      "properties": {
+        "tokens": { "type": "integer", "minimum": 1, "description": "Input tokens (input + cache read + cache write) of one request above which this tier applies." },
+        "input": { "$ref": "#/$defs/usd" },
+        "output": { "$ref": "#/$defs/usd" },
+        "cacheRead": { "$ref": "#/$defs/usd" },
+        "cacheWrite": { "$ref": "#/$defs/usd" },
+        "cacheWrite1h": { "$ref": "#/$defs/usd" }
+      }
+    },
+    "usd": { "type": "number", "minimum": 0 }
+  }
+}

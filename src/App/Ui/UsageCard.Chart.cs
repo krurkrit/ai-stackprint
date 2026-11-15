@@ -40,7 +40,7 @@ internal partial class UsageCard
         {
             var list = byDay.GetValueOrDefault(d) ?? [];
             long i = list.Sum(v => v.Input), o = list.Sum(v => v.Output), w = list.Sum(v => v.CacheWrite), c = list.Sum(v => v.CacheRead);
-            var money = list.Sum(v => Pricing.Cost(v) ?? 0m);
+            var money = list.Sum(v => ModelCatalog.Cost(v) ?? 0m);
             var parts = (cost ? new[] { (double)money } : [i, o, w, c]).Where((_, k) => keep[k]).ToArray();
             bars.Add((d, parts, $"{d:yyyy-MM-dd}\nInput {Fmt(i)} · Output {Fmt(o)}\n" + (writes ? $"Cache write {Fmt(w)} · " : "") + $"Cache read {Fmt(c)}" + (priced ? $"\nEst. cost {Money(money)}" : "")));
         }
@@ -114,7 +114,7 @@ internal partial class UsageCard
         decimal sum = 0; var any = false;
         foreach (var v in g)
         {
-            if (Pricing.Cost(v) is { } c) { sum += c; any = true; }
+            if (ModelCatalog.Cost(v) is { } c) { sum += c; any = true; }
         }
 
         return any ? sum : null;

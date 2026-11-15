@@ -17,9 +17,10 @@ AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAM
 - SDK: .NET 10 (LTS), pinned in `global.json`. The app version comes from git tags (MinVer); builds between tags are `<next>-alpha.0.<commits>`. Package versions are set once in `Directory.Packages.props` (exact versions; projects list packages without versions). Shared build settings: `Directory.Build.props`.
 
 ## Layout
-Large files: search them, do not read them whole: `src/App/Assets/logos.json` (57 KB) and `icons.json` (21 KB) are path data (search by name), `default/apps.json` (24 KB, search by app id), `.editorconfig` (19 KB, search by rule id), `docs/architecture.md` (read the section you need).
+Large files: search them, do not read them whole: `src/App/Assets/logos.json` (57 KB) and `icons.json` (21 KB) are path data (search by name), `default/apps.json` (24 KB, search by app id), `default/models.json` (85 KB, generated: search by model name), `.editorconfig` (19 KB, search by rule id), `docs/architecture.md` (read the section you need).
 - `src/App/AiStackprint.App.csproj` (the app, builds `AiStackprint.exe`: `Ui`, `Program.cs`, `Assets`) references `src/Core/AiStackprint.Core.csproj` (models and services, no Avalonia). Services must not depend on UI code; the build enforces it.
 - `default/apps.json`: built-in app definitions (data, embedded in Core); the user's `~/.ai-stackprint/apps.json` holds only custom apps (`custom.` ids)
+- `default/models.json`: model sizes, prices and retirement dates, generated weekly from LiteLLM by `.github/workflows/models.yml` with `tools/ModelData` (never edit it by hand; change the generator). Schema: `default/models.schema.json`. Read through `ModelCatalog`; the user's `~/.ai-stackprint/models.json` holds only their changes
 - `default/settings.json`: every setting, its default and what it means (embedded in Core); the user's `~/.ai-stackprint/settings.json` holds only changes
 - `src/App/Assets/icons.json`, `src/App/Assets/logos.json`: UI icons and app logos as path data (embedded); see `docs/architecture.md`
 - `src/Core/Models`: records and definition classes

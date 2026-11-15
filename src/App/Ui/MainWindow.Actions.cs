@@ -161,7 +161,7 @@ internal partial class MainWindow
         if (first)
         {
             UpdateView.Startup(_x);
-            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem, ProjectStore.Problem, AppCatalog.Problem })
+            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem, ProjectStore.Problem, AppCatalog.Problem, ModelCatalog.Problem })
             {
                 if (problem != null)
                 {

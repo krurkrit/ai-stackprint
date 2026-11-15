@@ -113,7 +113,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         var unpriced = new SortedSet<string>(); decimal total = 0;
         foreach (var v in b)
         {
-            if (Pricing.Cost(v) is { } c)
+            if (ModelCatalog.Cost(v) is { } c)
             {
                 total += c;
             }
@@ -146,7 +146,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         Tile("Cache read", Fmt(cr), "Input served from the cache (cheaper)");
         if (priced)
         {
-            Tile("Est. cost", Money(total), "The app's own figure where its log has one, else an estimate from prices.json");
+            Tile("Est. cost", Money(total), "The app's own figure where its log has one, else an estimate from the model data's list prices");
         }
 
         Tile("Sessions", r.Sessions.ToString("N0"));
@@ -167,7 +167,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         var notes = new StackPanel { Spacing = Space.XS };
         if (unpriced.Count > 0)
         {
-            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an empty entry for each; fill in the numbers.", TextSize.Caption, false, Muted));
+            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an entry with an empty price for each to your models.json; fill in input and output (USD per 1M tokens).", TextSize.Caption, false, Muted));
         }
 
         if (r.Capped)
@@ -185,7 +185,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", TextSize.Caption, false, Muted));
         }
 
-        var edit = Btn("Edit prices", () => { Pricing.Ensure(); Pricing.AddMissing(unpriced); PathUtil.OpenFile(Pricing.FilePath); }, false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
+        var edit = Btn("Edit prices", () => { ModelCatalog.AddMissing(unpriced); PathUtil.OpenFile(ModelCatalog.OverridesFile); }, false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
 
         return new StackPanel
         {
