@@ -49,7 +49,8 @@ internal partial class DetailPanel
         }
         else
         {
-            body = FileView.Show(file, _raw, Link, out scrolls);
+            body = FileView.Open(file, _raw, Link);
+            scrolls = false;   // the viewer scrolls by itself
         }
 
         var dock = new DockPanel();

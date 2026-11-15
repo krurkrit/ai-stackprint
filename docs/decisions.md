@@ -96,3 +96,4 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Workflow
 - Write changes directly to the project folder.
 - Loading: a page's controls (titles, buttons, cards) are shown at once and fade in; a card whose data is not ready shows the loading icon (spinner after 300 ms), and the data fades in (`Reveal.Fade`, 180 ms) when it arrives. A refresh of data already on screen keeps it and shows the small spinner.
+- Anything that reads a file or folder when you click it (a log file, a skill or plugin file, an app's log folders) reads off the UI thread: the viewer shows the loading icon, then the content fades in; a newer click cancels an older read.

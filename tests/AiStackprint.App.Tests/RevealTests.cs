@@ -58,4 +58,18 @@ public sealed class RevealTests
         Ui.WaitUntil(() => { Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return b.Opacity > 0; });   // the fade runs on the render clock
         Assert.True(b.Opacity > 0);
     }
+
+    [AvaloniaFact]
+    public void A_file_opens_in_the_background_and_shows_its_text()
+    {
+        var file = Path.Combine(Path.GetTempPath(), "reveal-" + Guid.NewGuid().ToString("N") + ".md");
+        File.WriteAllText(file, "hello from the file");
+        try
+        {
+            var w = new Window { Width = 800, Height = 600, Content = FileView.Open(file, false, _ => { }) };
+            w.Show();
+            Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.Contains("hello from the file")));
+        }
+        finally { File.Delete(file); }
+    }
 }

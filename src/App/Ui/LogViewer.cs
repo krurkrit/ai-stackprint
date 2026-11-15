@@ -95,7 +95,7 @@ internal partial class LogViewer
         var dock = new DockPanel();
         DockPanel.SetDock(head, Dock.Top);
         dock.Children.Add(head); dock.Children.Add(body);
-        Load(true);
+        LoadAsync(true);
         return Card(dock);
     }
 
@@ -180,7 +180,7 @@ internal partial class LogViewer
     {
         if (!_window)
         {
-            Load(Follow);
+            LoadAsync(Follow);
         }
     }
 
