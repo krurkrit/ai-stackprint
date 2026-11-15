@@ -7,10 +7,10 @@ using AiStackprint.Models;
 
 namespace AiStackprint.Services;
 
-/// <summary>Loads and saves <see cref="Settings"/> as settings.json in the app data folder.</summary>
+/// <summary>Loads and saves <see cref="Settings"/> as settings.json in the data folder (<see cref="DataFolder"/>).</summary>
 public static class SettingsStore
 {
-    public static string File => Path.Combine(AppCatalog.Folder, "settings.json");
+    public static string File => Path.Combine(DataFolder.Root, "settings.json");
 
     public static Settings Load(string? file = null)
     {

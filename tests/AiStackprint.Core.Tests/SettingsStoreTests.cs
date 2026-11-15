@@ -32,21 +32,3 @@ public class SettingsStoreTests
         Assert.False(SettingsStore.Load(bad).HideNotInstalled);
     }
 }
-
-public class AppCatalogTests
-{
-    [Fact]
-    public void MigrateOldFolder_moves_old_data_once_and_never_overwrites()
-    {
-        var root = Directory.CreateTempSubdirectory("aiprof-").FullName;
-        Directory.CreateDirectory(Path.Combine(root, "AiProfiler"));
-        File.WriteAllText(Path.Combine(root, "AiProfiler", "apps.json"), "[]");
-        Assert.True(AppCatalog.MigrateOldFolder(root));
-        Assert.True(File.Exists(Path.Combine(root, "AiStackprint", "apps.json")));
-        Assert.False(Directory.Exists(Path.Combine(root, "AiProfiler")));
-
-        Directory.CreateDirectory(Path.Combine(root, "AiProfiler"));      // both exist: leave both alone
-        Assert.False(AppCatalog.MigrateOldFolder(root));
-        Assert.True(Directory.Exists(Path.Combine(root, "AiProfiler")));
-    }
-}

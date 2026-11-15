@@ -2,7 +2,7 @@
 
 Three ways, easiest first.
 
-1. UI: sidebar > "+ Add app". Pick a name, category and config folder. Saved to `%APPDATA%/AiStackprint/apps.json` (macOS/Linux: the user ApplicationData folder).
+1. UI: sidebar > "+ Add app". Pick a name, category and config folder. Saved to `~/.ai-stackprint/apps.json`.
 2. Edit `apps.json` (same schema as `src/Core/Assets/apps.builtin.json`). An entry with the same `id` overrides the built-in one.
 3. Contribute a built-in: edit `src/Core/Assets/apps.builtin.json`.
 

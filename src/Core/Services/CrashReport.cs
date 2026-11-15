@@ -18,7 +18,7 @@ public static partial class CrashReport
     /// <summary>The newest entry in crash.log (heading line and stack trace); null when there is none.</summary>
     public static string? LastEntry(string? folder = null)
     {
-        var path = Path.Combine(folder ?? AppCatalog.Folder, "crash.log");
+        var path = Path.Combine(folder ?? DataFolder.Logs, "crash.log");
         try
         {
             if (!File.Exists(path))

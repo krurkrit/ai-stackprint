@@ -23,12 +23,12 @@ public class PriceFile
 }
 
 /// <summary>
-/// Cost estimates from prices.json (next to settings.json; created with a few defaults, then yours to edit).
+/// Cost estimates from prices.json (in the data folder; created with a few defaults, then yours to edit).
 /// A model gets the price of the longest key its name contains. Models without a price show tokens only.
 /// </summary>
 public static class Pricing
 {
-    public static string FilePath => Path.Combine(AppCatalog.Folder, "prices.json");
+    public static string FilePath => Path.Combine(DataFolder.Root, "prices.json");
 
     private static PriceFile? _file;
     private static DateTime _stamp, _checked;
@@ -54,7 +54,7 @@ public static class Pricing
                 return;
             }
 
-            Directory.CreateDirectory(AppCatalog.Folder);
+            Directory.CreateDirectory(DataFolder.Root);
             File.WriteAllText(FilePath, JsonSerializer.Serialize(Defaults(), AppCatalog._opt));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }

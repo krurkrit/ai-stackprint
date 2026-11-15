@@ -22,26 +22,7 @@ public static class AppCatalog
         AllowTrailingCommas = true
     };
 
-    private static string AppData => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    public static string Folder => Path.Combine(AppData, "AiStackprint");
-
-    /// <summary>
-    /// One-time move of data saved under the app's old name (AI Profiler): apps.json, settings.json, removed skills, backups.
-    /// Only when the new folder does not exist yet, so it never overwrites anything. Returns true when it moved.
-    /// </summary>
-    public static bool MigrateOldFolder(string? appData = null)
-    {
-        appData ??= AppData;
-        string old = Path.Combine(appData, "AiProfiler"), now = Path.Combine(appData, "AiStackprint");
-        if (!Directory.Exists(old) || Directory.Exists(now))
-        {
-            return false;
-        }
-
-        Directory.Move(old, now);
-        return true;
-    }
-    public static string UserFile => Path.Combine(Folder, "apps.json");
+    public static string UserFile => Path.Combine(DataFolder.Root, "apps.json");
 
     /// <summary>The built-in app definitions only (apps.builtin.json), without the user's apps.json.</summary>
     public static List<AppDefinition> BuiltIn()

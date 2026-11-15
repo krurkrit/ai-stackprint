@@ -47,8 +47,6 @@ internal partial class MainWindow : Window
             }
         }
 
-        try { AppCatalog.MigrateOldFolder(); }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // old data stays where it was; the app starts fresh
         _s.Settings = SettingsStore.Load();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };

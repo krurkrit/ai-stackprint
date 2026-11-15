@@ -29,7 +29,7 @@ public static class ScanCache
     /// <summary>The SHA-256 for this stamp, computed by <paramref name="hash"/> only when the file is new or changed.</summary>
     internal static string Hash(FileStamp key, Func<FileStamp, string> hash) => Hashes.GetOrAdd(key, k => { _dirty = true; return hash(k); });
 
-    public static string File => Path.Combine(AppCatalog.Folder, "scan-cache.json");
+    public static string File => Path.Combine(DataFolder.Cache, "scan-cache.json");
 
     private sealed record Entry(string P, long S, long T, string[]? R, string? H);
 

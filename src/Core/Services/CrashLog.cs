@@ -4,13 +4,13 @@
 namespace AiStackprint.Services;
 
 /// <summary>
-/// Writes errors that would close the app (and errors in background work nobody waited for) to crash.log next to settings.json,
+/// Writes errors that would close the app (and errors in background work nobody waited for) to logs/crash.log in the data folder,
 /// so a crash can be investigated. It only records: the app still closes as before. Kept under 256 KB.
 /// </summary>
 public static class CrashLog
 {
     private const long MaxBytes = 256 * 1024;
-    public static string File => Path.Combine(AppCatalog.Folder, "crash.log");
+    public static string File => Path.Combine(DataFolder.Logs, "crash.log");
 
     public static void Install()
     {
@@ -21,7 +21,7 @@ public static class CrashLog
     /// <param name="folder">Where crash.log goes; the app data folder when null.</param>
     public static void Write(string what, Exception? e, string? folder = null)
     {
-        folder ??= AppCatalog.Folder;
+        folder ??= DataFolder.Logs;
         try
         {
             Directory.CreateDirectory(folder);
@@ -39,7 +39,7 @@ public static class CrashLog
     /// <summary>True once after crash.log gained an entry the user has not been told about.</summary>
     public static bool TakeNew(string? folder = null)
     {
-        folder ??= AppCatalog.Folder;
+        folder ??= DataFolder.Logs;
         string log = Path.Combine(folder, "crash.log"), seen = Path.Combine(folder, "crash.seen");
         try
         {

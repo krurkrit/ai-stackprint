@@ -13,7 +13,7 @@ public class FileChangedException(string path) : IOException($"{Path.GetFileName
 public static class ConfigEditor
 {
     public const long MaxEditBytes = 2 * 1024 * 1024;
-    public static string BackupRoot => Path.Combine(AppCatalog.Folder, "backups");
+    public static string BackupRoot => DataFolder.ConfigBackups;
 
     public record Stamp(DateTime Modified, long Length);
 

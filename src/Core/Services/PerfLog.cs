@@ -22,8 +22,8 @@ public static class PerfLog
     public const string Header = "at,version,page,build_ms,ready_ms,cpu_ms,heap_mb,working_set_mb";
     private static readonly CultureInfo _inv = CultureInfo.InvariantCulture;
 
-    public static string File => Path.Combine(AppCatalog.Folder, "perf.log");
-    public static string Report => Path.Combine(AppCatalog.Folder, "perf-report.txt");
+    public static string File => Path.Combine(DataFolder.Logs, "perf.log");
+    public static string Report => Path.Combine(DataFolder.Logs, "perf-report.txt");
 
     /// <summary>
     /// The process now: CPU time used so far, managed heap and working set in MB. <paramref name="live"/>: collect first, so the heap is what is still held

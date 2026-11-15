@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class SkillManager
 {
-    public static string BackupRoot => Path.Combine(AppCatalog.Folder, "removed");
+    public static string BackupRoot => DataFolder.SkillBackups;
 
     /// <summary>Folder that receives new skills for an app at a level, or null when the app has no folder-style skills root there.</summary>
     public static string? TargetRoot(AppDefinition d, string level, string? project)

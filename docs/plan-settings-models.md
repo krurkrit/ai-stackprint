@@ -15,7 +15,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - `Pricing.For` scans every key, builds a LINQ chain and checks the file date on each call; `UsageStats` calls it per event. Cache the result per logged name (`Dictionary<string, ModelPrice?>`, exact match first), cleared when the price data changes.
 - Tests: same costs as before; a repeated name does not scan again; 5,000-entry table gives the same result as a small one.
 
-## Phase 2 — User folder `~/.ai-stackprint`
+## Phase 2 — User folder `~/.ai-stackprint` (done: files are copied one by one and never over an existing file, so a crash.log written before the move cannot block it; removed skills go to `backups/skills/`, config backups to `backups/configs/`)
 - One `DataFolder` (replaces `AppCatalog.Folder`) with `cache/`, `logs/`, `backups/`. Move scan-cache.json and last-scan.json to `cache/`, crash.log, crash.seen, perf.log and perf-report.txt to `logs/`.
 - First start: if `~/.ai-stackprint` does not exist and `%APPDATA%/AiStackprint` (or the macOS/Linux equivalent) does, move the files, leave `MOVED.txt` there. A failed move copies nothing half-way: it falls back to reading the old folder and says so once.
 - Tests (temp home): move, nothing to move, a partly present new folder, read-only old folder.

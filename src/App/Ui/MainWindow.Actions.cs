@@ -177,6 +177,10 @@ internal partial class MainWindow
         if (first)
         {
             UpdateView.Startup(_x);
+            if (DataFolder.MoveProblem is { } problem)
+            {
+                Toast.Show(problem, "warning", 10);
+            }
         }
 
         if (first && CrashLog.TakeNew())

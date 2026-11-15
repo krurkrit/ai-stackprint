@@ -17,10 +17,10 @@ public record Change(string What, string Kind, string Name, string App, string P
 /// <param name="Since">When the scan compared against was taken; null on the first run.</param>
 public record ScanChanges(List<Change> Changes, DateTime? Since);
 
-/// <summary>Skills, plugins and config files added, removed or edited since the scan before. The last scan is saved next to settings.json.</summary>
+/// <summary>Skills, plugins and config files added, removed or edited since the scan before. The last scan is saved in the data folder's cache.</summary>
 public static class ScanDiff
 {
-    public static string File => Path.Combine(AppCatalog.Folder, "last-scan.json");
+    public static string File => Path.Combine(DataFolder.Cache, "last-scan.json");
 
     // "Stamp" in last-scan.json. Hash: fingerprint of a skill, plugin or MCP server definition (never its content); null in older files = unknown
     private sealed record Entry(string Kind, string Name, string App, string Path, [property: System.Text.Json.Serialization.JsonPropertyName("Stamp")] long Ticks, string? Hash = null, string? Version = null);
