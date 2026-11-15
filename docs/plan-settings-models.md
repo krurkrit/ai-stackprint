@@ -11,7 +11,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
    - Claude Code, per reply (`message.usage`): `input_tokens` + `cache_read_input_tokens` + `cache_creation_input_tokens` (the request's input size, for tiers), `cache_creation.ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens` (which cache), `speed` (`standard` / `fast`), `inference_geo` (US-only processing), `service_tier`, `server_tool_use.web_search_requests`.
    - Codex, per `token_count` event: `last_token_usage` (input, cached input, cache write, output, reasoning) for the 272K tier, and `model_context_window` (the window, straight from the log).
 
-## Phase 1 — Price lookup cached per model name
+## Phase 1 — Price lookup cached per model name (done)
 - `Pricing.For` scans every key, builds a LINQ chain and checks the file date on each call; `UsageStats` calls it per event. Cache the result per logged name (`Dictionary<string, ModelPrice?>`, exact match first), cleared when the price data changes.
 - Tests: same costs as before; a repeated name does not scan again; 5,000-entry table gives the same result as a small one.
 

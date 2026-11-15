@@ -73,6 +73,40 @@ public class UsageTests
     }
 
     [Fact]
+    public void Pricing_looks_up_each_name_once_per_table_and_a_new_table_is_read_again()
+    {
+        var table = new PriceFile { Models = { ["claude-opus"] = new() { Input = 10 } } };
+        var first = Pricing.For("claude-opus-5-5", table);
+        table.Models.Clear();   // a read table is not changed; this shows the second call does not scan it again
+        Assert.Same(first, Pricing.For("CLAUDE-OPUS-5-5", table));
+        Assert.Null(Pricing.For("claude-sonnet", table));   // a new name is looked up in the table as it is now
+
+        var changed = new PriceFile { Models = { ["claude-opus"] = new() { Input = 20 } } };   // prices.json changed: a new table
+        Assert.Equal(20, Pricing.For("claude-opus-5-5", changed)!.Input);
+    }
+
+    [Fact]
+    public void Pricing_finds_the_same_price_in_a_large_table()
+    {
+        var small = new PriceFile { Models = { ["claude"] = new() { Input = 1 }, ["claude-opus-5-5"] = new() { Input = 4 }, ["gpt-6.1-sol"] = new() { Input = 2 } } };
+        var large = new PriceFile();
+        for (var i = 0; i < 5000; i++)
+        {
+            large.Models[$"vendor{i % 7}-model-{i}"] = new() { Input = 9 };
+        }
+
+        foreach (var (key, price) in small.Models)
+        {
+            large.Models[key] = price;
+        }
+
+        foreach (var name in new[] { "claude-opus-5-5", "claude-opus-5-5-20261101", "us.anthropic.claude-opus-5-5-v1:0", "claude-haiku", "gpt-6.1-sol", "unknown" })
+        {
+            Assert.Equal(Pricing.For(name, small)?.Input, Pricing.For(name, large)?.Input);
+        }
+    }
+
+    [Fact]
     public void Compute_buckets_per_day_and_respects_the_start_day()
     {
         var dir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "usage-" + Guid.NewGuid().ToString("N"))).FullName;

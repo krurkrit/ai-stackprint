@@ -1,6 +1,8 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace AiStackprint.Services;
@@ -83,10 +85,33 @@ public static class Pricing
         }
     }
 
-    public static ModelPrice? For(string model, PriceFile? table = null) =>
-        (table ?? Load()).Models.Where(kv => kv.Key.Length > 0 && model.Contains(kv.Key, StringComparison.OrdinalIgnoreCase)
-                && kv.Value.Input + kv.Value.Output + kv.Value.CacheRead + kv.Value.CacheWrite > 0)   // an all-zero entry is a placeholder to fill in
-            .OrderByDescending(kv => kv.Key.Length).Select(kv => kv.Value).FirstOrDefault();
+    /// <summary>
+    /// The price for a model name: the longest key it contains. Each name is looked up once per table (costs are asked for every
+    /// usage event, and a log holds a handful of names); a table is not changed once read: a changed prices.json is a new table.
+    /// </summary>
+    public static ModelPrice? For(string model, PriceFile? table = null)
+    {
+        var t = table ?? Load();
+        return _found.GetValue(t, static _ => new(StringComparer.OrdinalIgnoreCase)).GetOrAdd(model, Find, t);
+    }
+
+    private static readonly ConditionalWeakTable<PriceFile, ConcurrentDictionary<string, ModelPrice?>> _found = [];
+
+    private static ModelPrice? Find(string model, PriceFile table)
+    {
+        ModelPrice? best = null;
+        var length = 0;
+        foreach (var (key, price) in table.Models)
+        {
+            if (key.Length > length && price.Input + price.Output + price.CacheRead + price.CacheWrite > 0   // an all-zero entry is a placeholder to fill in
+                && model.Contains(key, StringComparison.OrdinalIgnoreCase))
+            {
+                best = price;
+                length = key.Length;
+            }
+        }
+        return best;
+    }
 
     /// <summary>USD for a bucket: the app's own figure when it recorded one, else the estimate; null when neither.</summary>
     public static decimal? Cost(UsageBucket b, PriceFile? table = null) => b.Cost ?? Cost(b.Model, b.Input, b.Output, b.CacheRead, b.CacheWrite, table);
