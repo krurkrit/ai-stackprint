@@ -27,5 +27,5 @@
   // Network (each is off until you turn it on)
   "limitsEnabled": [],               // app ids whose saved sign-in may be used to ask for live limits
   "limitsRefreshMinutes": 1,         // at most one call per app per this many minutes (at least 1)
-  "checkUpdates": false              // ask GitHub for the latest release at most once a day
+  "checkUpdates": false              // ask GitHub for the latest release and the model data at most once a day
 }

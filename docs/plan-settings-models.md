@@ -45,7 +45,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - The app: `ModelCatalog` replaces `Pricing`: built-in `default/models.json`, then the downloaded copy (newer `updated` wins), then `~/.ai-stackprint/models.json` overrides per field; longest-key lookup with the per-name cache from phase 1. `prices.json` goes: its non-zero entries that differ from the old defaults become overrides; zero placeholders are dropped. "Edit prices" links to the Models page (phase 8); until then it opens the overrides file.
 - Tests: generator on a trimmed LiteLLM sample (filtering, prefix, duplicates, units, tiers, checks); catalog layering and lookup; prices.json migration.
 
-## Phase 7 — Model data download in the app
+## Phase 7 — Model data download in the app (done; the setting key stays `checkUpdates` (no new format version), only its label changed; Settings has its own "Check model data now" beside the release check; a failed check also waits a day, like the release check)
 - `ModelDataUpdate` (Core): only when the update switch is on (renamed "Check GitHub for updates and model data") or on Check now; at most once a day; GET `api.github.com/repos/krurkrit/ai-stackprint/contents/default/models.json` (raw), `If-None-Match`, 10 s timeout; validate (version, schema basics, not empty) before saving to `cache/models.json`; keep the last good copy on any failure.
 - Settings shows the data date, last check and its result, Check now (with `Busy`). Usage page notes data over 60 days old.
 - `AGENTS.md` rule next to the update check: off until turned on, once a day, only api.github.com, nothing about the user sent.

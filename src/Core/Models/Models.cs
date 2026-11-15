@@ -167,6 +167,9 @@ public class UiState
     public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
     public DateTime? UpdateCheckedUtc { get; set; }     // last successful update check
     public string? UpdateDismissed { get; set; }        // "Later" on this version: no notice until a newer one
+    public DateTime? ModelDataCheckedUtc { get; set; }  // last model data check, whatever its result
+    public string? ModelDataEtag { get; set; }          // GitHub's ETag of the copy in cache/models.json (If-None-Match)
+    public string? ModelDataResult { get; set; }        // what the last check found, as shown in Settings
 }
 
 /// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>

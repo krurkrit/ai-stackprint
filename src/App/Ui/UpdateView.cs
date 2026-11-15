@@ -12,14 +12,14 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Settings › Updates (switch, Check now) and the "new version" notice. The check itself is <see cref="UpdateCheck"/> in Core.</summary>
-internal static class UpdateView
+internal static partial class UpdateView
 {
     private static Border? _notice;
 
     public static Control Settings(Ctx x)
     {
         var st = x.S.Settings;
-        var daily = new ToggleSwitch { IsChecked = st.CheckUpdates, OnContent = "Check once a day", OffContent = "Check once a day" };
+        var daily = new ToggleSwitch { IsChecked = st.CheckUpdates, OnContent = "Check GitHub for updates and model data once a day", OffContent = "Check GitHub for updates and model data once a day" };
         daily.IsCheckedChanged += (_, _) =>
         {
             st.CheckUpdates = daily.IsChecked == true;
@@ -35,10 +35,11 @@ internal static class UpdateView
             Spacing = Space.L,
             Children =
             {
-                Txt($"This is version {UpdateCheck.Label}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo}; nothing about you or this computer is sent. " +
-                    "Off until you turn it on. New versions are downloaded from the release page, not by this app.", TextSize.Small, false, Muted),
+                Txt($"This is version {UpdateCheck.Label}. A check asks {UpdateCheck.Host} for the latest release of {UpdateCheck.Repo} and for its model data (sizes and prices of AI models); nothing about you or this computer is sent. " +
+                    "Off until you turn it on. New versions are downloaded from the release page, not by this app; the model data is saved for you alone.", TextSize.Small, false, Muted),
                 daily,
-                Row(Btn("Check now", () => CheckNow(x, result), false, "arrow_sync"), result)
+                Row(Btn("Check now", () => CheckNow(x, result), false, "arrow_sync"), result),
+                ModelData(x)
             }
         });
     }
@@ -47,7 +48,17 @@ internal static class UpdateView
     public static async void Startup(Ctx x)
     {
         var st = x.S.Settings;
-        if (!st.CheckUpdates || !UpdateCheck.Due(x.S.State.UpdateCheckedUtc, DateTime.UtcNow))
+        if (!st.CheckUpdates)
+        {
+            return;
+        }
+
+        if (UpdateCheck.Due(x.S.State.ModelDataCheckedUtc, DateTime.UtcNow))
+        {
+            await FetchModelData(x);
+        }
+
+        if (!UpdateCheck.Due(x.S.State.UpdateCheckedUtc, DateTime.UtcNow))
         {
             return;
         }

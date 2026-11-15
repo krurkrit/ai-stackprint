@@ -110,7 +110,11 @@ internal class UsageView(Ctx x)
             .OrderByDescending(m => m.Tok).Take(10)
             .Select(m => new TableRow([Txt(m.Name, TextSize.Small, true), Txt(UsageCard.Fmt(m.Tok), TextSize.Small), Txt(UsageCard.Fmt(m.Read), TextSize.Small), Txt(m.Cost is { } v ? UsageCard.Money(v) : "–", TextSize.Small)]));
 
-        var note = Txt("Tokens are input, output and cache writes; cache reads are counted apart. Models without a price are left out of the cost.", TextSize.Caption, false, Muted);
+        var data = ModelCatalog.Load().Updated;
+        var stale = ModelDataUpdate.Stale(data, DateTime.UtcNow)
+            ? $" Prices are from model data of {data}, over {ModelDataUpdate.StaleAfter.Days} days old: turn on Settings › Updates, or update AI Stackprint, for newer prices."
+            : "";
+        var note = Txt("Tokens are input, output and cache writes; cache reads are counted apart. Models without a price are left out of the cost." + stale, TextSize.Caption, false, Muted);
         return new StackPanel
         {
             Spacing = Space.XL,
