@@ -4,14 +4,16 @@
 using AiStackprint.Services;
 using AiStackprint.Ui;
 
+using Avalonia.Headless.XUnit;
+
 using Xunit;
 
 namespace AiStackprint.App.Tests;
 
-/// <summary>Theme colors meet WCAG contrast (needs the app: Theme uses Avalonia colors).</summary>
+/// <summary>Theme colors meet WCAG contrast (needs the app: Theme uses Avalonia colors, so the tests run on the headless UI thread like the others; a plain test on another thread made Avalonia's render loop belong to that thread, and the next UI test failed to start).</summary>
 public class ThemeTests
 {
-    [Theory]
+    [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
     public void Status_colors_read_on_both_backgrounds(bool dark)
@@ -26,7 +28,7 @@ public class ThemeTests
         }
     }
 
-    [Theory]
+    [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
     public void Chart_colors_show_on_the_card(bool dark)
