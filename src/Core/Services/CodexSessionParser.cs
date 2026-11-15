@@ -10,7 +10,7 @@ internal class CodexSessionParser : ILogParser
 {
     public string Format => "codex-session";
 
-    public Session Parse(IEnumerable<string> lines)
+    public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0;
         foreach (var e in LogParsers.Json(lines))
@@ -60,8 +60,37 @@ internal class CodexSessionParser : ILogParser
         return LogParsers.Build(list, models, inTok, outTok);
     }
 
+    /// <summary>The steps <see cref="Parse"/> would make, only counted: tool output is not copied or checked. Codex has no sub-agent steps.</summary>
+    public SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines)
+    {
+        int prompts = 0, calls = 0; long inTok = 0, outTok = 0;
+        var models = new HashSet<string>(); var tools = new Dictionary<string, int>();
+        foreach (var e in LogParsers.Json(lines))
+        {
+            var p = e.Get("payload");
+            if (e.Is("type", "turn_context") && p.Str("model") is { Length: > 0 } model)
+            {
+                models.Add(model);
+            }
+            else if (e.Is("type", "event_msg") && p.Is("type", "token_count") && p.Get("info").Get("total_token_usage") is { ValueKind: JsonValueKind.Object } total)
+            {
+                inTok = total.Num("input_tokens"); outTok = total.Num("output_tokens");
+            }
+            else if (e.Is("type", "response_item") && p.Is("type", "message") && p.Str("role") is not ("assistant" or "developer" or "system"))
+            {
+                var text = LogParsers.Text(p.Get("content")).TrimStart();
+                prompts += text != "" && !text.StartsWith("<environment_context>") && !text.StartsWith("<user_instructions>") ? 1 : 0;
+            }
+            else if (e.Is("type", "response_item") && (p.Is("type", "function_call") || p.Is("type", "custom_tool_call")))
+            {
+                calls++; var name = p.Str("name"); tools[name] = tools.GetValueOrDefault(name) + 1;
+            }
+        }
+        return new(prompts, calls, 0, inTok, outTok, tools, models);
+    }
+
     /// <summary>Token counts are running totals: each event is the difference from the one before. Cached input is part of input, so it is split out.</summary>
-    public IEnumerable<UsageEvent> Usage(IEnumerable<string> lines)
+    public IEnumerable<UsageEvent> Usage(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         string model = "", project = "";
         long pIn = 0, pOut = 0, pCache = 0, pReason = 0, pWrite = 0;
@@ -110,7 +139,7 @@ internal class CodexSessionParser : ILogParser
     }
 
     /// <summary>The 5-hour ("primary") and weekly ("secondary") limit readings in token_count events: used percent and when the window resets.</summary>
-    public IEnumerable<LimitSample> Limits(IEnumerable<string> lines)
+    public IEnumerable<LimitSample> Limits(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         foreach (var e in LogParsers.Json(lines, "token_count"))
         {

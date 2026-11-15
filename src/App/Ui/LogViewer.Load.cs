@@ -66,7 +66,7 @@ internal partial class LogViewer
             var truncated = size > (readable ? ReadableBytes : RawBytes);
             if (readable)
             {
-                return new FileRead(LogParsers.Find(f.Format)!.Parse(LogReader.Lines(f.Path, ReadableBytes)), "", 1, size, truncated, null);
+                return new FileRead(LogParsers.Find(f.Format)!.Parse(LogReader.Utf8Lines(f.Path, ReadableBytes)), "", 1, size, truncated, null);
             }
 
             var text = LogReader.Tail(f.Path, RawBytes).Text;

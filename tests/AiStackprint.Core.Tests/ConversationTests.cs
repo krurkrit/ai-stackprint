@@ -73,10 +73,10 @@ public class ConversationTests
             """{"timestamp":"2026-11-11T05:00:00Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"cached_input_tokens":40,"cache_write_input_tokens":10,"output_tokens":5,"reasoning_output_tokens":0}},"rate_limits":{"primary":{"used_percent":12.5,"window_minutes":300,"resets_at":1794000000},"secondary":{"used_percent":3,"window_minutes":10080,"resets_at":1794500000}}}}"""
         };
         var p = LogParsers.Find("codex-session")!;
-        var l = p.Limits(lines).ToList();
+        var l = p.Limits(LogReader.Utf8(lines)).ToList();
         Assert.Equal(["5-hour", "Weekly"], l.Select(v => v.Name));
         Assert.Equal(12.5, l[0].UsedPercent);
-        var u = p.Usage(lines).Single();
+        var u = p.Usage(LogReader.Utf8(lines)).Single();
         Assert.Equal((50L, 40L, 10L), (u.Input, u.CacheRead, u.CacheWrite));
     }
 

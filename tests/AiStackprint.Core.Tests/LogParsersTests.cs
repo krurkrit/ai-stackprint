@@ -21,7 +21,7 @@ public class LogParsersTests
             """{"type":"file-history-snapshot"}""",
             "not json"
         };
-        var s = LogParsers.Find("claude-session")!.Parse(lines);
+        var s = LogParsers.Find("claude-session")!.Parse(LogReader.Utf8(lines));
         Assert.Equal(["user", "thinking", "assistant", "tool", "result", "assistant"], s.Entries.Select(e => e.Role));
         Assert.Equal("Bash", s.Entries[3].Tool);
         Assert.Equal("dotnet build", s.Entries[3].Text);
@@ -46,7 +46,7 @@ public class LogParsersTests
             """{"timestamp":"2026-11-11T05:00:05Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":80,"output_tokens":9}}}}""",
             """{"timestamp":"2026-11-11T05:00:06Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"One file."}]}}"""
         };
-        var s = LogParsers.Find("codex-session")!.Parse(lines);
+        var s = LogParsers.Find("codex-session")!.Parse(LogReader.Utf8(lines));
         Assert.Equal(["system", "user", "tool", "result", "assistant"], s.Entries.Select(e => e.Role));
         Assert.Equal("bash -lc ls", s.Entries[2].Text);
         Assert.Equal(80, s.InputTokens);
@@ -66,7 +66,7 @@ public class LogParserHintsTests
             """{"type":"assistant","message":{"content":[{"type":"tool_use","id":"t1","name":"Read","input":{"file_path":"src/App.cs"}},{"type":"tool_use","id":"t2","name":"Bash","input":{"command":"dotnet build\necho done"}}]}}""",
             """{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"class App {}"},{"type":"tool_result","tool_use_id":"t2","content":"{\"ok\":true}"}]}}"""
         };
-        var e = LogParsers.Find("claude-session")!.Parse(lines).Entries;
+        var e = LogParsers.Find("claude-session")!.Parse(LogReader.Utf8(lines)).Entries;
         Assert.Equal(".json", e[0].Lang);
         Assert.Contains("src/App.cs", e[0].Detail!);
         Assert.Equal(".sh", e[1].Lang);

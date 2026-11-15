@@ -24,7 +24,7 @@ public class UsageTests
     [Fact]
     public void Claude_usage_counts_a_streamed_message_once_and_reads_cache_tokens()
     {
-        var events = LogParsers.Find("claude-session")!.Usage(_claudeLines).ToList();
+        var events = LogParsers.Find("claude-session")!.Usage(LogReader.Utf8(_claudeLines)).ToList();
         Assert.Equal(2, events.Count);
         var a = events[0];
         Assert.Equal(("claude-opus-5-5", "app-one", 10L, 20L, 1000L, 300L, false), (a.Model, a.Project, a.Input, a.Output, a.CacheRead, a.CacheWrite, a.SubAgent));
@@ -35,7 +35,7 @@ public class UsageTests
     [Fact]
     public void Claude_session_tokens_do_not_double_count_a_streamed_message()
     {
-        var s = LogParsers.Find("claude-session")!.Parse(_claudeLines);
+        var s = LogParsers.Find("claude-session")!.Parse(LogReader.Utf8(_claudeLines));
         Assert.Equal(20, s.InputTokens);    // m1 once (10) + m2 (1) + m3 (9)
         Assert.Equal(31, s.OutputTokens);   // 20 + 2 + 9
     }
@@ -52,7 +52,7 @@ public class UsageTests
             """{"timestamp":"2026-11-11T05:00:04Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"cached_input_tokens":60,"output_tokens":10,"reasoning_output_tokens":4}}}}""",
             """{"timestamp":"2026-11-11T05:00:05Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":250,"cached_input_tokens":200,"output_tokens":30,"reasoning_output_tokens":9}}}}"""
         };
-        var e = LogParsers.Find("codex-session")!.Usage(lines).ToList();
+        var e = LogParsers.Find("codex-session")!.Usage(LogReader.Utf8(lines)).ToList();
         Assert.Equal(2, e.Count);
         Assert.Equal((40L, 10L, 60L, 4L), (e[0].Input, e[0].Output, e[0].CacheRead, e[0].Reasoning));
         Assert.Equal((10L, 20L, 140L, 5L), (e[1].Input, e[1].Output, e[1].CacheRead, e[1].Reasoning));

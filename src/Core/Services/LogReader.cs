@@ -136,6 +136,66 @@ public static class LogReader
         }
     }
 
+    /// <summary>
+    /// UTF-8 lines of a file from the last <paramref name="maxBytes"/> (starting at a whole line), not decoded to text: JSON lines are parsed
+    /// straight from these bytes, about twice as fast as through strings. Each line is valid only until the next one is read.
+    /// </summary>
+    public static IEnumerable<ReadOnlyMemory<byte>> Utf8Lines(string path, long maxBytes)
+    {
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1, FileOptions.SequentialScan);
+        var partial = fs.Length > maxBytes;   // the first line read is cut off: drop it
+        if (partial)
+        {
+            fs.Seek(fs.Length - maxBytes, SeekOrigin.Begin);
+        }
+
+        var buf = new byte[1 << 15]; var len = 0; var first = !partial;
+        while (true)
+        {
+            if (len == buf.Length)
+            {
+                Array.Resize(ref buf, buf.Length * 2);   // a line longer than the buffer
+            }
+
+            var read = fs.Read(buf, len, buf.Length - len);
+            var end = len + read; var start = 0;
+            if (first && end >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF)
+            {
+                start = 3;   // byte order mark
+            }
+
+            first = false;
+            if (read == 0)
+            {
+                if (end > start && !partial)
+                {
+                    yield return Line(buf, start, end);   // the last line has no line break
+                }
+
+                yield break;
+            }
+
+            int nl;
+            while ((nl = Array.IndexOf(buf, (byte)'\n', start, end - start)) >= 0)
+            {
+                if (!partial)
+                {
+                    yield return Line(buf, start, nl);
+                }
+
+                partial = false; start = nl + 1;
+            }
+
+            len = end - start;
+            Buffer.BlockCopy(buf, start, buf, 0, len);
+        }
+
+        static ReadOnlyMemory<byte> Line(byte[] buf, int start, int end) => buf.AsMemory(start, end > start && buf[end - 1] == '\r' ? end - start - 1 : end - start);
+    }
+
+    /// <summary>Text lines as UTF-8, for parsers fed from memory (tests, pasted text).</summary>
+    public static IEnumerable<ReadOnlyMemory<byte>> Utf8(IEnumerable<string> lines) => lines.Select(l => (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(l));
+
     /// <summary>Lines containing <paramref name="filter"/> (case-insensitive); all lines when empty.</summary>
     public static string Filter(string text, string filter) =>
         filter.Length == 0 ? text : string.Join('\n', text.Split('\n').Where(l => l.Contains(filter, StringComparison.OrdinalIgnoreCase)));

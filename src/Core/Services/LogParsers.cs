@@ -13,23 +13,34 @@ public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, 
 
 public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End);
 
+/// <summary>A session's counts for the Logs summary: prompts (user steps), tool calls, sub-agent steps, tokens, calls per tool, models.</summary>
+public sealed record SessionCounts(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, HashSet<string> Models)
+{
+    public static SessionCounts Of(Session s) => new(
+        s.Entries.Count(e => e.Role == "user"), s.Entries.Count(e => e.Role == "tool"), s.Entries.Count(e => e.SubAgent), s.InputTokens, s.OutputTokens,
+        s.Entries.Where(e => e.Role == "tool" && e.Tool != null).GroupBy(e => e.Tool!).ToDictionary(g => g.Key, g => g.Count()), s.Models);
+}
+
 /// <summary>Turns a session log (JSON lines) into readable steps. To support a new format: add a class and list it in LogParsers.All.</summary>
 public interface ILogParser
 {
     string Format { get; }
-    Session Parse(IEnumerable<string> lines);
+    Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines);
+
+    /// <summary>The same counts <see cref="SessionCounts.Of"/> gives for <see cref="Parse"/>, without building the steps' text: a format may count more cheaply.</summary>
+    SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines) => SessionCounts.Of(Parse(lines));
 
     /// <summary>Billed responses in the session (for the Usage card). Formats without usage data return nothing.</summary>
-    IEnumerable<UsageEvent> Usage(IEnumerable<string> lines) => [];
+    IEnumerable<UsageEvent> Usage(IEnumerable<ReadOnlyMemory<byte>> lines) => [];
 
     /// <summary>Usage of one file. Line formats read its newest <see cref="LogSummary.SessionBytes"/>; a database reads it whole.</summary>
-    IEnumerable<UsageEvent> UsageFile(string path) => Usage(LogReader.Lines(path, LogSummary.SessionBytes));
+    IEnumerable<UsageEvent> UsageFile(string path) => Usage(LogReader.Utf8Lines(path, LogSummary.SessionBytes));
 
     /// <summary>True when <see cref="UsageFile"/> reads the whole file itself (a database): no size cap, no limit readings.</summary>
     bool WholeFile => false;
 
     /// <summary>Usage-limit readings the app wrote into the log (used % per window, reset time). Formats without them return nothing.</summary>
-    IEnumerable<LimitSample> Limits(IEnumerable<string> lines) => [];
+    IEnumerable<LimitSample> Limits(IEnumerable<ReadOnlyMemory<byte>> lines) => [];
 }
 
 public static class LogParsers
@@ -40,24 +51,44 @@ public static class LogParsers
     /// <summary>
     /// Each line as JSON; lines that are not JSON (or cut off) are skipped, and so are lines without any of <paramref name="needs"/> (when given):
     /// a plain text search is far cheaper than parsing the large lines that cannot matter.
+    /// Each element is valid only until the loop moves to the next line (its document is then returned to the pool): read what you need, keep no element.
     /// </summary>
-    internal static IEnumerable<JsonElement> Json(IEnumerable<string> lines, params string[] needs)
+    internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, params string[] needs)
     {
+        var keys = needs.Select(System.Text.Encoding.UTF8.GetBytes).ToArray();
         foreach (var l in lines)
         {
-            if (string.IsNullOrWhiteSpace(l) || (needs.Length > 0 && !needs.Any(n => l.Contains(n, StringComparison.Ordinal))))
+            if (l.Span.IndexOfAnyExcept(" \t\r"u8) < 0 || (keys.Length > 0 && !Any(l.Span, keys)))
             {
                 continue;
             }
 
-            JsonElement e;
-            try { using var d = JsonDocument.Parse(l); e = d.RootElement.Clone(); }
+            JsonDocument d;
+            try { d = JsonDocument.Parse(l); }
             catch (JsonException) { continue; }
-            yield return e;
+            using (d)
+            {
+                yield return d.RootElement;
+            }
         }
     }
 
+    private static bool Any(ReadOnlySpan<byte> line, byte[][] keys)
+    {
+        foreach (var k in keys)
+        {
+            if (line.IndexOf(k) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     internal static string Str(this JsonElement e, string k) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
+    /// <summary>True when property <paramref name="k"/> is the string <paramref name="value"/>; compared in place, no string is made.</summary>
+    internal static bool Is(this JsonElement e, string k, string value) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String && v.ValueEquals(value);
     internal static JsonElement Get(this JsonElement e, string k) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(k, out var v) ? v : default;
     internal static long Num(this JsonElement e, string k) => e.Get(k) is { ValueKind: JsonValueKind.Number } v && v.TryGetInt64(out var n) ? n : 0;
     internal static DateTime? Time(this JsonElement e) => DateTime.TryParse(e.Str("timestamp"), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var t) ? t.ToLocalTime() : null;

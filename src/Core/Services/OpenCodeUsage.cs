@@ -18,7 +18,7 @@ internal class OpenCodeUsage : ILogParser
     public bool WholeFile => true;
 
     /// <summary>Listed as a usage source only, never on the Logs page.</summary>
-    public Session Parse(IEnumerable<string> lines) => LogParsers.Build([], [], 0, 0);
+    public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines) => LogParsers.Build([], [], 0, 0);
 
     public IEnumerable<UsageEvent> UsageFile(string path)
     {

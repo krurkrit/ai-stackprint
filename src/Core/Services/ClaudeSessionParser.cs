@@ -10,7 +10,7 @@ internal class ClaudeSessionParser : ILogParser
 {
     public string Format => "claude-session";
 
-    public Session Parse(IEnumerable<string> lines)
+    public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0;
         var seen = new HashSet<string>();   // a streamed reply is written on several lines with the same id and usage: count it once
@@ -65,7 +65,56 @@ internal class ClaudeSessionParser : ILogParser
         return LogParsers.Build(list, models, inTok, outTok);
     }
 
-    public IEnumerable<UsageEvent> Usage(IEnumerable<string> lines)
+    /// <summary>The steps <see cref="Parse"/> would make, only counted: no text is copied, cut or checked for JSON.</summary>
+    public SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines)
+    {
+        int prompts = 0, calls = 0, subSteps = 0; long inTok = 0, outTok = 0;
+        var models = new HashSet<string>(); var tools = new Dictionary<string, int>(); var seen = new HashSet<string>();
+        foreach (var e in LogParsers.Json(lines))
+        {
+            var sub = e.Get("isSidechain").ValueKind == JsonValueKind.True;
+            if (e.Is("type", "summary"))
+            {
+                subSteps += sub ? 1 : 0;
+                continue;
+            }
+
+            var user = e.Is("type", "user");
+            if (!user && !e.Is("type", "assistant"))
+            {
+                continue;
+            }
+
+            var msg = e.Get("message");
+            if (msg.Str("model") is { Length: > 0 } m && m != "<synthetic>")
+            {
+                models.Add(m);
+            }
+
+            if (msg.Str("id") is not { Length: > 0 } mid || seen.Add(mid + ":" + e.Str("requestId")))
+            { inTok += msg.Get("usage").Num("input_tokens"); outTok += msg.Get("usage").Num("output_tokens"); }
+            var content = msg.Get("content");
+            var steps = 0;
+            if (content.ValueKind == JsonValueKind.String)
+            {
+                steps = 1; prompts += user ? 1 : 0;
+            }
+            else if (content.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var b in content.EnumerateArray())
+                {
+                    if (b.Is("type", "text") && !string.IsNullOrWhiteSpace(b.Str("text"))) { steps++; prompts += user ? 1 : 0; }
+                    else if (b.Is("type", "tool_use")) { steps++; calls++; var name = b.Str("name"); tools[name] = tools.GetValueOrDefault(name) + 1; }
+                    else if (b.Is("type", "thinking") || b.Is("type", "tool_result")) { steps++; }
+                }
+            }
+
+            subSteps += sub ? steps : 0;
+        }
+        return new(prompts, calls, subSteps, inTok, outTok, tools, models);
+    }
+
+    public IEnumerable<UsageEvent> Usage(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         var seen = new HashSet<string>();
         foreach (var e in LogParsers.Json(lines, "\"usage\""))   // only replies carry usage; tool results and prompts are most of the bytes

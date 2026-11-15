@@ -107,7 +107,7 @@ public static class UsageStats
         foreach (var f in withParser.Where(f => !LogParsers.Find(f.Format)!.WholeFile).OrderByDescending(f => f.Modified).Take(3))
         {
             ct.ThrowIfCancellationRequested();
-            try { limits.AddRange(LogParsers.Find(f.Format)!.Limits(LogReader.Lines(f.Path, 2 << 20))); }   // readings are near the end of a file
+            try { limits.AddRange(LogParsers.Find(f.Format)!.Limits(LogReader.Utf8Lines(f.Path, 2 << 20))); }   // readings are near the end of a file
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         }
         events.Sort((a, b) => a.Time.CompareTo(b.Time));

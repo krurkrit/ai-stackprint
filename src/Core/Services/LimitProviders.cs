@@ -168,7 +168,7 @@ public class CodexLimits : ILimitProvider
     public LimitSnapshot? FromLogs(AppDefinition d, IReadOnlyList<string> projects)
     {
         var files = LogReader.Find(d, projects).Where(f => LogParsers.Find(f.Format) != null).Take(3).ToList();
-        var samples = files.SelectMany(f => LogParsers.Find(f.Format)!.Limits(LogReader.Lines(f.Path, 2 << 20))).ToList();
+        var samples = files.SelectMany(f => LogParsers.Find(f.Format)!.Limits(LogReader.Utf8Lines(f.Path, 2 << 20))).ToList();
         if (samples.Count == 0)
         {
             return null;

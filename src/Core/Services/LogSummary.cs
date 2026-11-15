@@ -28,35 +28,25 @@ public static partial class LogSummary
     /// <summary>Only the newest part of a session file is parsed.</summary>
     public const int SessionBytes = 8 << 20;
 
-    private sealed record SessionTotals(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, List<string> Models);
-
-    private static readonly ConcurrentDictionary<(string, long, long), SessionTotals> _cache = new();
-
-    private static SessionTotals Totals(Session s) => new(
-        s.Entries.Count(e => e.Role == "user"), s.Entries.Count(e => e.Role == "tool"), s.Entries.Count(e => e.SubAgent), s.InputTokens, s.OutputTokens,
-        s.Entries.Where(e => e.Role == "tool" && e.Tool != null).GroupBy(e => e.Tool!).ToDictionary(g => g.Key, g => g.Count()), [.. s.Models]);
+    private static readonly ConcurrentDictionary<(string, long, long), SessionCounts> _cache = new();
 
     /// <param name="since">Only files modified after this time; null = all.</param>
     public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since, CancellationToken ct = default)
     {
         var files = all.Where(f => since == null || f.Modified >= since).ToList();
         int errors = 0, warnings = 0; var budget = TextBudget; var capped = false;
-        var sessions = new List<SessionTotals>();
-        foreach (var f in files.OrderByDescending(f => f.Modified))
+        if (_cache.Count > 2000)
+        {
+            _cache.Clear();
+        }
+
+        var sessions = Sessions(files, ct);
+        foreach (var f in files.Where(f => LogParsers.Find(f.Format) == null).OrderByDescending(f => f.Modified))
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                if (LogParsers.Find(f.Format) is { } parser)
-                {
-                    if (_cache.Count > 2000)
-                    {
-                        _cache.Clear();
-                    }
-
-                    sessions.Add(_cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Totals(parser.Parse(LogReader.Lines(f.Path, SessionBytes)))));
-                }
-                else if (budget - f.Size < 0)
+                if (budget - f.Size < 0)
                 {
                     capped = true;
                 }
@@ -84,5 +74,22 @@ public static partial class LogSummary
             sessions.Sum(t => t.InputTokens), sessions.Sum(t => t.OutputTokens),
             [.. sessions.SelectMany(t => t.Tools).GroupBy(t => t.Key).Select(g => (g.Key, g.Sum(t => t.Value))).OrderByDescending(t => t.Item2).Take(5)],
             [.. sessions.SelectMany(t => t.Models).Distinct().Order()]);
+    }
+
+    /// <summary>The totals of every session file, several files at once: counting is CPU-bound and the files are independent.</summary>
+    private static List<SessionCounts> Sessions(List<LogFile> files, CancellationToken ct)
+    {
+        var parsed = files.Select(f => (File: f, Parser: LogParsers.Find(f.Format))).Where(p => p.Parser != null).ToList();
+        var totals = new SessionCounts?[parsed.Count];
+        Parallel.For(0, parsed.Count, new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4) }, i =>
+        {
+            var (f, parser) = parsed[i];
+            try
+            {
+                totals[i] = _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => parser!.Count(LogReader.Utf8Lines(f.Path, SessionBytes)));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // skip files that vanished or are locked
+        });
+        return [.. totals.OfType<SessionCounts>()];
     }
 }
