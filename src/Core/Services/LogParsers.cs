@@ -11,7 +11,9 @@ namespace AiStackprint.Services;
 /// </summary>
 public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null);
 
-public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End);
+/// <param name="PeakContext">The largest request of the main conversation (input + cache read + cache write): how full its context got; 0 = unknown.</param>
+/// <param name="ContextWindow">The window the log states (Codex <c>model_context_window</c>); 0 = take it from the model data.</param>
+public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End, long PeakContext = 0, long ContextWindow = 0);
 
 /// <summary>A session's counts for the Logs summary: prompts (user steps), tool calls, sub-agent steps, tokens, calls per tool, models.</summary>
 public sealed record SessionCounts(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, HashSet<string> Models)
@@ -175,6 +177,6 @@ public static class LogParsers
     internal static string? FileHint(JsonElement input) =>
         (input.Str("file_path") is { Length: > 0 } f ? f : input.Str("path")) is { Length: > 0 } p && Path.HasExtension(p) ? Path.GetExtension(p) : null;
 
-    internal static Session Build(List<LogEntry> entries, HashSet<string> models, long input, long output) =>
-        new(entries, models, input, output, entries.FirstOrDefault(e => e.Time != null)?.Time, entries.LastOrDefault(e => e.Time != null)?.Time);
+    internal static Session Build(List<LogEntry> entries, HashSet<string> models, long input, long output, long peak = 0, long window = 0) =>
+        new(entries, models, input, output, entries.FirstOrDefault(e => e.Time != null)?.Time, entries.LastOrDefault(e => e.Time != null)?.Time, peak, window);
 }

@@ -137,7 +137,8 @@ internal partial class MainWindow
             watch.Restart();   // not the wait for the UI thread between the two
             var mcp = McpServers.Read(items); Step("mcp");
             var changes = ScanDiff.Update(items, ScanDiff.File, mcp); Step("changes");
-            var health = Health.Compute(items); Step("health");
+            var claude = defs.FirstOrDefault(d => d.Id == "claude-code") is { } cd ? UsageStats.LastModel(LogReader.Find(cd, projects, usage: true)) : null;   // its window sets the skill-list budget
+            var health = Health.Compute(items, claude); Step("health");
             var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
             Say(DashboardView.Configs);
             var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList(); Step("configs");

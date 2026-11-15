@@ -12,7 +12,7 @@ internal class ClaudeSessionParser : ILogParser
 
     public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0;
+        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0, peak = 0;
         var seen = new HashSet<string>();   // a streamed reply is written on several lines with the same id and usage: count it once
         var calls = new Dictionary<string, (string Tool, string? File)>();   // tool_use id -> name, file type it touched
         var start = 0; var agent = "";
@@ -35,7 +35,14 @@ internal class ClaudeSessionParser : ILogParser
             }
 
             if (msg.Str("id") is not { Length: > 0 } mid || seen.Add(mid + ":" + e.Str("requestId")))
-            { inTok += msg.Get("usage").Num("input_tokens"); outTok += msg.Get("usage").Num("output_tokens"); }
+            {
+                var u = msg.Get("usage");
+                inTok += u.Num("input_tokens"); outTok += u.Num("output_tokens");
+                if (!sub)
+                {
+                    peak = Math.Max(peak, u.Num("input_tokens") + u.Num("cache_read_input_tokens") + u.Num("cache_creation_input_tokens"));   // the main conversation's context
+                }
+            }
             var content = msg.Get("content");
             if (content.ValueKind == JsonValueKind.String) { list.Add(new(type, content.GetString()!, time, sub)); continue; }
             if (content.ValueKind != JsonValueKind.Array)
@@ -62,7 +69,7 @@ internal class ClaudeSessionParser : ILogParser
             }
         }
         Tag();
-        return LogParsers.Build(list, models, inTok, outTok);
+        return LogParsers.Build(list, models, inTok, outTok, peak);
     }
 
     /// <summary>The steps <see cref="Parse"/> would make, only counted: no text is copied, cut or checked for JSON.</summary>

@@ -27,7 +27,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - `state.json`: `PanelHeight`, `UpdateCheckedUtc`, `UpdateDismissed` move out of `Settings` (moved from an old settings.json on load).
 - Tests: a default is not written, a change is; a changed default reaches a file without the key; unknown keys survive; a fake v2 with an upgrade step; a newer file is not written; backup before upgrade; atomic write; old settings.json with state keys.
 
-## Phase 4 — Projects remembered (done; the dashboard has no project list, so the greyed row and bin are in the menu; a missing project reached from search or Back shows "Folder not found" with Choose new location and Remove; relocating onto a folder already listed removes the old row)
+## Phase 4 — Projects remembered (done; removing asks first, and choosing a folder already in the list shows a warning and changes nothing; the dashboard has no project list, so the greyed row and bin are in the menu; a missing project reached from search or Back shows "Folder not found" with Choose new location and Remove; relocating onto a folder already listed removes the old row)
 - `projects.json`: list of `{ path, added }`, paths under home as `~/…`. Saved on add and remove; loaded on start.
 - Missing folders: greyed in the menu and on the dashboard, with a bin icon to remove; a click on the row opens the folder picker, and the chosen folder replaces the path (same position, same added date).
 - Tests: save/load, `~` paths on each OS form, duplicates, missing folder.
@@ -56,7 +56,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - The Usage page's "no price" note and "priced as …" link here with the model selected.
 - Headless tests: list, override and reset, add model, search; design tokens.
 
-## Phase 9 — Uses of model data
+## Phase 9 — Uses of model data (done, three commits. Differences: a changed tier threshold reads every log again (the cache key holds all thresholds), not only that model's; the tier uses input + cache read + cache write for both apps, which for Codex equals `last_token_usage` (checked: 1,208 of 1,209 events); US-only is `inference_geo: us`; the model a window comes from is the one the app used last in its newest log; the skill-list budget is 1% of the window at 4 characters per token, which gives the documented 8,000 for 200K)
 - Health check: config files that pin a retiring model ("… retires 2026-11-30; use claude-sonnet-5-5"), with the source link. Reads only model names, never other values.
 - Costs: tokens are still summed per day and model, but split by every attribute that changes the price: long-context tier (from the model's thresholds when the log is read), speed (standard / fast), US-only processing, and cache kind (5-minute / 1-hour). Prices are applied when shown, so an override or a new download takes effect without reading logs again; the usage cache key includes the tier thresholds, so a changed threshold re-reads only that model's logs. Logs without these fields land in the default group (standard, global, 5-minute, below every tier), which equals today's estimate. Web searches are counted per day and model. What each attribute prices:
   - 1-hour cache writes at `cacheWrite1h` (Claude `ephemeral_1h_input_tokens`).

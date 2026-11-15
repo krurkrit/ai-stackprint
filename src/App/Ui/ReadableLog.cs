@@ -194,12 +194,31 @@ internal partial class ReadableLog
             Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
         }
 
+        if (PeakContext(s) is { } peak)
+        {
+            Add(peak);
+        }
+
         if (s.Start is { } a && s.End is { } b)
         {
             Add($"{a:yyyy-MM-dd HH:mm} – {b:HH:mm} ({((b - a).TotalMinutes < 1 ? $"{(b - a).TotalSeconds:0} s" : $"{(b - a).TotalMinutes:0} min")})");
         }
 
         return w;
+    }
+
+    /// <summary>"Peak context 312K of 1M (31%)": the largest request against the window the log states, else the model data's; null when unknown.</summary>
+    internal static string? PeakContext(Session s)
+    {
+        if (s.PeakContext <= 0)
+        {
+            return null;
+        }
+
+        var window = s.ContextWindow > 0 ? s.ContextWindow : s.Models.Select(m => ModelCatalog.Info(m)?.ContextWindow ?? 0).DefaultIfEmpty(0).Max();
+        return window > 0
+            ? $"Peak context {UsageCard.Fmt(s.PeakContext)} of {UsageCard.Fmt(window)} ({100.0 * s.PeakContext / window:0}%)"
+            : $"Peak context {UsageCard.Fmt(s.PeakContext)}";
     }
 
     /// <summary>Conversation text in the body font at the Code &amp; logs size (<paramref name="delta"/> px smaller or larger).</summary>

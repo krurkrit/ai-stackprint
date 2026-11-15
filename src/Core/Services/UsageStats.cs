@@ -148,6 +148,29 @@ public static class UsageStats
             Sum(events.Where(e => e.Time >= now.AddHours(-5))), Sum(events), blockStart, block);
     }
 
+    /// <summary>
+    /// The model the app used last: in its newest log with usage, the model with the most replies on the last day. Null when no log has usage.
+    /// Shares the per-file cache with <see cref="Compute"/>.
+    /// </summary>
+    public static string? LastModel(IReadOnlyList<LogFile> files, CancellationToken ct = default)
+    {
+        foreach (var f in files.Where(f => LogParsers.Find(f.Format) != null).OrderByDescending(f => f.Modified).Take(5))
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                var buckets = Read(f, LogParsers.Find(f.Format)!).Buckets;
+                if (buckets.Count > 0)
+                {
+                    var day = buckets.Max(b => b.Day);
+                    return buckets.Where(b => b.Day == day).GroupBy(b => b.Model).MaxBy(g => g.Sum(b => b.Messages))!.Key;
+                }
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        }
+        return null;
+    }
+
     public static WindowUse Sum(IEnumerable<UsageEvent> events)
     {
         long tokens = 0, reads = 0; var n = 0; decimal cost = 0; var priced = false;

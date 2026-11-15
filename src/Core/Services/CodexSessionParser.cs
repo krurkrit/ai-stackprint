@@ -12,7 +12,7 @@ internal class CodexSessionParser : ILogParser
 
     public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0;
+        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0, peak = 0, window = 0;
         foreach (var e in LogParsers.Json(lines))
         {
             var p = e.Get("payload"); var time = e.Time();
@@ -20,8 +20,11 @@ internal class CodexSessionParser : ILogParser
             {
                 case "turn_context" when p.Str("model") != "": models.Add(p.Str("model")); break;
                 case "event_msg" when p.Str("type") == "token_count":
-                    var total = p.Get("info").Get("total_token_usage");   // cumulative: keep the latest
+                    var info = p.Get("info");
+                    var total = info.Get("total_token_usage");   // cumulative: keep the latest
                     if (total.ValueKind == JsonValueKind.Object) { inTok = total.Num("input_tokens"); outTok = total.Num("output_tokens"); }
+                    peak = Math.Max(peak, info.Get("last_token_usage").Num("input_tokens"));   // one reply's input, cached part included
+                    window = info.Num("model_context_window") is > 0 and var w ? w : window;
                     break;
                 case "response_item":
                     switch (p.Str("type"))
@@ -57,7 +60,7 @@ internal class CodexSessionParser : ILogParser
                     break;
             }
         }
-        return LogParsers.Build(list, models, inTok, outTok);
+        return LogParsers.Build(list, models, inTok, outTok, peak, window);
     }
 
     /// <summary>The steps <see cref="Parse"/> would make, only counted: tool output is not copied or checked. Codex has no sub-agent steps.</summary>

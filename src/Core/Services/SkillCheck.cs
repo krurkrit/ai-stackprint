@@ -20,6 +20,12 @@ public static partial class SkillCheck
     /// <summary>Claude Code: the skill list's budget is 1% of the context window; this is the documented fallback.</summary>
     public const int ClaudeListingFallback = 8000;
 
+    /// <summary>
+    /// The skill list's budget in characters: 1% of the context window at about 4 characters per token (the fallback is the same 1% of a
+    /// 200K window), or the fallback when the window is unknown.
+    /// </summary>
+    public static long ClaudeListingBudget(long? window) => window is > 0 ? window.Value / 100 * 4 : ClaudeListingFallback;
+
     [GeneratedRegex("^[a-z0-9]+(-[a-z0-9]+)*$")] private static partial Regex NameRule();
 
     public static List<Finding> Check(string path, SkillDoc doc)

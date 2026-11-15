@@ -26,7 +26,8 @@ internal partial class ContextSection(Ctx x)
     public void Leave() => _host = new();
     private List<(AppDefinitionRef App, ContextReport Report)>? _last;
 
-    private sealed record AppDefinitionRef(string Id, string Name, string? Logo, string Category);
+    /// <param name="Model">The model the app used last (its newest log with usage), for the share of its context window.</param>
+    private sealed record AppDefinitionRef(string Id, string Name, string? Logo, string Category, string? Model = null);
 
     public Control Build(string project)
     {
@@ -46,7 +47,9 @@ internal partial class ContextSection(Ctx x)
         }
         else
         {
-            Busy.Into(_host, "Reading instruction files…", _ => apps.Select(a => (a, ContextBudget.Find(x.S.Def(a.Id)!.Context)!.Read(project, start, home))).ToList(),
+            var projects = x.S.Projects.ToList();
+            Busy.Into(_host, "Reading instruction files…", ct => apps.Select(a => (a with { Model = UsageStats.Supports(x.S.Def(a.Id)!) ? UsageStats.LastModel(LogReader.Find(x.S.Def(a.Id)!, projects, usage: true), ct) : null },
+                ContextBudget.Find(x.S.Def(a.Id)!.Context)!.Read(project, start, home))).ToList(),
             r => { _last = r; return Show(r); });
         }
 
@@ -106,7 +109,7 @@ internal partial class ContextSection(Ctx x)
         var launch = r.Files.Count(f => f.Load is LoadWhen.Always or LoadWhen.Imported);
         var total = r.AlwaysTotal;
         sp.Children.Add(Row(AppName(app.Logo, app.Category, app.Name, Sizes.LogoS),
-            Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens", TextSize.Small, false, Muted)));
+            Txt(r.Files.Count == 0 ? "No instruction files here" : $"{ReadableLog.Plural(launch, "file")} at launch · {total:N0} {r.Unit} · ≈{total / 4:N0} tokens{Share(total / 4, app.Model)}", TextSize.Small, false, Muted)));
         if (r.Limit is { } limit && r.Files.Count > 0)
         {
             sp.Children.Add(Bar(total, limit, r));
@@ -152,6 +155,12 @@ internal partial class ContextSection(Ctx x)
 
         return sp;
     }
+
+    /// <summary>" · 0.4% of claude-opus-5-5's 1M window", or nothing when the model or its window is unknown.</summary>
+    internal static string Share(long tokens, string? model) =>
+        model != null && ModelCatalog.Info(model)?.ContextWindow is > 0 and var window
+            ? $" · {100.0 * tokens / window:0.#}% of {model}'s {UsageCard.Fmt(window)} window"
+            : "";
 
     private static string Label(LoadWhen w) => w switch
     {
