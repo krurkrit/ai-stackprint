@@ -33,7 +33,7 @@ internal partial class LogsView(Ctx x)
 
     public Control Build(string? appId)
     {
-        if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); _fileQuery = ""; }
+        if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); _fileQuery = ""; _rows = RowsStep; }
         _app ??= Apps.FirstOrDefault(d => x.Info(d.Id)?.Installed == true)?.Id ?? Apps.FirstOrDefault()?.Id;
         var def = _app == null ? null : x.S.Def(_app);
         var loading = def != null && _filesApp != def.Id;   // when the app changes (or the page is opened) its folders are read in the background
@@ -101,7 +101,7 @@ internal partial class LogsView(Ctx x)
                 x.Go("Logs:" + _app);
             };
             var search = SearchBox("Filter files by name, type or folder").With(b => { b.Text = _fileQuery; ToolTip.SetTip(b, "Words match separately, in any order; \"quotes\" match a phrase."); })
-                .OnPause(q => { _fileQuery = q; FillTable(def); });
+                .OnPause(q => { _fileQuery = q; _rows = RowsStep; FillTable(def); });
             right.Children.Add(Section("document_text", "Files", new StackPanel { Spacing = Space.L, Children = { search, new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() } } }, [.. del.Prepend(follow)]));
             if (loading)
             {
@@ -155,7 +155,9 @@ internal partial class LogsView(Ctx x)
     private void FillTable(AppDefinition def)
     {
         var q = SearchQuery.Parse(_fileQuery);
-        var rows = _files.Where(f => q.InText($"{Path.GetFileName(f.Path)} {f.Label} {Path.GetDirectoryName(f.Path)}")).Select(f =>
+        var match = _files.Where(f => q.InText($"{Path.GetFileName(f.Path)} {f.Label} {Path.GetDirectoryName(f.Path)}")).ToList();
+        var shown = match.Take(Math.Max(_rows, match.FindIndex(f => f.Path == _file?.Path) + 1)).ToList();   // newest first; the open file is always listed
+        var rows = shown.Select(f =>
         {
             var check = new CheckBox { IsChecked = _checked.Contains(f.Path) };
             check.IsCheckedChanged += (_, _) =>
@@ -176,9 +178,19 @@ internal partial class LogsView(Ctx x)
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete([f]))
             ], () => { _file = f; if (f.Path != _files.FirstOrDefault()?.Path) { _viewer.Follow = false; } x.Go("Logs:" + f.App); }, f.Path == _file?.Path);
         });
-        _table.Content = Table.Build([new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40")], rows,
+        var table = Table.Build([new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40")], rows,
             q.IsEmpty || _files.Count == 0 ? "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : "") : "No files match the filter.");
+        var rest = match.Count - shown.Count;
+        _table.Content = rest == 0 ? table : new StackPanel
+        {
+            Spacing = Space.M,
+            Children = { table, Btn($"Show {Math.Min(rest, RowsStep)} more ({rest} older not shown)", () => { _rows += RowsStep; FillTable(def); }) }
+        };
     }
+
+    /// <summary>Rows built at first: an app can have hundreds of log files, and every row is several controls rebuilt on each change the watcher sees.</summary>
+    private const int RowsStep = 50;
+    private int _rows = RowsStep;
 
     /// <summary>F5 on the Logs page: find the files again and re-read the open one.</summary>
     public void Reload()

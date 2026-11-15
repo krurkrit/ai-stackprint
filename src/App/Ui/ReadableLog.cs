@@ -24,27 +24,62 @@ internal partial class ReadableLog
     public Control Root => _scroll;
     public List<LogEntry> Steps { get; }
 
+    /// <summary>Steps built when a file opens; earlier ones are built when asked for ("Show earlier steps", a search hit), so a long session opens fast.</summary>
+    public const int FirstSteps = 60;
+    private const int MoreSteps = 100;
+
+    private readonly StackPanel _list = new() { Spacing = Space.M, Margin = new Thickness(Space.XL) };
+    private int _built;           // steps built, counted from the end of Steps
+    private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
+    private Button? _earlier;
+
     public ReadableLog(Session s, bool toEnd)
     {
         Steps = [.. s.Entries.TakeLast(MaxSteps)];
-        var list = new StackPanel { Spacing = Space.M, Margin = new Thickness(Space.XL) };
-        list.Children.Add(Summary(s));
+        _list.Children.Add(Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
         {
-            list.Children.Add(AgentGraph.Build(timeline));
+            _list.Children.Add(AgentGraph.Build(timeline));
         }
 
         if (s.Entries.Count > MaxSteps)
         {
-            list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", TextSize.Caption, false, Muted));
+            _list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", TextSize.Caption, false, Muted));
         }
 
-        bool? wasSub = null;
-        foreach (var e in Steps)
+        _headerCount = _list.Children.Count;
+        BuildEarlier(FirstSteps);
+        if (Steps.Count == 0)
         {
+            _list.Children.Add(Txt("No readable steps in this file.", TextSize.Body, false, Muted));
+        }
+
+        _scroll.Content = _list;
+        if (toEnd)
+        {
+            Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
+        }
+    }
+
+    /// <summary>Builds up to <paramref name="count"/> more steps before the ones already shown, and keeps a "Show earlier steps" button above them while some are left.</summary>
+    private void BuildEarlier(int count)
+    {
+        var to = Steps.Count - _built;
+        var from = Math.Max(0, to - count);
+        if (_earlier != null)
+        {
+            _list.Children.Remove(_earlier);
+            _earlier = null;
+        }
+
+        var at = _headerCount;
+        bool? wasSub = from > 0 ? Steps[from - 1].SubAgent : null;
+        for (var i = from; i < to; i++)
+        {
+            var e = Steps[i];
             if (e.SubAgent && wasSub != true)
             {
-                list.Children.Add(Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
+                _list.Children.Insert(at++, Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
             }
 
             wasSub = e.SubAgent;
@@ -58,23 +93,27 @@ internal partial class ReadableLog
 
             var holder = new Panel { Children = { step } };
             _holders[e] = holder;
-            list.Children.Add(holder);
-        }
-        if (Steps.Count == 0)
-        {
-            list.Children.Add(Txt("No readable steps in this file.", TextSize.Body, false, Muted));
+            _list.Children.Insert(at++, holder);
         }
 
-        _scroll.Content = list;
-        if (toEnd)
+        _built += to - from;
+        if (from > 0)
         {
-            Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
+            _earlier = Btn($"Show {Math.Min(MoreSteps, from)} earlier steps ({from} not shown)", () => BuildEarlier(MoreSteps));
+            _earlier.HorizontalAlignment = HorizontalAlignment.Center;
+            _list.Children.Insert(_headerCount, _earlier);
         }
     }
 
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>
     public void Reveal(LogEntry e)
     {
+        var i = Steps.IndexOf(e);
+        if (i >= 0 && i < Steps.Count - _built)
+        {
+            BuildEarlier(Steps.Count - _built - i);   // a search hit above what is built: build down to it
+        }
+
         if (!_controls.TryGetValue(e, out var c))
         {
             return;
