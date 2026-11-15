@@ -36,11 +36,35 @@ internal partial class LogsView(Ctx x)
         if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); _fileQuery = ""; }
         _app ??= Apps.FirstOrDefault(d => x.Info(d.Id)?.Installed == true)?.Id ?? Apps.FirstOrDefault()?.Id;
         var def = _app == null ? null : x.S.Def(_app);
-        Relist(def);
+        var loading = def != null && !_listed.Contains(def.Id);   // the first time an app's logs are opened its folders are read in the background
+        if (!loading)
+        {
+            Relist(def);
+        }
 
         var apps = Table.Build([new Col("App", "*")], Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
             .Select(d => new TableRow([AppName(d.Logo, d.Category, d.Name, Sizes.LogoS)], () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
 
+        var pane = new ContentControl { Content = BuildRight(def, loading) };
+
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SideList},*") };
+        var left = new ScrollViewer { Margin = new Thickness(Space.Page, Space.XXXL, Space.L, Space.XXL), Content = Card(apps) };
+        var scroll = new ScrollViewer { Content = pane };
+        Grid.SetColumn(scroll, 1);
+        g.Children.Add(left); g.Children.Add(scroll);
+        if (loading)
+        {
+            LoadFiles(def!, pane);
+        }
+
+        g.AttachedToVisualTree += (_, _) => Watch(def);
+        g.DetachedFromVisualTree += (_, _) => Watch(null);
+        return g;
+    }
+
+    /// <summary>The right side: title, summary, files and viewer. While the files are still being read the cards are there and show the loading icon.</summary>
+    private StackPanel BuildRight(AppDefinition? def, bool loading)
+    {
         var head = new StackPanel { Spacing = Space.S, Children = { def == null ? H1("Logs") : H1("Logs", "Logs", def.Name) } };
         if (def != null)
         {
@@ -50,7 +74,7 @@ internal partial class LogsView(Ctx x)
         var right = new StackPanel { Spacing = Space.XL, Margin = new Thickness(Space.L, Space.XXXL, Space.Page, Space.XXXL), Children = { head } };
         if (def != null)
         {
-            right.Children.Add(_summary.Build(_files));
+            right.Children.Add(loading ? Section("data_pie", "Summary", Busy.Loading("Reading log folders…")) : _summary.Build(_files));
             // Follow first, then the destructive buttons together
             var del = new List<Control>();
             foreach (var days in new[] { 7, 30, 90 })
@@ -79,18 +103,41 @@ internal partial class LogsView(Ctx x)
             var search = SearchBox("Filter files by name, type or folder").With(b => { b.Text = _fileQuery; ToolTip.SetTip(b, "Words match separately, in any order; \"quotes\" match a phrase."); })
                 .OnPause(q => { _fileQuery = q; FillTable(def); });
             right.Children.Add(Section("document_text", "Files", new StackPanel { Spacing = Space.L, Children = { search, new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() } } }, [.. del.Prepend(follow)]));
-            FillTable(def);
+            if (loading)
+            {
+                _table.Content = Busy.Loading("Reading log folders…");
+            }
+            else
+            {
+                FillTable(def);
+            }
         }
         right.Children.Add(_viewer.Build(_file, () => x.Go("Logs:" + _app)));
+        return right;
+    }
 
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SideList},*") };
-        var left = new ScrollViewer { Margin = new Thickness(Space.Page, Space.XXXL, Space.L, Space.XXL), Content = Card(apps) };
-        var scroll = new ScrollViewer { Content = right };
-        Grid.SetColumn(scroll, 1);
-        g.Children.Add(left); g.Children.Add(scroll);
-        g.AttachedToVisualTree += (_, _) => Watch(def);
-        g.DetachedFromVisualTree += (_, _) => Watch(null);
-        return g;
+    private readonly HashSet<string> _listed = [];
+
+    private async void LoadFiles(AppDefinition def, ContentControl pane)
+    {
+        var projects = x.S.Projects.ToList();
+        List<LogFile> found = [];
+        try
+        {
+            found = await Task.Run(() => LogReader.Find(def, projects));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // unreadable folders: shown as no files
+
+        _listed.Add(def.Id);
+        if (_app != def.Id)
+        {
+            return;   // the user moved to another app meanwhile
+        }
+
+        _files = found;
+        _file = _files.FirstOrDefault(f => f.Path == _file?.Path) ?? _files.FirstOrDefault();
+        _checked.IntersectWith(_files.Select(f => f.Path));
+        pane.Content = Reveal.Fade(BuildRight(def, false));   // the data fades in
     }
 
     private void Relist(AppDefinition? def)

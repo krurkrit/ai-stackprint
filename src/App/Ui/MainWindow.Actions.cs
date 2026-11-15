@@ -18,6 +18,8 @@ internal partial class MainWindow
         Refresh();
     }
 
+    private bool _firstShow = true;
+
     private void Refresh()
     {
         if (!_scanned)
@@ -52,6 +54,15 @@ internal partial class MainWindow
             _ when _view.StartsWith("Project:") => _project.Build(_view[8..]),
             _ => DashboardView.Build(_x, AddProject)
         };
+        if (_firstShow)
+        {
+            _firstShow = false;
+            if (_body.Content is Avalonia.Controls.Control first)
+            {
+                Reveal.Fade(first);   // the first scan is done: the data fades in over the loading cards
+            }
+        }
+
         MemoryTrim.Request();   // the page that was just replaced
     }
 

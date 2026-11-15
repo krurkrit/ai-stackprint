@@ -90,7 +90,7 @@ internal static class Busy
             var r = await Task.Run(() => work(ct), ct);
             if (!ct.IsCancellationRequested)
             {
-                host.Content = show(r);
+                host.Content = Reveal.Fade(show(r));   // the data fades in over the loading icon
             }
         }
         catch (OperationCanceledException) { }
