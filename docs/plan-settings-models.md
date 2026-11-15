@@ -67,7 +67,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - Context: project page share of the context window; Logs page peak context per session (Codex logs its own `model_context_window`; Claude uses `models.json`); Claude Code skill-list budget from the window size instead of the fallback.
 - Each is its own commit with tests.
 
-## Phase 10 — Export and import
+## Phase 10 — Export and import (done; the file holds `exported` (date) and `values` ("changes" or "all"); project paths under home are written as `~/`; a custom app that is built in now is noted and skipped; after an import the app reloads and rescans)
 - Settings › Export: tick Settings, Models, Apps, Projects; "Only my changes" (default) or "All values". One file `ai-stackprint-export.json` with `version` and a section per part; no state, caches, logs or secrets.
 - Settings › Import: preview of what changes, backup to `backups/`, merge (every value becomes an override; the all-values case is explained), locate or skip missing project folders, refuse a newer format. Consents are never imported as on.
 - Tests: round trip of each part, both modes, merge, newer format refused, consents stay off; headless preview dialog.

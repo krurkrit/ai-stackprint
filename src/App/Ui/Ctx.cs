@@ -20,6 +20,8 @@ internal class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
     public Action AddProject { get; init; } = () => { };
     /// <summary>Re-applies Appearance settings and rebuilds the UI.</summary>
     public Action Restyle { get; init; } = () => { };
+    /// <summary>Reads settings, projects and apps from their files again and rescans (after an import).</summary>
+    public Action Reload { get; init; } = () => { };
     /// <summary>Rebuilds the current page from the last scan (no rescan).</summary>
     public Action Refresh { get; init; } = () => { };
     /// <summary>Opens a skill or plugin on its page with the detail panel showing it.</summary>

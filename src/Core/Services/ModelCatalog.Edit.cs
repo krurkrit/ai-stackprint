@@ -103,7 +103,7 @@ public static partial class ModelCatalog
             mine[key] = yours;
         }
 
-        return Write(mine, file);
+        return WriteOverrides(mine, file);
     }
 
     internal static string? Reset(string file, string key, string? field)
@@ -124,18 +124,18 @@ public static partial class ModelCatalog
             mine.Remove(key);
         }
 
-        return Write(mine, file);
+        return WriteOverrides(mine, file);
     }
 
     /// <summary>The model data in use before your changes: built-in, or the downloaded copy when it is newer.</summary>
-    private static JsonObject SourceModels()
+    internal static JsonObject SourceModels()
     {
         var downloaded = ReadCache(CacheFile);
         var source = downloaded != null && string.CompareOrdinal(Updated(downloaded), Updated(_builtIn.Value)) > 0 ? downloaded : _builtIn.Value;
         return source["models"] as JsonObject ?? [];
     }
 
-    private static string? Write(JsonObject mine, string file)
+    internal static string? WriteOverrides(JsonObject mine, string file)
     {
         try
         {

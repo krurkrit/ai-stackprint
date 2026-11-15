@@ -18,6 +18,18 @@ internal partial class MainWindow
         Refresh();
     }
 
+    /// <summary>After an import: settings, projects and apps are read from their files again, then a rescan.</summary>
+    private void Reload()
+    {
+        _s.Settings = SettingsStore.Load();
+        _s.Projects.Clear();
+        _s.ProjectAdded.Clear();
+        LoadProjects();
+        _s.Use(AppCatalog.Read());
+        Ui.Theme.Appearance(Application.Current!, _s.Settings);
+        Scan();
+    }
+
     private bool _firstShow = true;
     private Action<string>? _status;   // the loading dashboard's "what the scan is doing" text, during the first scan
 

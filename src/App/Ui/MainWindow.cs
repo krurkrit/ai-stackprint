@@ -52,7 +52,7 @@ internal partial class MainWindow : Window
         _s.State = StateStore.Load();
         LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
-        _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
+        _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Reload = Reload, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
         _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
         _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _usage = new UsageView(_x); _models = new ModelsView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
