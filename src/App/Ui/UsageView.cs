@@ -36,7 +36,7 @@ internal class UsageView(Ctx x)
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
         head.Children.Add(H1("Usage"));
-        var intro = Txt("Tokens and estimated cost from the session logs of every app that keeps them. Cost is the app's own figure where its log has one, else an estimate from list prices; edit prices on an app's page.", TextSize.Small, false, Muted);
+        var intro = Txt("Tokens and estimated cost from the session logs of every app that keeps them. Cost is the app's own figure where its log has one, else an estimate from list prices; edit prices on the Models page.", TextSize.Small, false, Muted);
         if (_last != null)
         {
             _host.Content = Show(_last);
@@ -108,13 +108,13 @@ internal class UsageView(Ctx x)
         ], () => x.Go("App:" + a.App.Id)));
         var modelRows = all.GroupBy(b => b.Model).Select(g => (Name: g.Key, Tok: g.Sum(b => b.Input + b.Output + b.CacheWrite), Read: g.Sum(b => b.CacheRead), Cost: AppUsage.CostOf(g)))
             .OrderByDescending(m => m.Tok).Take(10)
-            .Select(m => new TableRow([Txt(m.Name, TextSize.Small, true), Txt(UsageCard.Fmt(m.Tok), TextSize.Small), Txt(UsageCard.Fmt(m.Read), TextSize.Small), Txt(m.Cost is { } v ? UsageCard.Money(v) : "–", TextSize.Small)]));
+            .Select(m => new TableRow([UsageCard.ModelName(m.Name), Txt(UsageCard.Fmt(m.Tok), TextSize.Small), Txt(UsageCard.Fmt(m.Read), TextSize.Small), Txt(m.Cost is { } v ? UsageCard.Money(v) : "–", TextSize.Small)], () => x.Go(UsageCard.ModelRoute(m.Name))));
 
         var data = ModelCatalog.Load().Updated;
         var stale = ModelDataUpdate.Stale(data, DateTime.UtcNow)
             ? $" Prices are from model data of {data}, over {ModelDataUpdate.StaleAfter.Days} days old: turn on Settings › Updates, or update AI Stackprint, for newer prices."
             : "";
-        var note = Txt("Tokens are input, output and cache writes; cache reads are counted apart. Models without a price are left out of the cost." + stale, TextSize.Caption, false, Muted);
+        var note = Txt("Tokens are input, output and cache writes; cache reads are counted apart. Models without a price are left out of the cost; a model row opens it on the Models page, to add or change its price." + stale, TextSize.Caption, false, Muted);
         return new StackPanel
         {
             Spacing = Space.XL,

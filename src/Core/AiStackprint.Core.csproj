@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="AiStackprint.Core.Tests" />
+    <InternalsVisibleTo Include="AiStackprint.App.Tests" />   <!-- UI tests edit model data in a temp file -->
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" />   <!-- OpenCode keeps usage in SQLite -->

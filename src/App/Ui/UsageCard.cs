@@ -159,7 +159,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
 
         var modelRows = b.GroupBy(v => v.Model).Select(g => (Name: g.Key, In: g.Sum(v => v.Input), Out: g.Sum(v => v.Output), CW: g.Sum(v => v.CacheWrite), CR: g.Sum(v => v.CacheRead), Cost: CostOf(g)))
             .OrderByDescending(m => m.In + m.Out + m.CW + m.CR).Take(10)
-            .Select(m => new TableRow([.. new Control?[] { Txt(m.Name, TextSize.Small, true), Txt(Fmt(m.In), TextSize.Small), Txt(Fmt(m.Out), TextSize.Small), writes ? Txt(Fmt(m.CW), TextSize.Small) : null, Txt(Fmt(m.CR), TextSize.Small), priced ? Txt(m.Cost is { } c ? Money(c) : "–", TextSize.Small) : null }.OfType<Control>()]));
+            .Select(m => new TableRow([.. new Control?[] { ModelName(m.Name), Txt(Fmt(m.In), TextSize.Small), Txt(Fmt(m.Out), TextSize.Small), writes ? Txt(Fmt(m.CW), TextSize.Small) : null, Txt(Fmt(m.CR), TextSize.Small), priced ? Txt(m.Cost is { } c ? Money(c) : "–", TextSize.Small) : null }.OfType<Control>()], () => x.Go(ModelRoute(m.Name))));
         var projectRows = b.GroupBy(v => v.Project).Select(g => (Name: g.Key, Msgs: g.Sum(v => v.Messages), Tok: g.Sum(v => v.Input + v.Output + v.CacheWrite), Cost: CostOf(g)))
             .OrderByDescending(p => p.Tok).Take(10)
             .Select(p => new TableRow([.. new Control?[] { Txt(p.Name, TextSize.Small, true), Txt(p.Msgs.ToString("N0"), TextSize.Small), Txt(Fmt(p.Tok), TextSize.Small), priced ? Txt(p.Cost is { } c ? Money(c) : "–", TextSize.Small) : null }.OfType<Control>()]));
@@ -167,7 +167,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         var notes = new StackPanel { Spacing = Space.XS };
         if (unpriced.Count > 0)
         {
-            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Edit prices\" adds an entry with an empty price for each to your models.json; fill in input and output (USD per 1M tokens).", TextSize.Caption, false, Muted));
+            notes.Children.Add(Txt("No price for: " + string.Join(", ", unpriced) + (priced ? ". Cost counts only models with a price." : ".") + " \"Add price\" opens the Models page to add the first; a model row there or here opens it too.", TextSize.Caption, false, Muted));
         }
 
         if (r.Capped)
@@ -185,7 +185,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", TextSize.Caption, false, Muted));
         }
 
-        var edit = Btn("Edit prices", () => { ModelCatalog.AddMissing(unpriced); PathUtil.OpenFile(ModelCatalog.OverridesFile); }, false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
+        var edit = Btn(unpriced.Count > 0 ? "Add price" : "Edit prices", () => x.Go(unpriced.Count > 0 ? ModelRoute(unpriced.Min!) : "Models"), false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);
 
         return new StackPanel
         {

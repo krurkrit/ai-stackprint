@@ -121,11 +121,9 @@ public sealed class ModelCatalogTests : IDisposable
     }
 
     [Fact]
-    public void Edit_prices_adds_an_empty_price_for_each_unpriced_model_once()
+    public void A_model_of_yours_with_an_empty_price_has_no_price()
     {
-        ModelCatalog.AddMissing(["my-model", "my-model"], Overrides);
-        ModelCatalog.AddMissing(["my-model"], Overrides);
-        Assert.Equal("""{"my-model":{"provider":"custom","price":{}}}""", ModelCatalog.ReadOverrides(Overrides)!.ToJsonString());
+        File.WriteAllText(Overrides, """{ "version": 1, "models": { "my-model": { "provider": "custom", "price": {} } } }""");
         Assert.Null(ModelCatalog.For("my-model", ModelCatalog.Build(_builtIn, null, ModelCatalog.ReadOverrides(Overrides))));   // empty: still unknown
     }
 

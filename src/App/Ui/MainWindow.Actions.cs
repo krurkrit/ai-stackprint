@@ -55,6 +55,8 @@ internal partial class MainWindow
             "Health" => _health.Build(),
             "Mcp" => _mcp.Build(),
             "Usage" => _usage.Build(),
+            "Models" => _models.Build(),
+            _ when _view.StartsWith("Models:") => _models.Build(_view[7..]),
             "Logs" => _logs.Build(null),
             _ when _view.StartsWith("Logs:") => _logs.Build(_view[5..]),
             _ when _view.StartsWith("App:") => _detail.Build(_view[4..]),
@@ -88,6 +90,7 @@ internal partial class MainWindow
             case "Skill": _skills.Leave(); break;
             case "Mcp": _mcp.Leave(); break;
             case "Usage": _usage.Leave(); break;
+            case var v when v.StartsWith("Models"): _models.Leave(); break;
             case var v when v.StartsWith("App:"): _detail.Leave(); break;
             case var v when v.StartsWith("Project:"): _project.Leave(); break;
         }

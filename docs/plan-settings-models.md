@@ -51,7 +51,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - `AGENTS.md` rule next to the update check: off until turned on, once a day, only api.github.com, nothing about the user sent.
 - Tests: fake HTTP handler for 200, 304, 403, timeout, invalid JSON, newer version.
 
-## Phase 8 — Models page
+## Phase 8 — Models page (done; icon `brain_circuit` (Fluent, already in icons.json); Edit shows the values in use and writes only those that differ from the data; a model you added gets Remove instead of Reset; a link to a model the data lacks opens Add model with its name; "Edit prices" on the Usage card became Add price, and `ModelCatalog.AddMissing` was removed)
 - Menu item and route `Models` (Ctrl+K too), icon from Fluent UI System Icons. Table: Name, Provider, Context, Max output, Input, Output, Cache read, Cache write, Retires; search and provider filter. Overridden values marked with Reset; Edit opens a dialog for one model; Add model. Saves through the overrides file (only changed fields).
 - The Usage page's "no price" note and "priced as …" link here with the model selected.
 - Headless tests: list, override and reset, add model, search; design tokens.

@@ -23,38 +23,6 @@ public static partial class ModelCatalog
         ? "models.json comes from a newer AI Stackprint: model changes made here are not saved."
         : null;
 
-    /// <summary>
-    /// Opens the way to edit prices: the file exists, and each model without a price gets an entry with an empty price to fill in
-    /// (an empty price is still unknown, never free).
-    /// </summary>
-    public static void AddMissing(IEnumerable<string> models, string? file = null)
-    {
-        file ??= OverridesFile;
-        var table = file == OverridesFile ? Load() : null;   // before the lock: Load takes it too
-        lock (_gate)
-        {
-            try
-            {
-                var mine = ReadOverrides(file) ?? [];
-                var changed = !File.Exists(file);
-                foreach (var m in models.Distinct(StringComparer.OrdinalIgnoreCase))
-                {
-                    if (!mine.ContainsKey(m) && (table == null || For(m, table) == null))
-                    {
-                        mine[m] = new JsonObject { ["provider"] = "custom", ["price"] = new JsonObject() };
-                        changed = true;
-                    }
-                }
-
-                if (changed)
-                {
-                    _format.Write(file, new JsonObject { ["models"] = mine });
-                }
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-        }
-    }
-
     /// <summary>The models object of your file, or null when there is none or it cannot be read.</summary>
     internal static JsonObject? ReadOverrides(string file)
     {
@@ -89,7 +57,7 @@ public static partial class ModelCatalog
             var changed = false;
             foreach (var (key, node) in old)
             {
-                if (node is not JsonObject p || Fields(p) is not { Count: > 0 } set || IsOldDefault(key, set) || mine.ContainsKey(key))
+                if (node is not JsonObject p || OldFields(p) is not { Count: > 0 } set || IsOldDefault(key, set) || mine.ContainsKey(key))
                 {
                     continue;
                 }
@@ -127,7 +95,7 @@ public static partial class ModelCatalog
     }
 
     /// <summary>The non-zero prices of an old entry, by their new names (the old file had the same names).</summary>
-    private static Dictionary<string, JsonNode> Fields(JsonObject p)
+    private static Dictionary<string, JsonNode> OldFields(JsonObject p)
     {
         var set = new Dictionary<string, JsonNode>();
         foreach (var f in new[] { "input", "output", "cacheRead", "cacheWrite" })

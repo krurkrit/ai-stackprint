@@ -133,5 +133,18 @@ internal partial class UsageCard
         _ => n.ToString()
     };
 
+    /// <summary>A logged model name, with the model-data entry its price comes from when that differs ("priced as …"); no price says so.</summary>
+    internal static Control ModelName(string name)
+    {
+        var key = ModelCatalog.PricedAs(name);
+        var note = key == null ? "no price" : !string.Equals(key, name, StringComparison.OrdinalIgnoreCase) ? "priced as " + key : null;
+        var t = Txt(name, TextSize.Small, true);
+        ToolTip.SetTip(t, "Open on the Models page");
+        return note == null ? t : new StackPanel { Children = { t, Txt(note, TextSize.Caption, false, Muted) } };
+    }
+
+    /// <summary>The Models page with this model's entry (the one it is priced as), or adding it when it has none.</summary>
+    internal static string ModelRoute(string name) => "Models:" + (ModelCatalog.PricedAs(name) ?? name.ToLowerInvariant());
+
     internal static string Money(decimal d) => "$" + d.ToString(d < 100 ? "N2" : "N0", System.Globalization.CultureInfo.InvariantCulture);
 }

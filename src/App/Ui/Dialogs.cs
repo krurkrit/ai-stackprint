@@ -10,7 +10,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>Modal dialogs: confirm, message, and a small form (optional text + one choice).</summary>
-internal static class Dialogs
+internal static partial class Dialogs
 {
     private static Window Shell(string title, Control body, params Button[] buttons)
     {
