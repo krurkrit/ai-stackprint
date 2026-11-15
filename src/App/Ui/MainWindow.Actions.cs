@@ -140,7 +140,7 @@ internal partial class MainWindow
             var health = Health.Compute(items); Step("health");
             var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
             Say(DashboardView.Configs);
-            var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList(); Step("configs");
+            var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList(); Step("configs");
             var all = health.Concat(safety).Concat(checks).ToList();
             ScanCache.Save(); Step("cache save");
             return (changes, all, mcp);

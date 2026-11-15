@@ -12,7 +12,7 @@ namespace AiStackprint.Core.Tests;
 /// <summary>What changes a reply's price: long-context tiers, the 1-hour cache, fast mode, US-only processing and web searches.</summary>
 public class UsagePricingTests
 {
-    private static readonly DateTime _t = new(2026, 11, 11, 10, 0, 0);
+    private static readonly DateTime _t = new(2026, 11, 11, 10, 0, 0, DateTimeKind.Local);
 
     private static ModelTable Table()
     {

@@ -94,6 +94,9 @@ public static partial class ModelCatalog
     /// <summary>The key that <see cref="For"/> used ("priced as …"), or null.</summary>
     public static string? PricedAs(string model, ModelTable? table = null) => Lookup(model, table).PricedKey;
 
+    /// <summary>The key that <see cref="Info"/> used, or null.</summary>
+    public static string? InfoKey(string model, ModelTable? table = null) => Lookup(model, table).AnyKey;
+
     /// <summary>USD for a bucket: the app's own figure when it recorded one, else the estimate; null when neither.</summary>
     public static decimal? Cost(UsageBucket b, ModelTable? table = null) =>
         b.Cost ?? Estimate(b.Model, new(b.Input, b.Output, b.CacheRead, b.CacheWrite, b.CacheWrite1h, b.Tier, b.Fast, b.UsOnly, b.WebSearches), table);
@@ -145,7 +148,7 @@ public static partial class ModelCatalog
         return cost + u.WebSearches * (m.WebSearch ?? 0);
     }
 
-    private sealed record Found(ModelInfo? Priced, string? PricedKey, ModelInfo? Any);
+    private sealed record Found(ModelInfo? Priced, string? PricedKey, ModelInfo? Any, string? AnyKey);
 
     private static readonly ConditionalWeakTable<ModelTable, ConcurrentDictionary<string, Found>> _found = [];
 
@@ -175,7 +178,7 @@ public static partial class ModelCatalog
                 priced = (info, key);
             }
         }
-        return new(priced.Info, priced.Key, any.Info);
+        return new(priced.Info, priced.Key, any.Info, any.Key);
     }
 
     private static string Updated(JsonObject file) => file["updated"] is JsonValue v && v.TryGetValue(out string? s) ? s : "";
