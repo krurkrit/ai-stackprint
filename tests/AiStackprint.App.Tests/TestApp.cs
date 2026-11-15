@@ -8,8 +8,10 @@ using Avalonia;
 using Avalonia.Headless;
 
 [assembly: AvaloniaTestApplication(typeof(TestApp))]
-// One test at a time: every test sets up its own headless app on one shared UI thread, and two classes starting at once sometimes
-// found the render loop owned by the other ("a different thread owns it" in cleanup). UI tests are few and fast.
+// One headless app for all tests. With one app per test (the default), setting up the next app sometimes found the shared render loop
+// still owned by the previous test's UI thread ("a different thread owns it"), on Linux CI even with one test at a time.
+[assembly: AvaloniaTestIsolation(AvaloniaTestIsolationLevel.PerAssembly)]
+// One test at a time: tests share that app (its theme and appearance settings). UI tests are few and fast.
 [assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
 
 namespace AiStackprint.App.Tests;
