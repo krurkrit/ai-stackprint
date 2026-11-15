@@ -16,7 +16,7 @@ namespace AiStackprint.Ui;
 internal static class TransferSection
 {
     public static Control Build(Ctx x) =>
-        Section("arrow_sync", "Export and import", new StackPanel
+        Section("document", "Export and import", new StackPanel
         {
             Spacing = Space.L,
             Children =

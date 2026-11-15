@@ -69,17 +69,35 @@ internal static partial class Dialogs
                     state.Text = "→ " + p;
                 }
             }, false, "folder_open");
-            body.Children.Add(Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt($"Project not found here: {missing}", TextSize.Small), locate, state));
+            body.Children.Add(Line("warning", WarningKey, Txt($"Project not found here: {missing}", TextSize.Small), locate, state));
         }
 
         foreach (var n in plan.Notes)
         {
-            body.Children.Add(Row(Icon("info", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Txt(n, TextSize.Small, false, Muted)));
+            body.Children.Add(Line("info", Muted, Txt(n, TextSize.Small, false, Muted)));
         }
 
         var go = Btn("Import (backup first)", () => { done(moved); w!.Close(true); }, true);
         w = Shell("Import", body, Btn("Cancel", () => { done(null); w!.Close(false); }).With(b => b.IsCancel = true), go);
         w.Width = Widths.DialogL;
         return w;
+    }
+
+    /// <summary>An icon, text that wraps in the space left, then any controls at the end.</summary>
+    private static Grid Line(string icon, string key, TextBlock text, params Control[] end)
+    {
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*" + string.Concat(end.Select(_ => ",Auto"))), ColumnSpacing = Space.M };
+        g.Children.Add(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, key).With(i => i.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center));
+        text.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        Grid.SetColumn(text, 1);
+        g.Children.Add(text);
+        for (var i = 0; i < end.Length; i++)
+        {
+            end[i].VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            Grid.SetColumn(end[i], i + 2);
+            g.Children.Add(end[i]);
+        }
+
+        return g;
     }
 }
