@@ -140,6 +140,7 @@ internal partial class MainWindow
         void Say(string text) { if (status != null) { Dispatcher.UIThread.Post(() => status(text)); } }
         var steps = new List<(string, long)>(); var watch = System.Diagnostics.Stopwatch.StartNew();
         void Step(string name) { steps.Add((name, watch.ElapsedMilliseconds)); watch.Restart(); }   // each step's time, for the --perf run
+        var claudeModel = defs.FirstOrDefault(d => d.Id == "claude-code") is { } cd ? Task.Run(() => UsageStats.LastModel(LogReader.Find(cd, projects, usage: true))) : Task.FromResult<string?>(null);   // its window sets the skill-list budget; finding the logs runs beside the scan
         var r = await Task.Run(() => { ScanCache.Load(); Step("cache load"); var c = Scanner.Collect(defs, projects); Step("collect"); return c; });   // the safety and change results of the last run: only changed files are read again
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
@@ -149,8 +150,7 @@ internal partial class MainWindow
             watch.Restart();   // not the wait for the UI thread between the two
             var mcp = McpServers.Read(items); Step("mcp");
             var changes = ScanDiff.Update(items, ScanDiff.File, mcp); Step("changes");
-            var claude = defs.FirstOrDefault(d => d.Id == "claude-code") is { } cd ? UsageStats.LastModel(LogReader.Find(cd, projects, usage: true)) : null;   // its window sets the skill-list budget
-            var health = Health.Compute(items, claude); Step("health");
+            var health = Health.Compute(items, claudeModel.GetAwaiter().GetResult()); Step("health");
             var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
             Say(DashboardView.Configs);
             var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList(); Step("configs");

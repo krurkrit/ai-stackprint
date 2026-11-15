@@ -42,14 +42,15 @@ public sealed class ContextWindowTests : IDisposable
     }
 
     [Fact]
-    public void The_last_model_is_the_most_used_on_the_last_day_of_the_newest_log()
+    public void The_last_model_is_the_last_one_named_in_the_newest_log()
     {
         static string Line(string day, string id, string model) =>
             "{\"type\":\"assistant\",\"timestamp\":\"" + day + "T05:00:00Z\",\"requestId\":\"" + id + "\",\"message\":{\"id\":\"" + id + "\",\"model\":\"" + model + "\",\"usage\":{\"input_tokens\":10,\"output_tokens\":5}}}";
         var older = Path.Combine(_dir, "a.jsonl");
         var newer = Path.Combine(_dir, "b.jsonl");
         File.WriteAllLines(older, [Line("2026-11-12", "x", "claude-haiku-5-5")]);
-        File.WriteAllLines(newer, [Line("2026-11-10", "1", "claude-haiku-5-5"), Line("2026-11-11", "2", "claude-opus-5-5"), Line("2026-11-11", "3", "claude-opus-5-5"), Line("2026-11-11", "4", "claude-sonnet-5-5")]);
+        File.WriteAllLines(newer, [Line("2026-11-10", "1", "claude-haiku-5-5"), Line("2026-11-11", "2", "claude-opus-5-5"), Line("2026-11-11", "3", "claude-sonnet-5-5"), Line("2026-11-11", "4", "claude-opus-5-5"),
+            "{\"type\":\"user\",\"message\":{\"content\":\"set \\\"model\\\": \\\"gpt-6\\\" in config\"}}", Line("2026-11-11", "5", "<synthetic>")]);
         File.SetLastWriteTime(older, new DateTime(2026, 11, 1, 0, 0, 0, DateTimeKind.Local));
         static LogFile F(string p) => new("claude", "Sessions", p, new FileInfo(p).Length, new FileInfo(p).LastWriteTime, null, "claude-session");
         Assert.Equal("claude-opus-5-5", UsageStats.LastModel([F(older), F(newer)], TestContext.Current.CancellationToken));

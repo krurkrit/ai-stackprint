@@ -40,7 +40,7 @@ public record UsageLive(List<LimitSample> Limits, WindowUse Last5h, WindowUse La
 public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bool Capped, UsageLive? Live = null);
 
 /// <summary>Usage per app from session logs. Buckets per file are cached by path + size + time, so re-opening is instant and the cache stays small.</summary>
-public static class UsageStats
+public static partial class UsageStats
 {
     /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live"/>).</summary>
     private sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
@@ -149,8 +149,8 @@ public static class UsageStats
     }
 
     /// <summary>
-    /// The model the app used last: in its newest log with usage, the model with the most replies on the last day. Null when no log has usage.
-    /// Shares the per-file cache with <see cref="Compute"/>.
+    /// The model the app used last: the last <c>"model"</c> value in the end of its newest log, else (no such value there) the model with the most
+    /// replies on the last day of that log. Null when no log names one. Reads only the end of a file first: the newest log is often large and in use.
     /// </summary>
     public static string? LastModel(IReadOnlyList<LogFile> files, CancellationToken ct = default)
     {
@@ -159,6 +159,11 @@ public static class UsageStats
             ct.ThrowIfCancellationRequested();
             try
             {
+                if (TailModel(f.Path) is { } model)
+                {
+                    return model;
+                }
+
                 var buckets = Read(f, LogParsers.Find(f.Format)!).Buckets;
                 if (buckets.Count > 0)
                 {
@@ -169,6 +174,23 @@ public static class UsageStats
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         }
         return null;
+    }
+
+    private const int TailBytes = 256 * 1024;
+
+    /// <summary>A JSON <c>"model": "…"</c> property (not one escaped inside a string; not a placeholder such as <c>&lt;synthetic&gt;</c>).</summary>
+    [System.Text.RegularExpressions.GeneratedRegex("""(?<!\\)"model"\s*:\s*"([^"\\<\s][^"\\]*)"(?!\s*:)""", System.Text.RegularExpressions.RegexOptions.RightToLeft)]
+    private static partial System.Text.RegularExpressions.Regex ModelProperty();
+
+    private static string? TailModel(string path)
+    {
+        using var s = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var length = Math.Min(s.Length, TailBytes);
+        s.Seek(-length, SeekOrigin.End);
+        var buffer = new byte[length];
+        s.ReadExactly(buffer);
+        var m = ModelProperty().Match(System.Text.Encoding.UTF8.GetString(buffer));
+        return m.Success ? m.Groups[1].Value : null;
     }
 
     public static WindowUse Sum(IEnumerable<UsageEvent> events)
