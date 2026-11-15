@@ -140,6 +140,9 @@ internal class AppDetailView(Ctx x)
             manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : []);
     }
 
+    /// <summary>The page was left: see <see cref="ItemBrowser.Leave"/>.</summary>
+    public void Leave() => _skillFilter.Leave();
+
     private Border Skills(AppDefinition d, List<Item> items)
     {
         if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); _skillQuery = ""; }

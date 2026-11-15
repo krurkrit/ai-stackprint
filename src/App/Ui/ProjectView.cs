@@ -27,6 +27,9 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
     /// <summary>Rows that take effect in <paramref name="project"/>: rows from that project, or rows not tied to any project.</summary>
     private static bool Applies(Item i, string project) => i.Project == project || (i.Project == null && !Scanner.InProject(i.Level));
 
+    /// <summary>The page was left: see <see cref="ItemBrowser.Leave"/>.</summary>
+    public void Leave() { _browser.Leave(); _context.Leave(); _checks.Leave(); }
+
     public Control Build(string project)
     {
         if (_project != project) { _project = project; _browser.Reset(); }

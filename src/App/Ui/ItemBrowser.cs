@@ -27,14 +27,15 @@ internal class ItemBrowser
     private static readonly TimeSpan _typing = TimeSpan.FromMilliseconds(150);   // search waits this long after the last key
     private readonly Ctx _x;
     private readonly string _kind;
-    private readonly TextBox _search = SearchBox("Search, or author: app: level: keyword:");
     private readonly DispatcherTimer _wait = new() { Interval = _typing };
-    private readonly ComboBox _app = new() { MinWidth = Widths.Field };
     private readonly SkillFilter _filter = new();
     private readonly DetailPanel _panel;
-    private readonly ContentControl _table = new();
-    private readonly ContentControl _own = new();   // the filter rows: rebuilt when a filter changes, so their counts follow the other filters
-    private readonly TextBlock _shown = Txt("", TextSize.Small, false, Muted);
+    // Kept while the page is shown (rebuilt rows keep the box's focus and the list its place); new ones once it is left: see Leave
+    private TextBox _search = null!;
+    private ComboBox _app = null!;
+    private ContentControl _table = null!;
+    private ContentControl _own = null!;   // the filter rows: rebuilt when a filter changes, so their counts follow the other filters
+    private TextBlock _shown = null!;
     private string _appId = "", _q = "";
     private Item? _sel;
     private bool _building, _max;
@@ -46,17 +47,34 @@ internal class ItemBrowser
     public ItemBrowser(Ctx ctx, string kind)
     {
         _x = ctx; _kind = kind; _panel = new DetailPanel(ctx);
-        ToolTip.SetTip(_search, SearchTip);
         _wait.Tick += (_, _) => { _wait.Stop(); Fill(); };
-        _search.TextChanged += (_, _) => { _q = _search.Text ?? ""; _wait.Stop(); _wait.Start(); };   // search after a short pause in typing
-        _app.SelectionChanged += (_, _) => { if (_building) { return; } _appId = (_app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
+        Leave();
+    }
+
+    /// <summary>
+    /// The page was left: new controls for the next visit, so the old ones (and through them the whole old page) can be freed.
+    /// Avalonia keeps a removed control linked to its old page's drawing tree, so a control kept in a field keeps that page in memory.
+    /// </summary>
+    public void Leave()
+    {
+        _wait.Stop();
+        var search = _search = SearchBox("Search, or author: app: level: keyword:");
+        search.Text = _q;
+        ToolTip.SetTip(search, SearchTip);
+        // search after a short pause in typing; the text set from _q is no change, and an old box says nothing
+        search.TextChanged += (_, _) => { if (search == _search && (search.Text ?? "") != _q) { _q = search.Text ?? ""; _wait.Stop(); _wait.Start(); } };
+        var app = _app = new ComboBox { MinWidth = Widths.Field };
+        app.SelectionChanged += (_, _) => { if (_building || app != _app) { return; } _appId = (app.SelectedItem as AppOption)?.Id ?? ""; Fill(); };
+        _table = new(); _own = new(); _shown = Txt("", TextSize.Small, false, Muted);
+        _grid = null; _splitter = null; _bottom = null;
+        _filter.Leave(); _panel.Leave();
     }
 
     /// <summary>Clears search, filters and selection (another project opened).</summary>
-    public void Reset() { _sel = null; _appId = ""; _search.Text = ""; _q = ""; _filter.Reset(); _max = false; }
+    public void Reset() { _sel = null; _appId = ""; _q = ""; _search.Text = ""; _filter.Reset(); _max = false; }
 
     /// <summary>Shows only one app's rows and/or rows matching a text (dashboard bars); other filters are cleared.</summary>
-    public void Filter(string? app, string? query) { Reset(); _appId = app ?? ""; _search.Text = query ?? ""; _q = query ?? ""; }
+    public void Filter(string? app, string? query) { Reset(); _appId = app ?? ""; _q = query ?? ""; _search.Text = _q; }
 
     /// <summary>Selects an item so the panel opens on it the next time the page is shown.</summary>
     public void Select(Item i) { _sel = i; _max = false; }
@@ -105,9 +123,11 @@ internal class ItemBrowser
         Grid.SetRow(_splitter, 1); Grid.SetRow(_bottom, 2);
         g.Children.Add(new ScrollViewer { Content = list }); g.Children.Add(_splitter); g.Children.Add(_bottom);
         ShowPanel();
-        _x.Escape = () => { if (_sel == null) { return false; } Close(); return true; };
+        _x.Escape = Escape;   // a method, not a lambda here: that would share the closure that holds this page
         return g;
     }
+
+    private bool Escape() { if (_sel == null) { return false; } Close(); return true; }
 
     private GridSplitter? _splitter;
     private Border? _bottom;

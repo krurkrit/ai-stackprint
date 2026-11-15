@@ -14,6 +14,7 @@ internal class LibraryView(Ctx x, string kind)
 {
     private readonly ItemBrowser _browser = new(x, kind);
 
+    public void Leave() => _browser.Leave();
     public void Select(Item i) => _browser.Select(i);
     public void Filter(string? app, string? query) => _browser.Filter(app, query);
 

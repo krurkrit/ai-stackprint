@@ -20,7 +20,10 @@ internal partial class ContextSection(Ctx x)
 {
     private string? _project, _start, _preview;
     private object? _scan;   // the scan the cached reports belong to: a rescan reads the files again
-    private readonly ContentControl _host = new();
+    private ContentControl _host = new();
+
+    /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
+    public void Leave() => _host = new();
     private List<(AppDefinitionRef App, ContextReport Report)>? _last;
 
     private sealed record AppDefinitionRef(string Id, string Name, string? Logo, string Category);

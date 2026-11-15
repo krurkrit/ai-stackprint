@@ -111,12 +111,18 @@ internal static partial class W
         InnerLeftContent = Icon("search", IconSize.S).Themed(TextElement.ForegroundProperty, Muted).With(i => { i.Margin = new Thickness(Space.L, 0, 0, 0); i.VerticalAlignment = VerticalAlignment.Center; })
     }.With(t => { if (minHeight > 0) { t.MinHeight = minHeight; } });
 
-    /// <summary>Calls <paramref name="changed"/> with the text once typing pauses (150 ms), not on every key.</summary>
+    /// <summary>
+    /// Calls <paramref name="changed"/> with the text once typing pauses (150 ms), not on every key, and only when the text differs from the
+    /// last one reported (a text set in code, or typed and undone, is no change). Nothing is reported once the box has left the window:
+    /// a late call would rebuild a page that is gone.
+    /// </summary>
     public static TextBox OnPause(this TextBox box, Action<string> changed)
     {
+        var last = box.Text ?? "";
         var wait = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-        wait.Tick += (_, _) => { wait.Stop(); changed(box.Text ?? ""); };
+        wait.Tick += (_, _) => { wait.Stop(); if ((box.Text ?? "") != last) { last = box.Text ?? ""; changed(last); } };
         box.TextChanged += (_, _) => { wait.Stop(); wait.Start(); };
+        box.DetachedFromVisualTree += (_, _) => wait.Stop();
         return box;
     }
 

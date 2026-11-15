@@ -17,8 +17,10 @@ internal class AppsView(Ctx x)
     private readonly HashSet<string> _offCats = [], _offStatus = [], _collapsed = [];   // unchecked categories and statuses; collapsed headings
     private string _q = "";
     private bool _byCat = true, _byStatus;                                  // Group by check boxes
-    private readonly TextBox _search = SearchBox("Search apps");
-    private readonly ContentControl _table = new(), _filters = new();
+    private TextBox _search = SearchBox("Search apps");
+    private ContentControl _table = new(), _filters = new();
+    /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
+    public void Leave() { _search = SearchBox("Search apps"); _search.Text = _q; _table = new(); _filters = new(); }
 
     public Control Build()
     {
@@ -32,7 +34,7 @@ internal class AppsView(Ctx x)
         return Page(head, _search.Free(), _filters.Free(), Card(_table.Free()));
     }
 
-    private void OnSearch(object? s, TextChangedEventArgs e) { _q = _search.Text ?? ""; Fill(); }
+    private void OnSearch(object? s, TextChangedEventArgs e) { if (s == _search && (_search.Text ?? "") != _q) { _q = _search.Text ?? ""; Fill(); } }   // the text set from _q is no change; an old box says nothing
 
     private void Fill()
     {

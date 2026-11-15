@@ -24,8 +24,11 @@ internal partial class DetailPanel(Ctx x)
     private readonly Stack<string?> _back = new();
     private string _tab = "Content";                       // Content | Files
     private bool _raw;
-    private readonly ContentControl _host = new();
+    private ContentControl _host = new();
     private Action _close = () => { };
+
+    /// <summary>The page was left: a new host and no callback into the old page, so nothing here keeps that page in memory.</summary>
+    public void Leave() { _host = new(); _close = () => { }; }
 
     public Control Build(Item item, Action close)
     {

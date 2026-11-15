@@ -17,8 +17,10 @@ internal class McpView(Ctx x)
 {
     private string _query = "";
     private bool _warnOnly;
-    private readonly ContentControl _table = new();
+    private ContentControl _table = new();
     private TextBox? _box;
+    /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
+    public void Leave() { _table = new(); _box = null; }
 
     public Control Build()
     {
@@ -33,7 +35,7 @@ internal class McpView(Ctx x)
         var intro = Txt($"{ReadableLog.Plural(all.Count, "server")} in {ReadableLog.Plural(apps, "app")}: programs the apps start, or web services they connect to, for tools. " +
             "Programs run with your rights. Secret-looking values are hidden. Goose and Continue keep servers in YAML and are not read here (Goose extensions are on the Plugins page).",
             TextSize.Small, false, Muted);
-        _box ??= SearchBox("Search name, app, command or file").OnPause(t => { _query = t.Trim(); Fill(); });
+        _box ??= SearchBox("Search name, app, command or file").With(b => b.Text = _query).OnPause(t => { _query = t.Trim(); Fill(); });
         Fill();
         return Page(head, intro, _box.Free(), _table.Free());
     }

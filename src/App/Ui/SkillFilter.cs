@@ -20,12 +20,19 @@ internal class SkillFilter
     private string _invoked = "", _from = "";   // "" = all
     private bool _byInvoked, _byFrom;                  // Group by check boxes
     private readonly HashSet<string> _collapsed = [];
-    private readonly ComboBox _fromBox = new() { MinWidth = Widths.FieldM };
+    private ComboBox _fromBox = null!;   // kept while the page is shown: a rebuild during its own selection change must not replace it
     private bool _building;
     private Action _changed = () => { };
 
-    public SkillFilter() =>
-        _fromBox.SelectionChanged += (_, _) => { if (!_building) { _from = (_fromBox.SelectedItem as Opt)?.Id ?? ""; _changed(); } };
+    public SkillFilter() => Leave();
+
+    /// <summary>The page was left: a new box and no callback into the old page, so nothing here keeps that page in memory.</summary>
+    public void Leave()
+    {
+        _changed = () => { };
+        var box = _fromBox = new ComboBox { MinWidth = Widths.FieldM };
+        box.SelectionChanged += (_, _) => { if (!_building && box == _fromBox) { _from = (box.SelectedItem as Opt)?.Id ?? ""; _changed(); } };   // an old box says nothing
+    }
 
     public void Reset() { _offLevels.Clear(); _invoked = ""; _from = ""; _byInvoked = _byFrom = false; _collapsed.Clear(); }
 

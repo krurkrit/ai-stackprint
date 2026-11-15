@@ -40,6 +40,12 @@ internal partial class MainWindow
             _logs.Release();   // the Logs page keeps no file text, controls or watcher once it is closed
         }
 
+        if (_shownView != _view)
+        {
+            Leave(_shownView);
+            _shownView = _view;
+        }
+
         _body.Content = _view switch
         {
             "Dashboard" => DashboardView.Build(_x, AddProject),
@@ -66,6 +72,26 @@ internal partial class MainWindow
         }
 
         MemoryTrim.Request();   // the page that was just replaced
+    }
+
+    private string _shownView = "";
+
+    /// <summary>
+    /// Another page opens: the view that was shown lets go of the controls it keeps, which would otherwise keep its whole page in memory.
+    /// A refresh of the same page (a rescan) keeps them, so the search box keeps its focus and text.
+    /// </summary>
+    private void Leave(string view)
+    {
+        switch (view)
+        {
+            case "Apps": _apps.Leave(); break;
+            case "Plugin": _plugins.Leave(); break;
+            case "Skill": _skills.Leave(); break;
+            case "Mcp": _mcp.Leave(); break;
+            case "Usage": _usage.Leave(); break;
+            case var v when v.StartsWith("App:"): _detail.Leave(); break;
+            case var v when v.StartsWith("Project:"): _project.Leave(); break;
+        }
     }
 
     private async void AddProject()
