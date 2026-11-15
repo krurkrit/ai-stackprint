@@ -33,6 +33,7 @@ internal class ItemBrowser
     private readonly SkillFilter _filter = new();
     private readonly DetailPanel _panel;
     private readonly ContentControl _table = new();
+    private readonly ContentControl _own = new();   // the filter rows: rebuilt when a filter changes, so their counts follow the other filters
     private readonly TextBlock _shown = Txt("", TextSize.Small, false, Muted);
     private string _appId = "", _q = "";
     private Item? _sel;
@@ -82,7 +83,7 @@ internal class ItemBrowser
 
         _building = false;
 
-        var own = _filter.Controls(items, _kind == "Skill", Fill);
+        _own.Content = _filter.Controls(items, _kind == "Skill", FilterChanged);
         var search = new DockPanel
         {
             Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(Space.L, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
@@ -91,7 +92,7 @@ internal class ItemBrowser
         var list = new StackPanel { Spacing = Space.XL, Margin = new Thickness(Space.Page, Space.XXXL, Space.Page, Space.XXL) };
         list.Children.AddRange(top);
         list.Children.Add(search);
-        list.Children.Add(own);
+        list.Children.Add(_own.Free());
         list.Children.Add(Card(_table.Free()));
         Fill();
 
@@ -144,6 +145,12 @@ internal class ItemBrowser
     public static bool Same(Item a, Item b) => a.Kind == b.Kind && a.App == b.App && a.Level == b.Level && a.Name == b.Name && a.Path == b.Path && a.Project == b.Project;
 
     private sealed record AppOption(string Id, string Name) { public override string ToString() => Name; }
+
+    private void FilterChanged()
+    {
+        _own.Content = _filter.Controls(_items, _kind == "Skill", FilterChanged);
+        Fill();
+    }
 
     private void Fill()
     {

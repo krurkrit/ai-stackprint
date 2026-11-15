@@ -45,7 +45,15 @@ internal static partial class W
         var wrap = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
         foreach (var (label, value) in opts)
         {
-            var b = new Button { Content = label, MinHeight = Sizes.CompactControl, CornerRadius = new CornerRadius(Radius.Pill) };
+            // Even padding with the text centered: Fluent's button padding is 1 px larger at the bottom, which put the label above the middle
+            var b = new Button
+            {
+                Content = label,
+                MinHeight = Sizes.CompactControl,
+                CornerRadius = new CornerRadius(Radius.Pill),
+                Padding = new Thickness(Space.L, 0),
+                VerticalContentAlignment = VerticalAlignment.Center
+            };
             if (value == current)
             {
                 b.Classes.Add("accent");
@@ -151,10 +159,11 @@ internal static partial class W
     {
         var wrap = new WrapPanel { ItemSpacing = Space.XL, LineSpacing = Space.S };
         var group = "r" + ++_radioGroups;
+        var chosen = current;   // follows the clicks: comparing with the first value missed a return to it ("All" after "Agent only")
         foreach (var (label, value) in opts)
         {
             var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current };
-            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != current) { pick(value); } };
+            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != chosen) { chosen = value; pick(value); } };
             wrap.Children.Add(rb);
         }
         return wrap;

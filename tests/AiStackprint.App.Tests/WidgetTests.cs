@@ -37,6 +37,19 @@ public class WidgetTests
     }
 
     [AvaloniaFact]
+    public void Radios_report_a_return_to_the_first_choice()
+    {
+        var picks = new List<string>();
+        var root = W.Radios([("All", ""), ("Agent only", "agent")], "", picks.Add);
+        Ui.Show(root);
+        var radios = root.GetVisualDescendants().OfType<RadioButton>().ToList();
+
+        radios[1].IsChecked = true;
+        radios[0].IsChecked = true;   // back to the value it started with: missed before, so the list stayed filtered
+        Assert.Equal(["agent", ""], picks);
+    }
+
+    [AvaloniaFact]
     public void Pills_mark_the_current_choice_and_report_a_click()
     {
         string? picked = null;

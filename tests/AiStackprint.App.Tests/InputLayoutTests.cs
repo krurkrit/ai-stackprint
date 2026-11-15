@@ -80,6 +80,18 @@ public class InputLayoutTests
         Assert.Equal(Top(box, wrapped) + box.Bounds.Height / 2, Top(label, wrapped) + lineHeight / 2, 0.5);
     }
 
+    [AvaloniaFact]
+    public void Pill_labels_sit_in_the_middle_of_the_pill()
+    {
+        var pills = W.Pills([("Warning", "w"), ("All", "")], "", _ => { });
+        Ui.Show(new StackPanel { Children = { pills } });
+        foreach (var b in pills.GetVisualDescendants().OfType<Button>())
+        {
+            var (top, bottom) = Gaps(b);
+            Assert.True(Math.Abs(top - bottom) <= 1, $"{b.Content}: {top} above the text, {bottom} below (1 px is layout rounding of an odd gap)");
+        }
+    }
+
     private static (double Top, double Bottom) Gaps(Control c)
     {
         var t = Text(c);
