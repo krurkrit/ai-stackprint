@@ -40,7 +40,8 @@ internal partial class MainWindow
 
         if (_s.Projects.Find(o => ProjectStore.Same(o, p)) is { } known)
         {
-            Go("Project:" + known);   // already in the list: open it
+            await Dialogs.Message(this, "Project already added", $"{Ctx.ProjectName(known)} is already in the list ({known}). It opens instead; a folder is listed once.", warn: true);
+            Go("Project:" + known);
             return;
         }
 
@@ -51,8 +52,14 @@ internal partial class MainWindow
         Scan();
     }
 
-    private void RemoveProject(string p)
+    /// <summary>Asks first; only the entry in the list goes, never the folder.</summary>
+    private async void RemoveProject(string p)
     {
+        if (!await Dialogs.Confirm(this, "Remove project", $"Remove {Ctx.ProjectName(p)} from the list?\n{p}\n\nThe folder and its files are not touched; add it again at any time.", "Remove", danger: true))
+        {
+            return;
+        }
+
         _s.Projects.Remove(p);
         _s.ProjectAdded.Remove(p);
         SaveProjects();
@@ -74,10 +81,9 @@ internal partial class MainWindow
             return;
         }
 
-        if (_s.Projects.Exists(o => o != old && ProjectStore.Same(o, p)))
+        if (_s.Projects.Find(o => o != old && ProjectStore.Same(o, p)) is { } known)
         {
-            Toast.Show($"{Ctx.ProjectName(p)} is already in the list: {Ctx.ProjectName(old)} was removed instead.", "info");
-            RemoveProject(old);
+            await Dialogs.Message(this, "Project already added", $"{Ctx.ProjectName(known)} is already in the list ({known}). Choose another folder, or remove {Ctx.ProjectName(old)} from the list.", warn: true);
             return;
         }
 

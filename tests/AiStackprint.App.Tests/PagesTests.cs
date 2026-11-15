@@ -5,6 +5,7 @@ using AiStackprint.Models;
 using AiStackprint.Services;
 using AiStackprint.Ui;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -71,6 +72,7 @@ public sealed class PagesTests : IDisposable
             ("Skills", () => new LibraryView(x, "Skill").Build()),
             ("MCP servers", () => new McpView(x).Build()),
             ("Usage", () => new UsageView(x).Build()),
+            ("Models", () => new ModelsView(x).Build()),
             ("Logs", () => new LogsView(x).Build(null)),
             ("Health", () => new HealthView(x).Build()),
             ("demo-project", () => new ProjectView(x, _ => { }, _ => { }).Build(s.Projects[0])),
@@ -86,6 +88,22 @@ public sealed class PagesTests : IDisposable
         }
 
         w.Close();   // nothing of this test left running in the next one
+        Settle();
+    }
+
+    [AvaloniaFact]
+    public void Author_bars_line_up_including_Other()
+    {
+        var s = State();
+        s.Items = [.. Enumerable.Range(0, 12).Select(i => Skill("s" + i, "User", ["Agent"]) with { Author = "Author " + i })];
+        var (w, x) = Host(s);
+        w.Content = DashboardView.Build(x, () => { });
+        Settle();
+        var labels = w.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Text is { } n && (n.StartsWith("Author ", StringComparison.Ordinal) || n == "Other")).ToList();
+        Assert.Contains(labels, l => l.Text == "Other");
+        var left = labels.Select(l => l.TranslatePoint(default, w)!.Value.X).Distinct().ToList();
+        Assert.Single(left);   // the "Other" row opens nothing, but sits where the others do
+        w.Close();
         Settle();
     }
 

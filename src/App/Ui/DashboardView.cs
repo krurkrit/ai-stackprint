@@ -174,12 +174,14 @@ internal static partial class DashboardView
         g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S), ClipToBounds = true, Child = bar, VerticalAlignment = VerticalAlignment.Center }.With(b => Grid.SetColumn(b, 1)));
         g.Children.Add(Txt(total.ToString("N0"), TextSize.Small, false, Muted).With(t => { Grid.SetColumn(t, 2); t.HorizontalAlignment = HorizontalAlignment.Right; t.VerticalAlignment = VerticalAlignment.Center; }));
         ToolTip.SetTip(g, tip);
+        // The same padding with or without a click, so a row that opens nothing ("Other") lines up with the others
+        var row = new Border { CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S, Space.XS), Background = Brushes.Transparent, Child = g };
         if (open == null)
         {
-            return g;
+            return row;
         }
 
-        var row = new Border { CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S, Space.XS), Cursor = Hand, Background = Brushes.Transparent, Child = g };
+        row.Cursor = Hand;
         row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
         row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
         row.PointerReleased += (_, _) => open();

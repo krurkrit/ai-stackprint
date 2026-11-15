@@ -42,10 +42,19 @@ internal static partial class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
-    public static Task Message(Window owner, string title, string text, bool mono = false)
+    /// <summary>A message with Close; <paramref name="warn"/> puts a warning icon before the text.</summary>
+    public static Task Message(Window owner, string title, string text, bool mono = false, bool warn = false)
     {
         Window? w = null;
         Control body = mono ? new ScrollViewer { MaxHeight = Heights.ViewerS, Content = Mono(text == "" ? "(no output)" : text) } : Txt(text);
+        if (warn)
+        {
+            var icon = Icon("warning", IconSize.M).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey).With(i => i.VerticalAlignment = VerticalAlignment.Top);
+            DockPanel.SetDock(icon, Dock.Left);
+            icon.Margin = new Thickness(0, 0, Space.L, 0);
+            body = new DockPanel { Children = { icon, body } };
+        }
+
         w = Shell(title, body, Btn("Close", () => w!.Close(), true).With(b => { b.IsDefault = true; b.IsCancel = true; }));
         return w.ShowDialog(owner);
     }
