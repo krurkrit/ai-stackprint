@@ -126,32 +126,47 @@ public class AppDefinition
     [JsonIgnore] public AppOrigin Origin { get; set; }
 }
 
-/// <summary>User preferences, saved to settings.json next to apps.json.</summary>
+/// <summary>
+/// User preferences. The defaults and what each one means are in default/settings.json (built in), not here: get a default set from
+/// <see cref="Services.SettingsStore.Defaults"/>, not with <c>new</c>. Keys this version does not know are kept (<see cref="Extra"/>).
+/// </summary>
 public class Settings
 {
+    [System.Text.Json.Serialization.JsonConstructor]
+    internal Settings() { }
+
     public List<string> HiddenApps { get; set; } = [];
     public bool HideNotInstalled { get; set; }
-    public string Theme { get; set; } = "System";      // System | Light | Dark
-    public string FontFamily { get; set; } = "Inter";
-    public double FontSize { get; set; } = 14;          // base size, 12-18
-    public int BodyWeight { get; set; } = 400;          // 300-700 (same list as EmphasisWeight)
-    public int EmphasisWeight { get; set; } = 500;      // 300-700
-    public string LogFontFamily { get; set; } = "JetBrains Mono";   // logs and the config editor
-    public double LogFontSize { get; set; } = 14;          // 10-18
-    public string HeadingFontFamily { get; set; } = "";   // empty = same as Body
-    public int HeadingWeight { get; set; }              // 0 = derived from Emphasis; else 300-700
-    public int LogFontWeight { get; set; } = 400;       // Code & logs
-    public int MenuWeight { get; set; } = 500;          // side menu items
-    public bool LogLineNumbers { get; set; }            // logs only; the config editor always shows them
-    public int FadeSeconds { get; set; } = 10;         // new log lines/steps stay highlighted and fade out over this many seconds; 0 = off
-    public int LimitsRefreshMinutes { get; set; } = 1; // live usage limits: at most one call per app per this many minutes (min 1)
-    public List<string> LimitsEnabled { get; set; } = [];   // app ids whose saved sign-in may be used to ask the provider for limits (opt-in)
-    public bool CheckUpdates { get; set; }              // ask GitHub for the latest release at most once a day (opt-in)
-    public DateTime? UpdateCheckedUtc { get; set; }     // last successful check
-    public string? UpdateDismissed { get; set; }        // "Later" on this version: no notice until a newer one
-    public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
+    public string Theme { get; set; } = "";
+    public string FontFamily { get; set; } = "";
+    public double FontSize { get; set; }
+    public int BodyWeight { get; set; }
+    public int EmphasisWeight { get; set; }
+    public string LogFontFamily { get; set; } = "";
+    public double LogFontSize { get; set; }
+    public string HeadingFontFamily { get; set; } = "";
+    public int HeadingWeight { get; set; }
+    public int LogFontWeight { get; set; }
+    public int MenuWeight { get; set; }
+    public bool LogLineNumbers { get; set; }
+    public int FadeSeconds { get; set; }
+    public int LimitsRefreshMinutes { get; set; }
+    public List<string> LimitsEnabled { get; set; } = [];
+    public bool CheckUpdates { get; set; }
     public ThemeColors Light { get; set; } = new();
     public ThemeColors Dark { get; set; } = new();
+
+    /// <summary>Keys of a newer version (or ones this version dropped): read and written back unchanged.</summary>
+    [System.Text.Json.Serialization.JsonExtensionData]
+    public Dictionary<string, System.Text.Json.JsonElement>? Extra { get; set; }
+}
+
+/// <summary>What the app remembers on this machine (state.json): not a preference, never exported.</summary>
+public class UiState
+{
+    public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
+    public DateTime? UpdateCheckedUtc { get; set; }     // last successful update check
+    public string? UpdateDismissed { get; set; }        // "Later" on this version: no notice until a newer one
 }
 
 /// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>
@@ -167,7 +182,8 @@ public class ThemeColors
 public class AppState
 {
     public List<AppDefinition> Defs { get; set; } = [];
-    public Settings Settings { get; set; } = new();
+    public Settings Settings { get; set; } = Services.SettingsStore.Defaults();
+    public UiState State { get; set; } = new();
     public List<string> Projects { get; } = [];
     public List<Item> Items { get; set; } = [];
     public List<AppInfo> Apps { get; set; } = [];

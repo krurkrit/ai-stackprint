@@ -12,7 +12,7 @@ public class AiStackprintApp : Application
     {
         Styles.Add(Theme.Fluent());   // Fluent controls with the Snowy Owl palette; variant follows the OS (ThemeVariant.Default)
         Styles.Add(CodeView.EditorStyles());
-        Theme.Appearance(this, new Models.Settings());   // defaults until MainWindow loads settings.json
+        Theme.Appearance(this, Services.SettingsStore.Defaults());   // defaults until MainWindow loads settings.json
     }
 
     public override void OnFrameworkInitializationCompleted()

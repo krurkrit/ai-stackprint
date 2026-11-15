@@ -47,7 +47,8 @@ internal partial class MainWindow : Window
             }
         }
 
-        _s.Settings = SettingsStore.Load();
+        _s.Settings = SettingsStore.Load();   // first: it hands values older versions kept there to state.json
+        _s.State = StateStore.Load();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
         _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);

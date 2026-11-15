@@ -1,7 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using AiStackprint.Models;
+using AiStackprint.Services;
 using AiStackprint.Ui;
 
 using Avalonia;
@@ -27,13 +27,15 @@ public class InputLayoutTests
         {
             foreach (var size in new[] { 12d, 14d, 18d })
             {
-                Theme.Appearance(Application.Current!, new Settings { FontSize = size });
+                var settings = SettingsStore.Defaults();
+                settings.FontSize = size;
+                Theme.Appearance(Application.Current!, settings);
                 Check(size);
             }
         }
         finally
         {
-            Theme.Appearance(Application.Current!, new Settings());
+            Theme.Appearance(Application.Current!, SettingsStore.Defaults());
         }
     }
 

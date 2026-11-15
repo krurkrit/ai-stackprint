@@ -117,7 +117,7 @@ internal class ItemBrowser
         var g = _grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto,0") };
         _splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Height = Sizes.Splitter }.Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, BorderKey);
         ToolTip.SetTip(_splitter, "Drag to resize · double-click to maximize or restore");
-        _splitter.DragCompleted += (_, _) => { if (!_max) { _x.S.Settings.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); SettingsStore.Save(_x.S.Settings); } };
+        _splitter.DragCompleted += (_, _) => { if (!_max) { _x.S.State.PanelHeight = Math.Round(g.RowDefinitions[2].ActualHeight); StateStore.Save(_x.S.State); } };
         _splitter.DoubleTapped += (_, _) => { _max = !_max; Layout(); };
         _bottom = new Border().Themed(Border.BackgroundProperty, Background);
         Grid.SetRow(_splitter, 1); Grid.SetRow(_bottom, 2);
@@ -154,7 +154,7 @@ internal class ItemBrowser
 
         var open = _sel != null;
         _grid.RowDefinitions[0].Height = open && _max ? new GridLength(0) : GridLength.Star;
-        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.Settings.PanelHeight, MinPanel, MaxPanel));
+        _grid.RowDefinitions[2].Height = !open ? new GridLength(0) : _max ? GridLength.Star : new GridLength(Math.Clamp(_x.S.State.PanelHeight, MinPanel, MaxPanel));
     }
 
     private void Close() { _sel = null; _max = false; ShowPanel(); Fill(); }

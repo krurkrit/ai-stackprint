@@ -1,7 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using AiStackprint.Models;
 using AiStackprint.Services;
 
 using Avalonia;
@@ -98,7 +97,7 @@ internal static class AppearanceSection
 
         var reset = Btn("Reset to defaults", () => Change(() =>
         {
-            var d = new Settings();
+            var d = SettingsStore.Defaults();
             st.FontFamily = d.FontFamily; st.FontSize = d.FontSize; st.BodyWeight = d.BodyWeight; st.EmphasisWeight = d.EmphasisWeight;
             st.LogFontFamily = d.LogFontFamily; st.LogFontSize = d.LogFontSize; st.LogFontWeight = d.LogFontWeight; st.HeadingFontFamily = d.HeadingFontFamily; st.HeadingWeight = d.HeadingWeight;
             st.MenuWeight = d.MenuWeight; st.LogLineNumbers = d.LogLineNumbers; st.Light = new(); st.Dark = new();

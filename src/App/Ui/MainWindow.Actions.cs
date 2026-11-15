@@ -177,9 +177,12 @@ internal partial class MainWindow
         if (first)
         {
             UpdateView.Startup(_x);
-            if (DataFolder.MoveProblem is { } problem)
+            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem })
             {
-                Toast.Show(problem, "warning", 10);
+                if (problem != null)
+                {
+                    Toast.Show(problem, "warning", 10);
+                }
             }
         }
 

@@ -101,7 +101,7 @@ public sealed class LimitsTests : IDisposable
     [Fact]
     public void Service_makes_no_call_until_turned_on()
     {
-        var settings = new Settings();
+        var settings = SettingsStore.Defaults();
         var svc = new LimitsService(() => settings);
         var done = new ManualResetEventSlim();
         svc.Updated += _ => { if (!svc.Status("claude-code").Busy) { done.Set(); } };

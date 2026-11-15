@@ -47,7 +47,7 @@ internal static class UpdateView
     public static async void Startup(Ctx x)
     {
         var st = x.S.Settings;
-        if (!st.CheckUpdates || !UpdateCheck.Due(st.UpdateCheckedUtc, DateTime.UtcNow))
+        if (!st.CheckUpdates || !UpdateCheck.Due(x.S.State.UpdateCheckedUtc, DateTime.UtcNow))
         {
             return;
         }
@@ -55,9 +55,9 @@ internal static class UpdateView
         UpdateCheck.Release? newer;
         try { newer = UpdateCheck.Newer(await UpdateCheck.LatestAsync(), UpdateCheck.Current); }
         catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException or OperationCanceledException) { return; }   // quiet; tried again next start
-        st.UpdateCheckedUtc = DateTime.UtcNow;
-        SettingsStore.Save(st);
-        if (newer != null && st.UpdateDismissed != newer.Version.ToString())
+        x.S.State.UpdateCheckedUtc = DateTime.UtcNow;
+        StateStore.Save(x.S.State);
+        if (newer != null && x.S.State.UpdateDismissed != newer.Version.ToString())
         {
             Notice(x, newer);
         }
@@ -70,8 +70,8 @@ internal static class UpdateView
         {
             var latest = await UpdateCheck.LatestAsync();
             var newer = UpdateCheck.Newer(latest, UpdateCheck.Current);
-            x.S.Settings.UpdateCheckedUtc = DateTime.UtcNow;
-            SettingsStore.Save(x.S.Settings);
+            x.S.State.UpdateCheckedUtc = DateTime.UtcNow;
+            StateStore.Save(x.S.State);
             result.Content = newer != null
                 ? Row(Txt($"{newer.Version} is available.", TextSize.Small), Btn("Release page", () => Open(x, newer), true, "open"))
                 : Txt(latest == null ? "No release has been published yet." : $"You have the latest version ({UpdateCheck.Label}).", TextSize.Small, false, Muted);
@@ -101,7 +101,7 @@ internal static class UpdateView
                 {
                     Row(Icon("arrow_sync", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt($"AI Stackprint {r.Version} is available", TextSize.Small, true)),
                     Row(Btn("Release page", () => { Open(x, r); Toast.Unpin(_notice); }, true, "open"),
-                        Btn("Later", () => { x.S.Settings.UpdateDismissed = r.Version.ToString(); SettingsStore.Save(x.S.Settings); Toast.Unpin(_notice); }))
+                        Btn("Later", () => { x.S.State.UpdateDismissed = r.Version.ToString(); StateStore.Save(x.S.State); Toast.Unpin(_notice); }))
                 }
             }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);

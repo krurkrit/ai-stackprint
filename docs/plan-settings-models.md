@@ -21,7 +21,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - Tests (temp home): move, nothing to move, a partly present new folder, read-only old folder.
 - Docs: every path in `AGENTS.md`, `architecture.md`, `releasing.md` (perf.log next to settings.json → `logs/`).
 
-## Phase 3 — Versioned files, defaults as data, only changes saved
+## Phase 3 — Versioned files, defaults as data, only changes saved (done; moving window values to state.json needs no new version: an older app reading the new file just uses its defaults for them)
 - `VersionedJson` (Core): reads a `JsonObject`, takes `version` (missing = 1), runs the upgrade steps in order, refuses to write a file newer than the app (read-only with a one-time notice), keeps unknown keys, copies the old file to `backups/` before an upgrade, writes atomically (temp file, then rename). Lenient read: comments and trailing commas.
 - `default/settings.json` (embedded in Core) holds every setting and its default; `Settings` property initializers go. Load = defaults, then the user file over them. Save writes only keys that differ from the default (plus `version`).
 - `state.json`: `PanelHeight`, `UpdateCheckedUtc`, `UpdateDismissed` move out of `Settings` (moved from an old settings.json on load).

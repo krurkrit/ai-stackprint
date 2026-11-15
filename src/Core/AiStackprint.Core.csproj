@@ -11,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\apps.builtin.json" LogicalName="apps.builtin.json" />
+    <EmbeddedResource Include="..\..\default\settings.json" LogicalName="default/settings.json" Link="default\settings.json" />   <!-- every setting and its default -->
   </ItemGroup>
 </Project>

@@ -1,0 +1,31 @@
+// Every setting and its default (built into the app). ~/.ai-stackprint/settings.json holds only the ones you change;
+// a missing key there means the value here, so a default changed in a later version reaches everyone who kept it.
+{
+  "version": 1,
+
+  // Apps
+  "hiddenApps": [],                  // app ids not scanned or shown
+  "hideNotInstalled": false,         // hide apps that are not found on this machine
+
+  // Appearance
+  "theme": "System",                 // System | Light | Dark
+  "fontFamily": "Inter",             // falls back to Noto Sans, then the platform font
+  "fontSize": 14,                    // base size, 12-18
+  "bodyWeight": 400,                 // 300-700
+  "emphasisWeight": 500,             // 300-700
+  "headingFontFamily": "",           // empty: same as fontFamily
+  "headingWeight": 0,                // 0: from emphasisWeight; else 300-700
+  "menuWeight": 500,                 // side menu items
+  "logFontFamily": "JetBrains Mono", // logs and the config editor
+  "logFontSize": 14,                 // 10-18
+  "logFontWeight": 400,
+  "logLineNumbers": false,           // logs only; the config editor always shows them
+  "fadeSeconds": 10,                 // new log lines stay highlighted this long; 0 = off
+  "light": {},                       // color overrides (accent, hover, selection, levels) as hex; empty: Snowy Owl
+  "dark": {},
+
+  // Network (each is off until you turn it on)
+  "limitsEnabled": [],               // app ids whose saved sign-in may be used to ask for live limits
+  "limitsRefreshMinutes": 1,         // at most one call per app per this many minutes (at least 1)
+  "checkUpdates": false              // ask GitHub for the latest release at most once a day
+}
