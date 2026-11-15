@@ -27,7 +27,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - `state.json`: `PanelHeight`, `UpdateCheckedUtc`, `UpdateDismissed` move out of `Settings` (moved from an old settings.json on load).
 - Tests: a default is not written, a change is; a changed default reaches a file without the key; unknown keys survive; a fake v2 with an upgrade step; a newer file is not written; backup before upgrade; atomic write; old settings.json with state keys.
 
-## Phase 4 — Projects remembered
+## Phase 4 — Projects remembered (done; the dashboard has no project list, so the greyed row and bin are in the menu; a missing project reached from search or Back shows "Folder not found" with Choose new location and Remove; relocating onto a folder already listed removes the old row)
 - `projects.json`: list of `{ path, added }`, paths under home as `~/…`. Saved on add and remove; loaded on start.
 - Missing folders: greyed in the menu and on the dashboard, with a bin icon to remove; a click on the row opens the folder picker, and the chosen folder replaces the path (same position, same added date).
 - Tests: save/load, `~` paths on each OS form, duplicates, missing folder.

@@ -184,7 +184,8 @@ public class AppState
     public List<AppDefinition> Defs { get; set; } = [];
     public Settings Settings { get; set; } = Services.SettingsStore.Defaults();
     public UiState State { get; set; } = new();
-    public List<string> Projects { get; } = [];
+    public List<string> Projects { get; } = [];                                    // in the order added; saved in projects.json
+    public Dictionary<string, DateTime> ProjectAdded { get; } = [];              // when each was added (UTC), kept when one is relocated
     public List<Item> Items { get; set; } = [];
     public List<AppInfo> Apps { get; set; } = [];
     public Services.ScanChanges Changes { get; set; } = new([], null);   // since the scan before this one (saved between runs)

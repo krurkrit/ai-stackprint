@@ -15,7 +15,7 @@ namespace AiStackprint.Ui;
 /// Everything that applies inside one project folder: what each app loads into context there (with limits), checks of its AI files, the instruction files,
 /// and its own skills plus user- and system-level ones in the same list as the Skills page (filters, bottom panel).
 /// </summary>
-internal class ProjectView(Ctx x, Action<string> removeProject)
+internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> relocateProject)
 {
     private static readonly string[] _order = Levels.Order;
     private readonly ItemBrowser _browser = new(x, "Skill");
@@ -33,6 +33,11 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
     public Control Build(string project)
     {
         if (_project != project) { _project = project; _browser.Reset(); }
+        if (!Directory.Exists(project))
+        {
+            return Missing(project);   // reached from search or Back after the folder was moved or deleted
+        }
+
         var all = x.S.Items.Where(i => Applies(i, project)).ToList();
         var skills = all.Where(i => i.Kind == "Skill").ToList();
 
@@ -54,6 +59,21 @@ internal class ProjectView(Ctx x, Action<string> removeProject)
 
         var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), _claude.Build(project), AiFoldersSection.Build(x, project, all), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
         return _browser.Build(top, skills);
+    }
+
+    private Control Missing(string project)
+    {
+        var text = new StackPanel
+        {
+            Spacing = Space.L,
+            Children =
+            {
+                Txt($"This folder no longer exists: {project}. If the project moved, choose its new location; it keeps its place in the list.", TextSize.Body),
+                Row(Btn("Choose new location", () => relocateProject(project), true, "folder_open"), DangerBtn("Remove from list", () => removeProject(project), "delete"))
+            }
+        };
+        var title = new StackPanel { Spacing = Space.S, Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) } };
+        return Page(Row(IconTile("folder", Sizes.LogoXL), title), Section("warning", "Folder not found", text));
     }
 
     /// <summary>Instruction/settings files read in this project, one row per file with every app that reads it.</summary>

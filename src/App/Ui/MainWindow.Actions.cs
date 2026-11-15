@@ -5,7 +5,6 @@ using AiStackprint.Models;
 using AiStackprint.Services;
 
 using Avalonia;
-using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
@@ -94,26 +93,6 @@ internal partial class MainWindow
         }
     }
 
-    private async void AddProject()
-    {
-        var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Project folder" });
-        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p || _s.Projects.Contains(p))
-        {
-            return;
-        }
-
-        _s.Projects.Add(p);
-        _view = "Project:" + p;
-        Scan();
-    }
-
-    private void RemoveProject(string p)
-    {
-        _s.Projects.Remove(p);
-        _view = "Dashboard";
-        Scan();
-    }
-
     private async void AddApp()
     {
         var def = await new AddAppDialog().ShowDialog<AppDefinition?>(this);
@@ -136,7 +115,7 @@ internal partial class MainWindow
         }
 
         _scanning = true; RefreshNav();
-        var defs = SettingsStore.Visible(_s.Defs, _s.Settings); var projects = _s.Projects.ToList();
+        var defs = SettingsStore.Visible(_s.Defs, _s.Settings); var projects = _s.Projects.Where(Directory.Exists).ToList();   // a missing folder is greyed in the menu until relocated or removed
         var status = _status;   // set while the first scan's loading dashboard is shown
         void Say(string text) { if (status != null) { Dispatcher.UIThread.Post(() => status(text)); } }
         var steps = new List<(string, long)>(); var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -177,7 +156,7 @@ internal partial class MainWindow
         if (first)
         {
             UpdateView.Startup(_x);
-            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem })
+            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem, ProjectStore.Problem })
             {
                 if (problem != null)
                 {

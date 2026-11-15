@@ -49,10 +49,11 @@ internal partial class MainWindow : Window
 
         _s.Settings = SettingsStore.Load();   // first: it hands values older versions kept there to state.json
         _s.State = StateStore.Load();
+        LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
         _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
-        _project = new ProjectView(_x, RemoveProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _usage = new UsageView(_x);
+        _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _usage = new UsageView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
         {
@@ -215,7 +216,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Section("PROJECTS"));
         foreach (var p in _s.Projects)
         {
-            nav.Children.Add(Go("folder", Ctx.ProjectName(p), "Project:" + p).With(b => ToolTip.SetTip(b, p)));
+            nav.Children.Add(ProjectRow(p));
         }
 
         nav.Children.Add(NavBtn("folder_add", "Add project folder", AddProject));

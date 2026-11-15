@@ -73,7 +73,7 @@ public sealed class PagesTests : IDisposable
             ("Usage", () => new UsageView(x).Build()),
             ("Logs", () => new LogsView(x).Build(null)),
             ("Health", () => new HealthView(x).Build()),
-            ("demo-project", () => new ProjectView(x, _ => { }).Build(s.Projects[0])),
+            ("demo-project", () => new ProjectView(x, _ => { }, _ => { }).Build(s.Projects[0])),
             ("Settings", () => new SettingsView(x).Build()),
         };
         foreach (var (title, build) in pages)
@@ -86,6 +86,25 @@ public sealed class PagesTests : IDisposable
         }
 
         w.Close();   // nothing of this test left running in the next one
+        Settle();
+    }
+
+    [AvaloniaFact]
+    public void A_project_folder_that_is_gone_offers_a_new_location_or_removal()
+    {
+        var s = State();
+        var (w, x) = Host(s);
+        var gone = Path.Combine(_tmp, "moved-away");
+        string? relocated = null, removed = null;
+        w.Content = new ProjectView(x, p => removed = p, p => relocated = p).Build(gone);
+        Settle();
+        Assert.Contains("Folder not found", Ui.Texts(w));
+        Button With(string text) => w.GetVisualDescendants().OfType<Button>().First(b => Ui.Texts(b).Contains(text));   // icon buttons: the text is inside
+        Ui.Click(With("Choose new location"));
+        Ui.Click(With("Remove from list"));
+        Assert.Equal(gone, relocated);
+        Assert.Equal(gone, removed);
+        w.Close();
         Settle();
     }
 
