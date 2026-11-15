@@ -50,4 +50,10 @@ public sealed class ModelTable
     public string? Updated { get; init; }
     /// <summary>The downloaded copy is used (newer than the built-in one).</summary>
     public bool Downloaded { get; init; }
+
+    private string? _tierKey;
+
+    /// <summary>Every model's tier thresholds in one string: usage read with other thresholds is split differently, so it is read again.</summary>
+    public string TierKey => _tierKey ??= string.Join(";", Models.Where(m => m.Value.Above is { Count: > 0 }).OrderBy(m => m.Key, StringComparer.Ordinal)
+        .Select(m => m.Key + ":" + string.Join(",", m.Value.Above!.Select(t => t.Tokens))));
 }

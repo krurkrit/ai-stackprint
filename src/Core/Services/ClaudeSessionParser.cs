@@ -141,8 +141,14 @@ internal class ClaudeSessionParser : ILogParser
                 continue;
             }
 
+            // What changes the price: 1-hour cache writes, fast mode, US-only processing, web searches (missing = standard, global, short cache, none)
+            var write = u.Num("cache_creation_input_tokens");
             yield return new(time, model, LogParsers.ProjectName(e.Str("cwd")), u.Num("input_tokens"), u.Num("output_tokens"),
-                u.Num("cache_read_input_tokens"), u.Num("cache_creation_input_tokens"), 0, e.Get("isSidechain").ValueKind == JsonValueKind.True);
+                u.Num("cache_read_input_tokens"), write, 0, e.Get("isSidechain").ValueKind == JsonValueKind.True,
+                CacheWrite1h: Math.Min(write, u.Get("cache_creation").Num("ephemeral_1h_input_tokens")),
+                Fast: u.Str("speed") == "fast",
+                UsOnly: string.Equals(u.Str("inference_geo"), "us", StringComparison.OrdinalIgnoreCase),
+                WebSearches: (int)u.Get("server_tool_use").Num("web_search_requests"));
         }
     }
 }

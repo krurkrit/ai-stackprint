@@ -149,6 +149,12 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             Tile("Est. cost", Money(total), "The app's own figure where its log has one, else an estimate from the model data's list prices");
         }
 
+        if (b.Sum(v => v.WebSearches) is > 0 and var searches)
+        {
+            var sc = b.Sum(v => ModelCatalog.SearchCost(v.Model, v.WebSearches) ?? 0);
+            Tile("Web searches", searches.ToString("N0"), sc > 0 ? $"{Money(sc)} at the model's price per search, part of the cost" : "No price per search in the model data");
+        }
+
         Tile("Sessions", r.Sessions.ToString("N0"));
         Tile("Messages", msgs.ToString("N0"), sub > 0 ? $"{sub:N0} from sub-agents" : null);
 
@@ -182,7 +188,7 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
 
         if (priced)
         {
-            notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices (cache writes at the 5-minute price). Cache read and write are counted apart from input.", TextSize.Caption, false, Muted));
+            notes.Children.Add(Txt("Cost is the app's own figure where its log has one, else an estimate from list prices: per reply, with the long-context price over a model's tier, the 1-hour cache price, and fast mode or US-only processing where the log records them. Cache read and write are counted apart from input.", TextSize.Caption, false, Muted));
         }
 
         var edit = Btn(unpriced.Count > 0 ? "Add price" : "Edit prices", () => x.Go(unpriced.Count > 0 ? ModelRoute(unpriced.Min!) : "Models"), false, "edit").With(e => e.HorizontalAlignment = HorizontalAlignment.Left);

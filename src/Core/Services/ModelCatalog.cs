@@ -95,13 +95,55 @@ public static partial class ModelCatalog
     public static string? PricedAs(string model, ModelTable? table = null) => Lookup(model, table).PricedKey;
 
     /// <summary>USD for a bucket: the app's own figure when it recorded one, else the estimate; null when neither.</summary>
-    public static decimal? Cost(UsageBucket b, ModelTable? table = null) => b.Cost ?? Cost(b.Model, b.Input, b.Output, b.CacheRead, b.CacheWrite, table);
+    public static decimal? Cost(UsageBucket b, ModelTable? table = null) =>
+        b.Cost ?? Estimate(b.Model, new(b.Input, b.Output, b.CacheRead, b.CacheWrite, b.CacheWrite1h, b.Tier, b.Fast, b.UsOnly, b.WebSearches), table);
 
-    /// <summary>An estimate at the base price; a cache price that is unknown is counted at the input price.</summary>
+    /// <summary>USD for one reply: the app's own figure, else the estimate with its tier.</summary>
+    public static decimal? Cost(UsageEvent e, ModelTable? table = null) =>
+        e.Cost ?? Estimate(e.Model, new(e.Input, e.Output, e.CacheRead, e.CacheWrite, e.CacheWrite1h, TierOf(e.Model, e.RequestInput, table), e.Fast, e.UsOnly, e.WebSearches), table);
+
+    /// <summary>An estimate at the base price (short cache, no tier).</summary>
     public static decimal? Cost(string model, long input, long output, long cacheRead, long cacheWrite, ModelTable? table = null) =>
-        For(model, table)?.Price is { Input: { } i, Output: { } o } p
-            ? (input * i + output * o + cacheRead * (p.CacheRead ?? i) + cacheWrite * (p.CacheWrite ?? i)) / 1_000_000m
-            : null;
+        Estimate(model, new(input, output, cacheRead, cacheWrite, 0, 0, false, false, 0), table);
+
+    /// <summary>The tier a request of <paramref name="requestInput"/> tokens is priced at: the largest <c>tokens</c> it is over, or 0 (base price).</summary>
+    public static long TierOf(string model, long requestInput, ModelTable? table = null) =>
+        For(model, table)?.Above?.Where(t => requestInput > t.Tokens).Select(t => t.Tokens).DefaultIfEmpty(0).Max() ?? 0;
+
+    /// <summary>The web-search part of a cost (USD), or null when the model has no search price.</summary>
+    public static decimal? SearchCost(string model, long searches, ModelTable? table = null) => For(model, table)?.WebSearch is { } w ? searches * w : null;
+
+    private readonly record struct Use(long Input, long Output, long CacheRead, long CacheWrite, long CacheWrite1h, long Tier, bool Fast, bool UsOnly, long WebSearches);
+
+    /// <summary>
+    /// Tokens at the tier's prices (a field the tier leaves out uses the base price), 1-hour cache writes at <c>cacheWrite1h</c>, times the fast and
+    /// US-only multipliers, plus web searches. A cache price that is unknown counts at the input price (a 1-hour one at the short-cache price).
+    /// </summary>
+    private static decimal? Estimate(string model, Use u, ModelTable? table)
+    {
+        if (For(model, table) is not { Price: { Input: { } i0, Output: { } o0 } p } m)
+        {
+            return null;
+        }
+
+        var tier = u.Tier > 0 ? m.Above?.Find(t => t.Tokens == u.Tier) : null;
+        decimal i = tier?.Input ?? i0, o = tier?.Output ?? o0;
+        var read = tier?.CacheRead ?? p.CacheRead ?? i;
+        var write = tier?.CacheWrite ?? p.CacheWrite ?? i;
+        var write1h = tier?.CacheWrite1h ?? p.CacheWrite1h ?? write;
+        var cost = (u.Input * i + u.Output * o + u.CacheRead * read + (u.CacheWrite - u.CacheWrite1h) * write + u.CacheWrite1h * write1h) / 1_000_000m;
+        if (u.Fast && m.Multipliers?.GetValueOrDefault("fast") is > 0 and var fast)
+        {
+            cost *= fast;
+        }
+
+        if (u.UsOnly && m.Multipliers?.GetValueOrDefault("us") is > 0 and var us)
+        {
+            cost *= us;
+        }
+
+        return cost + u.WebSearches * (m.WebSearch ?? 0);
+    }
 
     private sealed record Found(ModelInfo? Priced, string? PricedKey, ModelInfo? Any);
 

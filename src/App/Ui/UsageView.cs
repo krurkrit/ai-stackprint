@@ -71,6 +71,11 @@ internal class UsageView(Ctx x)
             Tile("Est. cost", UsageCard.Money(c));
         }
 
+        if (all.Sum(b => b.WebSearches) is > 0 and var searches)
+        {
+            Tile("Web searches", searches.ToString("N0"));
+        }
+
         Tile("Sessions", apps.Sum(a => a.Result.Sessions).ToString("N0"));
 
         var shown = Math.Min(apps.Count, TopApps + 1);

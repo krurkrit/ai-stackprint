@@ -8,10 +8,21 @@ using AiStackprint.Models;
 namespace AiStackprint.Services;
 
 /// <summary>One billed model response. Input excludes cached tokens; cache read/write are separate. Reasoning is informational (already inside Output). Cost: USD the app itself recorded, null when it did not.</summary>
-public record UsageEvent(DateTime Time, string Model, string Project, long Input, long Output, long CacheRead, long CacheWrite, long Reasoning, bool SubAgent, decimal? Cost = null);
+/// <param name="CacheWrite1h">The part of <paramref name="CacheWrite"/> written to the 1-hour cache (Anthropic); the rest is the short cache.</param>
+/// <param name="Fast">Fast mode (Claude <c>speed: fast</c>); <paramref name="UsOnly"/>: US-only processing. Both multiply the price.</param>
+/// <param name="WebSearches">Web searches the model ran for this reply (priced per search).</param>
+public record UsageEvent(DateTime Time, string Model, string Project, long Input, long Output, long CacheRead, long CacheWrite, long Reasoning, bool SubAgent, decimal? Cost = null,
+    long CacheWrite1h = 0, bool Fast = false, bool UsOnly = false, int WebSearches = 0)
+{
+    /// <summary>The request's input size, which picks a long-context price tier: input + cache read + cache write.</summary>
+    public long RequestInput => Input + CacheRead + CacheWrite;
+}
 
 /// <summary>Usage of one day, model and project (what is kept per file instead of every event).</summary>
-public record UsageBucket(DateOnly Day, string Model, string Project, long Input, long Output, long CacheRead, long CacheWrite, long Reasoning, int Messages, int SubAgentMessages, decimal? Cost = null);
+/// <param name="Tier">The long-context tier its replies were over (the tier's <c>tokens</c>; 0 = base price), from the model data when the log was read.</param>
+/// <remarks>Split by everything that changes the price (tier, fast mode, US-only processing); prices are applied when shown, so a changed price needs no new read.</remarks>
+public record UsageBucket(DateOnly Day, string Model, string Project, long Input, long Output, long CacheRead, long CacheWrite, long Reasoning, int Messages, int SubAgentMessages, decimal? Cost = null,
+    long CacheWrite1h = 0, long Tier = 0, bool Fast = false, bool UsOnly = false, int WebSearches = 0);
 
 /// <summary>One reading of a usage limit written by the app: percent of the window used, and when the window resets.</summary>
 public record LimitSample(DateTime Time, string Name, double UsedPercent, int WindowMinutes, DateTime ResetsAt);
@@ -34,7 +45,7 @@ public static class UsageStats
     /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live"/>).</summary>
     private sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
 
-    private static readonly ConcurrentDictionary<(string, long, long), Parsed> _cache = new();
+    private static readonly ConcurrentDictionary<(string, long, long, string), Parsed> _cache = new();
 
     /// <summary>The file's usage, read only when it is new or changed; <see cref="Compute"/> and <see cref="Live"/> share it, so a page reads each log once.</summary>
     private static Parsed Read(LogFile f, ILogParser parser)
@@ -44,11 +55,12 @@ public static class UsageStats
             _cache.Clear();
         }
 
-        return _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ =>
+        var table = ModelCatalog.Load();   // its tier thresholds split the buckets: changed thresholds read the logs again
+        return _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks, table.TierKey), _ =>
         {
             var recent = DateTime.Now.AddDays(-8);
             var events = parser.UsageFile(f.Path).ToList();
-            return new(Bucket(events), [.. events.Where(e => e.Time >= recent)]);
+            return new(Bucket(events, table), [.. events.Where(e => e.Time >= recent)]);
         });
     }
 
@@ -142,13 +154,15 @@ public static class UsageStats
         foreach (var e in events)
         {
             tokens += e.Input + e.Output + e.CacheWrite; reads += e.CacheRead; n++;
-            if ((e.Cost ?? ModelCatalog.Cost(e.Model, e.Input, e.Output, e.CacheRead, e.CacheWrite)) is { } c) { cost += c; priced = true; }
+            if (ModelCatalog.Cost(e) is { } c) { cost += c; priced = true; }
         }
         return new(tokens, reads, n, priced ? cost : null);
     }
 
-    public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events) =>
-        [.. events.GroupBy(e => (Day: DateOnly.FromDateTime(e.Time), e.Model, e.Project))
+    /// <summary>Per day, model and project, split by price tier (from <paramref name="table"/>'s thresholds), fast mode and US-only processing.</summary>
+    public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events, ModelTable? table = null) =>
+        [.. events.GroupBy(e => (Day: DateOnly.FromDateTime(e.Time), e.Model, e.Project, Tier: ModelCatalog.TierOf(e.Model, e.RequestInput, table), e.Fast, e.UsOnly))
             .Select(g => new UsageBucket(g.Key.Day, g.Key.Model, g.Key.Project, g.Sum(e => e.Input), g.Sum(e => e.Output), g.Sum(e => e.CacheRead), g.Sum(e => e.CacheWrite),
-                g.Sum(e => e.Reasoning), g.Count(), g.Count(e => e.SubAgent), g.All(e => e.Cost != null) ? g.Sum(e => e.Cost!.Value) : null))];
+                g.Sum(e => e.Reasoning), g.Count(), g.Count(e => e.SubAgent), g.All(e => e.Cost != null) ? g.Sum(e => e.Cost!.Value) : null,
+                g.Sum(e => e.CacheWrite1h), g.Key.Tier, g.Key.Fast, g.Key.UsOnly, g.Sum(e => e.WebSearches)))];
 }
