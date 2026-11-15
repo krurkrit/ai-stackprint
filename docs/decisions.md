@@ -80,7 +80,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Deleting logs moves them to the Recycle Bin or Trash.
 - Search has a results list and jump-to-line. Search results use the log font size, and all search-row controls are the same height.
   - Words match separately, in any order, on one line (Raw) or in one step (Conversation); "quotes" match a phrase; the regex toggle uses the whole text as one pattern. In Conversation, role:user and tool:bash keep only those steps. Matches are highlighted in the results; Enter / Shift+Enter go to the next / previous one ("3 of 120"). The search runs 250 ms after the last key.
-  - The Files card has a filter (words in the file name, type or folder). It lists the newest 50 files (and the open one); "Show 50 more" adds older ones, so opening the page and each change the watcher sees rebuild few rows.
+  - The Files card has a filter (words in the file name, type or folder). It lists the newest 50 files (and the open one); "Show 50 more" adds older ones, so opening the page and each change the watcher sees rebuild few rows. Clicking a file changes only the selection and the viewer: the page keeps its scroll position (so does switching Conversation/Raw or Follow).
 - Each app has a log summary.
 - Highlighting and rendering:
   - Session logs are readable, with syntax highlighting.
@@ -96,5 +96,6 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Workflow
 - Write changes directly to the project folder.
 - Loading: a page's controls (titles, buttons, cards) are shown at once and fade in; a card whose data is not ready shows the loading icon (shown at once), and the data fades in (`Reveal.Fade`, 180 ms) when it arrives. A refresh of data already on screen keeps it and shows the small spinner.
-- The first scan's loading cards say what the scan is doing: finding apps, comparing with the last scan, "Checking skills and plugins for safety: 45 of 120", checking config files.
+- When a page's data arrives only the parts that were loading fade in; titles and cards already on screen stay as they are (no blink), and a placeholder is as tall as what replaces it where the size is known (the log viewer).
+- The first scan's loading cards say what the scan is doing: short enough for a tile: "Finding apps…", "Comparing changes…", "Safety check 45/120", "Checking configs…".
 - Anything that reads a file or folder when you click it (a log file, a skill or plugin file, an app's log folders) reads off the UI thread: the viewer shows the loading icon, then the content fades in; a newer click cancels an older read.

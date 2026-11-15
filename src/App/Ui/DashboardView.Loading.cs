@@ -10,15 +10,15 @@ namespace AiStackprint.Ui;
 internal static partial class DashboardView
 {
     // What the first scan is doing, in the order it does it (shown in the loading cards)
-    internal const string Finding = "Finding apps, skills and plugins…";
-    internal const string Comparing = "Comparing with the last scan…";
-    internal const string Configs = "Checking config files and projects…";
-    internal static string Safety(int done, int total) => $"Checking skills and plugins for safety: {done} of {total}";
+    internal const string Finding = "Finding apps…";
+    internal const string Comparing = "Comparing changes…";
+    internal const string Configs = "Checking configs…";
+    internal static string Safety(int done, int total) => $"Safety check {done}/{total}";
 
     /// <summary>
     /// The dashboard before the first scan is done: its title, buttons and cards are the real ones, each card holds the loading icon where its data will be.
     /// It fades in; the finished dashboard (<see cref="Build"/>) replaces it and fades in too.
-    /// <paramref name="status"/> sets what every card says the scan is doing ("Checking skills for safety: 45 of 120").
+    /// <paramref name="status"/> sets what every card says the scan is doing ("Safety check 45/120").
     /// </summary>
     public static Control Loading(Ctx x, Action addProject, out Action<string> status)
     {

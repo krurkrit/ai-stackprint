@@ -31,7 +31,9 @@ internal class LogSummaryCard
     }
 
     /// <summary>Leaving the page: stop any calculation and drop the shown result.</summary>
-    public void Release() { _cts?.Cancel(); _cts = null; _body.Content = null; _files = []; }
+    public void Release() { _cts?.Cancel(); _cts = null; _body.Content = null; _files = []; _result = false; }
+
+    private bool _result;   // a result is on screen
 
     /// <summary>Recomputes, e.g. after the watcher saw new files.</summary>
     public void Update(IReadOnlyList<LogFile> files) { _files = files; Refresh(); }
@@ -42,7 +44,7 @@ internal class LogSummaryCard
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
         var cts = _cts = new CancellationTokenSource();
 #pragma warning restore S2930
-        _body.Content ??= Txt("Calculating…", TextSize.Small, false, Muted);
+        _body.Content ??= Busy.Loading("Calculating the summary…");   // a refresh keeps the last result on screen
 
         var files = _files; var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
         try
@@ -50,7 +52,9 @@ internal class LogSummaryCard
             var s = await Task.Run(() => LogSummary.Compute(files, since, cts.Token), cts.Token);
             if (!cts.IsCancellationRequested)
             {
-                _body.Content = Show(s);
+                var shown = Show(s);
+                _body.Content = _result ? shown : Reveal.Fade(shown);   // the first result fades in over the loading icon; later ones replace it in place
+                _result = true;
             }
         }
         catch (OperationCanceledException) { }

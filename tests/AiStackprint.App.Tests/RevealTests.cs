@@ -47,7 +47,7 @@ public sealed class RevealTests
         Assert.Contains(DashboardView.Finding, t);
 
         status(DashboardView.Safety(45, 120));   // every card says what the scan is doing
-        Assert.Equal(8, Ui.Texts(w).Count(s => s == "Checking skills and plugins for safety: 45 of 120"));
+        Assert.Equal(8, Ui.Texts(w).Count(s => s == "Safety check 45/120"));
     }
 
     [AvaloniaFact]
