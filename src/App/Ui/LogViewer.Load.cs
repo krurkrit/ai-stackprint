@@ -34,7 +34,7 @@ internal partial class LogViewer
 
         var id = ++_loadId;
         var readable = ShowReadable;
-        _view.Content = Busy.Loading("Reading the log…");
+        _view.Content = Busy.Loading("Reading the log…", immediate: true);
         var r = await Task.Run(() => ReadFile(f, readable), CancellationToken.None);
         if (id != _loadId || _file != f)
         {

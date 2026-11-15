@@ -65,11 +65,16 @@ internal static class Busy
     }
 
     /// <summary>Spinner with a muted label, shown after a short delay.</summary>
-    public static Control Loading(string text = "Loading…", double size = IconSize.M)
+    public static Control Loading(string text = "Loading…", double size = IconSize.M, bool immediate = false)
     {
         var row = Row(Spinner(size), Txt(text, TextSize.Small, false, Muted));
-        row.Opacity = 0;
         row.Margin = new Thickness(Space.XXS, Space.S);
+        if (immediate)
+        {
+            return row;   // the user just clicked something: show that it is working at once
+        }
+
+        row.Opacity = 0;
         row.AttachedToVisualTree += (_, _) => DispatcherTimer.RunOnce(() => row.Opacity = 1, TimeSpan.FromMilliseconds(DelayMs));
         return row;
     }

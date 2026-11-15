@@ -36,10 +36,10 @@ internal partial class LogsView(Ctx x)
         if (appId != null && appId != _app) { _app = appId; _file = null; _checked.Clear(); _fileQuery = ""; }
         _app ??= Apps.FirstOrDefault(d => x.Info(d.Id)?.Installed == true)?.Id ?? Apps.FirstOrDefault()?.Id;
         var def = _app == null ? null : x.S.Def(_app);
-        var loading = def != null && !_listed.Contains(def.Id);   // the first time an app's logs are opened its folders are read in the background
+        var loading = def != null && _filesApp != def.Id;   // when the app changes (or the page is opened) its folders are read in the background
         if (!loading)
         {
-            Relist(def);
+            _file ??= _files.FirstOrDefault();   // the files are already read (and kept current by the watcher): a click on a file does not read the folders again
         }
 
         var apps = Table.Build([new Col("App", "*")], Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
@@ -116,7 +116,7 @@ internal partial class LogsView(Ctx x)
         return right;
     }
 
-    private readonly HashSet<string> _listed = [];
+    private string? _filesApp;   // the app whose files _files holds; the watcher keeps them current while the page is open
 
     private async void LoadFiles(AppDefinition def, ContentControl pane)
     {
@@ -128,13 +128,13 @@ internal partial class LogsView(Ctx x)
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // unreadable folders: shown as no files
 
-        _listed.Add(def.Id);
         if (_app != def.Id)
         {
             return;   // the user moved to another app meanwhile
         }
 
         _files = found;
+        _filesApp = def.Id;
         _file = _files.FirstOrDefault(f => f.Path == _file?.Path) ?? _files.FirstOrDefault();
         _checked.IntersectWith(_files.Select(f => f.Path));
         pane.Content = Reveal.Fade(BuildRight(def, false));   // the data fades in
@@ -207,7 +207,7 @@ internal partial class LogsView(Ctx x)
         _viewer = new LogViewer(x) { Readable = _viewer.Readable, Follow = _viewer.Follow };
         _summary = new LogSummaryCard { Days = _summary.Days };
         _table.Content = null; _table = new ContentControl();
-        _files = []; _checked.Clear(); _file = null;
+        _files = []; _filesApp = null; _checked.Clear(); _file = null;
     }
 
     private async void Delete(List<LogFile> files)
