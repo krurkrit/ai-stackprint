@@ -1,7 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,7 +15,6 @@ namespace AiStackprint.Services;
 public static class Fingerprint
 {
     private const long MaxBytes = 4L * 1024 * 1024, MaxHashed = 256 * 1024;
-    private static readonly ConcurrentDictionary<(string Path, long Size, long Ticks), string> _files = new();
 
     public static string Text(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
 
@@ -41,8 +39,7 @@ public static class Fingerprint
                 total += size;
 
                 var full = Path.Combine(dir, rel);
-                var key = (full, size, File.GetLastWriteTimeUtc(full).Ticks);
-                var h = size > MaxHashed || total > MaxBytes ? size.ToString() : _files.GetOrAdd(key, _ => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(full))));
+                var h = size > MaxHashed || total > MaxBytes ? size.ToString() : ScanCache.Hashes.GetOrAdd(ScanCache.Stamp(full, size), _ => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(full))));
                 sb.Append(rel.Replace('\\', '/')).Append(':').Append(h).Append('\n');
             }
 

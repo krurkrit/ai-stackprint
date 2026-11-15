@@ -31,6 +31,14 @@ public sealed class SafetyScanTests : IDisposable
     private List<HealthIssue> Check(params Item[] items) => SafetyScan.Check(items, _tmp);
 
     [Fact]
+    public void Progress_counts_each_checked_item_up_to_the_total()
+    {
+        var seen = new List<(int, int)>();
+        SafetyScan.Check([Skill("one", "a"), Skill("two", "b")], _tmp, (d, t) => seen.Add((d, t)));
+        Assert.Equal([(1, 2), (2, 2)], seen);
+    }
+
+    [Fact]
     public void Ordinary_skill_text_has_no_findings()
     {
         var s = Skill("plain", "Use `curl https://example.com/api` to fetch data. Read ~/.config/app. Then ignore the noise in the logs.\nDon't tell users the secret exists in docs. Base64 is a way to encode.");

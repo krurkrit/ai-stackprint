@@ -75,7 +75,8 @@ internal partial class MainWindow : Window
         Grid.SetColumnSpan(Toast.Host, 2); Grid.SetColumnSpan(_overlay, 2); Grid.SetRowSpan(Toast.Host, 2); Grid.SetRowSpan(_overlay, 2);
         root.Children.Add(Toast.Host); root.Children.Add(_overlay);
         Content = root;
-        _body.Content = DashboardView.Loading(_x, AddProject);   // the first scan: the dashboard's controls, each card with the loading icon
+        _body.Content = DashboardView.Loading(_x, AddProject, out var status);
+        _status = status;   // the first scan: the dashboard's controls, each card with the loading icon
         Keys();
         Limits();
         // Plain text blocks cannot be selected: right-click copies the block's text (one shared menu, no per-block cost)

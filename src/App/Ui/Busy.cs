@@ -67,8 +67,7 @@ internal static class Busy
     /// <summary>Spinner with a muted label, shown at once (<paramref name="delayed"/>: only after 300 ms, for work that is usually quick).</summary>
     public static Control Loading(string text = "Loading…", double size = IconSize.M, bool delayed = false)
     {
-        var row = Row(Spinner(size), Txt(text, TextSize.Small, false, Muted));
-        row.Margin = new Thickness(Space.XXS, Space.S);
+        var row = Status(text, out _, size);
         if (!delayed)
         {
             return row;   // shown at once: a component with no data yet always says it is loading
@@ -76,6 +75,15 @@ internal static class Busy
 
         row.Opacity = 0;
         row.AttachedToVisualTree += (_, _) => DispatcherTimer.RunOnce(() => row.Opacity = 1, TimeSpan.FromMilliseconds(DelayMs));
+        return row;
+    }
+
+    /// <summary>Spinner with a muted label, shown at once; the label is returned so its text can follow the work ("Checking 45 of 120").</summary>
+    public static Control Status(string text, out TextBlock label, double size = IconSize.M)
+    {
+        label = Txt(text, TextSize.Small, false, Muted);
+        var row = Row(Spinner(size), label);
+        row.Margin = new Thickness(Space.XXS, Space.S);
         return row;
     }
 

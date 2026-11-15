@@ -1,7 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -34,29 +33,26 @@ public static partial class SafetyScan
         new("credentials", Credentials(), false, false, "mentions credential files (.ssh keys, .aws/credentials, .netrc …)")
     ];
 
-    // (path, size, mtime) → the ids of the rules that matched: a file is read again only when it changed
-    private static readonly ConcurrentDictionary<(string Path, long Size, long Ticks), string[]> _cache = new();
-
-    /// <summary>Findings for the skills and plugins in <paramref name="items"/>, as issues of the Safety area; each folder is read once.</summary>
-    public static List<HealthIssue> Check(IEnumerable<Item> items, string home)
+    /// <summary>
+    /// Findings for the skills and plugins in <paramref name="items"/>, as issues of the Safety area; each folder is read once.
+    /// <paramref name="progress"/> gets (done, total) as the items are checked.
+    /// </summary>
+    public static List<HealthIssue> Check(IEnumerable<Item> items, string home, Action<int, int>? progress = null)
     {
         var res = new List<HealthIssue>();
         var byRoot = new Dictionary<string, List<Finding>>(StringComparer.OrdinalIgnoreCase);
-        foreach (var i in items.Where(i => i.Kind is "Skill" or "Plugin"))
+        var targets = items.Where(i => i.Kind is "Skill" or "Plugin").Select(i => (Item: i, Target: Target(i))).Where(t => t.Target.Root != null).ToList();
+        var done = 0;
+        foreach (var (i, (root, single)) in targets)
         {
-            var (root, single) = Target(i);
-            if (root == null)
-            {
-                continue;
-            }
-
-            var key = single ? root : root + Path.DirectorySeparatorChar;
+            var key = single ? root! : root + Path.DirectorySeparatorChar;
             if (!byRoot.TryGetValue(key, out var findings))
             {
-                byRoot[key] = findings = Folder(root, single, home);
+                byRoot[key] = findings = Folder(root!, single, home);
             }
 
             res.AddRange(findings.Select(f => new HealthIssue("Safety", i.Name, i.App, f, i)));
+            progress?.Invoke(++done, targets.Count);
         }
 
         return res;
@@ -132,8 +128,7 @@ public static partial class SafetyScan
     {
         try
         {
-            var key = (file, size, File.GetLastWriteTimeUtc(file).Ticks);
-            return _cache.GetOrAdd(key, _ => Match(file));
+            return ScanCache.Rules.GetOrAdd(ScanCache.Stamp(file, size), _ => Match(file));   // the ids of the rules that matched: read again only when the file changed
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return []; }
     }

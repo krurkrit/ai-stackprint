@@ -38,12 +38,16 @@ public sealed class RevealTests
     {
         var w = new Window { Width = 1200, Height = 900 };
         var x = new Ctx(new AiStackprint.Models.AppState(), w, _ => { }, () => { });
-        w.Content = DashboardView.Loading(x, () => { });
+        w.Content = DashboardView.Loading(x, () => { }, out var status);
         w.Show();
         var t = Ui.Texts(w);
         Assert.Contains("Dashboard", t);
         Assert.Contains("Rescan", t);
         Assert.Contains("Skills by app", t);
+        Assert.Contains(DashboardView.Finding, t);
+
+        status(DashboardView.Safety(45, 120));   // every card says what the scan is doing
+        Assert.Equal(8, Ui.Texts(w).Count(s => s == "Checking skills and plugins for safety: 45 of 120"));
     }
 
     [AvaloniaFact]
