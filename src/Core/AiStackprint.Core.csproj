@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" />   <!-- OpenCode keeps usage in SQLite -->
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Assets\apps.builtin.json" LogicalName="apps.builtin.json" />
+    <EmbeddedResource Include="..\..\default\apps.json" LogicalName="default/apps.json" Link="default\apps.json" />   <!-- the apps AI Stackprint knows -->
     <EmbeddedResource Include="..\..\default\settings.json" LogicalName="default/settings.json" Link="default\settings.json" />   <!-- every setting and its default -->
   </ItemGroup>
 </Project>

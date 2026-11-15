@@ -17,9 +17,9 @@ AI Stackprint: cross-platform desktop app (Avalonia 12, .NET 10, C# only, no XAM
 - SDK: .NET 10 (LTS), pinned in `global.json`. The app version comes from git tags (MinVer); builds between tags are `<next>-alpha.0.<commits>`. Package versions are set once in `Directory.Packages.props` (exact versions; projects list packages without versions). Shared build settings: `Directory.Build.props`.
 
 ## Layout
-Large files: search them, do not read them whole: `src/App/Assets/logos.json` (57 KB) and `icons.json` (21 KB) are path data (search by name), `src/Core/Assets/apps.builtin.json` (24 KB, search by app id), `.editorconfig` (19 KB, search by rule id), `docs/architecture.md` (read the section you need).
+Large files: search them, do not read them whole: `src/App/Assets/logos.json` (57 KB) and `icons.json` (21 KB) are path data (search by name), `default/apps.json` (24 KB, search by app id), `.editorconfig` (19 KB, search by rule id), `docs/architecture.md` (read the section you need).
 - `src/App/AiStackprint.App.csproj` (the app, builds `AiStackprint.exe`: `Ui`, `Program.cs`, `Assets`) references `src/Core/AiStackprint.Core.csproj` (models and services, no Avalonia). Services must not depend on UI code; the build enforces it.
-- `src/Core/Assets/apps.builtin.json`: built-in app definitions (data, embedded resource in Core)
+- `default/apps.json`: built-in app definitions (data, embedded in Core); the user's `~/.ai-stackprint/apps.json` holds only custom apps (`custom.` ids)
 - `default/settings.json`: every setting, its default and what it means (embedded in Core); the user's `~/.ai-stackprint/settings.json` holds only changes
 - `src/App/Assets/icons.json`, `src/App/Assets/logos.json`: UI icons and app logos as path data (embedded); see `docs/architecture.md`
 - `src/Core/Models`: records and definition classes
@@ -31,7 +31,7 @@ Large files: search them, do not read them whole: `src/App/Assets/logos.json` (5
 - `docs/design-system.md`: tokens (spacing, radius, type, icon and component sizes) and shared components; read before UI work
 
 ## Rules
-- Support a new app by adding data to `src/Core/Assets/apps.builtin.json`. Do not add per-app `if` branches in `Scanner`.
+- Support a new app by adding data to `default/apps.json`. Do not add per-app `if` branches in `Scanner`.
 - Support a new plugin manifest format by adding an `IPluginReader` and registering it in `PluginReaders.All`. Same pattern for context rules (`IContextRule` in `ContextBudget.Rules`, app's `context` field) and live limits (`ILimitProvider` in `LimitProviders.All`, app's `limits` field).
 - Live limits: network calls only for apps the user turned on (Settings › Usage limits, with a consent dialog); at most one call per app per refresh interval (one minute minimum); each provider calls only its own host. Tokens stay in memory: never shown, logged, saved or refreshed; credential files are opened read-only.
 - Update check: off until the user turns it on (Settings › Updates) or presses Check now; automatic checks at most once a day, only to api.github.com, nothing about the user sent. It never downloads or installs. A release is a GitHub release tagged `v<major>.<minor>.<patch>`; drafts and pre-releases are ignored. Show the version with `UpdateCheck.Label` and compare with `UpdateCheck.Current` (the assembly version stays at major.0.0 under MinVer).

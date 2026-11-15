@@ -101,8 +101,13 @@ internal partial class MainWindow
             return;
         }
 
-        AppCatalog.SaveUser(def);
-        _s.Defs = AppCatalog.Load();
+        if (AppCatalog.SaveUser(def) is { } refused)
+        {
+            Toast.Show(refused, "warning");   // the dialog checks first; this is the same check at save time
+            return;
+        }
+
+        _s.Use(AppCatalog.Read());
         _view = "App:" + def.Id;
         Scan();
     }
@@ -156,7 +161,7 @@ internal partial class MainWindow
         if (first)
         {
             UpdateView.Startup(_x);
-            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem, ProjectStore.Problem })
+            foreach (var problem in new[] { DataFolder.MoveProblem, SettingsStore.Problem, ProjectStore.Problem, AppCatalog.Problem })
             {
                 if (problem != null)
                 {

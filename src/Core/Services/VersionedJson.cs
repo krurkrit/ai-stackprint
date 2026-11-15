@@ -24,6 +24,9 @@ public sealed class VersionedJson(string name, int current, params Func<JsonObje
 
     public int Current => current;
 
+    /// <summary>A file that is a bare JSON list is version 1 of a file whose data is that list under this key (apps.json before it had a version).</summary>
+    public string? ListKey { get; init; }
+
     /// <summary>The file at this path had a newer version than this app: it is not written.</summary>
     public bool IsNewer(string path) => _newer.Contains(Path.GetFullPath(path));
 
@@ -38,12 +41,18 @@ public sealed class VersionedJson(string name, int current, params Func<JsonObje
         JsonObject data;
         try
         {
-            if (JsonNode.Parse(File.ReadAllText(path), documentOptions: _read) is not JsonObject o)
+            switch (JsonNode.Parse(File.ReadAllText(path), documentOptions: _read))
             {
-                Keep(path, backups, "broken");
-                return null;
+                case JsonObject o:
+                    data = o;
+                    break;
+                case JsonArray a when ListKey != null:
+                    data = new JsonObject { [ListKey] = a };   // no version: 1
+                    break;
+                default:
+                    Keep(path, backups, "broken");
+                    return null;
             }
-            data = o;
         }
         catch (JsonException)
         {

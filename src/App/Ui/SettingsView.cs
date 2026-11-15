@@ -33,7 +33,7 @@ internal class SettingsView(Ctx x)
                 }
             });
             var status = hidden ? Txt("Not scanned", TextSize.Small, false, Muted) : info?.Installed == true ? Status("Installed") : Txt("Not found", TextSize.Small, false, Muted);
-            var origin = d.Origin switch { AppOrigin.Custom => "Custom", AppOrigin.Override => "Customised", _ => "Built-in" };
+            var origin = d.Origin == AppOrigin.Custom ? "Custom" : "Built-in";
             return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), TextSize.Small, false, Muted), Txt(origin, TextSize.Small, false, Muted), status, shown]);
         });
         var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);

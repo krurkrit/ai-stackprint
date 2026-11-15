@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using AiStackprint.Models;
+using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -18,6 +19,7 @@ internal class AddAppDialog : Window
     private readonly TextBox _name = new() { PlaceholderText = "App name, e.g. My Orchestrator" };
     private readonly TextBox _folder = new() { PlaceholderText = "Config folder, e.g. ~/.myapp (used to detect and scan)" };
     private readonly TextBox _proj = new() { PlaceholderText = "Optional project-relative skills folder, e.g. .myapp/skills" };
+    private readonly TextBlock _refused = Txt("", TextSize.Small, false, ErrorKey).With(t => t.IsVisible = false);
     private readonly ComboBox _cat = new() { ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" }, SelectedIndex = 0 };
 
     public AddAppDialog()
@@ -42,6 +44,7 @@ internal class AddAppDialog : Window
                 Txt("Add an app to scan", TextSize.Title, true), _name, _cat,
                 new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = Space.M, Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) } },
                 _proj,
+                _refused,
                 Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted),
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right,
                     Children = { Btn("Cancel", () => Close(null)), ok } }
@@ -60,7 +63,7 @@ internal class AddAppDialog : Window
 
         var def = new AppDefinition
         {
-            Id = new string([.. name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-')]).Trim('-'),
+            Id = AppCatalog.CustomPrefix + new string([.. name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-')]).Trim('-'),
             Name = name,
             Category = _cat.SelectedItem as string ?? "custom",
             Detect = { folder },
@@ -69,6 +72,13 @@ internal class AddAppDialog : Window
         if (!string.IsNullOrWhiteSpace(_proj.Text))
         {
             def.ProjectRoots.Add(new ScanRoot { Path = _proj.Text.Trim(), Level = "Project" });
+        }
+
+        if (AppCatalog.Refuse(def) is { } why)
+        {
+            _refused.Text = why;   // a tool AI Stackprint already supports: no second copy of it
+            _refused.IsVisible = true;
+            return;
         }
 
         Close(def);

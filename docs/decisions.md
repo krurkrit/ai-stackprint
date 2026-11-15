@@ -96,7 +96,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - The "Readable" view is called "Conversation". Both Assistant and "You" messages are left-aligned. Assistant messages have a 20 px right margin and "You" messages have a 20 px left margin.
 
 ## Settings, models and data files
-- Defaults ship with the app as data in `default/` (built in, read-only): `settings.json` (every setting and its default; no defaults written in C#), `models.json` (with `models.schema.json`) and `apps.json` (today's `apps.builtin.json`).
+- Defaults ship with the app as data in `default/` (built in, read-only): `settings.json` (every setting and its default; no defaults written in C#), `models.json` (with `models.schema.json`) and `apps.json` (was `src/Core/Assets/apps.builtin.json`).
 - The user folder is `~/.ai-stackprint/` on every OS (not `%APPDATA%`): one path for docs and support, next to `~/.claude` and `~/.codex`, and not synced by roaming profiles. The first start of the new version moves the files from the old folder and leaves a note there.
   - `settings.json`: only settings that differ from the default; a missing key means the default, so a changed default reaches everyone who did not change it. Unknown keys are kept on save.
   - `models.json`: only the model fields you changed, and models you added (`provider: "custom"`).

@@ -100,9 +100,9 @@ public class PluginSource
     public int Depth { get; set; } = 2;                      // folders: how deep plugin folders sit under Path
 }
 
-public enum AppOrigin { BuiltIn, Custom, Override }
+public enum AppOrigin { BuiltIn, Custom }
 
-/// <summary>Data-driven description of an AI app. Built-ins live in Assets/apps.builtin.json.</summary>
+/// <summary>Data-driven description of an AI app. Built-ins live in default/apps.json; custom apps in the user's apps.json.</summary>
 public class AppDefinition
 {
     public string Id { get; set; } = "";
@@ -192,5 +192,9 @@ public class AppState
     public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan
     public List<Services.McpServer> Mcp { get; set; } = [];                      // MCP servers in the config files of the last scan
 
+    public List<AppDefinition> ShadowedApps { get; set; } = [];                  // your apps.json entries for tools that are now built in (not used)
+
     public AppDefinition? Def(string id) => Defs.FirstOrDefault(d => d.Id == id);
+
+    public void Use(Services.Catalog c) { Defs = c.Defs; ShadowedApps = c.Shadowed; }
 }

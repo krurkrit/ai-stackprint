@@ -31,7 +31,29 @@ internal class AppsView(Ctx x)
             Btn("Add app", x.AddApp, true, "add"));
         DockPanel.SetDock(btns, Dock.Right);
         head.Children.Add(btns); head.Children.Add(H1("Apps"));
-        return Page(head, _search.Free(), _filters.Free(), Card(_table.Free()));
+        return x.S.ShadowedApps.Count == 0
+            ? Page(head, _search.Free(), _filters.Free(), Card(_table.Free()))
+            : Page(head, NowBuiltIn(), _search.Free(), _filters.Free(), Card(_table.Free()));
+    }
+
+    /// <summary>Your apps.json entries for tools that a later version supports itself: the built-in app is used, so each can be removed.</summary>
+    private Border NowBuiltIn()
+    {
+        var rows = x.S.ShadowedApps.Select(d => new TableRow(
+        [
+            Txt(d.Name, TextSize.Body, true), Mono(d.Id, TextSize.Caption),
+            DangerBtn("Remove", () => AppActions.RemoveApp(x, d), "delete").With(b => b.MinHeight = Sizes.CompactControl)
+        ]));
+        var body = new StackPanel
+        {
+            Spacing = Space.M,
+            Children =
+            {
+                Txt("AI Stackprint now supports these tools itself, so the built-in apps are used and your entries in apps.json are not.", TextSize.Small, false, Muted),
+                Table.Build([new Col("App", "1.4*"), new Col("Id in apps.json", "2*"), new Col("", "Auto")], rows)
+            }
+        };
+        return Section("info", $"Now built in · {x.S.ShadowedApps.Count}", body);
     }
 
     private void OnSearch(object? s, TextChangedEventArgs e) { if (s == _search && (_search.Text ?? "") != _q) { _q = _search.Text ?? ""; Fill(); } }   // the text set from _q is no change; an old box says nothing

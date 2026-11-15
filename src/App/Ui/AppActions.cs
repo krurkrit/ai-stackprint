@@ -130,15 +130,15 @@ internal static class AppActions
 
     public static async void RemoveApp(Ctx x, AppDefinition d)
     {
-        var reset = d.Origin == AppOrigin.Override;
-        if (!await Dialogs.Confirm(x.Owner, reset ? $"Reset {d.Name}?" : $"Remove {d.Name}?",
-                reset ? "Deletes your apps.json entry so the built-in definition is used again." : "Deletes the app from apps.json. Its files on disk are not touched.",
-                reset ? "Reset" : "Remove", true))
+        var builtIn = d.Origin == AppOrigin.Custom && x.S.Def(d.Id) != d;   // your entry for a tool that is now built in
+        if (!await Dialogs.Confirm(x.Owner, $"Remove {d.Name}?",
+                builtIn ? $"{d.Name} is now built in, so your entry in apps.json is not used. Removing it deletes only that entry." : "Deletes the app from apps.json. Its files on disk are not touched.",
+                "Remove", true))
         {
             return;
         }
 
-        await Try(x, "Remove app", () => { AppCatalog.RemoveUser(d.Id); x.S.Defs = AppCatalog.Load(); return ""; }, back: !reset);
+        await Try(x, "Remove app", () => { AppCatalog.RemoveUser(d.Id); x.S.Use(AppCatalog.Read()); return ""; }, back: !builtIn);
     }
 
     public static void Hide(Ctx x, AppDefinition d)

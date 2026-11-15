@@ -56,7 +56,7 @@ internal class AppDetailView(Ctx x)
         var installed = info?.Installed == true;
         var chips = Row(Chip(d.Category),
             installed ? Status("Installed") : Chip("Not found", BorderKey),
-            Chip(d.Origin switch { AppOrigin.Custom => "Custom app", AppOrigin.Override => "Customised in apps.json", _ => "Built-in" }));
+            Chip(d.Origin == AppOrigin.Custom ? "Custom app" : "Built-in"));
         var title = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center, Children = { H1("Apps", "Apps", d.Name), chips } };
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Top };
@@ -71,9 +71,9 @@ internal class AppDetailView(Ctx x)
         }
 
         actions.Children.Add(Btn("Hide", () => AppActions.Hide(x, d), false, "eye_off").With(b => ToolTip.SetTip(b, "Hide this app everywhere. Undo in Settings.")));
-        if (d.Origin != AppOrigin.BuiltIn)
+        if (d.Origin == AppOrigin.Custom)
         {
-            actions.Children.Add(DangerBtn(d.Origin == AppOrigin.Custom ? "Remove app" : "Reset to built-in", () => AppActions.RemoveApp(x, d), "delete"));
+            actions.Children.Add(DangerBtn("Remove app", () => AppActions.RemoveApp(x, d), "delete"));
         }
 
         var head = new DockPanel();
