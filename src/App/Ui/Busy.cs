@@ -14,8 +14,8 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// The one loading indicator: a turning arc in the accent color. <see cref="Loading"/> appears only after 300 ms,
-/// so quick work never flashes it. It turns only while on screen.
+/// The one loading indicator: a turning arc in the accent color. <see cref="Loading"/> shows at once (pass delayed: true to wait 300 ms for quick work).
+/// It turns only while on screen.
 /// </summary>
 internal static class Busy
 {
@@ -46,10 +46,10 @@ internal static class Busy
         finally { cts.Dispose(); }   // the loop owns its source: done only after the last turn stopped
     }
 
-    public static Control Spinner(double size = IconSize.S)
+    public static Control Spinner(double size = IconSize.S, string key = Accent)
     {
         var arc = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse("M12,3 A9,9 0 1 1 3,12"), StrokeThickness = ArcWidth, StrokeLineCap = PenLineCap.Round }
-            .Themed(Avalonia.Controls.Shapes.Shape.StrokeProperty, Accent);
+            .Themed(Avalonia.Controls.Shapes.Shape.StrokeProperty, key);
         var v = new Viewbox
         {
             Width = Size(size),
@@ -64,14 +64,14 @@ internal static class Busy
         return v;
     }
 
-    /// <summary>Spinner with a muted label, shown after a short delay.</summary>
-    public static Control Loading(string text = "Loading…", double size = IconSize.M, bool immediate = false)
+    /// <summary>Spinner with a muted label, shown at once (<paramref name="delayed"/>: only after 300 ms, for work that is usually quick).</summary>
+    public static Control Loading(string text = "Loading…", double size = IconSize.M, bool delayed = false)
     {
         var row = Row(Spinner(size), Txt(text, TextSize.Small, false, Muted));
         row.Margin = new Thickness(Space.XXS, Space.S);
-        if (immediate)
+        if (!delayed)
         {
-            return row;   // the user just clicked something: show that it is working at once
+            return row;   // shown at once: a component with no data yet always says it is loading
         }
 
         row.Opacity = 0;
@@ -80,8 +80,8 @@ internal static class Busy
     }
 
     /// <summary>Spinner beside a "Updated 40 s ago" style note while a refresh runs; keeps the old data on screen.</summary>
-    public static Control Inline(bool busy, string note) =>
-        busy ? Row(Spinner(IconSize.XS), Txt(note, TextSize.Caption, false, Muted)) : Txt(note, TextSize.Caption, false, Muted);
+    public static Control Inline(bool busy, string note, string? key = null) =>
+        busy ? Row(Spinner(IconSize.XS, key ?? Accent), Txt(note, TextSize.Caption, false, key ?? Muted)) : Txt(note, TextSize.Caption, false, key ?? Muted);
 
     /// <summary>
     /// Runs <paramref name="work"/> off the UI thread with the spinner in <paramref name="host"/>, then shows the result.

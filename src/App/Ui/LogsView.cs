@@ -112,7 +112,7 @@ internal partial class LogsView(Ctx x)
                 FillTable(def);
             }
         }
-        right.Children.Add(_viewer.Build(_file, () => x.Go("Logs:" + _app)));
+        right.Children.Add(loading ? Card(Busy.Loading("Reading log folders…")) : _viewer.Build(_file, () => x.Go("Logs:" + _app)));
         return right;
     }
 

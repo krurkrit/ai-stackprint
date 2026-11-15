@@ -240,10 +240,10 @@ internal partial class MainWindow : Window
         var rescan = Btn(_navOpen ? "Rescan" : "", Scan, true, "arrow_sync");
         if (_scanning && _navOpen)
         {
-            rescan.Content = Busy.Inline(true, "Scanning…");
+            rescan.Content = Busy.Inline(true, "Scanning…", OnAccent);   // the button is accent colored: spinner and text must be the on-accent color
         }
 
-        if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "") : Icon("arrow_sync", IconSize.L); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
+        if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "", OnAccent) : Icon("arrow_sync", IconSize.L); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
         rescan.HorizontalAlignment = HorizontalAlignment.Stretch; rescan.HorizontalContentAlignment = HorizontalAlignment.Center;
         foot.Children.Add(rescan);
 
