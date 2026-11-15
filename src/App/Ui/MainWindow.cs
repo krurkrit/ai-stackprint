@@ -237,7 +237,6 @@ internal partial class MainWindow : Window
 
         var foot = new StackPanel { Spacing = Space.M, Margin = new Thickness(0, Space.L, 0, 0) };
         foot.Children.Add(Go("settings", "Settings", "Settings"));
-        foot.Children.Add(ThemeSwitch());
         var rescan = Btn(_navOpen ? "Rescan" : "", Scan, true, "arrow_sync");
         if (_scanning && _navOpen)
         {

@@ -44,21 +44,21 @@ internal partial class MainWindow
             Children = { Title("AI Stackprint", TextSize.Small).With(t => t.Margin = new Thickness(0, 0, Space.L, 0)), _backBtn, _forwardBtn }
         };
         var row = new DockPanel { Height = TitleBarHeight };
+        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Margin = new Thickness(0, 0, Space.M, 0), VerticalAlignment = VerticalAlignment.Center };
+        _themeHost.Content = ThemeSwitch();
+        right.Children.Add(_themeHost);
         if (!mac)
         {
             _maxBtn = TitleBtn("maximize", "Maximize", ToggleMaximize);
             PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty) { UpdateMaxButton(); } };
-            var right = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = Space.XXS,
-                Margin = new Thickness(0, 0, Space.M, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                Children = { TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized), _maxBtn, CloseHover(TitleBtn("dismiss", "Close", Close)) }
-            };
-            DockPanel.SetDock(right, Dock.Right);
-            row.Children.Add(right);
+            right.Children.Add(new Border { Width = Stroke.Thin, Height = IconSize.M, Margin = new Thickness(Space.M, 0) }.Themed(Border.BackgroundProperty, BorderKey));   // theme | window buttons
+            right.Children.Add(TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized));
+            right.Children.Add(_maxBtn);
+            right.Children.Add(CloseHover(TitleBtn("dismiss", "Close", Close)));
         }
+
+        DockPanel.SetDock(right, Dock.Right);
+        row.Children.Add(right);
         row.Children.Add(left);
         var bar = new Border { Height = TitleBarHeight, Child = row, Background = Avalonia.Media.Brushes.Transparent }.Themed(Border.BackgroundProperty, MainKey);
         // Drag and double-click handled here, not through Avalonia's title-bar role: with that role Windows took some button clicks as drags.
@@ -86,6 +86,33 @@ internal partial class MainWindow
         };
         UpdateHistoryButtons();
         return bar;
+    }
+
+    private readonly ContentControl _themeHost = new() { VerticalAlignment = VerticalAlignment.Center };
+
+    private static readonly (string Mode, string Icon, string Tip)[] _themes =
+        [("System", "desktop", "Follow the system theme"), ("Dark", "weather_moon", "Dark theme"), ("Light", "weather_sunny", "Light theme")];
+
+    /// <summary>System / moon / sun in one rounded group at the right of the title bar; the chosen one is filled with the selection color.</summary>
+    private Border ThemeSwitch()
+    {
+        var group = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS };
+        foreach (var (mode, icon, tip) in _themes)
+        {
+            var on = mode == _s.Settings.Theme;
+            var b = TitleBtn(icon, tip, () => SetTheme(mode));
+            b.Padding = new Thickness(Space.S);
+            if (on)
+            {
+                b.Themed(BackgroundProperty, Selected).Themed(ForegroundProperty, Accent);
+            }
+
+            Avalonia.Automation.AutomationProperties.SetName(b, tip + (on ? " (on)" : ""));
+            group.Children.Add(b);
+        }
+
+        return new Border { Child = group, Padding = new Thickness(Space.XXS), CornerRadius = new CornerRadius(Radius.L + Space.XXS), BorderThickness = new Thickness(Stroke.Thin) }
+            .Themed(Border.BorderBrushProperty, BorderKey);
     }
 
     /// <summary>Title-bar icon button: muted icon, Rescan colors (accent fill, accent text) under the pointer.</summary>

@@ -4,11 +4,7 @@
 using AiStackprint.Services;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Threading;
-
-using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
@@ -22,51 +18,12 @@ internal partial class MainWindow
     private void Back() { if (_back.Count == 0) { return; } _forward.Push(_view); Show(_back.Pop()); }
     private void Forward() { if (_forward.Count == 0) { return; } _back.Push(_view); Show(_forward.Pop()); }
 
-    private static readonly (string Mode, string Icon, string Tip)[] _themes =
-        [("System", "desktop", "Follow the system theme"), ("Light", "weather_sunny", "Light theme"), ("Dark", "weather_moon", "Dark theme")];
-
-    /// <summary>System / sun / moon switch. Open: three segments, the active one highlighted. Collapsed: one button that cycles.</summary>
-    private Control ThemeSwitch()
-    {
-        var cur = _s.Settings.Theme;
-        if (!_navOpen)
-        {
-            var i = Math.Max(0, Array.FindIndex(_themes, t => t.Mode == cur));
-            var next = _themes[(i + 1) % _themes.Length];
-            return NavBtn(_themes[i].Icon, $"{_themes[i].Tip} (click: {next.Mode.ToLowerInvariant()})", () => SetTheme(next.Mode));
-        }
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = Space.XS };
-        for (var i = 0; i < _themes.Length; i++)
-        {
-            var t = _themes[i]; var on = t.Mode == cur;
-            var b = new Button
-            {
-                Content = Icon(t.Icon, IconSize.M),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Center,
-                MinHeight = Sizes.CompactControl,
-                Background = Brushes.Transparent
-            };
-            HoverStyle(b);
-            b.Themed(ForegroundProperty, on ? Accent : Muted);
-            if (on)
-            {
-                b.Themed(BackgroundProperty, Surface);
-            }
-
-            ToolTip.SetTip(b, t.Tip);
-            b.Click += (_, _) => SetTheme(t.Mode);
-            Grid.SetColumn(b, i);
-            g.Children.Add(b);
-        }
-        return g;
-    }
-
     private void SetTheme(string mode)
     {
         _s.Settings.Theme = mode;
         SettingsStore.Save(_s.Settings);
         Restyle();
+        _themeHost.Content = ThemeSwitch();
     }
 
     private void Keys()

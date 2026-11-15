@@ -12,7 +12,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 
 ## Typography and appearance
 - Inter is the UI font, with lighter weights. All menu items use weight 500.
-- Appearance settings: fonts, sizes, weights, log font and size, log line numbers (hidden by default), and accent, hover and selection colors per theme. There is no Theme row; the theme switch lives in the side menu.
+- Appearance settings: fonts, sizes, weights, log font and size, log line numbers (hidden by default), and accent, hover and selection colors per theme. There is no Theme row; the theme switch (System, Dark, Light in one rounded group, the chosen one filled) is at the right of the title bar, before the window buttons (on macOS, at the right edge), so it looks the same whether the side menu is open or collapsed.
 - UI and log font sizes both use a typed number input, not a dropdown. Log size defaults to 14, range 10–18.
 - Body and Emphasis weights share one list.
 - Inputs (text, number and search boxes, drop-downs, check boxes, radio buttons) share one height, and one-line text sits in the middle. Multi-line inputs start their first line where a one-line input shows its text and leave the same gap below the last line. The gaps come from the font's line height (`Theme.Inputs`), so this holds at any font and size; do not set a fixed `MinHeight` or padding on an input.
