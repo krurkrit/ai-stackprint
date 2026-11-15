@@ -68,7 +68,7 @@ internal class ClaudeSessionParser : ILogParser
     public IEnumerable<UsageEvent> Usage(IEnumerable<string> lines)
     {
         var seen = new HashSet<string>();
-        foreach (var e in LogParsers.Json(lines))
+        foreach (var e in LogParsers.Json(lines, "\"usage\""))   // only replies carry usage; tool results and prompts are most of the bytes
         {
             if (e.Str("type") != "assistant")
             {

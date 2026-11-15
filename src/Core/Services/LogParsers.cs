@@ -37,12 +37,15 @@ public static class LogParsers
     private static readonly ILogParser[] _all = [new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage()];
     public static ILogParser? Find(string? format) => format == null ? null : _all.FirstOrDefault(p => p.Format == format);
 
-    /// <summary>Each line as JSON; lines that are not JSON (or cut off) are skipped.</summary>
-    internal static IEnumerable<JsonElement> Json(IEnumerable<string> lines)
+    /// <summary>
+    /// Each line as JSON; lines that are not JSON (or cut off) are skipped, and so are lines without any of <paramref name="needs"/> (when given):
+    /// a plain text search is far cheaper than parsing the large lines that cannot matter.
+    /// </summary>
+    internal static IEnumerable<JsonElement> Json(IEnumerable<string> lines, params string[] needs)
     {
         foreach (var l in lines)
         {
-            if (string.IsNullOrWhiteSpace(l))
+            if (string.IsNullOrWhiteSpace(l) || (needs.Length > 0 && !needs.Any(n => l.Contains(n, StringComparison.Ordinal))))
             {
                 continue;
             }

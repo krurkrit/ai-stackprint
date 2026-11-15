@@ -21,6 +21,13 @@ public static class ScanCache
 
     private static readonly Lock _gate = new();
     private static bool _loaded;
+    private static volatile bool _dirty;   // a file was read this run: the saved cache is out of date
+
+    /// <summary>The rule ids for this stamp, matched by <paramref name="match"/> only when the file is new or changed.</summary>
+    internal static string[] Rule(FileStamp key, Func<FileStamp, string[]> match) => Rules.GetOrAdd(key, k => { _dirty = true; return match(k); });
+
+    /// <summary>The SHA-256 for this stamp, computed by <paramref name="hash"/> only when the file is new or changed.</summary>
+    internal static string Hash(FileStamp key, Func<FileStamp, string> hash) => Hashes.GetOrAdd(key, k => { _dirty = true; return hash(k); });
 
     public static string File => Path.Combine(AppCatalog.Folder, "scan-cache.json");
 
@@ -58,9 +65,15 @@ public static class ScanCache
         }
     }
 
-    /// <summary>Writes the cache: per path only its newest stamp, and only files that still exist.</summary>
+    /// <summary>Writes the cache: per path only its newest stamp, and only files that still exist. Nothing when no file was read since the last save.</summary>
     public static void Save(string? file = null)
     {
+        if (!_dirty)
+        {
+            return;   // every file was as last time: the saved cache is already right
+        }
+
+        _dirty = false;
         var keys = Rules.Keys.Concat(Hashes.Keys).GroupBy(k => k.Path, StringComparer.Ordinal).Select(g => g.MaxBy(k => k.Ticks)).Where(k => System.IO.File.Exists(k.Path));
         var entries = keys.Select(k => new Entry(k.Path, k.Size, k.Ticks, Rules.GetValueOrDefault(k), Hashes.GetValueOrDefault(k))).ToList();
         var path = file ?? File;
@@ -79,7 +92,7 @@ public static class ScanCache
     {
         lock (_gate)
         {
-            Rules.Clear(); Hashes.Clear(); _loaded = false;
+            Rules.Clear(); Hashes.Clear(); _loaded = false; _dirty = false;
         }
     }
 

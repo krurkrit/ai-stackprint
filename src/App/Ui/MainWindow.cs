@@ -82,7 +82,7 @@ internal partial class MainWindow : Window
         // Plain text blocks cannot be selected: right-click copies the block's text (one shared menu, no per-block cost)
         AddHandler(PointerReleasedEvent, CopyMenu, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         ActualThemeVariantChanged += (_, _) => RefreshNav();   // OS theme change or sun/moon click
-        Opened += (_, _) => { _s.Defs = AppCatalog.Load(); Scan(); };
+        Opened += (_, _) => { _perfOpened = System.Diagnostics.Stopwatch.GetTimestamp(); _s.Defs = AppCatalog.Load(); Scan(); };
     }
 
     private void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)

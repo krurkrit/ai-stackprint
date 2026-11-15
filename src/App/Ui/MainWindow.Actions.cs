@@ -113,27 +113,41 @@ internal partial class MainWindow
         var defs = SettingsStore.Visible(_s.Defs, _s.Settings); var projects = _s.Projects.ToList();
         var status = _status;   // set while the first scan's loading dashboard is shown
         void Say(string text) { if (status != null) { Dispatcher.UIThread.Post(() => status(text)); } }
-        var r = await Task.Run(() => { ScanCache.Load(); return Scanner.Collect(defs, projects); });   // the safety and change results of the last run: only changed files are read again
+        var steps = new List<(string, long)>(); var watch = System.Diagnostics.Stopwatch.StartNew();
+        void Step(string name) { steps.Add((name, watch.ElapsedMilliseconds)); watch.Restart(); }   // each step's time, for the --perf run
+        var r = await Task.Run(() => { ScanCache.Load(); Step("cache load"); var c = Scanner.Collect(defs, projects); Step("collect"); return c; });   // the safety and change results of the last run: only changed files are read again
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
         (_s.Changes, _s.Health, _s.Mcp) = await Task.Run(() =>
         {
             Say(DashboardView.Comparing);
-            var mcp = McpServers.Read(items);
-            var changes = ScanDiff.Update(items, ScanDiff.File, mcp);
-            var health = Health.Compute(items);
-            var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } });
+            watch.Restart();   // not the wait for the UI thread between the two
+            var mcp = McpServers.Read(items); Step("mcp");
+            var changes = ScanDiff.Update(items, ScanDiff.File, mcp); Step("changes");
+            var health = Health.Compute(items); Step("health");
+            var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
             Say(DashboardView.Configs);
-            var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home));
+            var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).ToList(); Step("configs");
             var all = health.Concat(safety).Concat(checks).ToList();
-            ScanCache.Save();
+            ScanCache.Save(); Step("cache save");
             return (changes, all, mcp);
         });
         _status = null;
         var first = !_scanned;
+        if (first)
+        {
+            _perfScanMs = (long)System.Diagnostics.Stopwatch.GetElapsedTime(_perfOpened).TotalMilliseconds;
+            _perfSteps = steps;
+        }
         _scanning = false; _scanned = true;
         Refresh();
         RequestLimits();
+        if (first && PerfRun)
+        {
+            RunPerf();   // no update check or crash notice in a measuring run
+            return;
+        }
+
         if (first)
         {
             UpdateView.Startup(_x);

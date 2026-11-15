@@ -19,6 +19,9 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal static class Busy
 {
+    /// <summary>Style class on every spinner: a page has data still loading while one is on screen (the --perf run waits for none).</summary>
+    public const string Class = "busy";
+
     private const int DelayMs = 300;
     private const double ArcWidth = 2.5;   // spinner line, in the 24-unit icon box (scales with the spinner)
 
@@ -58,6 +61,7 @@ internal static class Busy
             RenderTransform = new RotateTransform(),
             VerticalAlignment = VerticalAlignment.Center
         };
+        v.Classes.Add(Class);
         CancellationTokenSource? cts = null;
         v.AttachedToVisualTree += (_, _) => { cts?.Cancel(); cts = new(); _ = Spin(v, cts); };
         v.DetachedFromVisualTree += (_, _) => { cts?.Cancel(); cts = null; };   // Spin disposes it

@@ -95,6 +95,31 @@ public class UsageTests
     }
 
     [Fact]
+    public void Live_and_Compute_read_a_file_once_and_Live_counts_the_last_5_hours_and_7_days()
+    {
+        var dir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "usage-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            static string Line(DateTime t, string id, int input) =>
+                $$"""{"type":"assistant","timestamp":"{{t.ToUniversalTime():yyyy-MM-ddTHH:mm:ssZ}}","message":{"id":"{{id}}","model":"claude-opus-5-5","usage":{"input_tokens":{{input}},"output_tokens":0""" + "}}}";
+            var now = DateTime.Now;
+            var path = Path.Combine(dir, "s.jsonl");
+            File.WriteAllLines(path, [Line(now.AddDays(-20), "old", 1000), Line(now.AddDays(-3), "week", 100), Line(now.AddHours(-1), "hour", 10),
+                """{"type":"user","message":{"content":"no usage on this line"}}"""]);
+            var info = new FileInfo(path);
+            var file = new LogFile("claude", "Sessions", path, info.Length, info.LastWriteTime, null, "claude-session");
+
+            Assert.Equal(1110L, UsageStats.Compute([file], DateTime.MinValue, TestContext.Current.CancellationToken).Buckets.Sum(b => b.Input));
+            File.WriteAllText(path, "");   // emptied, but the LogFile's stamp is unchanged: Live can only find the events in the parse Compute made
+            var live = UsageStats.Live([file], now, TestContext.Current.CancellationToken);
+            Assert.Equal(10L, live.Last5h.Tokens);
+            Assert.Equal(110L, live.Last7d.Tokens);
+            Assert.Equal(2, live.Last7d.Messages);
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [Fact]
     public void OpenCode_usage_reads_messages_and_v2_sessions_with_reasoning_in_output_and_its_own_cost()
     {
         var path = Path.Combine(Path.GetTempPath(), $"oc-{Guid.NewGuid():N}.db");

@@ -22,6 +22,27 @@ public sealed class SkillDocTests : IDisposable
     }
 
     [Fact]
+    public void Read_gives_the_whole_small_file_and_stops_a_large_one_at_the_limit()
+    {
+        var small = Write("s/SKILL.md", "---\nname: s\ndescription: ünïcode ✓\n---\nbody\n");
+        Assert.Equal("ünïcode ✓", SkillDoc.Read(small).Get("description"));
+        Assert.Equal("body\n", SkillDoc.Read(small).Body);
+
+        var big = Write("b/SKILL.md", "---\nname: b\n---\n" + new string('x', SkillDoc.MaxBytes + 1000));
+        Assert.Equal(SkillDoc.MaxBytes, SkillDoc.Read(big).Body.Length + "---\nname: b\n---\n".Length);
+    }
+
+    [Fact]
+    public void Entries_list_size_and_time_from_the_folder_listing()
+    {
+        var f = Write("e/SKILL.md", "abc");
+        Write("e/.git/x", "hidden");
+        var e = Assert.Single(SkillDoc.Entries(Path.Combine(_tmp, "e")));
+        Assert.Equal(("SKILL.md", 3L, File.GetLastWriteTimeUtc(f).Ticks), e);
+        Assert.Equal(e, SkillDoc.Entry(f));
+    }
+
+    [Fact]
     public void Parses_front_matter_blocks_nested_maps_and_lists()
     {
         var d = SkillDoc.Parse("---\nname: pdf-tools\ndescription: >\n  Reads PDFs.\n  Use for forms.\nlicense: \"MIT\"\nmetadata:\n  author: acme\n  version: \"1.0\"\nallowed-tools:\n  - Read\n  - Bash(git:*)\n---\n# Body\ntext\n");

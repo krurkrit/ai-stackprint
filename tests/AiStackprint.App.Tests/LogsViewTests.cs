@@ -57,6 +57,9 @@ public sealed class LogsViewTests : IDisposable
     public void Clicking_a_file_opens_it_without_scrolling_the_page_back_to_the_top()
     {
         var (w, _) = Page(8);
+        // the summary and the open file arrive later and would move the row under the click
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Largest: ", StringComparison.Ordinal)) && !w.GetVisualDescendants().Any(v => v.Classes.Contains(Busy.Class) && v.IsEffectivelyVisible));
+        w.UpdateLayout();
         var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().Where(v => v.Extent.Height > v.Viewport.Height).OrderByDescending(v => v.Extent.Height).First();
         var name = w.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "log03.log");
         scroll.Offset = new Vector(0, Math.Min(name.TranslatePoint(default, scroll.Content as Visual ?? scroll)!.Value.Y - 50, scroll.Extent.Height - scroll.Viewport.Height));
@@ -64,11 +67,20 @@ public sealed class LogsViewTests : IDisposable
         w.UpdateLayout();
         var before = scroll.Offset;
 
-        var at = name.TranslatePoint(new Point(2, 2), w)!.Value;
-        w.MouseDown(at, MouseButton.Left);
-        w.MouseUp(at, MouseButton.Left);
-        Ui.WaitUntil(() => Ui.Texts(w).Count(t => t == "log03.log") == 2);   // in the list and as the viewer's title
+        bool Opened() => Ui.Texts(w).Count(t => t == "log03.log") == 2;   // in the list and as the viewer's title
+        for (var attempt = 0; attempt < 5 && !Opened(); attempt++)
+        {
+            // A click is hit-tested against the last rendered frame, and the folder watcher may have rebuilt the list: render, then find the row again
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            var cell = w.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "log03.log");
+            var at = cell.TranslatePoint(new Point(2, 2), w)!.Value;
+            w.MouseDown(at, MouseButton.Left);
+            w.MouseUp(at, MouseButton.Left);
+            for (var i = 0; i < 25 && !Opened(); i++) { Avalonia.Threading.Dispatcher.UIThread.RunJobs(); Thread.Sleep(20); }
+        }
 
+        Assert.True(Opened());
         Assert.Equal(before, scroll.Offset);
     }
 }

@@ -19,7 +19,7 @@ public class AiStackprintApp : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d)
         {
-            d.MainWindow = new MainWindow();
+            d.MainWindow = new MainWindow { PerfRun = d.Args?.Contains("--perf") == true };   // --perf: measure every page, log it and close
         }
 
         base.OnFrameworkInitializationCompleted();

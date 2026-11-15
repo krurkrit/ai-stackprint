@@ -26,7 +26,7 @@ public static class Fingerprint
         try
         {
             var dir = single ? Path.GetDirectoryName(root)! : root;
-            var files = single ? [(Path.GetFileName(root), new FileInfo(root).Length)] : SkillDoc.Files(root);
+            var files = single ? [SkillDoc.Entry(root)] : SkillDoc.Entries(root);
             if (files.Count == 0)
             {
                 return null;
@@ -34,12 +34,12 @@ public static class Fingerprint
 
             var sb = new StringBuilder();
             long total = 0;
-            foreach (var (rel, size) in files.OrderBy(f => f.Rel, StringComparer.Ordinal))
+            foreach (var (rel, size, ticks) in files.OrderBy(f => f.Rel, StringComparer.Ordinal))
             {
                 total += size;
 
                 var full = Path.Combine(dir, rel);
-                var h = size > MaxHashed || total > MaxBytes ? size.ToString() : ScanCache.Hashes.GetOrAdd(ScanCache.Stamp(full, size), _ => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(full))));
+                var h = size > MaxHashed || total > MaxBytes ? size.ToString() : ScanCache.Hash(new FileStamp(full, size, ticks), _ => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(full))));
                 sb.Append(rel.Replace('\\', '/')).Append(':').Append(h).Append('\n');
             }
 

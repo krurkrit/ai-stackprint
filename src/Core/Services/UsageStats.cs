@@ -31,7 +31,26 @@ public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bo
 /// <summary>Usage per app from session logs. Buckets per file are cached by path + size + time, so re-opening is instant and the cache stays small.</summary>
 public static class UsageStats
 {
-    private static readonly ConcurrentDictionary<(string, long, long), List<UsageBucket>> _cache = new();
+    /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live"/>).</summary>
+    private sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
+
+    private static readonly ConcurrentDictionary<(string, long, long), Parsed> _cache = new();
+
+    /// <summary>The file's usage, read only when it is new or changed; <see cref="Compute"/> and <see cref="Live"/> share it, so a page reads each log once.</summary>
+    private static Parsed Read(LogFile f, ILogParser parser)
+    {
+        if (_cache.Count > 2000)
+        {
+            _cache.Clear();
+        }
+
+        return _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ =>
+        {
+            var recent = DateTime.Now.AddDays(-8);
+            var events = parser.UsageFile(f.Path).ToList();
+            return new(Bucket(events), [.. events.Where(e => e.Time >= recent)]);
+        });
+    }
 
     /// <summary>The app has a log or database whose usage can be read.</summary>
     public static bool Supports(AppDefinition d) => d.Logs.Concat(d.Usage).Any(l => LogParsers.Find(l.Format) != null);
@@ -57,12 +76,7 @@ public static class UsageStats
 
             try
             {
-                if (_cache.Count > 2000)
-                {
-                    _cache.Clear();
-                }
-
-                var buckets = _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => Bucket(parser.UsageFile(f.Path)));
+                var buckets = Read(f, parser).Buckets;
                 if (!parser.WholeFile && f.Size > LogSummary.SessionBytes)
                 {
                     capped = true;
@@ -76,26 +90,17 @@ public static class UsageStats
         return new(all, sessions, withParser, capped);
     }
 
-    private static readonly ConcurrentDictionary<(string, long, long), List<UsageEvent>> _events = new();
-
     /// <summary>Use in the last 5 hours and 7 days (exact, from event times), the current 5-hour block, and the latest limit readings.</summary>
     public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct = default)
     {
         var withParser = files.Where(f => LogParsers.Find(f.Format) != null).ToList();
         var events = new List<UsageEvent>(); var limits = new List<LimitSample>();
-        if (_events.Count > 40)
-        {
-            _events.Clear();
-        }
-
         foreach (var f in withParser.Where(f => f.Modified >= now.AddDays(-8)))
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                var parser = LogParsers.Find(f.Format)!;
-                var list = _events.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => [.. parser.UsageFile(f.Path).Where(e => e.Time >= now.AddDays(-8))]);
-                events.AddRange(list.Where(e => e.Time >= now.AddDays(-7)));
+                events.AddRange(Read(f, LogParsers.Find(f.Format)!).Recent.Where(e => e.Time >= now.AddDays(-7)));
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         }

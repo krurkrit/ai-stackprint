@@ -81,11 +81,11 @@ public static partial class SafetyScan
 
     private static List<Finding> Folder(string root, bool single, string home)
     {
-        var files = single ? [(Path.GetFileName(root), new FileInfo(root).Length)] : SkillDoc.Files(root);
+        var files = single ? [SkillDoc.Entry(root)] : SkillDoc.Entries(root);
         var dir = single ? Path.GetDirectoryName(root)! : root;
         var hits = new Dictionary<string, List<string>>();
         long total = 0;
-        foreach (var (rel, size) in files.Where(f => IsText(f.Rel) && f.Size <= MaxFile && !f.Rel.Contains("node_modules", StringComparison.OrdinalIgnoreCase)))
+        foreach (var (rel, size, ticks) in files.Where(f => IsText(f.Rel) && f.Size <= MaxFile && !f.Rel.Contains("node_modules", StringComparison.OrdinalIgnoreCase)))
         {
             total += size;
             if (total > MaxTotal)
@@ -94,7 +94,7 @@ public static partial class SafetyScan
             }
 
             var full = Path.Combine(dir, rel);
-            foreach (var id in Scan(full, size))
+            foreach (var id in Scan(new FileStamp(full, size, ticks)))
             {
                 if (!hits.TryGetValue(id, out var l))
                 {
@@ -124,11 +124,11 @@ public static partial class SafetyScan
 
     private static bool IsText(string rel) => _textEndings.Any(e => rel.EndsWith(e, StringComparison.OrdinalIgnoreCase));
 
-    private static string[] Scan(string file, long size)
+    private static string[] Scan(FileStamp file)
     {
         try
         {
-            return ScanCache.Rules.GetOrAdd(ScanCache.Stamp(file, size), _ => Match(file));   // the ids of the rules that matched: read again only when the file changed
+            return ScanCache.Rule(file, f => Match(f.Path));   // the ids of the rules that matched: read again only when the file changed
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return []; }
     }

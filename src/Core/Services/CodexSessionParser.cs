@@ -65,7 +65,7 @@ internal class CodexSessionParser : ILogParser
     {
         string model = "", project = "";
         long pIn = 0, pOut = 0, pCache = 0, pReason = 0, pWrite = 0;
-        foreach (var e in LogParsers.Json(lines))
+        foreach (var e in LogParsers.Json(lines, "session_meta", "turn_context", "token_count"))   // the only lines read below
         {
             var p = e.Get("payload");
             switch (e.Str("type"))
@@ -112,7 +112,7 @@ internal class CodexSessionParser : ILogParser
     /// <summary>The 5-hour ("primary") and weekly ("secondary") limit readings in token_count events: used percent and when the window resets.</summary>
     public IEnumerable<LimitSample> Limits(IEnumerable<string> lines)
     {
-        foreach (var e in LogParsers.Json(lines))
+        foreach (var e in LogParsers.Json(lines, "token_count"))
         {
             var p = e.Get("payload");
             if (e.Str("type") != "event_msg" || p.Str("type") != "token_count" || e.Time() is not { } time)
