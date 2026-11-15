@@ -28,7 +28,9 @@ internal static class Radius
     public const double XS = 2;      // chart columns
     public const double S = 4;       // bars, small chips, code blocks
     public const double M = 6;       // buttons, list rows, inputs
-    public const double L = 8;       // cards and dialogs
+    public const double L = 8;       // dialogs
+    public const double Tile = Sizes.IconTile * Sizes.TileCorner;   // the card-header icon tile (8)
+    public const double Card = Tile + Space.XXL;   // cards: the icon tile's corner plus the card padding, so the two corners are concentric (28)
     public const double XL = 12;     // overlays (command palette, toasts)
     public const double Pill = 999;  // dots, pills, round buttons
 }
@@ -71,6 +73,7 @@ internal static class Sizes
     public const double IconTile = 32;     // tinted square behind a card or row icon
     public const double TileGlyph = 0.55;  // icon size as a share of its tile
     public const double LogoGlyph = 0.6;   // logo size as a share of its tile
+    public const double TileCorner = 0.25; // corner radius of an icon or logo tile as a share of its side
     public const double LogoS = 24;        // app logo in dense rows and charts
     public const double LogoM = 28;        // app logo in tables
     public const double LogoL = 32;        // app logo in headers

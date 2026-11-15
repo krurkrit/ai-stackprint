@@ -35,7 +35,9 @@ The reference for how AI Stackprint looks. Colors and fonts come from Snowy Owl 
 | `XS` | 2 | chart columns |
 | `S` | 4 | bars, small chips, code blocks |
 | `M` | 6 | buttons, list rows, inputs |
-| `L` | 8 | cards and dialogs |
+| `L` | 8 | dialogs |
+| `Tile` | 8 | icon tile of a card header (`Sizes.IconTile` × `Sizes.TileCorner`) |
+| `Card` | 28 | cards: `Tile` + the card padding (`Space.XXL`), so the card's corner is concentric with its icon tile's |
 | `XL` | 12 | overlays (command palette, toasts) |
 | `Pill` | 999 | dots, pills, round buttons |
 
@@ -89,8 +91,8 @@ Weights come from Appearance (`W.Body`, `W.Emphasis`, `W.Heading`); never set a 
 Built in `W` (`Widgets*.cs`); use these instead of building the same thing again.
 
 - **Page** (`W.Page`): margins `Page` × `XXXL`, sections `XXL` apart. The header row is `W.H1` with buttons on the right.
-- **Card** (`W.Card`): surface color, `Radius.L`, padding `XXL`, no border. Cards sit `XL` apart.
-- **Card header** (`W.Section` / `W.CardHeader`): every card with a title uses it. Icon on a tinted square (`Sizes.IconTile`, accent glyph `IconSize.M`), title at `TextSize.Subtitle` in the heading weight, optional buttons on the right that wrap. The header is one input tall with or without buttons, and the body starts `L` below it, so headers line up across a row of cards.
+- **Card** (`W.Card`): surface color, `Radius.Card`, padding `XXL` on all four sides, no border. Cards sit `XL` apart.
+- **Card header** (`W.Section` / `W.CardHeader`): every card with a title uses it. Icon on a tinted square (`Sizes.IconTile`, accent glyph `IconSize.M`), title at `TextSize.Subtitle` in the heading weight, optional buttons on the right that wrap. The header is one input tall with or without buttons, and the body starts `L` below it, so headers line up across a row of cards. The header is lifted by half of (input height − tile size), so the icon tile is `XXL` from the card's top edge, the same as from its left edge.
 - **Rendered Markdown** (`MarkdownView`): H1 at `TextSize.Title`, H2 at `Subtitle`, smaller headings and body at `Body`, table cells at `Small`; headings in the heading weight.
 - **Stat card** (dashboard tiles): card header, big number (`Display`, right-aligned, tabular figures), a `Sizes.Bar` stacked bar, and a dot legend.
 - **Buttons** (`W.Btn`): one input tall, side padding `XL`, `IconSize.S` icon. Primary uses the accent class; destructive uses `W.DangerBtn`; icon-only uses `W.IconBtn`.

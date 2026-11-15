@@ -103,14 +103,16 @@ internal static partial class W
     }
 
     public static Border Card(Control c) =>
-        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.XXL), Child = c }
+        new Border { CornerRadius = new CornerRadius(Radius.Card), Padding = new Thickness(Space.XXL), Child = c }
             .Themed(Border.BackgroundProperty, Surface);
 
     /// <summary>Card with the standard header and <paramref name="body"/> below it.</summary>
     public static Border Section(string icon, string title, Control body, params Control[] actions)
     {
         // The body fills the rest of the card, so a card stretched by its row can center its content
-        var head = CardHeader(icon, title, actions).With(h => { DockPanel.SetDock(h, Dock.Top); h.Margin = new Thickness(0, 0, 0, Space.L); });
+        // The header row is one input tall with the icon tile centered in it: it moves up by the difference, so the tile is as far from the top as from the left
+        var lift = Math.Min(0, (Sizes.IconTile - Theme.InputHeight) / 2);
+        var head = CardHeader(icon, title, actions).With(h => { DockPanel.SetDock(h, Dock.Top); h.Margin = new Thickness(0, lift, 0, Space.L); });
         return Card(new DockPanel { Children = { head, body } });
     }
 
@@ -209,7 +211,7 @@ internal static partial class W
     }
 
     private static Border Tile(Control glyph, double size, string bg = Subtle) =>
-        new Border { Width = size, Height = size, CornerRadius = new CornerRadius(size / Radius.S), Child = glyph, VerticalAlignment = VerticalAlignment.Center }
+        new Border { Width = size, Height = size, CornerRadius = new CornerRadius(size * Sizes.TileCorner), Child = glyph, VerticalAlignment = VerticalAlignment.Center }
             .Themed(Border.BackgroundProperty, bg);
 
     public static Border IconTile(string icon, double size = Sizes.IconTile) => Tile(Icon(icon, size * Sizes.TileGlyph).Themed(TextElement.ForegroundProperty, Accent), size, Selected);
