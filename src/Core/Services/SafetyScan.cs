@@ -120,6 +120,9 @@ public static partial class SafetyScan
         return res;
     }
 
+    /// <summary>The command downloads and runs code in one step (the "download-run" rule).</summary>
+    internal static bool DownloadsAndRuns(string command) => DownloadRun().IsMatch(command);
+
     private static string Names(List<string> files) => string.Join(", ", files.Take(MaxFilesListed)) + (files.Count > MaxFilesListed ? $" and {files.Count - MaxFilesListed} more" : "");
 
     private static bool IsText(string rel) => _textEndings.Any(e => rel.EndsWith(e, StringComparison.OrdinalIgnoreCase));

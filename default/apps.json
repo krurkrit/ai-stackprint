@@ -132,6 +132,8 @@
         {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Workspace"},
         {"path": "~/.cursor/mcp.json", "level": "User", "kind": "mcp", "label": "Global"},
         {"path": ".cursor/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"},
+        {"path": "~/.cursor/hooks.json", "level": "User", "kind": "hooks", "label": "Global"},
+        {"path": ".cursor/hooks.json", "level": "Project", "kind": "hooks", "label": "Workspace"},
         {"path": ".cursorignore", "level": "Project", "kind": "ignore", "label": "Workspace"},
         {"path": ".cursorindexingignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
       ],
@@ -224,6 +226,8 @@
         {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Repository"},
         {"path": ".vscode/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace (VS Code)"},
         {"path": "~/.copilot/mcp-config.json", "level": "User", "kind": "mcp", "label": "Copilot CLI"},
+        {"path": ".github/hooks", "level": "Project", "kind": "hooks", "label": "Repository"},
+        {"path": "~/.copilot/hooks", "level": "User", "kind": "hooks", "label": "Copilot CLI"},
         {"path": "%APPDATA%/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "windows", "label": "VS Code"},
         {"path": "~/Library/Application Support/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "macos", "label": "VS Code"},
         {"path": "~/.config/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "linux", "label": "VS Code"}
@@ -517,7 +521,8 @@
         {"path": "~/.kiro/steering", "level": "User", "kind": "instructions", "label": "Global"},
         {"path": ".kiro/steering", "level": "Project", "kind": "instructions", "label": "Workspace"},
         {"path": "~/.kiro/settings/mcp.json", "level": "User", "kind": "mcp", "label": "Global"},
-        {"path": ".kiro/settings/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
+        {"path": ".kiro/settings/mcp.json", "level": "Project", "kind": "mcp", "label": "Workspace"},
+        {"path": ".kiro/hooks", "level": "Project", "kind": "hooks", "label": "Workspace"}
       ],
       "plugins": [
         {"format": "vscode", "path": "~/.kiro/extensions", "label": "Extensions"}
@@ -527,7 +532,7 @@
         {"path": "~/Library/Application Support/Kiro/logs", "label": "Logs", "depth": 4, "os": "macos"},
         {"path": "~/.config/Kiro/logs", "label": "Logs", "depth": 4, "os": "linux"}
       ],
-      "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort."
+      "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Hook files are read best effort: their format changed in Kiro 1.0."
     },
     {
       "id": "antigravity", "name": "Antigravity", "category": "editor", "logo": "antigravity",

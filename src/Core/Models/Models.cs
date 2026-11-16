@@ -193,7 +193,8 @@ public class AppState
     public List<AppInfo> Apps { get; set; } = [];
     public Services.ScanChanges Changes { get; set; } = new([], null);   // since the scan before this one (saved between runs)
     public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan
-    public List<Services.McpServer> Mcp { get; set; } = [];                      // MCP servers in the config files of the last scan
+    public List<Services.McpServer> Mcp { get; set; } = [];                      // MCP and LSP servers in the config files and plugins of the last scan
+    public List<Services.Hook> Hooks { get; set; } = [];                         // hooks in the settings and hook files and plugins of the last scan
 
     public List<AppDefinition> ShadowedApps { get; set; } = [];                  // your apps.json entries for tools that are now built in (not used)
 

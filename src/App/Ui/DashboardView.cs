@@ -208,7 +208,7 @@ internal static partial class DashboardView
             [
                 Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
                 Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted), Txt(ch.Detail ?? "", TextSize.Caption, false, Muted)
-            ], ch.What == "Removed" ? null : ch.Kind is "MCP server" or "LSP server" ? () => x.Go("Mcp") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
+            ], ch.What == "Removed" ? null : ch.Kind is "MCP server" or "LSP server" ? () => x.Go("Mcp") : ch.Kind == "Hook" ? () => x.Go("Hooks") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
             body = new StackPanel { Spacing = Space.S, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*"), new Col("", "1.6*")], rows) } };
             if (c.Changes.Count > 12)
             {

@@ -17,11 +17,22 @@ public static partial class ProjectChecks
 {
     private static void Configs(string project, IReadOnlyList<AppDefinition> defs, List<ProjectIssue> issues, List<ProjectProgram> programs)
     {
-        var files = defs.SelectMany(d => d.Configs.Where(c => Scanner.InProject(c.Level) && c.Kind is "mcp" or "settings" && PathUtil.OsMatches(c.Os)).Select(c => (App: d, Config: c)))
+        var files = defs.SelectMany(d => d.Configs.Where(c => Scanner.InProject(c.Level) && c.Kind is "mcp" or "settings" or "hooks" && PathUtil.OsMatches(c.Os)).Select(c => (App: d, Config: c)))
             .GroupBy(x => x.Config.Path.Replace('\\', '/'), StringComparer.OrdinalIgnoreCase);
         foreach (var g in files)
         {
             var path = Path.Combine(project, g.Key.Replace('/', Path.DirectorySeparatorChar));
+            if (g.Any(x => x.Config.Kind == "hooks"))
+            {
+                // a hook file or a folder of them (.github/hooks, .kiro/hooks), in any of the formats Hooks reads
+                foreach (var f in Directory.Exists(path) ? Services.Hooks.Files(path) : File.Exists(path) ? [path] : [])
+                {
+                    AddHooks(Services.Hooks.InFile(f, project, PathUtil.Home), project, f, [.. g.Select(x => x.App.Id).Distinct()], programs, issues);
+                }
+
+                continue;
+            }
+
             if (!File.Exists(path) || !Path.GetExtension(path).StartsWith(".json", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -94,44 +105,18 @@ public static partial class ProjectChecks
         }
     }
 
-    /// <summary>Hooks: every "command" under a top-level "hooks" object, named by its event (and matcher).</summary>
-    internal static void Hooks(JsonElement root, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues)
+    /// <summary>Hooks under a top-level "hooks" object (<see cref="Services.Hooks.Parse"/>), named by their event (and matcher); a missing script is an issue.</summary>
+    internal static void Hooks(JsonElement root, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues) =>
+        AddHooks(Services.Hooks.Parse(root, path, project, PathUtil.Home), project, path, apps, programs, issues);
+
+    private static void AddHooks(IEnumerable<Hook> hooks, string project, string path, List<string> apps, List<ProjectProgram> programs, List<ProjectIssue> issues)
     {
-        if (!root.TryGetProperty("hooks", out var hooks) || hooks.ValueKind != JsonValueKind.Object)
+        foreach (var h in hooks)
         {
-            return;
-        }
-
-        foreach (var ev in hooks.EnumerateObject())
-        {
-            Walk(ev.Value, ev.Name);
-        }
-
-        void Walk(JsonElement e, string name)
-        {
-            if (e.ValueKind == JsonValueKind.Array)
+            programs.Add(new("Hook", h.Name, h.What, path, h.Type != "command" ? h.Type : null));
+            if (h.Missing != null)
             {
-                foreach (var x in e.EnumerateArray())
-                {
-                    Walk(x, name);
-                }
-            }
-            else if (e.ValueKind == JsonValueKind.Object)
-            {
-                var n = Str(e, "matcher") is { Length: > 0 } m ? $"{name} · {m}" : name;
-                if (Str(e, "command") is { } cmd)
-                {
-                    programs.Add(new("Hook", n, Mask(cmd), path, Str(e, "type") is { } t && t != "command" ? t : null));
-                    if (HookScript.Missing(cmd, project, PathUtil.Home) is { } missing)
-                    {
-                        issues.Add(new(apps, path, new($"Hook {n} in {Rel(project, path)} runs {Mask(missing)}, which does not exist.")));
-                    }
-                }
-
-                foreach (var p in e.EnumerateObject().Where(p => p.Value.ValueKind is JsonValueKind.Array or JsonValueKind.Object))
-                {
-                    Walk(p.Value, n);
-                }
+                issues.Add(new(apps, path, new($"Hook {h.Name} in {Rel(project, path)} runs {h.Missing}, which does not exist.")));
             }
         }
     }

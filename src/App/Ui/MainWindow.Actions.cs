@@ -67,6 +67,7 @@ internal partial class MainWindow
             "Part" => _parts.Build(),
             "Health" => _health.Build(),
             "Mcp" => _mcp.Build(),
+            "Hooks" => _hooks.Build(),
             "Usage" => _usage.Build(),
             "Models" => _models.Build(),
             _ when _view.StartsWith("Models:") => _models.Build(_view[7..]),
@@ -103,6 +104,7 @@ internal partial class MainWindow
             case "Skill": _skills.Leave(); break;
             case "Part": _parts.Leave(); break;
             case "Mcp": _mcp.Leave(); break;
+            case "Hooks": _hooks.Leave(); break;
             case "Usage": _usage.Leave(); break;
             case var v when v.StartsWith("Models"): _models.Leave(); break;
             case var v when v.StartsWith("App:"): _detail.Leave(); break;
@@ -146,19 +148,20 @@ internal partial class MainWindow
         var r = await Task.Run(() => { ScanCache.Load(); Step("cache load"); var c = Scanner.Collect(defs, projects); Step("collect"); return c; });   // the safety and change results of the last run: only changed files are read again
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
-        (_s.Changes, _s.Health, _s.Mcp) = await Task.Run(() =>
+        (_s.Changes, _s.Health, _s.Mcp, _s.Hooks) = await Task.Run(() =>
         {
             Say(DashboardView.Comparing);
             watch.Restart();   // not the wait for the UI thread between the two
             var mcp = McpServers.Read(items).Concat(McpServers.FromPlugins(items)).ToList(); Step("mcp");
-            var changes = ScanDiff.Update(items, ScanDiff.File, mcp); Step("changes");
+            var hooks = Hooks.Read(items, PathUtil.Home).Concat(Hooks.FromPlugins(items, PathUtil.Home)).ToList(); Step("hooks");
+            var changes = ScanDiff.Update(items, ScanDiff.File, mcp, hooks); Step("changes");
             var health = Health.Compute(items, claudeModel.GetAwaiter().GetResult()); Step("health");
             var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
             Say(DashboardView.Configs);
             var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList(); Step("configs");
             var all = health.Concat(safety).Concat(checks).ToList();
             ScanCache.Save(); Step("cache save");
-            return (changes, all, mcp);
+            return (changes, all, mcp, hooks);
         });
         _status = null;
         var first = !_scanned;

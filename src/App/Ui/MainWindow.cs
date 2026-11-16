@@ -28,6 +28,7 @@ internal partial class MainWindow : Window
     private readonly AppsView _apps;
     private readonly HealthView _health;
     private readonly McpView _mcp;
+    private readonly HooksView _hooks;
     private readonly UsageView _usage;
     private readonly ModelsView _models;
     private readonly AppDetailView _detail;
@@ -54,7 +55,7 @@ internal partial class MainWindow : Window
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Reload = Reload, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
         _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _parts = new LibraryView(_x, "Part"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
-        _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _usage = new UsageView(_x); _models = new ModelsView(_x);
+        _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _hooks = new HooksView(_x); _usage = new UsageView(_x); _models = new ModelsView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
         {
@@ -212,6 +213,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
         nav.Children.Add(Go("bot", "Commands & agents", "Part"));
         nav.Children.Add(Go("server", "Servers", "Mcp"));
+        nav.Children.Add(Go("flash", "Hooks", "Hooks"));
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));
         nav.Children.Add(Go("brain_circuit", "Models", "Models"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));

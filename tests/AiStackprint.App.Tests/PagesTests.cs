@@ -38,6 +38,7 @@ public sealed class PagesTests : IDisposable
                 new Item("Command", "ship", "Ship it", "Claude Code · git-helper", "User", Path.Combine(_tmp, "plugin", "commands", "ship.md")) { App = "claude-code", Plugin = "git-helper" },
             ],
             Mcp = [new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false) { Apps = ["claude-code"], Level = "User" }],
+            Hooks = [new Hook("Stop", null, "echo done", "command", "/u/.claude/settings.json") { Apps = ["claude-code"] }],
         };
         s.Health = [new HealthIssue("Skills", "review", "claude-code", new Finding("No description.", true), s.Items[1])];
         s.Projects.Add(project);
@@ -73,6 +74,7 @@ public sealed class PagesTests : IDisposable
             ("Skills", () => new LibraryView(x, "Skill").Build()),
             ("Commands & agents", () => new LibraryView(x, "Part").Build()),
             ("Servers", () => new McpView(x).Build()),
+            ("Hooks", () => new HooksView(x).Build()),
             ("Usage", () => new UsageView(x).Build()),
             ("Models", () => new ModelsView(x).Build()),
             ("Logs", () => new LogsView(x).Build(null)),

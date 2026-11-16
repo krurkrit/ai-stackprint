@@ -7,17 +7,17 @@ using AiStackprint.Models;
 
 namespace AiStackprint.Services;
 
-/// <param name="What">Added, Removed or Edited (config files whose time changed; skills and plugins whose files or version changed; MCP servers whose definition changed).</param>
+/// <param name="What">Added, Removed or Edited (config files whose time changed; skills and plugins whose files or version changed; servers and hooks whose definition changed).</param>
 public record Change(string What, string Kind, string Name, string App, string Path)
 {
-    /// <summary>What changed in an edit: "version 1.2 → 1.3", "files changed", "command or address changed"; null when only the time changed.</summary>
+    /// <summary>What changed in an edit: "version 1.2 → 1.3", "files changed", "command or address changed", "command changed"; null when only the time changed.</summary>
     public string? Detail { get; init; }
 }
 
 /// <param name="Since">When the scan compared against was taken; null on the first run.</param>
 public record ScanChanges(List<Change> Changes, DateTime? Since);
 
-/// <summary>Skills, plugins and config files added, removed or edited since the scan before. The last scan is saved in the data folder's cache.</summary>
+/// <summary>Skills, plugins, commands, agents, config files, servers and hooks added, removed or edited since the scan before. The last scan is saved in the data folder's cache.</summary>
 public static class ScanDiff
 {
     public static string File => Path.Combine(DataFolder.Cache, "last-scan.json");
@@ -37,11 +37,12 @@ public static class ScanDiff
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return 0; }
     }
 
-    /// <summary>Compares <paramref name="items"/> and <paramref name="servers"/> with the saved scan, then saves them as the new one.</summary>
-    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers = null)
+    /// <summary>Compares <paramref name="items"/>, <paramref name="servers"/> and <paramref name="hooks"/> with the saved scan, then saves them as the new one.</summary>
+    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers = null, IEnumerable<Hook>? hooks = null)
     {
         var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i), i.Kind is "Skill" or "Plugin" ? Fingerprint.Of(i) : null, i.Version))
             .Concat((servers ?? []).Select(s => new Entry(s.Kind + " server", s.Project == null ? s.Name : $"{s.Name} · {System.IO.Path.GetFileName(s.Project.TrimEnd(System.IO.Path.DirectorySeparatorChar, '/'))}", s.Apps.FirstOrDefault() ?? "", s.File, 0, s.Fingerprint)))
+            .Concat((hooks ?? []).GroupBy(h => (h.File, h.Name)).SelectMany(g => g.Select((h, n) => new Entry("Hook", n == 0 ? h.Name : $"{h.Name} ({n + 1})", h.Apps.FirstOrDefault() ?? "", h.File, 0, h.Fingerprint))))
             .DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
         Snapshot? old = null;
         try
@@ -86,9 +87,9 @@ public static class ScanDiff
     /// <summary>Null when nothing changed; otherwise what changed ("" when only the time did).</summary>
     private static string? Edit(Entry b, Entry e)
     {
-        if (e.Kind is "MCP server" or "LSP server")
+        if (e.Kind is "MCP server" or "LSP server" or "Hook")
         {
-            return b.Hash != null && e.Hash != null && b.Hash != e.Hash ? "command or address changed" : null;
+            return b.Hash != null && e.Hash != null && b.Hash != e.Hash ? (e.Kind == "Hook" ? "command changed" : "command or address changed") : null;
         }
 
         if (b.Version != null && e.Version != null && b.Version != e.Version)

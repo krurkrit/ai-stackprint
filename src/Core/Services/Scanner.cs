@@ -155,7 +155,7 @@ public static partial class Scanner
             return;
         }
 
-        var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", "ignore" => "Ignore", _ => "Instructions" };
+        var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", "ignore" => "Ignore", "hooks" => "Hooks", _ => "Instructions" };
         rows.Add(new Item("Config", Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar)), kind, d.Name, c.Level, path)
         { App = d.Id, Project = project, LevelLabel = c.Label, AppWritten = c.AppWritten });
     }

@@ -62,6 +62,9 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
 - Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 
+## Hooks
+- Hooks are their own page, not part of the config files: each row is one command or prompt with its event, matcher, app, level and source, because a hook runs with your rights on every matching event and is the part of a settings file most worth seeing. Hooks a plugin adds are rows of that plugin ("from plugin X").
+- One generic parser reads every documented JSON shape; formats that are not stable (Kiro) are read best effort and say so. Warnings: a missing script, or download-and-run in one step. Nothing is run.
 ## Safety
 - Health has a "Safety" area: findings to review in installed skills and plugins, never "safe" or "unsafe". It is offline pattern matching; nothing is run or fetched, and a clean result proves nothing. Warnings: hidden Unicode, text that tells the agent to hide things from you, download-and-run commands, a plugin hook that runs a missing script. Information: long encoded blocks, bare-IP and paste-site links, credential file names.
 - Health "Config files": your user-level settings and MCP files (JSON), with secrets in plain text as information (they are expected in a personal file) and permission settings that skip prompts as warnings.

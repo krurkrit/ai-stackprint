@@ -16,7 +16,7 @@ internal static class AiFoldersSection
     private static readonly (string Key, string One, string Many)[] _words =
     [
         ("Command", "command", "commands"), ("Agent", "agent", "agents"), ("Skill", "skill", "skills"), ("Plugin", "plugin", "plugins"),
-        ("Settings", "settings file", "settings files"), ("MCP servers", "MCP file", "MCP files"), ("Instructions", "instruction file", "instruction files"), ("Ignore", "ignore file", "ignore files")
+        ("Settings", "settings file", "settings files"), ("MCP servers", "MCP file", "MCP files"), ("Instructions", "instruction file", "instruction files"), ("Ignore", "ignore file", "ignore files"), ("Hooks", "hook file", "hook files")
     ];
 
     /// <summary>"3 commands · 1 agent · 4 other files".</summary>
