@@ -57,7 +57,9 @@ public sealed class PluginReadersTests : IDisposable
         Write("ext/mcpb/manifest.json", """{ "name": "fs", "display_name": "Filesystem", "author": { "name": "Anthropic" }, "server": { "type": "node" } }""");
         Write("ext/.hidden/plugin.json", """{ "name": "hidden" }""");
         Write("ext/market/conductor/gemini-extension.json", """{ "name": "conductor", "version": "0.1.9", "description": "older copy" }""");
-        var rows = Read("folders", "ext", new PluginSource { Depth = 2, Label = "Extensions" }).ToDictionary(r => r.Name);
+        var all = Read("folders", "ext", new PluginSource { Depth = 2, Label = "Extensions" });
+        Assert.Equal(("plan", "conductor"), Assert.Single(all, r => r.Kind == "Command") is var c ? (c.Name, c.Plugin) : default);   // the extension's command is a row of it
+        var rows = all.Where(r => r.Kind == "Plugin").ToDictionary(r => r.Name);
 
         Assert.Equal(["Filesystem", "Python", "conductor", "notes"], rows.Keys.Order());
         Assert.Equal(("Plans", "0.2.0", "Extensions"), (rows["conductor"].Description, rows["conductor"].Version, rows["conductor"].LevelLabel));

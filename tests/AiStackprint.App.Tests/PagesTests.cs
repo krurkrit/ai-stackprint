@@ -35,6 +35,7 @@ public sealed class PagesTests : IDisposable
                 Skill("review", "User", ["Agent"]),
                 Skill("deploy", "Project", ["User"]),
                 new Item("Plugin", "git-helper", "Git tools", "Claude Code", "User", Path.Combine(_tmp, "plugin")) { App = "claude-code" },
+                new Item("Command", "ship", "Ship it", "Claude Code · git-helper", "User", Path.Combine(_tmp, "plugin", "commands", "ship.md")) { App = "claude-code", Plugin = "git-helper" },
             ],
             Mcp = [new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false) { Apps = ["claude-code"], Level = "User" }],
         };
@@ -70,6 +71,7 @@ public sealed class PagesTests : IDisposable
             ("Claude Code", () => new AppDetailView(x).Build("claude-code")),
             ("Plugins", () => new LibraryView(x, "Plugin").Build()),
             ("Skills", () => new LibraryView(x, "Skill").Build()),
+            ("Commands & agents", () => new LibraryView(x, "Part").Build()),
             ("MCP servers", () => new McpView(x).Build()),
             ("Usage", () => new UsageView(x).Build()),
             ("Models", () => new ModelsView(x).Build()),

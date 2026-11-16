@@ -80,7 +80,7 @@ internal class ItemBrowser
     public void Select(Item i) { _sel = i; _max = false; }
 
     /// <param name="top">Page header and any sections above the list.</param>
-    /// <param name="items">The rows in scope (this kind only).</param>
+    /// <param name="items">The rows in scope (this kind only; "Part" = commands and agents).</param>
     public Control Build(IEnumerable<Control> top, List<Item> items)
     {
         _items = items;
@@ -101,7 +101,7 @@ internal class ItemBrowser
 
         _building = false;
 
-        _own.Content = _filter.Controls(items, _kind == "Skill", FilterChanged);
+        _own.Content = _filter.Controls(items, _kind is "Skill" or "Part", FilterChanged);
         var search = new DockPanel
         {
             Children = { _app.Free().With(c => { DockPanel.SetDock(c, Dock.Right); c.Margin = new Thickness(Space.L, 0, 0, 0); c.VerticalAlignment = VerticalAlignment.Center; }),
@@ -168,7 +168,7 @@ internal class ItemBrowser
 
     private void FilterChanged()
     {
-        _own.Content = _filter.Controls(_items, _kind == "Skill", FilterChanged);
+        _own.Content = _filter.Controls(_items, _kind is "Skill" or "Part", FilterChanged);
         Fill();
     }
 
@@ -182,9 +182,9 @@ internal class ItemBrowser
         var cols = _kind == "Plugin"
             // minimums fit the narrowest window (900 px): Path gives way first
             ? new[] { new Col("Plugin", "2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Version", ".7*", Min: 56), new Col("Path", "3*"), new Col("", "112") }
-            : [new Col("Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112")];
+            : [new Col(_kind == "Part" ? "Name" : "Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col(_kind == "Part" ? "Type" : "Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112")];
         _table.Content = Table.Build(cols, _filter.Rows(shown, Row, cols.Length, Fill),
-            _items.Count == 0 ? $"No {(_kind == "Plugin" ? "plugins" : "skills")} found." : "Nothing matches. Clear the search or filters.");
+            _items.Count == 0 ? $"No {_kind switch { "Plugin" => "plugins", "Part" => "commands or agents", _ => "skills" }} found." : "Nothing matches. Clear the search or filters.");
     }
 
     private TableRow Row(Item i) => new(
@@ -192,7 +192,7 @@ internal class ItemBrowser
         Table.NameDesc(i.Name, i.Description, marks: _query),
         DetailPanel.AppLink(_x, i.App, i.Source),
         AppDetailView.LevelCell(i),
-        _kind == "Plugin" ? Txt(i.Version ?? "", TextSize.Small) : AppDetailView.InvokeCell(i),
+        _kind switch { "Plugin" => Txt(i.Version ?? "", TextSize.Small), "Part" => Txt(i.Kind, TextSize.Small), _ => AppDetailView.InvokeCell(i) },
         PathCell(i.Path),
         Actions(i)
     ], () => Pick(i), _sel != null && Same(i, _sel));

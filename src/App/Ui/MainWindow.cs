@@ -24,7 +24,7 @@ internal partial class MainWindow : Window
     private readonly Border _side;
     private readonly ContentControl _body = new();
     private readonly Ctx _x;
-    private readonly LibraryView _skills, _plugins;
+    private readonly LibraryView _skills, _plugins, _parts;
     private readonly AppsView _apps;
     private readonly HealthView _health;
     private readonly McpView _mcp;
@@ -53,7 +53,7 @@ internal partial class MainWindow : Window
         LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Reload = Reload, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
-        _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
+        _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _parts = new LibraryView(_x, "Part"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
         _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _usage = new UsageView(_x); _models = new ModelsView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
@@ -162,7 +162,7 @@ internal partial class MainWindow : Window
 
     private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
 
-    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
+    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Part (commands and agents), Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
     private void Go(string view)
     {
         if (view != _view) { _back.Push(_view); _forward.Clear(); }
@@ -183,7 +183,7 @@ internal partial class MainWindow : Window
     /// <summary>Skills or Plugins page filtered to an app and/or a search text.</summary>
     private void Browse(string kind, string? app, string? query)
     {
-        (kind == "Plugin" ? _plugins : _skills).Filter(app, query);
+        (kind switch { "Plugin" => _plugins, "Part" => _parts, _ => _skills }).Filter(app, query);
         Go(kind);
     }
 
@@ -192,6 +192,7 @@ internal partial class MainWindow : Window
     {
         if (i.Kind == "Plugin") { _plugins.Select(i); Go("Plugin"); }
         else if (i.Kind == "Skill") { _skills.Select(i); Go("Skill"); }
+        else if (i.Kind is "Command" or "Agent") { _parts.Select(i); Go("Part"); }
         else
         {
             Go("App:" + i.App);
@@ -209,6 +210,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
+        nav.Children.Add(Go("bot", "Commands & agents", "Part"));
         nav.Children.Add(Go("server", "MCP servers", "Mcp"));
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));
         nav.Children.Add(Go("brain_circuit", "Models", "Models"));

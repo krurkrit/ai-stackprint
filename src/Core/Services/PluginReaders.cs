@@ -70,6 +70,7 @@ internal class ClaudePluginReader : IPluginReader
                     {
                         Scanner.Tagged(rows, () => Scanner.ReadRoot(dir, new ScanRoot { Level = level, Depth = 6 }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
                             i => i with { App = app.Id, Plugin = p.Name, Project = project });
+                        PluginContents.Add(rows, dir, m, new(app, level, project, p.Name));
                     }
                 }
             }

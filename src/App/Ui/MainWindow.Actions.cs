@@ -64,6 +64,7 @@ internal partial class MainWindow
             "Settings" => _settings.Build(),
             "Plugin" => _plugins.Build(),
             "Skill" => _skills.Build(),
+            "Part" => _parts.Build(),
             "Health" => _health.Build(),
             "Mcp" => _mcp.Build(),
             "Usage" => _usage.Build(),
@@ -100,6 +101,7 @@ internal partial class MainWindow
             case "Apps": _apps.Leave(); break;
             case "Plugin": _plugins.Leave(); break;
             case "Skill": _skills.Leave(); break;
+            case "Part": _parts.Leave(); break;
             case "Mcp": _mcp.Leave(); break;
             case "Usage": _usage.Leave(); break;
             case var v when v.StartsWith("Models"): _models.Leave(); break;

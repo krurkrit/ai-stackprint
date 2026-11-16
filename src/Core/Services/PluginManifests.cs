@@ -9,7 +9,7 @@ using AiStackprint.Models;
 namespace AiStackprint.Services;
 
 /// <summary>What a plugin or extension says about itself, from whichever manifest it has.</summary>
-public sealed record PluginManifest(string Description, string? Author, IReadOnlyList<string> Keywords, IReadOnlyList<string> Provides, string? Name = null, string? Version = null);
+public sealed record PluginManifest(string Description, string? Author, IReadOnlyList<string> Keywords, IReadOnlyList<string> Provides, string? Name = null, string? Version = null, string? File = null);
 
 /// <summary>
 /// Reads plugin and extension manifests of every app the same way: plugin.json (Claude, Codex, Cursor, Factory, Copilot),
@@ -77,7 +77,7 @@ public static partial class PluginManifests
         var keywords = r.TryGetProperty("keywords", out var k) && k.ValueKind == JsonValueKind.Array
             ? k.EnumerateArray().Where(w => w.ValueKind == JsonValueKind.String).Select(w => w.GetString()!.Trim()).Where(w => w != "").Distinct(StringComparer.OrdinalIgnoreCase).ToList()
             : [];
-        return new(MarkdownLite.Plain(desc), string.IsNullOrWhiteSpace(author) ? null : author.Trim(), keywords, PluginParts.Find(folder, r), name, Str(r, "version"));
+        return new(MarkdownLite.Plain(desc), string.IsNullOrWhiteSpace(author) ? null : author.Trim(), keywords, PluginParts.Find(folder, r), name, Str(r, "version"), file);
     }
 
     /// <summary>package.nls.json strings, for VS Code extensions whose package.json names them as %key%.</summary>
@@ -147,6 +147,7 @@ public static partial class PluginManifests
                 i => i with { App = ctx.App.Id, Plugin = name, Project = ctx.Project });
         }
 
+        PluginContents.Add(rows, folder, m, new(ctx.App, ctx.Level, ctx.Project, name));
         return item;
     }
 
