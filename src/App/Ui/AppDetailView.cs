@@ -103,13 +103,13 @@ internal class AppDetailView(Ctx x)
         var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Description).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var rows = cfg.Select(i => new TableRow(
         [
-            Txt(i.Name, TextSize.Body, true), Txt(i.Description, TextSize.Small), LevelCell(i), Mono(i.Path, TextSize.Caption),
+            Txt(i.Name, TextSize.Body, true), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i), LevelCell(i), Mono(i.Path, TextSize.Caption),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
         ], () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
         var body = new StackPanel
         {
             Spacing = Space.L,
-            Children = { Table.Build([new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "3*"), new Col("", "112")], rows,
+            Children = { Table.Build([new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Holds", "1.6*"), new Col("Level", "1.2*"), new Col("Path", "2.6*"), new Col("", "112")], rows,
             "No instruction or settings files found. Add project folders to see project files.") }
         };
         if (_preview != null && cfg.Any(i => i.Path == _preview))

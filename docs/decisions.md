@@ -62,6 +62,9 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
 - Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 
+## Config files
+- A config file is the source, not the thing: the app page's and project's "Instructions & settings" tables have a "Holds" column ("2 MCP servers · 1 hook · model claude-opus-5-5 · 3 permission rules", "12 patterns" for an ignore file), so a settings file explains itself. Servers and hooks link to their page. How many project files an ignore file hides stays in the project's Checks card (it needs the file list).
+
 ## Hooks
 - Hooks are their own page, not part of the config files: each row is one command or prompt with its event, matcher, app, level and source, because a hook runs with your rights on every matching event and is the part of a settings file most worth seeing. Hooks a plugin adds are rows of that plugin ("from plugin X").
 - One generic parser reads every documented JSON shape; formats that are not stable (Kiro) are read best effort and say so. Warnings: a missing script, or download-and-run in one step. Nothing is run.

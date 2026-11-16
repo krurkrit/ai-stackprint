@@ -8,6 +8,7 @@ using AiStackprint.Ui;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 
 using Xunit;
@@ -92,6 +93,31 @@ public sealed class PagesTests : IDisposable
         }
 
         w.Close();   // nothing of this test left running in the next one
+        Settle();
+    }
+
+    [AvaloniaFact]
+    public void A_config_file_says_what_it_holds_and_its_hooks_open_the_Hooks_page()
+    {
+        var s = State();
+        var settings = Path.Combine(_tmp, "settings.json");
+        File.WriteAllText(settings, """{ "model": "claude-opus-5-5" }""");
+        s.Items = [new Item("Config", "settings.json", "Settings", "Claude Code", "User", settings) { App = "claude-code" }];
+        s.Hooks = [new Hook("Stop", null, "echo done", "command", settings) { Apps = ["claude-code"] }];
+        var w = new Window { Width = 1200, Height = 800 };
+        string? went = null;
+        var x = new Ctx(s, w, v => went = v, () => { }) { Limits = new LimitsService(() => s.Settings) };
+        w.Show();
+        w.Content = new AppDetailView(x).Build("claude-code");
+        Settle();
+
+        Assert.Contains("model claude-opus-5-5", Ui.Texts(w));
+        var link = w.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "1 hook · ");
+        Assert.Equal("Open the Hooks page", ToolTip.GetTip(link));
+        link.RaiseEvent(new PointerReleasedEventArgs(link, new Pointer(1, PointerType.Mouse, true), w, default, 0,
+            new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased), KeyModifiers.None, MouseButton.Left));
+        Assert.Equal("Hooks", went);
+        w.Close();
         Settle();
     }
 

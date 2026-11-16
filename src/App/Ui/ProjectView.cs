@@ -77,7 +77,7 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
     }
 
     /// <summary>Instruction/settings files read in this project, one row per file with every app that reads it.</summary>
-    private static Border Configs(List<Item> all)
+    private Border Configs(List<Item> all)
     {
         var rows = all.Where(i => i.Kind == "Config").GroupBy(i => i.Path)
             .OrderBy(g => Array.IndexOf(_order, g.First().Level)).ThenBy(g => g.First().Name)
@@ -86,12 +86,12 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
                 var i = g.First();
                 return new TableRow(
                 [
-                    Txt(i.Name, TextSize.Body, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), TextSize.Small), Txt(i.Description, TextSize.Small),
+                    Txt(i.Name, TextSize.Body, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), TextSize.Small), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i),
                     AppDetailView.LevelCell(i), Mono(i.Path, TextSize.Caption),
                     IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path))
                 ]);
             });
-        var cols = new[] { new Col("File", "1.2*"), new Col("Read by", "1.4*"), new Col("Type", "1*"), new Col("Level", "1.2*"), new Col("Path", "2.6*"), new Col("", "40") };
+        var cols = new[] { new Col("File", "1.2*"), new Col("Read by", "1.4*"), new Col("Type", "1*"), new Col("Holds", "1.6*"), new Col("Level", "1.2*"), new Col("Path", "2.2*"), new Col("", "40") };
         return Section("document", "Instructions & settings", Table.Build(cols, rows, "No instruction or settings files apply."));
     }
 }
