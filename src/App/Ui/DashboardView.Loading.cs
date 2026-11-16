@@ -41,7 +41,7 @@ internal static partial class DashboardView
         var cats = Card("apps", "Apps by category");
         Grid.SetRowSpan(cats, 2); Grid.SetColumnSpan(cats, 2);
         tiles.Children.Add(cats);
-        var titles = new[] { ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("server", "MCP servers"), ("warning", "Health warnings") };
+        var titles = new[] { ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("server", "Servers"), ("warning", "Health warnings") };
         for (var i = 0; i < titles.Length; i++)
         {
             var c = Card(titles[i].Item1, titles[i].Item2);

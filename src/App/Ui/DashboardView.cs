@@ -37,7 +37,7 @@ internal static partial class DashboardView
         {
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
-            Tile("server", "MCP servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
+            Tile("server", "Servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
             Tile("warning", "Health warnings", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
         };
         var radar = Categories(apps, () => x.Go("Apps"));
@@ -208,7 +208,7 @@ internal static partial class DashboardView
             [
                 Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
                 Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted), Txt(ch.Detail ?? "", TextSize.Caption, false, Muted)
-            ], ch.What == "Removed" ? null : ch.Kind == "MCP server" ? () => x.Go("Mcp") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
+            ], ch.What == "Removed" ? null : ch.Kind is "MCP server" or "LSP server" ? () => x.Go("Mcp") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
             body = new StackPanel { Spacing = Space.S, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*"), new Col("", "1.6*")], rows) } };
             if (c.Changes.Count > 12)
             {

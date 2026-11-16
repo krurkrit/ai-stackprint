@@ -41,7 +41,7 @@ public static class ScanDiff
     public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers = null)
     {
         var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i), i.Kind is "Skill" or "Plugin" ? Fingerprint.Of(i) : null, i.Version))
-            .Concat((servers ?? []).Select(s => new Entry("MCP server", s.Project == null ? s.Name : $"{s.Name} · {System.IO.Path.GetFileName(s.Project.TrimEnd(System.IO.Path.DirectorySeparatorChar, '/'))}", s.Apps.FirstOrDefault() ?? "", s.File, 0, s.Fingerprint)))
+            .Concat((servers ?? []).Select(s => new Entry(s.Kind + " server", s.Project == null ? s.Name : $"{s.Name} · {System.IO.Path.GetFileName(s.Project.TrimEnd(System.IO.Path.DirectorySeparatorChar, '/'))}", s.Apps.FirstOrDefault() ?? "", s.File, 0, s.Fingerprint)))
             .DistinctBy(e => (e.Kind, e.Path, e.Name)).ToList();
         Snapshot? old = null;
         try
@@ -86,7 +86,7 @@ public static class ScanDiff
     /// <summary>Null when nothing changed; otherwise what changed ("" when only the time did).</summary>
     private static string? Edit(Entry b, Entry e)
     {
-        if (e.Kind == "MCP server")
+        if (e.Kind is "MCP server" or "LSP server")
         {
             return b.Hash != null && e.Hash != null && b.Hash != e.Hash ? "command or address changed" : null;
         }

@@ -211,7 +211,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
         nav.Children.Add(Go("bot", "Commands & agents", "Part"));
-        nav.Children.Add(Go("server", "MCP servers", "Mcp"));
+        nav.Children.Add(Go("server", "Servers", "Mcp"));
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));
         nav.Children.Add(Go("brain_circuit", "Models", "Models"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));

@@ -38,7 +38,7 @@ public static partial class ProjectChecks
                 Secrets(doc.RootElement, "", g.Key, path, apps, local, issues);
                 if (doc.RootElement.ValueKind == JsonValueKind.Object)
                 {
-                    programs.AddRange(McpServers.Parse(doc.RootElement, path).Select(s => new ProjectProgram("MCP server", s.Name, s.What, path, s.Note)));
+                    programs.AddRange(McpServers.Parse(doc.RootElement, path).Select(s => new ProjectProgram(s.Kind + " server", s.Name, s.What, path, s.Note)));
                     Hooks(doc.RootElement, project, path, apps, programs, issues);
                     Permissions(doc.RootElement, g.Key, path, apps, issues);
                 }

@@ -72,7 +72,7 @@ public sealed class PagesTests : IDisposable
             ("Plugins", () => new LibraryView(x, "Plugin").Build()),
             ("Skills", () => new LibraryView(x, "Skill").Build()),
             ("Commands & agents", () => new LibraryView(x, "Part").Build()),
-            ("MCP servers", () => new McpView(x).Build()),
+            ("Servers", () => new McpView(x).Build()),
             ("Usage", () => new UsageView(x).Build()),
             ("Models", () => new ModelsView(x).Build()),
             ("Logs", () => new LogsView(x).Build(null)),

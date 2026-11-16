@@ -150,7 +150,7 @@ internal partial class MainWindow
         {
             Say(DashboardView.Comparing);
             watch.Restart();   // not the wait for the UI thread between the two
-            var mcp = McpServers.Read(items); Step("mcp");
+            var mcp = McpServers.Read(items).Concat(McpServers.FromPlugins(items)).ToList(); Step("mcp");
             var changes = ScanDiff.Update(items, ScanDiff.File, mcp); Step("changes");
             var health = Health.Compute(items, claudeModel.GetAwaiter().GetResult()); Step("health");
             var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");

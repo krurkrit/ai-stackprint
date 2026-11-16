@@ -10,7 +10,7 @@ namespace AiStackprint.Services;
 public record ProjectIssue(IReadOnlyList<string> Apps, string? File, Finding Finding);
 
 /// <summary>An MCP server or hook a project config file starts.</summary>
-/// <param name="Kind">"MCP server" or "Hook".</param>
+/// <param name="Kind">"MCP server", "LSP server" or "Hook".</param>
 /// <param name="What">The command line (secret-looking parts hidden) or the server address.</param>
 public record ProjectProgram(string Kind, string Name, string What, string File, string? Note);
 

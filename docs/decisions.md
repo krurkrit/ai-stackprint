@@ -57,7 +57,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Info (not warnings): a CLAUDE.md/GEMINI.md/QWEN.md next to AGENTS.md that never mentions it; apps that read no file here; ignore-file patterns that match nothing; stale paths in instruction files. Warning: a hook that runs a script that does not exist.
 - "Claude Code settings" card (only when a settings file exists): permission rules and settings by level, highest priority first; a deny anywhere wins; env shows names only.
 
-## MCP servers
+## Servers (MCP and LSP)
+- MCP and LSP servers share one page, "Servers", with a Type column and pills: both are programs an app starts with your rights and have the same columns; they differ in purpose (tools for the model, code intelligence for the agent), and LSP servers are few (mostly from plugins). Servers a plugin adds are rows of that plugin ("from plugin X").
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
 - Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 

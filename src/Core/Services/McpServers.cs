@@ -10,12 +10,16 @@ using static AiStackprint.Services.ConfigJson;
 
 namespace AiStackprint.Services;
 
-/// <summary>An MCP server an app's config file starts or connects to.</summary>
+/// <summary>An MCP server an app's config file or a plugin starts or connects to, or an LSP server (<see cref="Kind"/>) the app starts for code intelligence.</summary>
 /// <param name="What">The command line (secret-looking parts hidden) or the server address.</param>
 /// <param name="Note">Not pinned, key in plain text, env names, disabled; null when there is nothing to say.</param>
 /// <param name="Warn">It runs a package without a fixed version, or a key is stored in plain text.</param>
 public sealed record McpServer(string Name, string What, string File, string? Note, bool Warn)
 {
+    /// <summary>"MCP" (tools for the model) or "LSP" (a language server the agent uses for diagnostics and navigation).</summary>
+    public string Kind { get; init; } = "MCP";
+    /// <summary>The plugin that adds it; null when a config file names it.</summary>
+    public string? Plugin { get; init; }
     public IReadOnlyList<string> Apps { get; init; } = [];
     public string Level { get; init; } = "User";
     public string? LevelLabel { get; init; }
@@ -106,6 +110,11 @@ public static partial class McpServers
                     res.AddRange(servers.EnumerateObject().Where(s => s.Value.ValueKind == JsonValueKind.Object)
                         .Select(s => One(s.Name, s.Value, path) is { } m ? m with { Project = project } : null).OfType<McpServer>());
                 }
+            }
+
+            if (obj.TryGetProperty("lsp", out var lsp) && lsp.ValueKind == JsonValueKind.Object)   // OpenCode (best effort): language servers it starts
+            {
+                res.AddRange(Map(lsp, "LSP", path).Select(s => s with { Project = project }));
             }
         }
     }

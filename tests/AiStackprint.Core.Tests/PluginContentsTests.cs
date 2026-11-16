@@ -53,4 +53,36 @@ public sealed class PluginContentsTests : IDisposable
         var plan = Assert.Single(rows, r => r.Kind == "Command");
         Assert.Equal(("plan", "Make a plan", "conductor"), (plan.Name, plan.Description, plan.Plugin));
     }
+
+    [Fact]
+    public void Plugin_mcp_and_lsp_servers_are_rows_of_their_plugin()
+    {
+        Write("p/.claude-plugin/plugin.json", """{ "name": "db", "mcpServers": "./config/extra.json", "lspServers": { "go": { "command": "gopls", "args": ["serve"] } } }""");
+        Write("p/.mcp.json", """{ "mcpServers": { "pg": { "command": "${CLAUDE_PLUGIN_ROOT}/bin/pg", "env": { "PG_PASSWORD": "hunter2-very-secret-value" } } } }""");
+        Write("p/config/extra.json", """{ "cache": { "command": "npx", "args": ["redis-mcp"] } }""");
+        Write("p/.lsp.json", """{ "ts": { "command": "typescript-language-server", "args": ["--stdio"] } }""");
+        Write("mcpb/manifest.json", """{ "name": "files", "server": { "type": "node", "mcp_config": { "command": "node", "args": ["${__dirname}/server/index.js"] } } }""");
+        var plugin = new Item("Plugin", "db@market", "", "App", "Project", Path.Combine(_tmp, "p")) { App = "app", Project = "/work", Scope = "disabled" };
+        var bundle = new Item("Plugin", "files", "", "App", "User", Path.Combine(_tmp, "mcpb")) { App = "app" };
+
+        var servers = McpServers.FromPlugins([plugin, bundle]).OrderBy(s => s.Name).ToList();
+
+        Assert.Equal(["cache", "files", "go", "pg", "ts"], servers.Select(s => s.Name));
+        Assert.Equal(["MCP", "MCP", "LSP", "MCP", "LSP"], servers.Select(s => s.Kind));
+        var pg = servers[3];
+        Assert.Equal(("db@market", "Project", "/work", "${CLAUDE_PLUGIN_ROOT}/bin/pg"), (pg.Plugin, pg.Level, pg.Project, pg.What));
+        Assert.DoesNotContain("hunter2", pg.Note!, StringComparison.Ordinal);
+        Assert.Contains("plugin disabled", pg.Note!, StringComparison.Ordinal);
+        Assert.StartsWith("Not pinned: redis-mcp", servers[0].Note!, StringComparison.Ordinal);
+        Assert.Equal(("files", "app"), (servers[1].Plugin, servers[1].Apps[0]));
+    }
+
+    [Fact]
+    public void A_config_files_lsp_key_lists_language_servers()
+    {
+        var json = """{ "mcp": { "a": { "type": "local", "command": ["npx", "a@1.0.0"] } }, "lsp": { "rust": { "command": ["rust-analyzer"] }, "off": { "disabled": true } } }""";
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var s = McpServers.Parse(doc.RootElement, "opencode.json");
+        Assert.Equal([("a", "MCP"), ("rust", "LSP")], s.Select(x => (x.Name, x.Kind)));
+    }
 }
