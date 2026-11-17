@@ -28,6 +28,7 @@ Large files: search them, do not read them whole: `src/App/Assets/logos.json` (5
 - `tests/AiStackprint.Core.Tests`: xUnit v3 tests for Core; `tests/AiStackprint.App.Tests`: headless tests for UI code
 - `build/pack.ps1`: Velopack installer for one platform; `.github/workflows/release.yml`: release on a version tag
 - `docs/`: architecture and how-to guides (`releasing.md`: versions, tags, installers)
+- `docs/README.md`: index of the docs. `docs/feature-map.md`: where each feature lives (page, service, UI file, data, tests); `docs/recipes.md`: step lists for common changes; `docs/conventions.md`: names, list columns, widths, sorting; `docs/typography.md`: text helpers, weights, fonts. Read the one you need before searching the code.
 - `docs/decisions.md`: agreed product and UI decisions; read before UI work
 - `docs/design-system.md`: tokens (spacing, radius, type, icon and component sizes) and shared components; read before UI work
 
