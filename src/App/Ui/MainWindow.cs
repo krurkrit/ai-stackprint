@@ -211,14 +211,14 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
-        nav.Children.Add(Go("bot", "Commands & agents", "Part"));
+        nav.Children.Add(Go("bot", "Commands & Agents", "Part"));
         nav.Children.Add(Go("server", "Servers", "Mcp"));
         nav.Children.Add(Go("flash", "Hooks", "Hooks"));
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));
         nav.Children.Add(Go("brain_circuit", "Models", "Models"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));
         var warnings = _s.Health.Count(h => h.Finding.Warning);
-        nav.Children.Add(Go("warning", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
+        nav.Children.Add(Go("heart_pulse", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
         nav.Children.Add(Section("PROJECTS"));
         foreach (var p in _s.Projects)
         {

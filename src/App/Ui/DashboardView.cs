@@ -38,7 +38,7 @@ internal static partial class DashboardView
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
             Tile("server", "Servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
-            Tile("warning", "Health warnings", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
+            Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
         };
         var radar = Categories(apps, () => x.Go("Apps"));
         Grid.SetRowSpan(radar, 2); Grid.SetColumnSpan(radar, 2);   // 2 x 2 tiles on the left; the four tiles fill the right
@@ -46,8 +46,8 @@ internal static partial class DashboardView
         for (var i = 0; i < cards.Length; i++) { Grid.SetColumn(cards[i], 2 + i % 2); Grid.SetRow(cards[i], i / 2); tiles.Children.Add(cards[i]); }
 
         var charts = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = Space.XL };
-        var left = new StackPanel { Spacing = Space.XL, Children = { Section("sparkle", "Skills by app", ByApp(x, "Skill")), Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")), Section("wrench_screwdriver", "What plugins add", PluginContents(x)) } };
-        var right = new StackPanel { Spacing = Space.XL, Children = { Section("people", "Skills and plugins by author", ByAuthor(x)), Recent(x) } };
+        var left = new StackPanel { Spacing = Space.XL, Children = { Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")), Section("wrench_screwdriver", "What plugins add", PluginContents(x)), Section("sparkle", "Skills by app", ByApp(x, "Skill")) } };
+        var right = new StackPanel { Spacing = Space.XL, Children = { Section("people", "Plugins and skills by author", ByAuthor(x)), Recent(x) } };
         Grid.SetColumn(right, 1);
         charts.Children.Add(left); charts.Children.Add(right);
         return Page(head, tiles, LimitsView.Strip(x), charts);

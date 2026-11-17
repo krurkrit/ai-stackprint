@@ -181,8 +181,8 @@ internal class ItemBrowser
 
         var cols = _kind == "Plugin"
             // minimums fit the narrowest window (900 px): Path gives way first
-            ? new[] { new Col("Plugin", "2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col("Version", ".7*", Min: 56), new Col("Path", "3*"), new Col("", "112") }
-            : [new Col(_kind == "Part" ? "Name" : "Skill", "2.2*", Min: 120), new Col("App", "1.3*", Min: 116), new Col("Level", "1.1*", Min: 56), new Col(_kind == "Part" ? "Type" : "Invoked by", ".9*", Min: 76), new Col("Path", "3*"), new Col("", "112")];
+            ? new[] { Cols.Name("Plugin"), Cols.App(), Cols.Level(), Cols.Version(), Cols.Path(), Cols.Actions() }
+            : [Cols.Name(_kind == "Part" ? "Name" : "Skill"), Cols.App(), Cols.Level(), Cols.Type(_kind == "Part" ? "Type" : "Invoked by"), Cols.Path(), Cols.Actions()];
         _table.Content = Table.Build(cols, _filter.Rows(shown, Row, cols.Length, Fill),
             _items.Count == 0 ? $"No {_kind switch { "Plugin" => "plugins", "Part" => "commands or agents", _ => "skills" }} found." : "Nothing matches. Clear the search or filters.");
     }

@@ -107,7 +107,7 @@ internal partial class MainWindow
     private readonly ContentControl _themeHost = new() { VerticalAlignment = VerticalAlignment.Center };
 
     private static readonly (string Mode, string Icon, string Tip)[] _themes =
-        [("System", "desktop", "Follow the system theme"), ("Dark", "weather_moon", "Dark theme"), ("Light", "weather_sunny", "Light theme")];
+        [("System", "desktop", "Follow the system theme"), ("Light", "weather_sunny", "Light theme"), ("Dark", "weather_moon", "Dark theme")];
 
     /// <summary>System / moon / sun in one rounded group at the right of the title bar; the chosen one is filled with the selection color.</summary>
     private Border ThemeSwitch()

@@ -18,6 +18,25 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal record Col(string Head, string Width, bool Right = false, double Min = 0);
 
+/// <summary>
+/// Columns that appear on several pages. Order on every page: the main value (name), then from the biggest scope to the smallest (App, Level, Type),
+/// then details (Version, Runs, Path ...), then the buttons. A column of the same kind has the same width everywhere.
+/// </summary>
+internal static class Cols
+{
+    private static string Px(double v) => v.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    public static Col Name(string head = "Name", string width = "2*") => new(head, width, Min: 120);
+    public static Col App(string head = "App") => new(head, Px(Widths.ColApp));
+    public static Col Level() => new("Level", Px(Widths.ColLevel));
+    public static Col Type(string head = "Type") => new(head, Px(Widths.ColType));
+    public static Col Version() => new("Version", Px(Widths.ColVersion));
+    public static Col Count(string head) => new(head, Px(Widths.ColCount), true);
+    public static Col Path() => new("Path", "3*");
+    public static Col Action() => new("", Px(Widths.ColAction));
+    public static Col Actions() => new("", Px(Widths.ColActions));
+}
+
 /// <summary>A row: one control per column, optional click handler, and whether it is the current selection.</summary>
 internal record TableRow(Control[] Cells, Action? Click = null, bool Selected = false);
 
@@ -26,13 +45,13 @@ internal static class Table
 {
     public static Control Build(Col[] cols, IEnumerable<TableRow> rows, string empty = "Nothing found.")
     {
-        var widths = string.Join(",", cols.Select(c => c.Width));
         ColumnDefinitions Defs()
         {
-            var d = new ColumnDefinitions(widths);
+            var d = new ColumnDefinitions();
             for (var i = 0; i < cols.Length; i++)
             {
-                d[i].MinWidth = Size(cols[i].Min);
+                var w = cols[i].Width;
+                d.Add(new ColumnDefinition(double.TryParse(w, System.Globalization.CultureInfo.InvariantCulture, out var px) ? new GridLength(Size(px)) : GridLength.Parse(w)) { MinWidth = Size(cols[i].Min) });
             }
 
             return d;

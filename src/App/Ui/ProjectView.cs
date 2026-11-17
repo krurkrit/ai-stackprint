@@ -80,18 +80,18 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
     private Border Configs(List<Item> all)
     {
         var rows = all.Where(i => i.Kind == "Config").GroupBy(i => i.Path)
-            .OrderBy(g => Array.IndexOf(_order, g.First().Level)).ThenBy(g => g.First().Name)
+            .OrderBy(g => g.First().Name, StringComparer.OrdinalIgnoreCase).ThenBy(g => Array.IndexOf(_order, g.First().Level))
             .Select(g =>
             {
                 var i = g.First();
                 return new TableRow(
                 [
-                    Txt(i.Name, TextSize.Body, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), TextSize.Small), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i),
-                    AppDetailView.LevelCell(i), Mono(i.Path, TextSize.Caption),
+                    Txt(i.Name, TextSize.Body, true), Txt(string.Join(", ", g.Select(c => c.Source).Distinct()), TextSize.Small), AppDetailView.LevelCell(i),
+                    Txt(i.Description, TextSize.Small), HoldsCell.For(x, i), Mono(i.Path, TextSize.Caption),
                     IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path))
                 ]);
             });
-        var cols = new[] { new Col("File", "1.2*"), new Col("Read by", "1.4*"), new Col("Type", "1*"), new Col("Holds", "1.6*"), new Col("Level", "1.2*"), new Col("Path", "2.2*"), new Col("", "40") };
+        var cols = new[] { Cols.Name("File", "1.2*"), Cols.App("Read by"), Cols.Level(), Cols.Type(), new Col("Holds", "1.6*"), Cols.Path(), Cols.Action() };
         return Section("document", "Instructions & settings", Table.Build(cols, rows, "No instruction or settings files apply."));
     }
 }

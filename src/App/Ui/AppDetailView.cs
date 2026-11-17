@@ -100,16 +100,16 @@ internal class AppDetailView(Ctx x)
 
     private Border Configs(List<Item> items)
     {
-        var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Description).ThenBy(i => Levels.Rank(i.Level)).ToList();
+        var cfg = items.Where(i => i.Kind == "Config").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var rows = cfg.Select(i => new TableRow(
         [
-            Txt(i.Name, TextSize.Body, true), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i), LevelCell(i), Mono(i.Path, TextSize.Caption),
+            Txt(i.Name, TextSize.Body, true), LevelCell(i), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i), Mono(i.Path, TextSize.Caption),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
         ], () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
         var body = new StackPanel
         {
             Spacing = Space.L,
-            Children = { Table.Build([new Col("File", "1.2*"), new Col("Type", "1*"), new Col("Holds", "1.6*"), new Col("Level", "1.2*"), new Col("Path", "2.6*"), new Col("", "112")], rows,
+            Children = { Table.Build([Cols.Name("File", "1.2*"), Cols.Level(), Cols.Type(), new Col("Holds", "1.6*"), Cols.Path(), Cols.Actions()], rows,
             "No instruction or settings files found. Add project folders to see project files.") }
         };
         if (_preview != null && cfg.Any(i => i.Path == _preview))
@@ -122,7 +122,7 @@ internal class AppDetailView(Ctx x)
 
     private Control Plugins(AppDefinition d, List<Item> items)
     {
-        var plugins = items.Where(i => i.Kind == "Plugin").OrderBy(i => i.Name).ToList();
+        var plugins = items.Where(i => i.Kind == "Plugin").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => Levels.Rank(i.Level)).ToList();
         if (d.PluginManifest == null && d.Plugins.Count == 0 && plugins.Count == 0)
         {
             return new Panel();
@@ -135,7 +135,7 @@ internal class AppDetailView(Ctx x)
             Txt(items.Count(i => i.Plugin == p.Name && i.Kind == "Skill").ToString()),
             Row(IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, p.Path)), manage ? IconBtn("delete", "Remove plugin", () => AppActions.RemovePlugin(x, d, p)) : new Panel())
         ], () => x.Open(p)));
-        var cols = new[] { new Col("Plugin", "3*"), new Col("Level", "1.2*"), new Col("Version", "1*"), new Col("Skills", ".6*", true), new Col("", "80") };
+        var cols = new[] { Cols.Name("Plugin", "3*"), Cols.Level(), Cols.Version(), Cols.Count("Skills"), Cols.Actions() };
         return Section("puzzle_piece", $"Plugins · {plugins.Count}", Table.Build(cols, rows, "No plugins installed."),
             manage ? [Btn("Add plugin", () => AppActions.AddPlugin(x, d), true, "add")] : []);
     }
@@ -146,7 +146,7 @@ internal class AppDetailView(Ctx x)
     private Border Skills(AppDefinition d, List<Item> items)
     {
         if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); _skillQuery = ""; }
-        var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => Levels.Rank(i.Level)).ThenBy(i => i.Name).ToList();
+        var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var index = new ItemSearch(skills, ItemAuthor.For(x.S.Items));
         var query = SearchQuery.Empty;
         TableRow Row(Item s) => new(
@@ -155,7 +155,7 @@ internal class AppDetailView(Ctx x)
             W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(s.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, s.Path)),
                 SkillManager.CannotRemove(s) == null ? IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, s)) : new Panel())
         ], () => x.Open(s));
-        var cols = new[] { new Col("Skill", "2.6*"), new Col("Level", "1.3*"), new Col("Invoked by", "1*"), new Col("From", ".9*"), new Col("", "112") };
+        var cols = new[] { Cols.Name("Skill", "2.6*"), Cols.Level(), Cols.Type("Invoked by"), new Col("From", ".9*"), Cols.Actions() };
         var body = new ContentControl();
         void Fill()   // re-renders only this section, so the Usage card above is not recalculated
         {

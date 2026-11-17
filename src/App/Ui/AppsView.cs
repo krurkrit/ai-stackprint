@@ -100,7 +100,7 @@ internal class AppsView(Ctx x)
         _filters.Content = f;
 
         var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
-        var cols = new[] { new Col("App", "2*"), new Col("Category", "1*"), new Col("Status", "1*"), new Col("Plugins", ".6*", true), new Col("Skills", ".6*", true), new Col("Config files", ".8*", true) };
+        var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Type("Status"), Cols.Count("Plugins"), Cols.Count("Skills"), Cols.Count("Commands"), Cols.Count("Agents"), Cols.Count("Servers"), Cols.Count("Hooks"), Cols.Count("Config files") };
         _table.Content = Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters.");
     }
 
@@ -110,7 +110,8 @@ internal class AppsView(Ctx x)
         [
             AppName(a.Logo, a.Category, a.Name).With(n => { if (!a.Installed) { n.Opacity = 0.6; } }), Txt(Cap(a.Category), TextSize.Small, false, Muted),
             a.Installed ? Status("Installed") : Txt("Not found", TextSize.Small, false, Muted),
-            Count(a.Id, "Plugin", a.Installed), Count(a.Id, "Skill", a.Installed), Count(a.Id, "Config", a.Installed)
+            Count(a.Id, "Plugin", a.Installed), Count(a.Id, "Skill", a.Installed), Count(a.Id, "Command", a.Installed), Count(a.Id, "Agent", a.Installed),
+            Shown(x.S.Mcp.Count(m => m.Apps.Contains(a.Id)), a.Installed), Shown(x.S.Hooks.Count(h => h.Apps.Contains(a.Id)), a.Installed), Count(a.Id, "Config", a.Installed)
         ], () => x.Go("App:" + a.Id));
         if (!_byCat && !_byStatus) { foreach (var a in apps) { yield return Row(a); } yield break; }
         foreach (var g in apps.GroupBy(Key).OrderBy(g => g.Key, StringComparer.Ordinal))
@@ -143,11 +144,9 @@ internal class AppsView(Ctx x)
     private string Key(Models.AppInfo a) => (_byCat ? a.Category : "") + "|" + (_byStatus ? (a.Installed ? "0" : "1") : "");
     private IEnumerable<string> Keys(IEnumerable<Models.AppInfo> apps) => apps.Select(Key).Distinct();
 
-    private TextBlock Count(string id, string kind, bool installed)
-    {
-        var n = x.Count(id, kind);
-        return Txt(n == 0 && !installed ? "-" : n.ToString());
-    }
+    private TextBlock Count(string id, string kind, bool installed) => Shown(x.Count(id, kind), installed);
+
+    private static TextBlock Shown(int n, bool installed) => Txt(n == 0 && !installed ? "-" : n.ToString());
 
     public static string Cap(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
 

@@ -55,7 +55,7 @@ internal class ProjectChecksSection(Ctx x)
                 Txt(i.Finding.Text, TextSize.Small), Txt(string.Join(", ", i.Apps.Select(a => x.S.Def(a)?.Name ?? a)), TextSize.Small, false, Muted),
                 i.File is { } f ? IconBtn("open", "Open file", () => PathUtil.OpenFile(f)) : new Panel()
             ]));
-            sp.Children.Add(Table.Build([new Col("", "24"), new Col("Finding", "5*"), new Col("Apps", "1.4*"), new Col("", "40")], rows));
+            sp.Children.Add(Table.Build([new Col("", "24"), new Col("Finding", "5*"), Cols.App("Apps"), Cols.Action()], rows));
         }
 
         if (r.Ignores.Count > 0)
@@ -67,18 +67,18 @@ internal class ProjectChecksSection(Ctx x)
                 Mono(ProjectChecks.Rel(_project!, i.File), TextSize.Small), Txt(string.Join(", ", i.Apps.Select(a => x.S.Def(a)?.Name ?? a)), TextSize.Small, false, Muted),
                 Txt($"{i.Hidden:N0} of {i.Total:N0} files", TextSize.Small), IconBtn("open", "Open file", () => PathUtil.OpenFile(i.File))
             ]));
-            sp.Children.Add(Table.Build([new Col("File", "2*"), new Col("App", "2*"), new Col("Hides", "1.4*"), new Col("", "40")], ignored));
+            sp.Children.Add(Table.Build([Cols.Name("File"), Cols.App(), new Col("Hides", "1.4*"), Cols.Action()], ignored));
         }
 
         sp.Children.Add(Title($"MCP servers and hooks · {r.Programs.Count}", TextSize.Subtitle));
         sp.Children.Add(Txt("Programs this project's config files start when an app uses them. They run with your rights; secret-looking values are hidden.", TextSize.Small, false, Muted));
         var programs = r.Programs.Select(p => new TableRow(
         [
-            Txt(p.Kind, TextSize.Small), Txt(p.Name, TextSize.Small, true), Mono(p.What, TextSize.Caption), Mono(ProjectChecks.Rel(_project!, p.File), TextSize.Caption),
+            Txt(p.Name, TextSize.Small, true), Txt(p.Kind, TextSize.Small), Mono(p.What, TextSize.Caption), Mono(ProjectChecks.Rel(_project!, p.File), TextSize.Caption),
             Txt(p.Note ?? "", TextSize.Caption, false, p.Note?.StartsWith("Not pinned", StringComparison.Ordinal) == true ? WarningKey : Muted),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(p.File))
         ]));
-        sp.Children.Add(Table.Build([new Col("Type", ".9*"), new Col("Name", "1.2*"), new Col("Runs", "3*"), new Col("File", "1.4*"), new Col("Note", "1.6*"), new Col("", "40")],
+        sp.Children.Add(Table.Build([Cols.Name("Name", "1.2*"), Cols.Type(), new Col("Runs", "3*"), new Col("File", "1.4*"), new Col("Note", "1.6*"), Cols.Action()],
             programs, "No MCP servers or hooks in this project's config files."));
         return sp;
     }

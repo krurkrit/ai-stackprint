@@ -44,20 +44,20 @@ internal class HooksView(Ctx x)
         var words = _query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var shown = x.S.Hooks.Where(h => _show != "w" || h.Warn)
             .Where(h => words.All(w => Text(h).Contains(w, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(h => Levels.Rank(h.Level)).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(h => h.Event, StringComparer.OrdinalIgnoreCase).ToList();
+            .OrderBy(h => h.Event, StringComparer.OrdinalIgnoreCase).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(h => Levels.Rank(h.Level)).ToList();
         var rows = shown.Select(h => new TableRow(
         [
             Txt(h.Event, TextSize.Body, true),
-            h.Matcher is { Length: > 0 } m && m != "*" ? Mono(m, TextSize.Caption) : Txt("Every", TextSize.Caption, false, Muted),
             h.Apps.Count == 1 ? DetailPanel.AppLink(x, h.Apps[0], h.Apps[0]) : Txt(AppName(h), TextSize.Small),
             Level(h.Level, h.Project != null ? $"{h.Level} · {Ctx.ProjectName(h.Project)}" : h.Level, h.LevelLabel),
+            h.Matcher is { Length: > 0 } m && m != "*" ? Mono(m, TextSize.Caption) : Txt("Every", TextSize.Caption, false, Muted),
             h.Type == "command" ? Mono(h.What, TextSize.Caption) : Txt(h.What, TextSize.Caption),
             Txt(h.Note ?? "", TextSize.Caption, false, h.Warn ? WarningKey : Muted),
             SourceCell.For(x, h.Plugin, h.Apps.FirstOrDefault() ?? "", h.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(h.File))
         ]));
-        _table.Content = Table.Build([new Col("Event", "1.1*", Min: 96), new Col("Matcher", "1*", Min: 64), new Col("App", "1.1*", Min: 96), new Col("Level", "1*", Min: 56),
-            new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), new Col("", "40")], rows,
+        _table.Content = Table.Build([Cols.Name("Event"), Cols.App(), Cols.Level(), Cols.Type("Matcher"),
+            new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
             x.S.Hooks.Count == 0 ? "No hooks in the apps' settings or hook files or plugins." : "Nothing matches. Clear the search or choose All.");
     }
 

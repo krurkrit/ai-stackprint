@@ -59,7 +59,7 @@ internal static class LimitsView
             }
         }
         Render();
-        var card = Section("data_pie", "Plan & limits", host);
+        var card = Section("data_pie", "Usage", host);
         card.AttachedToVisualTree += (_, _) => { MainWindow.LimitsChanged += Render; foreach (var d in apps) { x.Limits.Request(d, x.S.Projects); } };
         card.DetachedFromVisualTree += (_, _) => MainWindow.LimitsChanged -= Render;
         return card;

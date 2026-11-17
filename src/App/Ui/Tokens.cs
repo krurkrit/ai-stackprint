@@ -107,6 +107,13 @@ internal static class Widths
     public const double Legend = 180;      // chart legend
     public const double TitleSearch = 280; // the search box in the middle of the title bar
     public const double Text = 460;        // longest line of a message
+    public const double ColApp = 150;      // table columns that hold the same kind of value are the same width on every page (see Cols)
+    public const double ColLevel = 110;
+    public const double ColType = 120;
+    public const double ColVersion = 90;
+    public const double ColCount = 80;
+    public const double ColAction = 40;    // one icon button
+    public const double ColActions = 112;  // three icon buttons
 }
 
 /// <summary>Heights of scrolling viewers (code, text, lists).</summary>

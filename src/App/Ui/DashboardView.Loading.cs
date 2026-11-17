@@ -41,7 +41,7 @@ internal static partial class DashboardView
         var cats = Card("apps", "Apps by category");
         Grid.SetRowSpan(cats, 2); Grid.SetColumnSpan(cats, 2);
         tiles.Children.Add(cats);
-        var titles = new[] { ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("server", "Servers"), ("warning", "Health warnings") };
+        var titles = new[] { ("puzzle_piece", "Plugins"), ("sparkle", "Skills"), ("server", "Servers"), ("heart_pulse", "Health") };
         for (var i = 0; i < titles.Length; i++)
         {
             var c = Card(titles[i].Item1, titles[i].Item2);
@@ -50,8 +50,8 @@ internal static partial class DashboardView
         }
 
         var charts = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = Space.XL };
-        var left = new StackPanel { Spacing = Space.XL, Children = { Card("sparkle", "Skills by app"), Card("puzzle_piece", "Plugins by app"), Card("wrench_screwdriver", "What plugins add") } };
-        var right = new StackPanel { Spacing = Space.XL, Children = { Card("people", "Skills and plugins by author") } };
+        var left = new StackPanel { Spacing = Space.XL, Children = { Card("puzzle_piece", "Plugins by app"), Card("wrench_screwdriver", "What plugins add"), Card("sparkle", "Skills by app") } };
+        var right = new StackPanel { Spacing = Space.XL, Children = { Card("people", "Plugins and skills by author") } };
         Grid.SetColumn(right, 1);
         charts.Children.Add(left); charts.Children.Add(right);
         return Reveal.Fade(Page(head, tiles, charts));

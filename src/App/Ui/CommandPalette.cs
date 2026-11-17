@@ -65,8 +65,8 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         var e = new List<Entry>
         {
             new("board", "Dashboard", "Page", () => go("Dashboard")), new("apps", "Apps", "Page", () => go("Apps")),
-            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")), new("bot", "Commands & agents", "Page", () => go("Part")), new("server", "Servers", "Page", () => go("Mcp")), new("flash", "Hooks", "Page", () => go("Hooks")), new("data_pie", "Usage", "Page", () => go("Usage")), new("brain_circuit", "Models", "Page", () => go("Models")),
-            new("document_text", "Logs", "Page", () => go("Logs")), new("warning", "Health", "Page", () => go("Health")), new("settings", "Settings", "Page", () => go("Settings")),
+            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")), new("bot", "Commands & Agents", "Page", () => go("Part")), new("server", "Servers", "Page", () => go("Mcp")), new("flash", "Hooks", "Page", () => go("Hooks")), new("data_pie", "Usage", "Page", () => go("Usage")), new("brain_circuit", "Models", "Page", () => go("Models")),
+            new("document_text", "Logs", "Page", () => go("Logs")), new("heart_pulse", "Health", "Page", () => go("Health")), new("settings", "Settings", "Page", () => go("Settings")),
             new("arrow_sync", "Rescan", "Action", x.Rescan), new("folder_add", "Add project folder", "Action", x.AddProject), new("add", "Add app", "Action", x.AddApp),
         };
         foreach (var a in x.ShownApps.OrderBy(a => a.Name))

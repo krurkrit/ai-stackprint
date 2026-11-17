@@ -32,12 +32,12 @@ internal class ClaudeSettingsSection(Ctx x)
 
         var rules = _info.Rules.Select(r => new TableRow(
         [
-            Chip(r.Effect, r.Effect == "deny" ? ErrorKey : r.Effect == "ask" ? WarningKey : Accent), Mono(r.Rule, TextSize.Small), Txt(r.Level, TextSize.Small),
+            Mono(r.Rule, TextSize.Small), Txt(r.Level, TextSize.Small), Chip(r.Effect, r.Effect == "deny" ? ErrorKey : r.Effect == "ask" ? WarningKey : Accent),
             Txt(r.Note ?? "", TextSize.Caption, false, r.Note?.StartsWith("Never", StringComparison.Ordinal) == true ? WarningKey : Muted), IconBtn("open", "Open file", () => PathUtil.OpenFile(r.File))
         ]));
         var settings = _info.Settings.Select(s => new TableRow(
         [
-            Txt(s.Key, TextSize.Small, true), Mono(s.Value, TextSize.Small), Txt(s.Level, TextSize.Small), Txt(s.Overrides == null ? "" : "Overrides " + s.Overrides, TextSize.Caption, false, Muted),
+            Txt(s.Key, TextSize.Small, true), Txt(s.Level, TextSize.Small), Mono(s.Value, TextSize.Small), Txt(s.Overrides == null ? "" : "Overrides " + s.Overrides, TextSize.Caption, false, Muted),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(s.File))
         ]));
         var body = new StackPanel
@@ -47,9 +47,9 @@ internal class ClaudeSettingsSection(Ctx x)
             {
                 Txt("Levels are read highest priority first: System (managed), Local, Project, User. A deny rule at any level wins. Secret-looking values are hidden; env shows names only.", TextSize.Small, false, Muted),
                 Title($"Permission rules · {_info.Rules.Count}", TextSize.Subtitle),
-                Table.Build([new Col("Effect", ".7*"), new Col("Rule", "3*"), new Col("Level", "1*"), new Col("Note", "2*"), new Col("", "40")], rules, "No permission rules."),
+                Table.Build([Cols.Name("Rule", "3*"), Cols.Level(), Cols.Type("Effect"), new Col("Note", "2*"), Cols.Action()], rules, "No permission rules."),
                 Title($"Settings · {_info.Settings.Count}", TextSize.Subtitle),
-                Table.Build([new Col("Setting", "1.4*"), new Col("Value", "3*"), new Col("Level", "1*"), new Col("Note", "2*"), new Col("", "40")], settings, "No settings of this kind.")
+                Table.Build([Cols.Name("Setting", "1.4*"), Cols.Level(), new Col("Value", "3*"), new Col("Note", "2*"), Cols.Action()], settings, "No settings of this kind.")
             }
         };
         return Section("settings", "Claude Code settings", body);

@@ -45,20 +45,20 @@ internal class McpView(Ctx x)
         var words = _query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var shown = x.S.Mcp.Where(s => _show switch { "" => true, "w" => s.Warn, _ => s.Kind == _show })
             .Where(s => words.All(w => Text(s).Contains(w, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(s => Levels.Rank(s.Level)).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(s => Levels.Rank(s.Level)).ToList();
         var rows = shown.Select(s => new TableRow(
         [
             Txt(s.Name, TextSize.Body, true),
-            Chip(s.Kind),
             s.Apps.Count == 1 ? DetailPanel.AppLink(x, s.Apps[0], s.Apps[0]) : Txt(AppName(s), TextSize.Small),
             Level(s.Level, s.Project != null ? $"{s.Level} · {Ctx.ProjectName(s.Project)}" : s.Level, s.LevelLabel),
+            Chip(s.Kind),
             Mono(s.What, TextSize.Caption),
             Txt(s.Note ?? "", TextSize.Caption, false, s.Warn ? WarningKey : Muted),
             SourceCell.For(x, s.Plugin, s.Apps.FirstOrDefault() ?? "", s.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(s.File))
         ]));
-        _table.Content = Table.Build([new Col("Name", "1.2*", Min: 96), new Col("Type", "Auto"), new Col("App", "1.1*", Min: 96), new Col("Level", "1*", Min: 56),
-            new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), new Col("", "40")], rows,
+        _table.Content = Table.Build([Cols.Name(), Cols.App(), Cols.Level(), Cols.Type(),
+            new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
             x.S.Mcp.Count == 0 ? "No MCP or LSP servers in the apps' config files or plugins." : "Nothing matches. Clear the search or choose All.");
     }
 

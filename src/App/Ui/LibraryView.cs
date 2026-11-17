@@ -37,7 +37,7 @@ internal class LibraryView(Ctx x, string kind)
             _ => null
         };
         if (right != null) { DockPanel.SetDock(right, Dock.Right); head.Children.Add(right); }
-        head.Children.Add(H1(kind switch { "Plugin" => "Plugins", "Part" => "Commands & agents", _ => "Skills" }));
+        head.Children.Add(H1(kind switch { "Plugin" => "Plugins", "Part" => "Commands & Agents", _ => "Skills" }));
         return _browser.Build([head], [.. all.Where(i => _type == "" || i.Kind == _type)]);
     }
 }

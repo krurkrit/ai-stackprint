@@ -73,7 +73,7 @@ public sealed class PagesTests : IDisposable
             ("Claude Code", () => new AppDetailView(x).Build("claude-code")),
             ("Plugins", () => new LibraryView(x, "Plugin").Build()),
             ("Skills", () => new LibraryView(x, "Skill").Build()),
-            ("Commands & agents", () => new LibraryView(x, "Part").Build()),
+            ("Commands & Agents", () => new LibraryView(x, "Part").Build()),
             ("Servers", () => new McpView(x).Build()),
             ("Hooks", () => new HooksView(x).Build()),
             ("Usage", () => new UsageView(x).Build()),
@@ -117,6 +117,31 @@ public sealed class PagesTests : IDisposable
         link.RaiseEvent(new PointerReleasedEventArgs(link, new Pointer(1, PointerType.Mouse, true), w, default, 0,
             new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased), KeyModifiers.None, MouseButton.Left));
         Assert.Equal("Hooks", went);
+        w.Close();
+        Settle();
+    }
+
+    [AvaloniaFact]
+    public void Start_in_offers_the_folders_with_their_own_instruction_files()
+    {
+        var s = State();
+        s.Defs = [new AppDefinition { Id = "codex", Name = "Codex", Category = "agent", Context = "codex", Configs = { new ConfigFile { Path = "AGENTS.md", Level = "Project", Kind = "instructions" } } }];
+        s.Apps = [new AppInfo("codex", "Codex", "agent", null, true, null)];
+        Directory.CreateDirectory(Path.Combine(s.Projects[0], "svc", "api"));
+        File.WriteAllText(Path.Combine(s.Projects[0], "svc", "api", "AGENTS.md"), "api rules");
+        var w = new Window { Width = 1200, Height = 800 };
+        ContextSection? section = null;
+        var x = new Ctx(s, w, _ => { }, () => { }) { Refresh = () => w.Content = section!.Build(s.Projects[0]) };
+        section = new ContextSection(x);
+        w.Show();
+        x.Refresh();
+        Settle();
+
+        Ui.Click(w.GetVisualDescendants().OfType<Button>().First(b => Ui.Texts(b).Contains("Start in…")));   // a button with an icon
+        Settle();
+        var items = TopLevel.GetTopLevel(w)!.GetVisualDescendants().Concat(Avalonia.Controls.Primitives.OverlayLayer.GetOverlayLayer(w)?.GetVisualDescendants() ?? [])
+            .OfType<MenuItem>().Select(m => m.Header as string).ToList();
+        Assert.Equal(["svc/api", "Other folder…"], items);
         w.Close();
         Settle();
     }

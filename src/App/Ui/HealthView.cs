@@ -24,7 +24,7 @@ internal class HealthView(Ctx x)
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
         head.Children.Add(H1("Health"));
-        var intro = Txt("Safety: findings to review in installed skills and plugins (hidden text, download-and-run commands, missing hook scripts). Nothing is run, and no finding does not mean safe. Config files: your user-level settings and MCP files. Models: config files that pin a model which retires within a year (a warning within 90 days), from the model data. Skills checked against the Agent Skills format (agentskills.io), Claude Code's skill-list budget, duplicate names, and plugins that are missing or run programs. " +
+        var intro = Txt("Safety: findings to review in installed plugins and skills (hidden text, download-and-run commands, missing hook scripts). Nothing is run, and no finding does not mean safe. Config files: your user-level settings and MCP files. Models: config files that pin a model which retires within a year (a warning within 90 days), from the model data. Skills checked against the Agent Skills format (agentskills.io), Claude Code's skill-list budget, duplicate names, and plugins that are missing or run programs. " +
             "Projects: instruction files over an app's limit, rules that never load, text loaded twice, broken links, secrets and permission settings in config files. Details on each project page.", TextSize.Small, false, Muted);
 
         var page = new List<Control> { head, intro };
@@ -42,7 +42,7 @@ internal class HealthView(Ctx x)
                 Txt(i.Subject, TextSize.Body, true), i.App == "" ? new Panel() : DetailPanel.AppLink(x, i.App, i.App), Txt(i.Finding.Text, TextSize.Small)
             ], i.Item is { } it ? () => x.Open(it) : i.Project is { } p ? () => x.Go("Project:" + p) : null));
             page.Add(Section(g.Key switch { "Skills" => "sparkle", "Projects" => "folder", "Safety" => "eye_off", "Config files" => "settings", "Models" => "brain_circuit", _ => "puzzle_piece" }, $"{g.Key} · {g.Count():N0}",
-                Table.Build([new Col("", "24"), new Col("Name", "1.4*"), new Col("App", "1.2*"), new Col("Finding", "4*")], rows)));
+                Table.Build([new Col("", "24"), Cols.Name("Name", "1.4*"), Cols.App(), new Col("Finding", "4*")], rows)));
         }
         return Page([.. page]);
     }

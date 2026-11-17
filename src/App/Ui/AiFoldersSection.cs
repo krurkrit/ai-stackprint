@@ -44,13 +44,13 @@ internal static class AiFoldersSection
         ]));
         var table = Table.Build([new Col("Folder", "1*"), new Col("Apps", "2*"), new Col("Inside", "3*"), new Col("Files", ".6*"), new Col("Size", ".8*"), new Col("", "40")], rows, "No AI folders in this project.");
 
-        var parts = applying.Where(i => i.Kind is "Command" or "Agent").OrderBy(i => Array.IndexOf(Levels.Order, i.Level)).ThenBy(i => i.Kind).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
+        var parts = applying.Where(i => i.Kind is "Command" or "Agent").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => i.Source, StringComparer.OrdinalIgnoreCase).ThenBy(i => Array.IndexOf(Levels.Order, i.Level)).ThenBy(i => i.Kind)
             .Select(i => new TableRow(
             [
-                Txt(i.Name, TextSize.Body, true), Txt(i.Kind, TextSize.Small), Txt(i.Source, TextSize.Small), AppDetailView.LevelCell(i), Txt(i.Description, TextSize.Small, false, Muted),
+                Txt(i.Name, TextSize.Body, true), Txt(i.Source, TextSize.Small), AppDetailView.LevelCell(i), Txt(i.Kind, TextSize.Small), Txt(i.Description, TextSize.Small, false, Muted),
                 IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path))
             ])).ToList();
-        var list = Table.Build([new Col("Name", "1.4*"), new Col("Type", ".8*"), new Col("App", "1.2*"), new Col("Level", "1.2*"), new Col("Description", "3*"), new Col("", "40")], parts, "No commands or agents apply here.");
+        var list = Table.Build([Cols.Name("Name", "1.4*"), Cols.App(), Cols.Level(), Cols.Type(), new Col("Description", "3*"), Cols.Action()], parts, "No commands or agents apply here.");
 
         return new StackPanel
         {
