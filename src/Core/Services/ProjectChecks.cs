@@ -38,6 +38,11 @@ public static partial class ProjectChecks
         Links(project, context, issues);
         Personal(project, context, defs, home, issues);
         Shared(project, context, defs, issues);
+        if (ContextBudget.Same(start, project))
+        {
+            Nested(project, context, defs, home, issues);   // every other folder a session may start in
+        }
+
         var ignores = new List<ProjectIgnore>();
         var files = ProjectFiles.List(project, out var complete);
         if (complete)

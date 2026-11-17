@@ -34,6 +34,44 @@ public sealed class ContextTests : IDisposable
         File.WriteAllText(p, text);
     }
 
+    private static readonly AiStackprint.Models.AppDefinition _codex = new()
+    {
+        Id = "codex",
+        Name = "Codex",
+        Context = "codex",
+        Configs = { new AiStackprint.Models.ConfigFile { Path = "AGENTS.md", Level = "Project", Kind = "instructions" } },
+    };
+
+    [Fact]
+    public void A_codex_chain_over_the_limit_in_a_sub_folder_is_reported_once_with_its_start_folder()
+    {
+        Environment.SetEnvironmentVariable("CODEX_HOME", Path.Combine(_home, ".codex"));
+        Write(_project, "AGENTS.md", new string('a', 40_000));   // cut at the root already: reported there, not again for each folder
+        Write(_project, "svc/a/AGENTS.md", "a rules");
+        Write(_project, "svc/b/AGENTS.md", "b rules");
+        Write(_project, "node_modules/x/AGENTS.md", "skipped");
+
+        var issues = ProjectChecks.Run(_project, _project, [_codex], _home).Issues.Where(i => i.Finding.Text.StartsWith("When ", StringComparison.Ordinal)).ToList();
+
+        Assert.Equal(["When Codex starts in svc/a: ", "When Codex starts in svc/b: "], issues.Select(i => i.Finding.Text[..(i.Finding.Text.IndexOf(": ", StringComparison.Ordinal) + 2)]));
+        Assert.All(issues, i => Assert.Contains("is not loaded", i.Finding.Text, StringComparison.Ordinal));
+        Assert.Equal(Path.Combine(_project, "svc", "a"), issues[0].File);
+        Assert.DoesNotContain(ProjectChecks.Run(_project, Path.Combine(_project, "svc", "a"), [_codex], _home).Issues, i => i.Finding.Text.StartsWith("When ", StringComparison.Ordinal));   // a chosen start folder: only that one
+    }
+
+    [Fact]
+    public void At_most_fifty_start_folders_are_checked()
+    {
+        for (var i = 0; i < 60; i++)
+        {
+            Write(_project, $"pkg/p{i:00}/AGENTS.md", "x");
+        }
+
+        var folders = ProjectChecks.StartFolders(_project, [_codex]);
+        Assert.Equal(ProjectChecks.MaxStartFolders, folders.Count);
+        Assert.Equal(Path.Combine(_project, "pkg", "p00"), folders[0]);
+    }
+
     [Fact]
     public void Imports_skip_code_quotes_and_mail()
     {

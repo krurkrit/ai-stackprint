@@ -6,7 +6,6 @@ using AiStackprint.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
-using Avalonia.Platform.Storage;
 
 using static AiStackprint.Ui.W;
 
@@ -53,26 +52,13 @@ internal partial class ContextSection(Ctx x)
             r => { _last = r; return Show(r); });
         }
 
-        var pick = Btn(ContextBudget.Same(start, project) ? "Start in…" : "Start in: " + Path.GetRelativePath(project, start), () => PickStart(project), false, "folder_open");
-        ToolTip.SetTip(pick, "Which files load depends on the folder a session starts in. Pick a folder inside the project.");
+        var pick = Btn(ContextBudget.Same(start, project) ? "Start in…" : "Start in: " + Path.GetRelativePath(project, start), () => { }, false, "folder_open");
+        pick.Click += (_, _) => StartMenu(project, pick);
+        ToolTip.SetTip(pick, "Which files load depends on the folder a session starts in: a folder with its own instruction files, or any folder inside the project.");
         var reset = ContextBudget.Same(start, project) ? null : IconBtn("dismiss", "Start in the project folder", () => { _start = project; _last = null; x.Refresh(); });
         var export = Btn("Export to AGENTS.md", () => Export(project), false, "document_edit");
         ToolTip.SetTip(export, "Combine the instruction files the apps load here into one AGENTS.md. You see it first; an existing AGENTS.md is backed up before it is replaced.");
         return Section("brain_circuit", "Loaded into context", _host.Free(), reset == null ? [export, pick] : [export, pick, reset]);
-    }
-
-    private async void PickStart(string project)
-    {
-        var start = await x.Owner.StorageProvider.TryGetFolderFromPathAsync(project);
-        var r = await x.Owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Session starts in", SuggestedStartLocation = start });
-        if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p)
-        {
-            return;
-        }
-
-        if (!ContextBudget.Same(p, project) && !ContextBudget.Inside(p, project)) { Toast.Show("Pick a folder inside the project", "warning"); return; }
-        _start = p; _last = null; _preview = null;
-        x.Refresh();
     }
 
     private StackPanel Show(List<(AppDefinitionRef App, ContextReport Report)> reports)
