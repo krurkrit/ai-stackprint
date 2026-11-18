@@ -50,7 +50,7 @@ internal static partial class W
             {
                 Content = label,
                 MinHeight = Sizes.CompactControl,
-                CornerRadius = new CornerRadius(Radius.Pill),
+                CornerRadius = new CornerRadius(Sizes.PillCorner),
                 Padding = new Thickness(Space.L, 0),
                 VerticalContentAlignment = VerticalAlignment.Center
             };
@@ -58,6 +58,8 @@ internal static partial class W
             {
                 b.Classes.Add("accent");
             }
+
+            b.Themed(Button.BorderBrushProperty, value == current ? Accent : BorderKey);   // a solid line: the theme's own border is a gradient that reads as uneven on a pill
 
             b.Click += (_, _) => pick(value);
             wrap.Children.Add(b);

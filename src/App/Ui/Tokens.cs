@@ -81,6 +81,7 @@ internal static class Sizes
     public const double LogoM = 28;        // app logo in tables
     public const double LogoL = 32;        // app logo in headers
     public const double CompactControl = 24;   // pills, toolbar and inline buttons (Fluent: small control)
+    public const double PillCorner = CompactControl / 2;   // a pill button: fully round, the radius is half its height
     public const double LargeControl = 40;     // the command palette search box (Fluent: large control)
     public const double NavItem = 40;          // side menu entries
     public const double LogoXL = 56;           // app or project logo beside a page title
@@ -117,7 +118,6 @@ internal static class Widths
     public const double ColVersion = 90;
     public const double ColStatus = 92;    // "Installed" in its pill / "Not found"
     public const double ColCount = 80;
-    public const double ColCheck = 36;     // a checkbox
     public const double ColAction = 40;    // one icon button
     public const double ColActions = 112;  // three icon buttons
 }

@@ -12,7 +12,7 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-/// <summary>The Benchmarks radar of the Models page: the ticked models on Artificial Analysis scores, speed and cost (<see cref="BenchmarkCompare"/>).</summary>
+/// <summary>The Benchmarks radar of the Models page: the models in the slots on Artificial Analysis scores, speed and cost (<see cref="BenchmarkCompare"/>).</summary>
 internal partial class ModelsView
 {
     /// <summary>The second radar card, under the first; a hint with a button when benchmarks are off or not downloaded yet.</summary>

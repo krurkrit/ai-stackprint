@@ -11,6 +11,7 @@ public class AiStackprintApp : Application
     public override void Initialize()
     {
         Styles.Add(Theme.Fluent());   // Fluent controls with the Snowy Owl palette; variant follows the OS (ThemeVariant.Default)
+        Styles.Add(Theme.Controls());   // Fluent 2 control templates; our accent and palette stay
         Styles.Add(CodeView.EditorStyles());
         Theme.Appearance(this, Services.SettingsStore.Defaults());   // defaults until MainWindow loads settings.json
     }

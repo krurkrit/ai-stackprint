@@ -114,20 +114,32 @@ public sealed class ModelsViewTests : IDisposable
         Assert.Contains("custom 1", w.GetVisualDescendants().OfType<Button>().Select(b => b.Content as string));
     }
 
+    private static List<AutoCompleteBox> Slots(Window w) => [.. w.GetVisualDescendants().OfType<AutoCompleteBox>()];
+
     [AvaloniaFact]
-    public void Ticking_two_models_shows_the_radar_with_raw_values_in_tooltips()
+    public void The_page_has_a_Catalog_tab_without_tick_boxes_and_a_Compare_tab_with_four_empty_slots()
     {
         var (w, _) = Open();
-        Assert.DoesNotContain("Compare models", Ui.Texts(w));
-        var boxes = w.GetVisualDescendants().OfType<CheckBox>().ToList();
-        Assert.Equal(2, boxes.Count);
-        boxes[0].IsChecked = true;
-        Dispatcher.UIThread.RunJobs();
-        Assert.Contains("Tick 1 more to compare (up to 4).", Ui.Texts(w));
+        var tabs = w.GetVisualDescendants().OfType<TabControl>().Single();
+        Assert.Equal(["Catalog", "Compare"], tabs.Items.OfType<TabItem>().Select(i => i.Header));
+        Assert.Equal(0, tabs.SelectedIndex);
+        Assert.Empty(w.GetVisualDescendants().OfType<CheckBox>());
 
-        w.GetVisualDescendants().OfType<CheckBox>().Skip(1).First().IsChecked = true;
-        Dispatcher.UIThread.RunJobs();
+        var state = new UiState { ModelsTab = "Compare" };
+        var (c, _) = Open(null, state);
+        var slots = Slots(c);
+        Assert.Equal(4, slots.Count);
+        Assert.All(slots, s => Assert.True(string.IsNullOrEmpty(s.Text)));
+        Assert.Contains(Ui.Texts(c), s => s.StartsWith("Pick 2 to 4 models", StringComparison.Ordinal));
+    }
+
+    [AvaloniaFact]
+    public void Two_models_in_the_slots_show_the_facts_and_the_radar_with_raw_values_in_tooltips()
+    {
+        var (w, _) = Open(null, new UiState { ModelsTab = "Compare", ComparedModels = ["claude-opus-5-5", "gpt-6"] });
+        Assert.Equal(["claude-opus-5-5", "gpt-6", "", ""], Slots(w).Select(s => s.Text ?? ""));
         var texts = Ui.Texts(w);
+        Assert.Contains("Facts", texts);
         Assert.Contains("Compare models", texts);
         Assert.Contains("Cheap input", texts);
         Assert.Contains("Benchmarks", texts);   // the second chart; with benchmarks off it is a hint to turn them on
@@ -140,25 +152,48 @@ public sealed class ModelsViewTests : IDisposable
     }
 
     [AvaloniaFact]
-    public void Ticked_models_are_kept_in_the_state_and_show_again_when_the_page_opens()
+    public void Choosing_a_model_in_a_slot_is_kept_in_the_state_and_Clear_empties_the_slots()
+    {
+        var state = new UiState { ModelsTab = "Compare" };
+        var (w, _) = Open(null, state);
+        var slots = Slots(w);
+        slots[0].SelectedItem = "gpt-6";
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(["gpt-6"], state.ComparedModels);
+        Assert.DoesNotContain("Compare models", Ui.Texts(w));   // one model is not a comparison
+
+        Slots(w)[1].SelectedItem = "claude-opus-5-5";
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(["gpt-6", "claude-opus-5-5"], state.ComparedModels);
+        Assert.Contains("Compare models", Ui.Texts(w));
+
+        Ui.Click(Ui.Button(w, "Clear"));
+        Dispatcher.UIThread.RunJobs();
+        Assert.Empty(state.ComparedModels);
+        Assert.All(Slots(w), s => Assert.True(string.IsNullOrEmpty(s.Text)));
+    }
+
+    [AvaloniaFact]
+    public void The_compare_button_of_a_row_fills_the_first_free_slot_and_opens_the_Compare_tab()
     {
         var state = new UiState();
         var (w, _) = Open(null, state);
-        foreach (var cb in w.GetVisualDescendants().OfType<CheckBox>().ToList())
-        {
-            cb.IsChecked = true;
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        Assert.Equal(["claude-opus-5-5", "gpt-6"], state.ComparedModels);
-
-        var (again, _) = Open(null, new UiState { ComparedModels = [.. state.ComparedModels, "gone-model"] });   // a later visit; a model that no longer exists is dropped
-        Assert.Contains("Compare models", Ui.Texts(again));
-        Assert.All(again.GetVisualDescendants().OfType<CheckBox>(), cb => Assert.True(cb.IsChecked));
-
-        Ui.Click(Ui.Button(again, "Clear"));
+        var compare = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) is string s && s.StartsWith("Compare with", StringComparison.Ordinal));
+        Ui.Click(compare);
         Dispatcher.UIThread.RunJobs();
-        Assert.DoesNotContain("Compare models", Ui.Texts(again));
+        Assert.Equal("Compare", state.ModelsTab);
+        Assert.Single(state.ComparedModels);
+        Assert.Equal(state.ComparedModels[0], Slots(w)[0].Text);
+    }
+
+    [AvaloniaFact]
+    public void Facts_mark_the_best_value_of_each_row()
+    {
+        Assert.Equal("1000000", ModelsView.Best("contextWindow", ["1000000", "400000"]));
+        Assert.Equal("2", ModelsView.Best("price.input", ["4", "2", "2"]));   // a tie marks both
+        Assert.Null(ModelsView.Best("price.input", ["2", "2"]));
+        Assert.Null(ModelsView.Best("retires", ["2027-01-01", "2028-01-01"]));
+        Assert.Null(ModelsView.Best("maxOutput", [null, "8000"]));   // one known value is not a comparison
     }
 
     [AvaloniaFact]

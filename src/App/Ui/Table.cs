@@ -35,7 +35,6 @@ internal static class Cols
     public static Col Version() => new("Version", Px(Widths.ColVersion));
     public static Col Count(string head) => new(head, Px(Widths.ColCount), true);
     public static Col Path() => new("Path", "3*");
-    public static Col Check() => new("", Px(Widths.ColCheck));
     public static Col Action() => new("", Px(Widths.ColAction));
     public static Col Actions() => new("", Px(Widths.ColActions));
 }

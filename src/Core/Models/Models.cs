@@ -175,7 +175,8 @@ public class UiState
     public string? BenchmarkKey { get; set; }           // your Artificial Analysis API key: machine-only (state.json is never exported), never shown or logged
     public DateTime? BenchmarkCheckedUtc { get; set; }  // last benchmark download, whatever its result
     public string? BenchmarkResult { get; set; }        // what it found, as shown in Settings
-    public List<string> ComparedModels { get; set; } = [];   // models ticked for the radar on the Models page, in the order picked
+    public List<string> ComparedModels { get; set; } = [];   // models in the Compare tab's slots of the Models page, in slot order
+    public string ModelsTab { get; set; } = "Catalog";      // the tab the Models page was left on: Catalog or Compare
 }
 
 /// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>

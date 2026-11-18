@@ -63,6 +63,12 @@ internal static partial class Theme
         return new() { Palettes = { [ThemeVariant.Light] = _lightFluent, [ThemeVariant.Dark] = _darkFluent } };
     }
 
+    private static FluentAvalonia.Styling.FluentAvaloniaTheme? _controls;
+
+    /// <summary>Fluent UI 2 control templates (FluentAvalonia) over the built-in theme; our accent and palette stay.</summary>
+    public static FluentAvalonia.Styling.FluentAvaloniaTheme Controls() =>
+        _controls = new() { PreferSystemTheme = false, PreferUserAccentColor = false, CustomAccentColor = C(_light.Primary) };
+
     private static FontFamily Stack(string family) => new(family == "Inter" ? "Inter, Noto Sans, $Default" : $"{family}, Inter, Noto Sans, $Default");
     private static FontFamily MonoStack(string family) => new($"{family}, JetBrains Mono, Cascadia Mono, Consolas, Menlo, monospace");
 
@@ -105,9 +111,12 @@ internal static partial class Theme
         app.Resources["ContentControlThemeFontFamily"] = Font;
         W.Scale = Math.Clamp(s.FontSize, 12, 18) / 14.0;
         app.Resources["ControlContentThemeFontSize"] = W.Size(14);
+        app.Resources["TabItemHeaderFontSize"] = W.Size(TextSize.Body);   // Fluent UI 2 tabs are body size (the control default is 28)
         Inputs(app, W.Size(14));
         W.Body = (FontWeight)Weight(s.BodyWeight, 400);
         W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 600);
+        _controls?.CustomAccentColor = ParseHex(s.Light.Accent) ?? C(_light.Primary);   // its light fills are fixed when it loads
+
         app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(_light, s.Light, _lightFluent);
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }
@@ -121,6 +130,8 @@ internal static partial class Theme
     public static Avalonia.Media.BoxShadows PopupShadow(bool dark) => new(
         new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 0, Blur = 2, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x66 : (byte)0x1F, 0, 0, 0) },
         [new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 8, Blur = 16, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x80 : (byte)0x24, 0, 0, 0) }]);
+
+    private static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)(a.R + (b.R - a.R) * t), (byte)(a.G + (b.G - a.G) * t), (byte)(a.B + (b.B - a.B) * t));
 
     private static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
 
@@ -171,6 +182,20 @@ internal static partial class Theme
             [W.HighlightRingKey] = B(C(p == _dark ? Warning : OrangeAccent)),
             [W.ScrimKey] = B(A(Colors.Black, p == _dark ? .5 : .35)),   // behind the search overlay
         };
+        // FluentAvalonia builds its accent fills from these seven colors (it would otherwise use its own purple)
+        d["SystemAccentColor"] = primary;
+        for (var i = 1; i <= 3; i++)
+        {
+            d["SystemAccentColorLight" + i] = Mix(primary, Colors.White, .2 * i);
+            d["SystemAccentColorDark" + i] = Mix(primary, Colors.Black, .15 * i);
+        }
+        // its light theme fixes the fills when it loads (its purple), so the fills are set here too
+        foreach (var (name, alpha) in new[] { ("Default", 1.0), ("Secondary", .9), ("Tertiary", .8) })
+        {
+            d["AccentFillColor" + name] = A(primary, alpha);
+            d["AccentFillColor" + name + "Brush"] = B(A(primary, alpha));
+        }
+
         for (var i = 0; i < Categories.Length; i++)
         {
             d[W.CategoryKey(Categories[i])] = B(C((p == _dark ? _darkCategory : _lightCategory)[i]));

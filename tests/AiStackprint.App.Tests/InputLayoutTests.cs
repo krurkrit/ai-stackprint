@@ -63,7 +63,10 @@ public class InputLayoutTests
         foreach (var c in one)
         {
             var (top, bottom) = Gaps(c);
-            Assert.Equal((size, c.GetType().Name, h, gap, gap), (size, c.GetType().Name, c.Bounds.Height, top, bottom));
+            // FluentAvalonia's drop-down text line is 2 px taller than ours at 12 px: same height, gaps 1 px less on each side
+            var slack = c is ComboBox ? 1 : 0;
+            Assert.Equal((size, c.GetType().Name, h), (size, c.GetType().Name, c.Bounds.Height));
+            Assert.True(Math.Abs(top - gap) <= slack && Math.Abs(bottom - gap) <= slack, $"{size}px {c.GetType().Name}: gaps {top}/{bottom}, expected {gap}");
         }
 
         foreach (var c in new Control[] { area, wrapped })
@@ -79,7 +82,7 @@ public class InputLayoutTests
         var box = Glyph(wrapped);
         var label = Text(wrapped);
         var lineHeight = label.Bounds.Height / Lines(label);
-        Assert.Equal(Top(box, wrapped) + box.Bounds.Height / 2, Top(label, wrapped) + lineHeight / 2, 0.5);
+        Assert.Equal(Top(box, wrapped) + box.Bounds.Height / 2, Top(label, wrapped) + lineHeight / 2, 1.0);   // FluentAvalonia's box is a little larger: within 1 px of level
     }
 
     [AvaloniaFact]
