@@ -17,9 +17,9 @@ internal class HealthView(Ctx x)
 
     public Control Build()
     {
-        var issues = x.S.Health;
+        var issues = x.S.AllHealth.ToList();
         int warn = issues.Count(i => i.Finding.Warning), info = issues.Count - warn;
-        var head = new DockPanel();
+        var head = Head();
         var pills = Pills([($"Warnings {warn:N0}", "w"), ($"All {issues.Count:N0}", "a")], _all ? "a" : "w", v => { _all = v == "a"; x.Refresh(); });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
@@ -28,6 +28,11 @@ internal class HealthView(Ctx x)
             "Projects: instruction files over an app's limit, rules that never load, text loaded twice, broken links, secrets and permission settings in config files. Details on each project page.", TextSize.Small, false, Muted);
 
         var page = new List<Control> { head, intro };
+        if (!x.S.HealthReady)
+        {
+            page.Add(Busy.Status("Checking projects…", out _));   // the projects' checks follow the scan; the page redraws when they are done
+        }
+
         var shown = issues.Where(i => _all || i.Finding.Warning).ToList();
         if (shown.Count == 0)
         {

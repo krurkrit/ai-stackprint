@@ -82,14 +82,23 @@ internal partial class LogsView(Ctx x)
         if (def != null)
         {
             right.Children.Add(loading ? Section("data_pie", "Summary", Busy.Loading("Reading log folders…")) : _summary.Build(_files));
-            // Follow first, then the destructive buttons together
-            var del = new List<Control>();
-            foreach (var days in new[] { 7, 30, 90 })
+            // Follow first, then one Delete menu (four buttons did not fit on a line); each choice still asks before anything moves to the Recycle Bin
+            var del = Btn("Delete…", () => { }, false, "delete");
+            var menu = new MenuFlyout();
+            void Choice(string text, Func<List<LogFile>> files)
             {
-                del.Add(Btn($"Older than {days} d", () => Delete(LogTrash.OlderThan(_files, days))));
+                var item = new MenuItem { Header = text };
+                item.Click += (_, _) => Delete(files());
+                menu.Items.Add(item);
             }
 
-            del.Add(Btn("Delete selected", () => Delete([.. _files.Where(f => _checked.Contains(f.Path))]), false, "delete"));
+            Choice("Selected files", () => [.. _files.Where(f => _checked.Contains(f.Path))]);
+            foreach (var days in new[] { 7, 30, 90 })
+            {
+                Choice($"Older than {days} days", () => LogTrash.OlderThan(_files, days));
+            }
+
+            del.Flyout = menu;
             var follow = _follow = new ToggleSwitch { OnContent = "Follow newest", OffContent = "Follow newest", IsChecked = _viewer.Follow };
             ToolTip.SetTip(follow, "Open the newest log file, switch to a new file when one appears, and stay at the end. Clicking an older file turns it off.");
             follow.IsCheckedChanged += (_, _) =>
@@ -109,7 +118,7 @@ internal partial class LogsView(Ctx x)
             };
             var search = SearchBox("Filter files by name, type or folder").With(b => { b.Text = _fileQuery; ToolTip.SetTip(b, "Words match separately, in any order; \"quotes\" match a phrase."); })
                 .OnPause(q => { _fileQuery = q; _rows = RowsStep; FillTable(def); });
-            right.Children.Add(Section("document_text", "Files", new StackPanel { Spacing = Space.L, Children = { search, new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() } } }, [.. del.Prepend(follow)]));
+            right.Children.Add(Section("document_text", "Files", new StackPanel { Spacing = Space.L, Children = { search, new ScrollViewer { MaxHeight = Heights.List, Content = _table.Free() } } }, follow, del));
             if (loading)
             {
                 _table.Content = Busy.Loading("Reading log folders…");

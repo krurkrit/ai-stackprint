@@ -42,6 +42,7 @@ public sealed class PagesTests : IDisposable
             Hooks = [new Hook("Stop", null, "echo done", "command", "/u/.claude/settings.json") { Apps = ["claude-code"] }],
         };
         s.Health = [new HealthIssue("Skills", "review", "claude-code", new Finding("No description.", true), s.Items[1])];
+        s.ProjectHealth = [];   // the projects' checks are done (they run after the dashboard shows)
         s.Projects.Add(project);
         return s;
     }

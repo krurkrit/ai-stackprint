@@ -26,7 +26,7 @@ internal static partial class Dialogs
     {
         Window? w = null;
         var key = new TextBox { Text = name ?? "", PlaceholderText = "Model name as the app logs it, e.g. my-model", Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
-        var boxes = new Dictionary<string, TextBox>();
+        var boxes = new Dictionary<string, Func<string?>>();   // each field's way to read what is entered (a text box, or a date picker)
         var grid = new Grid { ColumnDefinitions = new($"{Widths.Label},*,Auto"), ColumnSpacing = Space.L, RowSpacing = Space.S };
         var r = 0;
         void Add(Control label, Control box, Control? after = null)
@@ -54,10 +54,29 @@ internal static partial class Dialogs
         foreach (var f in ModelCatalog.Fields)
         {
             var data = row?.Data.GetValueOrDefault(f);
-            var box = new TextBox { Text = row?.Values.GetValueOrDefault(f) ?? "", PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
-            boxes[f] = box;
-            var reset = row?.Changed.Contains(f) == true ? IconBtn("arrow_reset", $"Reset to the model data ({data ?? "unknown"})", () => box.Text = data ?? "") : null;
-            Add(Label(ModelCatalog.Label(f)), box, reset);
+            var current = row?.Values.GetValueOrDefault(f) ?? "";
+            Control input;
+            Func<string?> get;
+            Action<string> set;
+            if (f == "retires")
+            {
+                // A date is picked, not typed: no format to get wrong
+                var picker = new CalendarDatePicker { SelectedDateFormat = CalendarDatePickerFormat.Custom, CustomDateFormatString = "yyyy-MM-dd", PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left, SelectedDate = ParseDate(current) };
+                input = picker;
+                get = () => picker.SelectedDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "";
+                set = v => picker.SelectedDate = ParseDate(v);
+            }
+            else
+            {
+                var box = new TextBox { Text = current, PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
+                input = box;
+                get = () => box.Text;
+                set = v => box.Text = v;
+            }
+
+            boxes[f] = get;
+            var reset = row?.Changed.Contains(f) == true ? IconBtn("arrow_reset", $"Reset to the model data ({data ?? "unknown"})", () => set(data ?? "")) : null;
+            Add(Label(ModelCatalog.Label(f)), input, reset ?? (f == "retires" ? IconBtn("dismiss", "Clear the date", () => set("")) : null));
         }
 
         var error = Txt("", TextSize.Small, false, ErrorKey).With(t => t.IsVisible = false);
@@ -66,7 +85,7 @@ internal static partial class Dialogs
             : $"{row.Key} ({row.Provider}). Prices are USD per 1M tokens. A value you change is saved in models.json and used instead of the model data's; set it back, or empty it, to use the data again.";
         var save = Btn("Save", () =>
         {
-            var why = edits.Save(row?.Key ?? key.Text ?? "", boxes.ToDictionary(b => b.Key, b => b.Value.Text));
+            var why = edits.Save(row?.Key ?? key.Text ?? "", boxes.ToDictionary(b => b.Key, b => b.Value()));
             if (why == null)
             {
                 w!.Close(true);
@@ -81,6 +100,9 @@ internal static partial class Dialogs
         w = Shell(row == null ? "Add model" : "Edit model", body, Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), save);
         return w;
     }
+
+    private static DateTime? ParseDate(string? s) =>
+        DateOnly.TryParseExact(s, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var d) ? d.ToDateTime(TimeOnly.MinValue) : null;
 
     private static TextBlock Label(string s) => Txt(s, TextSize.Small).With(t => t.VerticalAlignment = VerticalAlignment.Center);
 

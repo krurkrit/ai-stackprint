@@ -31,7 +31,7 @@ public static class CrashLog
                 info.Delete();   // start over rather than grow without end
             }
 
-            System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} · {what} · v{UpdateCheck.Label} · {Environment.OSVersion}\n{e}\n\n");
+            System.IO.File.AppendAllText(info.FullName, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss zzz} · {what} · v{UpdateCheck.Label} · {Environment.OSVersion}\n{e}\n\n");
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException) { }   // nowhere to write: nothing more to do while closing
     }

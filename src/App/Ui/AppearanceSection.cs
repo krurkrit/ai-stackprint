@@ -64,7 +64,7 @@ internal static class AppearanceSection
         Add("Font family", FontCombo(installed, "Inter", st.FontFamily, f => Change(() => st.FontFamily = f)), installed.Contains("Inter") ? null : "Not installed: Noto Sans or the system font is used. Get Inter at rsms.me/inter");
         Add("Font size", SizeBox(st.FontSize, 12, 18, n => Change(() => st.FontSize = n)), "12 to 18 px; titles and labels scale with it");
         Add("Weight", Combo(labels, WLabel(st.BodyWeight, 400), l => Change(() => st.BodyWeight = WValue(l))));
-        Add("Emphasis weight", Combo(labels, WLabel(st.EmphasisWeight, 500), l => Change(() => st.EmphasisWeight = WValue(l))), "Names and labels");
+        Add("Emphasis weight", Combo(labels, WLabel(st.EmphasisWeight, 600), l => Change(() => st.EmphasisWeight = WValue(l))), "Names and labels");
         Group("Headings");
         Add("Font family", FontCombo(installed, "Same as body", string.IsNullOrWhiteSpace(st.HeadingFontFamily) ? "Same as body" : st.HeadingFontFamily, f => Change(() => st.HeadingFontFamily = f == "Same as body" ? "" : f), "Same as body"));
         var headWeights = labels.Prepend("Automatic").ToList();

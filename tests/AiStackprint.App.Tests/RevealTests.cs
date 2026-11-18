@@ -34,7 +34,7 @@ public sealed class RevealTests
     }
 
     [AvaloniaFact]
-    public void The_dashboard_before_the_first_scan_has_its_buttons_and_cards_with_loading_icons()
+    public void The_dashboard_before_the_first_scan_has_its_buttons_and_one_loading_block_for_the_page()
     {
         var w = new Window { Width = 1200, Height = 900 };
         var x = new Ctx(new AiStackprint.Models.AppState(), w, _ => { }, () => { });
@@ -43,11 +43,11 @@ public sealed class RevealTests
         var t = Ui.Texts(w);
         Assert.Contains("Dashboard", t);
         Assert.Contains("Rescan", t);
-        Assert.Contains("Skills by app", t);
-        Assert.Contains(DashboardView.Finding, t);
+        Assert.Equal(1, t.Count(s => s == DashboardView.Finding));   // one message for the whole page, not one per card
+        Assert.DoesNotContain("Skills by app", t);
 
-        status(DashboardView.Safety(45, 120));   // every card says what the scan is doing
-        Assert.Equal(9, Ui.Texts(w).Count(s => s == "Safety check 45/120"));
+        status(DashboardView.Safety(45, 120));   // the one block says what the scan is doing
+        Assert.Equal(1, Ui.Texts(w).Count(s => s == "Safety check 45/120"));
     }
 
     [AvaloniaFact]

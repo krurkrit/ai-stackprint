@@ -28,7 +28,7 @@ Numbers made only of digits and separators (up to 24 characters) automatically g
 
 ## Size ladder (14 px base)
 
-`Tiny` 11 (axis ticks, badges) · `Caption` 12 (hints, chips, table header) · `Small` 13 (table cells, legends) · `Body` 14 · `Subtitle` 15 (card titles) · `Title` 18 · `Page` 24 · `Display` 32. Pick the nearest step; add a new step only with a comment in `Tokens.cs` and a row in `design-system.md`.
+`Tiny` 10 (axis ticks, badges) · `Caption` 12 (hints, chips, table header) · `Small` 12 (table cells, legends) · `Body` 14 · `Subtitle` 16 (card titles) · `Title` 20 · `Page` 24 · `Display` 32. Pick the nearest step; add a new step only with a comment in `Tokens.cs` and a row in `design-system.md`.
 
 ## Where text appears
 

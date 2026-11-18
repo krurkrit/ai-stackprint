@@ -38,14 +38,14 @@ internal class SettingsView(Ctx x)
         });
         var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);
 
-        return Page(H1("Settings"), AppearanceSection.Build(x), LimitsView.Settings(x), UpdateView.Settings(x), TransferSection.Build(x),
+        return Page(Head().With(h => h.Children.Add(H1("Settings"))), AppearanceSection.Build(x), LimitsView.Settings(x), UpdateView.Settings(x), BenchmarksSection.Build(x), TransferSection.Build(x),
             Section("eye_off", "App visibility", new StackPanel
             {
                 Spacing = Space.L,
                 Children = {
                 Txt("Hidden apps are skipped when scanning and left out of the dashboard, lists and projects. Saved to " + SettingsStore.File, TextSize.Small, false, Muted),
                 notInstalled, table }
-            }));
+            }), CreditsSection.Build(x));
     }
 
     private void Save(Action change)

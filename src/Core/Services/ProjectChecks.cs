@@ -32,7 +32,9 @@ public static partial class ProjectChecks
         var context = defs.Select(d => (App: d, Rule: ContextBudget.Find(d.Context))).Where(a => a.Rule != null)
             .Select(a => (a.App, a.Rule!.Read(project, start, home))).ToList();
         var issues = new List<ProjectIssue>();
-        Patterns(project, context, issues);
+        // One walk of the project folder for every check that needs its files (a big project took 0.8 s to list, and it was listed twice)
+        var listed = new Lazy<(List<string> Files, bool Complete)>(() => { var l = ProjectFiles.List(project, out var c); return (l, c); });
+        Patterns(project, context, listed, issues);
         Duplicates(context, issues);
         Empty(project, context, issues);
         Links(project, context, issues);
@@ -44,7 +46,7 @@ public static partial class ProjectChecks
         }
 
         var ignores = new List<ProjectIgnore>();
-        var files = ProjectFiles.List(project, out var complete);
+        var (files, complete) = listed.Value;
         if (complete)
         {
             Ignores(project, defs, files, issues, ignores);
@@ -75,7 +77,7 @@ public static partial class ProjectChecks
     }
 
     /// <summary>A rule that loads only for matching files, whose patterns match no file in the project: it never loads.</summary>
-    private static void Patterns(string project, List<(AppDefinition App, ContextReport Report)> context, List<ProjectIssue> issues)
+    private static void Patterns(string project, List<(AppDefinition App, ContextReport Report)> context, Lazy<(List<string> Files, bool Complete)> listed, List<ProjectIssue> issues)
     {
         var rules = context.SelectMany(c => c.Report.Files.Where(f => f.Load == LoadWhen.Conditional && f.Patterns is { Count: > 0 }).Select(f => (c.App, File: f))).ToList();
         if (rules.Count == 0)
@@ -83,7 +85,7 @@ public static partial class ProjectChecks
             return;
         }
 
-        var files = ProjectFiles.List(project, out var complete);
+        var (files, complete) = listed.Value;
         if (!complete)
         {
             return;   // too many files to be sure

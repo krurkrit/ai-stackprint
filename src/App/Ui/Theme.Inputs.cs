@@ -23,11 +23,11 @@ internal static partial class Theme
 
     private static Styles? _inputStyles;   // the app's current input styles, replaced when the font changes
 
-    /// <summary>Height of a one-line input at the current font: the line height plus equal whole-pixel gaps, about 36 px (37 for Inter at 14 px).</summary>
-    public static double InputHeight { get; private set; } = 37;
+    /// <summary>Height of a one-line input at the current font: the line height plus equal whole-pixel gaps, about 32 px (Fluent UI 2 default control; 33 for Inter at 14 px).</summary>
+    public static double InputHeight { get; private set; } = 33;
 
     /// <summary>Gap between the top edge of an input and its first line of text (and between its last line and the bottom edge).</summary>
-    public static double InputGap { get; private set; } = 10;
+    public static double InputGap { get; private set; } = 8;
 
     /// <summary>Line height of the UI font at <paramref name="size"/>, as text boxes and labels lay it out.</summary>
     public static double LineHeight(double size) =>
@@ -36,8 +36,11 @@ internal static partial class Theme
     private static void Inputs(Application app, double fontSize)
     {
         // Whole pixels, as layout rounding places them: a fractional gap would round to 1 px more on one side.
+        // Fluent controls take their corners from these two resources: the same radii as our own controls (Fluent UI 2: medium 4, overlays 8)
+        app.Resources["ControlCornerRadius"] = new CornerRadius(Radius.M);
+        app.Resources["OverlayCornerRadius"] = new CornerRadius(Radius.L);
         var line = Math.Ceiling(LineHeight(fontSize));
-        InputGap = Math.Max(MinInputGap + InputBorder, Math.Ceiling((36 - line) / 2));
+        InputGap = Math.Max(MinInputGap + InputBorder, Math.Ceiling((32 - line) / 2));
         InputHeight = line + 2 * InputGap;
         var pad = InputGap - InputBorder;   // text and number boxes, drop-downs: the gap sits inside their border
         app.Resources["CheckBoxMinHeight"] = InputHeight;   // Fluent centers the box in this height

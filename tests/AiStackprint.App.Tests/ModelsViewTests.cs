@@ -31,12 +31,12 @@ public sealed class ModelsViewTests : IDisposable
 
     public void Dispose() => Directory.Delete(_dir, true);
 
-    private (Window W, ModelsView View) Open(string? select = null)
+    private (Window W, ModelsView View) Open(string? select = null, UiState? state = null)
     {
         var w = new Window { Width = 1400, Height = 900 };
         ModelsView? view = null;
-        var x = new Ctx(new AppState(), w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build(select) };
-        view = new ModelsView(x, Edits);
+        var x = new Ctx(new AppState { State = state ?? new UiState() }, w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build(select) };
+        view = new ModelsView(x, Edits, _ => { });   // not the real state.json
         w.Content = view.Build(select);
         w.Show();
         Dispatcher.UIThread.RunJobs();
@@ -112,5 +112,74 @@ public sealed class ModelsViewTests : IDisposable
         var (w, _) = Open("my-local");
         Assert.Contains("Yours", Ui.Texts(w));
         Assert.Contains("custom 1", w.GetVisualDescendants().OfType<Button>().Select(b => b.Content as string));
+    }
+
+    [AvaloniaFact]
+    public void Ticking_two_models_shows_the_radar_with_raw_values_in_tooltips()
+    {
+        var (w, _) = Open();
+        Assert.DoesNotContain("Compare models", Ui.Texts(w));
+        var boxes = w.GetVisualDescendants().OfType<CheckBox>().ToList();
+        Assert.Equal(2, boxes.Count);
+        boxes[0].IsChecked = true;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains("Tick 1 more to compare (up to 4).", Ui.Texts(w));
+
+        w.GetVisualDescendants().OfType<CheckBox>().Skip(1).First().IsChecked = true;
+        Dispatcher.UIThread.RunJobs();
+        var texts = Ui.Texts(w);
+        Assert.Contains("Compare models", texts);
+        Assert.Contains("Cheap input", texts);
+        Assert.Contains("Benchmarks", texts);   // the second chart; with benchmarks off it is a hint to turn them on
+        Assert.Contains(texts, s => s.Contains("Settings › Benchmarks", StringComparison.Ordinal));
+        var tips = w.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Ellipse>().Select(e => ToolTip.GetTip(e)?.ToString() ?? "").ToList();
+        Assert.Equal(12, tips.Count);   // two models, six axes
+        Assert.Contains(tips, s => s.Contains("claude-opus-5-5") && s.Contains("Context: 1M") && s.Contains("100% on the scale of all models"));
+        Assert.Contains(tips, s => s.Contains("gpt-6") && s.Contains("Cheap input: $2.00 per 1M") && s.Contains("95% on the scale of all models"));
+        Assert.Contains(tips, s => s.Contains("gpt-6") && s.Contains("Max output: unknown"));
+    }
+
+    [AvaloniaFact]
+    public void Ticked_models_are_kept_in_the_state_and_show_again_when_the_page_opens()
+    {
+        var state = new UiState();
+        var (w, _) = Open(null, state);
+        foreach (var cb in w.GetVisualDescendants().OfType<CheckBox>().ToList())
+        {
+            cb.IsChecked = true;
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.Equal(["claude-opus-5-5", "gpt-6"], state.ComparedModels);
+
+        var (again, _) = Open(null, new UiState { ComparedModels = [.. state.ComparedModels, "gone-model"] });   // a later visit; a model that no longer exists is dropped
+        Assert.Contains("Compare models", Ui.Texts(again));
+        Assert.All(again.GetVisualDescendants().OfType<CheckBox>(), cb => Assert.True(cb.IsChecked));
+
+        Ui.Click(Ui.Button(again, "Clear"));
+        Dispatcher.UIThread.RunJobs();
+        Assert.DoesNotContain("Compare models", Ui.Texts(again));
+    }
+
+    [AvaloniaFact]
+    public void Retires_is_picked_as_a_date_saved_as_YYYY_MM_DD_and_cleared_with_the_clear_button()
+    {
+        var row = Edits.Rows().Single(r => r.Key == "gpt-6");
+        var d = Dialogs.ModelEditor(row, null, Edits);
+        d.Show();
+        Dispatcher.UIThread.RunJobs();
+        var picker = d.GetVisualDescendants().OfType<CalendarDatePicker>().Single();   // not a text box: nothing to type wrong
+        Assert.Null(picker.SelectedDate);
+        picker.SelectedDate = new DateTime(2027, 3, 4, 0, 0, 0, DateTimeKind.Unspecified);
+        Ui.Click(Ui.Button(d, "Save"));
+        Assert.Equal("2027-03-04", Edits.Rows().Single(r => r.Key == "gpt-6").Values["retires"]);
+
+        var again = Dialogs.ModelEditor(Edits.Rows().Single(r => r.Key == "gpt-6"), null, Edits);
+        again.Show();
+        Dispatcher.UIThread.RunJobs();
+        var shown = again.GetVisualDescendants().OfType<CalendarDatePicker>().Single();
+        Assert.Equal(new DateTime(2027, 3, 4, 0, 0, 0, DateTimeKind.Unspecified), shown.SelectedDate);
+        Ui.Click(again.GetVisualDescendants().OfType<Button>().Single(b => ToolTip.GetTip(b) is string s && s.StartsWith("Reset", StringComparison.Ordinal)));
+        Assert.Null(shown.SelectedDate);   // reset: the model data has no date
     }
 }

@@ -130,7 +130,7 @@ public sealed class LimitsService(Func<Settings> settings)
             }
             else if (c.Expires is { } exp && exp < DateTime.UtcNow)
             {
-                next = new(LimitState.Expired, logs ?? old, old, $"The saved sign-in expired. Use {d.Name} once and it renews it.", false);
+                next = new(LimitState.Expired, logs ?? old, old, ExpiredMessage(d.Name, p.Id switch { "claude" => "claude", "codex" => "codex", "gemini" => "gemini", _ => null }, exp), false);
             }
             else if (logs != null && DateTime.UtcNow - logs.FetchedAt.ToUniversalTime() < TimeSpan.FromMinutes(10))
             {
@@ -162,6 +162,15 @@ public sealed class LimitsService(Func<Settings> settings)
         }
         lock (_lock) { e.Status = next; e.RetryAfter = retry; }
         Updated?.Invoke(d.Id);
+    }
+
+    /// <summary>Says when the saved sign-in ran out and how to renew it (the app never refreshes it itself).</summary>
+    public static string ExpiredMessage(string app, string? cli, DateTime expiresUtc)
+    {
+        var age = DateTime.UtcNow - expiresUtc;
+        var ago = age.TotalHours < 1 ? "less than an hour ago" : age.TotalHours < 48 ? $"{(int)age.TotalHours} hours ago" : $"{(int)age.TotalDays} days ago";
+        var renew = cli != null ? $"Run `{cli}` once to renew." : $"Open {app} once to renew.";
+        return $"Sign-in expired {ago}. {renew}";
     }
 
     private static string ShortMessage(Exception ex) => ex switch

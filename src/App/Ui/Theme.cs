@@ -107,7 +107,7 @@ internal static partial class Theme
         app.Resources["ControlContentThemeFontSize"] = W.Size(14);
         Inputs(app, W.Size(14));
         W.Body = (FontWeight)Weight(s.BodyWeight, 400);
-        W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 500);
+        W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 600);
         app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(_light, s.Light, _lightFluent);
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }

@@ -70,9 +70,9 @@ internal static partial class W
         return c;
     }
 
-    /// <summary>Text at a 14-px-based size; bold = the Emphasis weight.</summary>
+    /// <summary>Text at a 14-px-based size; bold = the Emphasis weight. It can be selected by dragging and copied, except inside a button or a clickable row (<see cref="CopyableText"/>).</summary>
     public static TextBlock Txt(string s, double size = TextSize.Body, bool bold = false, string key = Text) =>
-        new TextBlock { Text = s, FontSize = Size(size), FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.With(t => NumberStyle(t, s))
+        new CopyableText { Text = s, FontSize = Size(size), FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.With(t => NumberStyle(t, s))
             .Themed(TextBlock.ForegroundProperty, key);
 
     /// <summary>Like <see cref="Txt"/> but the text can be selected and copied by dragging. Only for text that is not part of a click target.</summary>
@@ -82,7 +82,7 @@ internal static partial class W
 
     /// <summary>Card titles, names in headers, big numbers: Heading weight.</summary>
     public static TextBlock Title(string s, double size = TextSize.Subtitle) =>
-        new TextBlock { Text = s, FontSize = Size(size), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
+        new CopyableText { Text = s, FontSize = Size(size), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
             .With(t => { if (HeadingFont != null) { t.FontFamily = HeadingFont; } NumberStyle(t, s); });
 
     public static TextBlock Mono(string s, double size = TextSize.Small) => Txt(s, size).With(t => t.FontFamily = Theme.Mono);
@@ -91,6 +91,12 @@ internal static partial class W
     public static Action<string>? GoAction { get; set; }
 
     /// <summary>Page title. Back/forward live in the window title bar.</summary>
+    /// <summary>
+    /// The row of a page title with its buttons or filters on the right. It is as tall as a button on every page, so the title sits at the same height whether the page has a button,
+    /// a row of pills or nothing at the right.
+    /// </summary>
+    public static DockPanel Head() => new() { MinHeight = Theme.InputHeight };
+
     public static Control H1(string s) => Title(s, TextSize.Page);
 
     /// <summary>Detail-page title "Parent › Name"; the parent is muted and clickable when <paramref name="go"/> is a view.</summary>
@@ -104,6 +110,11 @@ internal static partial class W
 
     public static Border Card(Control c) =>
         new Border { CornerRadius = new CornerRadius(Radius.Card), Padding = new Thickness(Space.XXL), Child = c }
+            .Themed(Border.BackgroundProperty, Surface);
+
+    /// <summary>The surface of a page that is only a table: the card color with a smaller corner (no icon header, so no concentric corner) and a little padding.</summary>
+    public static Border TableSurface(Control table) =>
+        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.S, Space.L, Space.S, Space.S), Child = table }
             .Themed(Border.BackgroundProperty, Surface);
 
     /// <summary>Card with the standard header and <paramref name="body"/> below it.</summary>
@@ -217,8 +228,11 @@ internal static partial class W
     public static Border IconTile(string icon, double size = Sizes.IconTile) => Tile(Icon(icon, size * Sizes.TileGlyph).Themed(TextElement.ForegroundProperty, Accent), size, Selected);
 
     /// <summary>App logo, or its category icon when the app has no logo.</summary>
-    public static Border AppLogo(string? logo, string category, double size = Sizes.LogoL) =>
-        Tile(Glyph(Icons.Logo(logo) ?? Icons.Get(Icons.ForCategory(category)), size * Sizes.LogoGlyph).Themed(TextElement.ForegroundProperty, Text), size);
+    public static Border AppLogo(string? logo, string category, double size = Sizes.LogoL) => LogoOr(logo, Icons.ForCategory(category), size);
+
+    /// <summary>The logo with this key in a tile, or the icon named <paramref name="icon"/> when there is none.</summary>
+    public static Border LogoOr(string? logo, string icon, double size = Sizes.LogoL) =>
+        Tile(Glyph(Icons.Logo(logo) ?? Icons.Get(icon), size * Sizes.LogoGlyph).Themed(TextElement.ForegroundProperty, Text), size);
 
     /// <summary>Logo + name, vertically centered; used as the first cell of app rows.</summary>
     /// <summary>Logo and name. The name wraps inside its column (a horizontal StackPanel gave it unlimited width, so it ran into the next column).</summary>

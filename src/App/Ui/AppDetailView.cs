@@ -167,7 +167,7 @@ internal class AppDetailView(Ctx x)
 
             var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
             query = SearchQuery.Parse(_skillQuery);
-            var table = Table.Build(cols, _skillFilter.Rows([.. index.Find(query).Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match the search or these filters.");
+            var table = Table.Virtual(cols, _skillFilter.RowMakers([.. index.Find(query).Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match the search or these filters.");
             body.Content = new StackPanel { Spacing = Space.XL, Children = { filters, table } };
         }
         Fill();

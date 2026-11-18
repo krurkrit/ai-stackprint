@@ -25,7 +25,7 @@ internal class McpView(Ctx x)
     public Control Build()
     {
         var all = x.S.Mcp;
-        var head = new DockPanel();
+        var head = Head();
         var pills = Pills([($"All {all.Count:N0}", ""), ($"MCP {all.Count(s => s.Kind == "MCP"):N0}", "MCP"), ($"LSP {all.Count(s => s.Kind == "LSP"):N0}", "LSP"),
             ($"Warnings {all.Count(s => s.Warn):N0}", "w")], _show, v => { _show = v; x.Refresh(); });
         DockPanel.SetDock(pills, Dock.Right);
@@ -52,14 +52,14 @@ internal class McpView(Ctx x)
             s.Apps.Count == 1 ? DetailPanel.AppLink(x, s.Apps[0], s.Apps[0]) : Txt(AppName(s), TextSize.Small),
             Level(s.Level, s.Project != null ? $"{s.Level} · {Ctx.ProjectName(s.Project)}" : s.Level, s.LevelLabel),
             Chip(s.Kind),
-            Mono(s.What, TextSize.Caption),
+            Mono(s.What, TextSize.Caption).With(t => { t.MaxLines = 3; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; ToolTip.SetTip(t, t.Text); }),   // a long command shows 3 lines; the whole command is in the tooltip and copies with a right-click
             Txt(s.Note ?? "", TextSize.Caption, false, s.Warn ? WarningKey : Muted),
             SourceCell.For(x, s.Plugin, s.Apps.FirstOrDefault() ?? "", s.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(s.File))
         ]));
-        _table.Content = Table.Build([Cols.Name(), Cols.App(), Cols.Level(), Cols.Type(),
+        _table.Content = TableSurface(Table.Build([Cols.Name(), Cols.App(), Cols.Level(), Cols.Type(),
             new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
-            x.S.Mcp.Count == 0 ? "No MCP or LSP servers in the apps' config files or plugins." : "Nothing matches. Clear the search or choose All.");
+            x.S.Mcp.Count == 0 ? "No MCP or LSP servers in the apps' config files or plugins." : "Nothing matches. Clear the search or choose All."));
     }
 
     private string AppName(McpServer s) => string.Join(", ", s.Apps.Select(a => x.S.Def(a)?.Name ?? a));

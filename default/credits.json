@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  // Free and open-source projects AI Stackprint uses. Shown in Settings › Credits (CreditsSection).
+  // packages: NuGet ids this entry covers; a test fails when a package in Directory.Packages.props is not listed here.
+  // shipped: false for tools used to build, test and release only (not part of the installed app).
+  "credits": [
+    { "name": "Avalonia", "logo": "avalonia", "group": "Framework", "license": "MIT", "url": "https://github.com/AvaloniaUI/Avalonia", "use": "UI framework, themes and color picker; its UI test host runs the headless tests",
+      "packages": ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Fluent", "Avalonia.Controls.ColorPicker", "Avalonia.Headless.XUnit"], "shipped": true },
+    { "name": "SkiaSharp and HarfBuzzSharp", "logo": "skiasharp", "group": "Framework", "license": "MIT", "url": "https://github.com/mono/SkiaSharp", "use": "drawing and text shaping, brought by Avalonia", "packages": [], "shipped": true },
+    { "name": "ANGLE", "group": "Framework", "license": "BSD-3-Clause", "url": "https://github.com/google/angle", "use": "graphics layer on Windows, brought by Avalonia", "packages": [], "shipped": true },
+    { "name": "AvaloniaEdit", "logo": "avalonia", "group": "Editor", "license": "MIT", "url": "https://github.com/AvaloniaUI/AvaloniaEdit", "use": "code and text viewer and editor", "packages": ["Avalonia.AvaloniaEdit", "AvaloniaEdit.TextMate"], "shipped": true },
+    { "name": "TextMateSharp", "group": "Editor", "license": "MIT", "url": "https://github.com/danipen/TextMateSharp", "use": "syntax colors; the grammars and the Light+ and Dark+ themes come from VS Code", "packages": [], "shipped": true },
+    { "name": "Velopack", "logo": "velopack", "group": "Framework", "license": "MIT", "url": "https://github.com/velopack/velopack", "use": "installers for Windows, Linux and macOS", "packages": ["Velopack"], "shipped": true },
+    { "name": "Microsoft.Data.Sqlite", "logo": "dotnet", "group": "Framework", "license": "MIT", "url": "https://github.com/dotnet/efcore", "use": "reading OpenCode's usage database", "packages": ["Microsoft.Data.Sqlite"], "shipped": true },
+    { "name": "SQLitePCLRaw and SQLite", "logo": "sqlite", "group": "Framework", "license": "Apache-2.0, public domain", "url": "https://github.com/ericsink/SQLitePCL.raw", "use": "SQLite engine for Microsoft.Data.Sqlite", "packages": [], "shipped": true },
+    { "name": ".NET", "logo": "dotnet", "group": "Framework", "license": "MIT", "url": "https://github.com/dotnet/runtime", "use": "runtime and libraries", "packages": [], "shipped": true },
+    { "name": "Artificial Analysis", "group": "Data", "license": "free API terms (credit required)", "url": "https://artificialanalysis.ai", "use": "benchmark scores for the Models page Benchmarks chart, only when you turn it on and add your own API key; not open source", "packages": [], "shipped": true },
+    { "name": "Fluent UI System Icons", "logo": "fluentui", "group": "Icons", "license": "MIT", "url": "https://github.com/microsoft/fluentui-system-icons", "use": "UI icons", "packages": [], "shipped": true },
+    { "name": "LobeHub Icons", "logo": "lobehub", "group": "Icons", "license": "MIT", "url": "https://github.com/lobehub/lobe-icons", "use": "AI app logos (trademarks of their owners; they identify the apps only)", "packages": [], "shipped": true },
+    { "name": "Simple Icons", "logo": "simpleicons", "group": "Icons", "license": "CC0-1.0", "url": "https://github.com/simple-icons/simple-icons", "use": "app logos (trademarks of their owners; they identify the apps only)", "packages": [], "shipped": true },
+    { "name": "Snowy Owl", "logo": "snowyowl", "group": "Design", "license": "MIT", "url": "https://github.com/krurkrit/snowy-owl", "use": "colors and type: the light and dark themes", "packages": [], "shipped": true },
+    { "name": "LiteLLM", "logo": "litellm", "group": "Data", "license": "MIT", "url": "https://github.com/BerriAI/litellm", "use": "model sizes, prices and retirement dates (default/models.json is built from its model list each week)", "packages": [], "shipped": true },
+    { "name": "Inter", "group": "Fonts", "license": "SIL OFL 1.1", "url": "https://rsms.me/inter/", "use": "default UI font; not bundled, used when installed", "packages": [], "shipped": false },
+    { "name": "Noto Sans", "logo": "googlefonts", "group": "Fonts", "license": "SIL OFL 1.1", "url": "https://fonts.google.com/noto", "use": "fallback UI font; not bundled, used when installed", "packages": [], "shipped": false },
+    { "name": "JetBrains Mono", "logo": "jetbrains", "group": "Fonts", "license": "SIL OFL 1.1", "url": "https://www.jetbrains.com/lp/mono/", "use": "default code and log font; not bundled, used when installed", "packages": [], "shipped": false },
+    { "name": "MinVer", "logo": "minver", "group": "Build", "license": "Apache-2.0", "url": "https://github.com/adamralph/minver", "use": "version numbers from git tags", "packages": ["MinVer"], "shipped": false },
+    { "name": "git-cliff", "logo": "gitcliff", "group": "Build", "license": "MIT or Apache-2.0", "url": "https://github.com/orhun/git-cliff", "use": "release notes from commit messages", "packages": [], "shipped": false },
+    { "name": "xUnit.net", "logo": "xunit", "group": "Build", "license": "Apache-2.0", "url": "https://github.com/xunit/xunit", "use": "tests", "packages": ["xunit.v3", "xunit.runner.visualstudio"], "shipped": false },
+    { "name": "Microsoft.NET.Test.Sdk", "logo": "dotnet", "group": "Build", "license": "MIT", "url": "https://github.com/microsoft/vstest", "use": "test host", "packages": ["Microsoft.NET.Test.Sdk"], "shipped": false },
+    { "name": "GitHub Actions", "logo": "githubactions", "group": "Build", "license": "MIT", "url": "https://github.com/actions", "use": "checkout, setup-dotnet and artifact steps of the release and model-data workflows", "packages": [], "shipped": false },
+    { "name": "SonarAnalyzer.CSharp", "logo": "sonarqube", "group": "Build", "license": "Sonar Source-Available 1.0", "url": "https://github.com/SonarSource/sonar-dotnet", "use": "code analysis while building; source-available, not open source", "packages": ["SonarAnalyzer.CSharp"], "shipped": false }
+  ]
+}

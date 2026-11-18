@@ -14,7 +14,7 @@ public record Change(string What, string Kind, string Name, string App, string P
     public string? Detail { get; init; }
 }
 
-/// <param name="Since">When the scan compared against was taken; null on the first run.</param>
+/// <param name="Since">When the scan compared against was taken, in local time; null on the first run.</param>
 public record ScanChanges(List<Change> Changes, DateTime? Since);
 
 /// <summary>Skills, plugins, commands, agents, config files, servers and hooks added, removed or edited since the scan before. The last scan is saved in the data folder's cache.</summary>
@@ -78,10 +78,10 @@ public static class ScanDiff
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            System.IO.File.WriteAllText(file, JsonSerializer.Serialize(new Snapshot(DateTime.Now, now)));
+            System.IO.File.WriteAllText(file, JsonSerializer.Serialize(new Snapshot(DateTime.UtcNow, now)));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-        return new(changes, old?.Time);
+        return new(changes, old?.Time.ToLocalTime());   // saved in UTC (older files hold local time with its offset: both read the same); shown in local time
     }
 
     /// <summary>Null when nothing changed; otherwise what changed ("" when only the time did).</summary>

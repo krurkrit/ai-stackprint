@@ -132,7 +132,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 
 ## Workflow
 - Write changes directly to the project folder.
-- Loading: a page's controls (titles, buttons, cards) are shown at once and fade in; a card whose data is not ready shows the loading icon (shown at once), and the data fades in (`Reveal.Fade`, 180 ms) when it arrives. A refresh of data already on screen keeps it and shows the small spinner.
+- Loading: a page's controls (titles, buttons, cards) are shown at once and fade in; a card whose data is not ready shows the loading icon (shown at once). The dashboard's first scan is the exception: every card would say the same, so the title and buttons show with one loading block for the whole page, and the data fades in (`Reveal.Fade`, 180 ms) when it arrives. A refresh of data already on screen keeps it and shows the small spinner.
 - When a page's data arrives only the parts that were loading fade in; titles and cards already on screen stay as they are (no blink), and a placeholder is as tall as what replaces it where the size is known (the log viewer).
-- The first scan's loading cards say what the scan is doing: short enough for a tile: "Finding apps…", "Comparing changes…", "Safety check 45/120", "Checking configs…".
+- The startup scan does only what the dashboard needs. The projects' checks (they walk every project folder) run after the dashboard shows: the Health tile shows the loading icon and the sidebar badge no count until they are done, and the Health page says "Checking projects…" and fills in. A project page runs its own checks when it opens, with a loading icon. In general a page that is not shown does not load or process anything.
+- The first scan's loading block says what the scan is doing: short enough for a tile: "Finding apps…", "Comparing changes…", "Safety check 45/120", "Checking configs…".
 - Anything that reads a file or folder when you click it (a log file, a skill or plugin file, an app's log folders) reads off the UI thread: the viewer shows the loading icon, then the content fades in; a newer click cancels an older read.

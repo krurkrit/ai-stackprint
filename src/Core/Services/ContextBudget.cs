@@ -126,13 +126,15 @@ public static partial class ContextBudget
                 continue;
             }
 
-            foreach (var name in names)
+            // The folder's file names are read once and compared with the wanted names (a stat call per name and folder took most of the time in a big project)
+            HashSet<string> present;
+            try { present = Directory.EnumerateFiles(d).Select(f => Path.GetFileName(f)).ToHashSet(OperatingSystem.IsLinux() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { present = []; }
+            foreach (var name in names.Where(present.Contains))
             {
-                var f = Path.Combine(d, name); if (File.Exists(f))
-                {
-                    yield return f;
-                }
+                yield return Path.Combine(d, name);
             }
+
             foreach (var f in Below(d, names, depth - 1))
             {
                 yield return f;

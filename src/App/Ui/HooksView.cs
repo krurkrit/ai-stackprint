@@ -25,7 +25,7 @@ internal class HooksView(Ctx x)
     public Control Build()
     {
         var all = x.S.Hooks;
-        var head = new DockPanel();
+        var head = Head();
         var pills = Pills([($"All {all.Count:N0}", ""), ($"Warnings {all.Count(h => h.Warn):N0}", "w")], _show, v => { _show = v; x.Refresh(); });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
@@ -51,14 +51,14 @@ internal class HooksView(Ctx x)
             h.Apps.Count == 1 ? DetailPanel.AppLink(x, h.Apps[0], h.Apps[0]) : Txt(AppName(h), TextSize.Small),
             Level(h.Level, h.Project != null ? $"{h.Level} · {Ctx.ProjectName(h.Project)}" : h.Level, h.LevelLabel),
             h.Matcher is { Length: > 0 } m && m != "*" ? Mono(m, TextSize.Caption) : Txt("Every", TextSize.Caption, false, Muted),
-            h.Type == "command" ? Mono(h.What, TextSize.Caption) : Txt(h.What, TextSize.Caption),
+            (h.Type == "command" ? Mono(h.What, TextSize.Caption) : Txt(h.What, TextSize.Caption)).With(t => { t.MaxLines = 3; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; ToolTip.SetTip(t, t.Text); }),
             Txt(h.Note ?? "", TextSize.Caption, false, h.Warn ? WarningKey : Muted),
             SourceCell.For(x, h.Plugin, h.Apps.FirstOrDefault() ?? "", h.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(h.File))
         ]));
-        _table.Content = Table.Build([Cols.Name("Event"), Cols.App(), Cols.Level(), Cols.Type("Matcher"),
+        _table.Content = TableSurface(Table.Build([Cols.Name("Event"), Cols.App(), Cols.Level(), Cols.Type("Matcher"),
             new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
-            x.S.Hooks.Count == 0 ? "No hooks in the apps' settings or hook files or plugins." : "Nothing matches. Clear the search or choose All.");
+            x.S.Hooks.Count == 0 ? "No hooks in the apps' settings or hook files or plugins." : "Nothing matches. Clear the search or choose All."));
     }
 
     private string AppName(Hook h) => string.Join(", ", h.Apps.Select(a => x.S.Def(a)?.Name ?? a));

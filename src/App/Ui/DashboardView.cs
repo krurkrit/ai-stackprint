@@ -25,20 +25,21 @@ internal static partial class DashboardView
     {
         var s = x.S;
         var apps = x.ShownApps.ToList();
-        var head = new DockPanel();
+        var head = Head();
         var btns = Row(Btn("Add project folder", addProject, false, "folder_add"), Btn("Rescan", x.Rescan, true, "arrow_sync"));
         DockPanel.SetDock(btns, Dock.Right);
         head.Children.Add(btns);
         head.Children.Add(H1("Dashboard"));
 
-        var warn = s.Health.Count(h => h.Finding.Warning);
+        var all = s.AllHealth.ToList();
+        var warn = all.Count(h => h.Finding.Warning);
         var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = Space.XL, RowSpacing = Space.XL };
         var cards = new[]
         {
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
             Tile("server", "Servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
-            Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", s.Health.Count - warn, ChartRead))
+            s.HealthReady ? Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", all.Count - warn, ChartRead)) : HealthPending(x)
         };
         var radar = Categories(apps, () => x.Go("Apps"));
         Grid.SetRowSpan(radar, 2); Grid.SetColumnSpan(radar, 2);   // 2 x 2 tiles on the left; the four tiles fill the right
@@ -216,6 +217,15 @@ internal static partial class DashboardView
             }
         }
         return Section("arrow_sync", title, body);
+    }
+
+    /// <summary>The Health tile while the projects' checks run (after the dashboard shows): a count now would be too low.</summary>
+    private static Border HealthPending(Ctx x)
+    {
+        var card = Section("heart_pulse", "Health", Busy.Status("Checking projects…", out _));
+        card.Cursor = Hand;
+        card.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { x.Go("Health"); } };
+        return card;
     }
 
     private static Border Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)

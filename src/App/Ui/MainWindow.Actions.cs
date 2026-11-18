@@ -22,6 +22,7 @@ internal partial class MainWindow
     private void Reload()
     {
         _s.Settings = SettingsStore.Load();
+        Table.VirtualFrom = _s.Settings.VirtualListRows;
         _s.Projects.Clear();
         _s.ProjectAdded.Clear();
         LoadProjects();
@@ -131,6 +132,29 @@ internal partial class MainWindow
         Scan();
     }
 
+    private int _healthRun;
+
+    /// <summary>
+    /// The projects' checks, after the dashboard shows (they walk every project folder, and only the Health tile, the badge and the Health page need them).
+    /// A newer scan makes an older run's result stale: it is dropped.
+    /// </summary>
+    private async void LoadProjectHealth(List<AppDefinition> defs, List<string> projects)
+    {
+        var run = ++_healthRun;
+        var found = await Task.Run(() => ProjectChecks.ForHealth(defs, projects, PathUtil.Home));
+        if (run != _healthRun)
+        {
+            return;
+        }
+
+        _s.ProjectHealth = found;
+        RefreshNav();
+        if (_view is "Dashboard" or "Health")
+        {
+            Refresh();
+        }
+    }
+
     private async void Scan()
     {
         if (_scanning)
@@ -138,7 +162,8 @@ internal partial class MainWindow
             return;
         }
 
-        _scanning = true; RefreshNav();
+        _scanning = true; _s.ProjectHealth = null; RefreshNav();   // the projects' checks run after the dashboard shows
+        ProjectFiles.Forget();   // a scan lists each project folder anew
         var defs = SettingsStore.Visible(_s.Defs, _s.Settings); var projects = _s.Projects.Where(Directory.Exists).ToList();   // a missing folder is greyed in the menu until relocated or removed
         var status = _status;   // set while the first scan's loading dashboard is shown
         void Say(string text) { if (status != null) { Dispatcher.UIThread.Post(() => status(text)); } }
@@ -148,20 +173,31 @@ internal partial class MainWindow
         var r = await Task.Run(() => { ScanCache.Load(); Step("cache load"); var c = Scanner.Collect(defs, projects); Step("collect"); return c; });   // the safety and change results of the last run: only changed files are read again
         _s.Items = r.Items; _s.Apps = r.Apps;
         var items = _s.Items;
-        (_s.Changes, _s.Health, _s.Mcp, _s.Hooks) = await Task.Run(() =>
+        (_s.Changes, _s.Health, _s.Mcp, _s.Hooks) = await Task.Run(async () =>
         {
             Say(DashboardView.Comparing);
             watch.Restart();   // not the wait for the UI thread between the two
             var mcp = McpServers.Read(items).Concat(McpServers.FromPlugins(items)).ToList(); Step("mcp");
             var hooks = Hooks.Read(items, PathUtil.Home).Concat(Hooks.FromPlugins(items, PathUtil.Home)).ToList(); Step("hooks");
-            var changes = ScanDiff.Update(items, ScanDiff.File, mcp, hooks); Step("changes");
-            var health = Health.Compute(items, claudeModel.GetAwaiter().GetResult()); Step("health");
-            var safety = SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }); Step("safety");
-            Say(DashboardView.Configs);
-            var checks = ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ProjectChecks.ForHealth(defs, projects, PathUtil.Home)).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList(); Step("configs");
-            var all = health.Concat(safety).Concat(checks).ToList();
+            // The four checks read the scan's items and do not depend on each other, so they run side by side (the scan cache is thread-safe);
+            // each step's time is its own, so together they add up to more than the wall time
+            var timed = new List<(string, long)>();
+            Task<T> Run<T>(string name, Func<T> check) => Task.Run(() =>
+            {
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var v = check();
+                lock (timed) { timed.Add((name, sw.ElapsedMilliseconds)); }
+                return v;
+            });
+            var changes = Run("changes", () => ScanDiff.Update(items, ScanDiff.File, mcp, hooks));
+            var health = Run("health", () => Health.Compute(items, claudeModel.GetAwaiter().GetResult()));
+            var safety = Run("safety", () => SafetyScan.Check(items, PathUtil.Home, (done, total) => { if (done == 1 || done == total || done % 10 == 0) { Say(DashboardView.Safety(done, total)); } }));
+            var checks = Run("configs", () => ConfigChecks.ForHealth(items, PathUtil.Home).Concat(ModelRetirement.ForHealth(items, DateOnly.FromDateTime(DateTime.Today))).ToList());
+            await Task.WhenAll(changes, health, safety, checks).ConfigureAwait(false);
+            steps.AddRange(timed); watch.Restart();
+            var all = health.Result.Concat(safety.Result).Concat(checks.Result).ToList();
             ScanCache.Save(); Step("cache save");
-            return (changes, all, mcp, hooks);
+            return (changes.Result, all, mcp, hooks);
         });
         _status = null;
         var first = !_scanned;
@@ -173,6 +209,7 @@ internal partial class MainWindow
         _scanning = false; _scanned = true;
         Refresh();
         RequestLimits();
+        LoadProjectHealth(defs, projects);
         if (first && PerfRun)
         {
             RunPerf();   // no update check or crash notice in a measuring run

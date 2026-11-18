@@ -73,7 +73,7 @@ public static partial class CrashReport
     public static string? ForLastCrash(string? folder = null) =>
         LastEntry(folder) is { } e ? IssueUrl(Redact(e, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Environment.UserName)) : null;
 
-    // CrashLog.Write starts each entry with "yyyy-MM-dd HH:mm:ss · "
-    [GeneratedRegex(@"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} · ")]
+    // CrashLog.Write starts each entry with "yyyy-MM-dd HH:mm:ss +07:00 · " (older versions: without the offset)
+    [GeneratedRegex(@"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}( [+-]\d{2}:\d{2})? · ")]
     private static partial Regex EntryStart();
 }

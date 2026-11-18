@@ -40,7 +40,7 @@ internal static partial class UpdateView
     {
         var t = ModelCatalog.Load();
         var data = $"In use: data from {t.Updated ?? "an unknown date"} ({(t.Downloaded ? "downloaded" : "built into this version")}), {t.Models.Count:N0} models.";
-        var last = x.S.State.ModelDataCheckedUtc is { } at ? $" Last check {at.ToLocalTime():g}: {x.S.State.ModelDataResult}" : " Not checked yet.";
+        var last = x.S.State.ModelDataCheckedUtc is { } at ? $" Last check {at.ToLocalTime():yyyy-MM-dd HH:mm}: {x.S.State.ModelDataResult}" : " Not checked yet.";
         return Txt(data + last, TextSize.Small, false, Muted);
     }
 

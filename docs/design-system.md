@@ -32,12 +32,12 @@ The reference for how AI Stackprint looks. Colors and fonts come from Snowy Owl 
 
 | Token | px | Use |
 |---|---|---|
-| `XS` | 2 | chart columns |
-| `S` | 4 | bars, small chips, code blocks |
-| `M` | 6 | buttons, list rows, inputs |
-| `L` | 8 | dialogs |
+| `XS` | 2 | chart columns (Fluent UI 2 small) |
+| `S` | 4 | bars, small chips, code blocks (medium) |
+| `M` | 4 | buttons, list rows, inputs: every control; Fluent's own controls too (`ControlCornerRadius`, set in `Theme.Inputs`) (medium) |
+| `L` | 8 | dialogs and pop-ups (xLarge; `OverlayCornerRadius`) |
 | `Tile` | 8 | icon tile of a card header (`Sizes.IconTile` × `Sizes.TileCorner`) |
-| `Card` | 28 | cards: `Tile` + the card padding (`Space.XXL`), so the card's corner is concentric with its icon tile's |
+| `Card` | 12 | cards (2xLarge) |
 | `XL` | 12 | overlays (command palette, toasts) |
 | `Pill` | 999 | dots, pills, round buttons |
 
@@ -45,14 +45,14 @@ The reference for how AI Stackprint looks. Colors and fonts come from Snowy Owl 
 
 | Token | px | Weight | Use |
 |---|---|---|---|
-| `Tiny` | 11 | Body | axis ticks, badges |
-| `Caption` | 12 | Body | captions, chips, hints |
-| `Small` | 13 | Body / Emphasis | secondary text, table cells, legends |
-| `Body` | 14 | Body / Emphasis | default text |
-| `Subtitle` | 15 | Heading | card titles |
-| `Title` | 18 | Heading | section titles inside a page |
-| `Page` | 24 | Heading | page titles (`W.H1`) |
-| `Display` | 32 | Heading | big numbers on cards |
+| `Tiny` | 10 | Body | axis ticks, badges (Fluent caption 2) |
+| `Caption` | 12 | Body | captions, chips, hints (caption 1) |
+| `Small` | 12 | Body / Emphasis | secondary text, table cells, legends (Fluent has no 13: this is caption 1 too) |
+| `Body` | 14 | Body / Emphasis | default text (body 1) |
+| `Subtitle` | 16 | Heading | card titles (subtitle 2) |
+| `Title` | 20 | Heading | section titles inside a page (subtitle 1) |
+| `Page` | 24 | Heading | page titles (`W.H1`) (title 3) |
+| `Display` | 32 | Heading | big numbers on cards (title 1) |
 
 Weights come from Appearance (`W.Body`, `W.Emphasis`, `W.Heading`); never set a fixed weight.
 
@@ -77,10 +77,10 @@ Weights come from Appearance (`W.Body`, `W.Emphasis`, `W.Heading`); never set a 
 | `Sizes.Bar` / `BarThin` | 10 / 8 | bar charts / progress bars in dense rows |
 | `Sizes.IconTile` | 32 | tinted square behind a card icon (glyph is `TileGlyph` of it) |
 | `Sizes.LogoS` / `LogoM` / `LogoL` / `LogoXL` | 24 / 28 / 32 / 56 | app logos: charts, tables, headers, page titles |
-| `Sizes.CompactControl` | 32 | pills, toolbar buttons |
-| `Theme.InputHeight` | ≈36 | inputs and standard buttons (measured from the font) |
+| `Sizes.CompactControl` | 24 | pills, toolbar buttons (Fluent small control) |
+| `Theme.InputHeight` | ≈32 (33 for Inter 14) | inputs and standard buttons (Fluent default control), measured from the font |
 | `Sizes.NavItem` | 40 | side menu entries |
-| `Sizes.LargeControl` | 44 | command palette search box |
+| `Sizes.LargeControl` | 40 | command palette search box (Fluent large control) |
 | `Widths.Field` / `FieldM` / `FieldS` | 220 / 160 / 120 | drop-down in a settings row / in a filter row / number box |
 | `Widths.Label*` | 80–220 | label columns of forms and key-value lists |
 | `Widths.Dialog*` | 380 / 520 / 640 | dialog widths |
@@ -102,3 +102,19 @@ Built in `W` (`Widgets*.cs`); use these instead of building the same thing again
 - **Chips and status** (`W.Chip`, `W.Status`): `Caption` text, `Radius.Pill`.
 - **Dots** (`W.Dot`, `W.DotText`): `Sizes.Dot`, sitting on the text baseline.
 - **Charts**: bars use `Sizes.Bar` and `Radius.S`; series colors are the `Chart*`, level and category keys in `Theme`. The donut (`PieChart`) animates in once and when its values change.
+
+## Loading icons
+- One icon everywhere: `DotsLoader`, a ring of dots with a bright head running round and a fading tail, all in the accent color (`Busy.Spinner(size, key)` takes another color key, e.g. on-accent for a spinner on an accent button).
+- Big (`Sizes.Loader`, 56): a whole page that is loading (the dashboard before the first scan, centered under the title): 12 fine dots.
+- Small (12 to 20 px, from 48 px up the big look is used): 8 larger dots, beside text and in cards (`Busy.Status`, `Busy.Loading`, `Busy.Inline`).
+- It carries the `Busy.Class` marker; the --perf run waits for none on screen.
+
+## Page header and text
+- A page title row is `W.Head()` (a DockPanel as tall as a button) with the title and then the buttons, pills or nothing at the right: the title sits at the same height on every page.
+- Text made with `W.Txt`, `W.Title` and `W.Mono` is a `CopyableText` (a `SelectableTextBlock`): drag to select, Ctrl+C to copy. Inside a button or a clickable row a drag would fight the click, so there it does not select; right-click on any text, there too, offers Copy (the selection, or the whole text). Text made with `new TextBlock` directly is only copied by right-click.
+- A cell with long text (a command) shows at most 3 lines with an ellipsis, the whole text in its tooltip.
+- A count of zero is shown in the muted color.
+
+### Fluent UI 2
+
+The scales follow Fluent UI 2 (the React v9 theme as we know it; not re-checked against Microsoft's pages): spacing ramp 2, 4, 6, 8, 12, 16, 20, 24, 32 with 8 as the default gap; corner radii 2 / 4 / 8 / 12 (small, medium for every control, xLarge for dialogs, 2xLarge for cards); type ramp 10, 12, 14, 16, 20, 24, 32 (caption 2 to title 1); icon sizes 12, 16, 20; control heights 24 (small), 32 (default), 40 (large); Emphasis weight 600 (semibold) by default. Colors stay Snowy Owl (`Theme`). Not taken from Fluent 2: card shadows (cards are flat on the page color).

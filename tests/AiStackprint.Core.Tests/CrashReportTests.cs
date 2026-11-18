@@ -26,6 +26,16 @@ public sealed class CrashReportTests : IDisposable
     }
 
     [Fact]
+    public void A_crash_entry_carries_its_time_zone_and_older_entries_without_one_are_still_found()
+    {
+        CrashLog.Write("The app closed after this error", new InvalidOperationException("new"), _tmp);
+        var text = File.ReadAllText(Path.Combine(_tmp, "crash.log"));
+        Assert.Matches(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{2}:\d{2} · ", text);
+        File.AppendAllText(Path.Combine(_tmp, "crash.log"), "2026-11-01 10:00:00 · The app closed after this error · v0.1\nSystem.Exception: old\n\n");
+        Assert.Contains("old", CrashReport.LastEntry(_tmp));
+    }
+
+    [Fact]
     public void Home_folder_and_user_name_are_removed()
     {
         var text = @"at Foo() in C:\Users\jdoe\src\a.cs and /home/jdoe/x, also C:/Users/jdoe/y; user JDoe";

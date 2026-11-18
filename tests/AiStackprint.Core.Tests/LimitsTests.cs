@@ -16,6 +16,16 @@ public sealed class LimitsTests : IDisposable
     private static readonly DateTime _now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
 
     [Fact]
+    public void Expired_sign_in_message_says_how_long_ago_and_how_to_renew()
+    {
+        var m = LimitsService.ExpiredMessage("Claude Code", "claude", DateTime.UtcNow.AddHours(-27));
+        Assert.Contains("expired 27 hours ago", m);
+        Assert.Contains("Run `claude` once to renew.", m);
+        Assert.Contains("Open Cursor once to renew.", LimitsService.ExpiredMessage("Cursor", null, DateTime.UtcNow.AddHours(-2)));
+        Assert.Contains("3 days ago", LimitsService.ExpiredMessage("Claude Code", "claude", DateTime.UtcNow.AddDays(-3).AddMinutes(-5)));
+    }
+
+    [Fact]
     public void Claude_reply_windows_plan_and_extra_usage()
     {
         var s = ClaudeLimits.Parse("""
@@ -129,6 +139,21 @@ public sealed class ScanAndHealthTests : IDisposable
         Assert.Contains("InvalidOperationException: boom", text);
         Assert.True(CrashLog.TakeNew(_tmp));
         Assert.False(CrashLog.TakeNew(_tmp));
+    }
+
+    [Fact]
+    public void Scan_diff_saves_its_time_in_UTC_and_gives_it_back_in_local_time_also_from_an_older_file_that_held_local_time()
+    {
+        var file = Path.Combine(_tmp, "last-scan.json");
+        var a = new Item("Skill", "a", "", "App", "User", "/s/a/SKILL.md") { App = "app" };
+        ScanDiff.Update([a], file);
+        Assert.Contains("Z\"", File.ReadAllText(file));   // "2026-11-18T05:00:00.123Z": UTC, no offset to get wrong when the time zone changes
+
+        var older = DateTimeOffset.Now.AddHours(-2);
+        File.WriteAllText(file, $$"""{"Time":"{{older:yyyy-MM-ddTHH:mm:ss.fffzzz}}","Items":[]}""");   // what older versions wrote: local time with its offset
+        var since = ScanDiff.Update([a], file).Since!.Value;
+        Assert.Equal(DateTimeKind.Local, since.Kind);
+        Assert.InRange((older.LocalDateTime - since).TotalSeconds, -1, 1);
     }
 
     [Fact]

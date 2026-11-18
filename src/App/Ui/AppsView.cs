@@ -26,7 +26,7 @@ internal class AppsView(Ctx x)
     {
         _search.TextChanged -= OnSearch; _search.TextChanged += OnSearch;
         Fill();
-        var head = new DockPanel();
+        var head = Head();
         var btns = Row(Btn("Open apps.json", () => PathUtil.OpenFolder(Path.GetDirectoryName(AppCatalog.UserFile)!), false, "document_edit"),
             Btn("Add app", x.AddApp, true, "add"));
         DockPanel.SetDock(btns, Dock.Right);
@@ -100,8 +100,8 @@ internal class AppsView(Ctx x)
         _filters.Content = f;
 
         var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
-        var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Type("Status"), Cols.Count("Plugins"), Cols.Count("Skills"), Cols.Count("Commands"), Cols.Count("Agents"), Cols.Count("Servers"), Cols.Count("Hooks"), Cols.Count("Config files") };
-        _table.Content = Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters.");
+        var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Status(), Cols.Count("Plugins"), Cols.Count("Skills"), Cols.Count("Commands"), Cols.Count("Agents"), Cols.Count("Servers"), Cols.Count("Hooks"), Cols.Count("Config files") };
+        _table.Content = Table.Scrollable(Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters."), Table.MinWidth(cols));
     }
 
     private IEnumerable<TableRow> Rows(List<Models.AppInfo> apps, int cols)
@@ -122,7 +122,7 @@ internal class AppsView(Ctx x)
             var cells = new Control[cols];
             cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
                 _byCat ? Icon(Icons.ForCategory(first.Category), IconSize.S) : new Panel(), Title(name, TextSize.Body),
-                Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)} of {g.Count()} installed", TextSize.Small, false, Muted));
+                Txt(_byStatus ? $"{g.Count()}" : $"{g.Count(a => a.Installed)}", TextSize.Small, false, Muted));   // how many are here, not how many the app could know
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
             for (var c = 1; c < cols; c++)
             {
@@ -146,7 +146,7 @@ internal class AppsView(Ctx x)
 
     private TextBlock Count(string id, string kind, bool installed) => Shown(x.Count(id, kind), installed);
 
-    private static TextBlock Shown(int n, bool installed) => Txt(n == 0 && !installed ? "-" : n.ToString());
+    private static TextBlock Shown(int n, bool installed) => Txt(n == 0 && !installed ? "-" : n.ToString(), TextSize.Body, false, n == 0 ? Muted : Text);   // a zero is quiet, so the numbers that are there stand out
 
     public static string Cap(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
 

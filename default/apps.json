@@ -319,7 +319,7 @@
       "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Command and agent folders are best-effort."
     },
     {
-      "id": "factory-droid", "name": "Factory Droid", "category": "agent",
+      "id": "factory-droid", "name": "Factory Droid", "category": "agent", "logo": "factorydroid",
       "detect": ["~/.factory"],
       "roots": [
         {"path": "~/.factory/skills", "level": "User"}
@@ -351,7 +351,7 @@
       "notes": "Skill paths are best-effort; edit apps.json if yours differ. Log paths are best-effort."
     },
     {
-      "id": "crush", "name": "Crush", "category": "agent",
+      "id": "crush", "name": "Crush", "category": "agent", "logo": "crush",
       "detect": ["~/.config/crush"],
       "roots": [
         {"path": "~/.config/crush/skills", "level": "User"}
@@ -376,7 +376,7 @@
       "notes": "Skill paths are best-effort; edit apps.json if yours differ."
     },
     {
-      "id": "augment", "name": "Augment", "category": "agent",
+      "id": "augment", "name": "Augment Code", "category": "agent", "logo": "augment",
       "detect": ["~/.augment"],
       "roots": [
         {"path": "~/.augment/skills", "level": "User"}
@@ -419,7 +419,7 @@
       "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents."
     },
     {
-      "id": "continue", "name": "Continue", "category": "agent",
+      "id": "continue", "name": "Continue", "category": "agent", "logo": "continue",
       "detect": ["~/.continue"],
       "roots": [
         {"path": "~/.continue/skills", "level": "User"}
@@ -609,8 +609,14 @@
     },
     {
       "id": "warp", "name": "Warp", "category": "editor", "logo": "warp",
-      "detect": ["~/.warp"],
-      "notes": "Uses the shared .agents/skills folders (listed under Shared agents). Detect path is best-effort."
+      "detect": ["~/.warp", "%LOCALAPPDATA%/warp/Warp"],
+      "configs": [
+        {"path": "%LOCALAPPDATA%/warp/Warp/config/settings.toml", "level": "User", "kind": "settings"}
+      ],
+      "logs": [
+        {"path": "%LOCALAPPDATA%/warp/Warp/data/logs", "label": "Logs"}
+      ],
+      "notes": "Uses the shared .agents/skills folders (listed under Shared agents). Detect, settings and log paths are verified on Windows only; the ~/.warp path on macOS and Linux is best-effort."
     },
     {
       "id": "shared-agents", "name": "Shared agents", "category": "shared",
@@ -624,12 +630,12 @@
       "notes": "Cross-tool skills folder used by several agents and skill installers."
     },
     {
-      "id": "t3-code", "name": "T3 Code", "category": "orchestrator",
+      "id": "t3-code", "name": "T3 Code", "category": "orchestrator", "logo": "t3code",
       "detect": ["%T3CODE_HOME%", "%T3CODE_BASE_DIR%", "~/.t3"],
       "notes": "Orchestrator. Uses skills from the agent homes it drives (Claude Code, Codex, OpenCode); its own state lives in ~/.t3."
     },
     {
-      "id": "orca", "name": "Orca", "category": "orchestrator",
+      "id": "orca", "name": "Orca", "category": "orchestrator", "logo": "orca",
       "detect": ["~/.orca", "%APPDATA%/orca", "~/Library/Application Support/orca", "~/.config/orca"],
       "projectRoots": [
         {"path": ".orca/skills", "level": "Project", "layout": "flat-md"}

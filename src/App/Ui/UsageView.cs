@@ -17,7 +17,7 @@ namespace AiStackprint.Ui;
 internal class UsageView(Ctx x)
 {
     private const int TopApps = 4;   // apps with their own color in the chart; the rest are "Other"
-    private static readonly string[] _keys = [Accent, ChartIn, ChartOut, ChartWrite, Muted];
+    private static readonly string[] _keys = [ChartIn, ChartOut, ChartWrite, ChartRead, Muted];   // the four chart series (the first is the accent), then gray for "Other": each app its own color
 
     private int _days = 7;
     private object? _scan;
@@ -31,7 +31,7 @@ internal class UsageView(Ctx x)
     public Control Build()
     {
         if (!ReferenceEquals(_scan, x.S.Items) || _cachedDays != _days) { _scan = x.S.Items; _cachedDays = _days; _last = null; }
-        var head = new DockPanel();
+        var head = Head();
         var pills = Pills([("7 days", "7"), ("30 days", "30")], _days.ToString(), v => { _days = int.Parse(v); x.Refresh(); });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);

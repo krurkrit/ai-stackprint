@@ -40,7 +40,7 @@ public sealed class SettingsStoreTests : IDisposable
         var names = typeof(Settings).GetProperties().Where(p => p.Name != nameof(Settings.Extra)).Select(p => char.ToLowerInvariant(p.Name[0]) + p.Name[1..]);
         Assert.DoesNotContain(names, n => !defaults.ContainsKey(n));
         var d = SettingsStore.Defaults();
-        Assert.Equal(("System", "Inter", 14d, 400, 500, 10, 1), (d.Theme, d.FontFamily, d.FontSize, d.BodyWeight, d.EmphasisWeight, d.FadeSeconds, d.LimitsRefreshMinutes));
+        Assert.Equal(("System", "Inter", 14d, 400, 600, 10, 1), (d.Theme, d.FontFamily, d.FontSize, d.BodyWeight, d.EmphasisWeight, d.FadeSeconds, d.LimitsRefreshMinutes));
         Assert.Null(d.Extra);
     }
 
@@ -122,5 +122,14 @@ public sealed class SettingsStoreTests : IDisposable
         StateStore.Save(new UiState { PanelHeight = 500, UpdateDismissed = "1.0.0" }, file);
         var s = StateStore.Load(file);
         Assert.Equal((500d, "1.0.0"), (s.PanelHeight, s.UpdateDismissed));
+    }
+
+    [Fact]
+    public void Models_ticked_for_the_comparison_are_saved_in_state_json_in_order()
+    {
+        var file = Path.Combine(_dir, StateStore.FileName);
+        StateStore.Save(new UiState { ComparedModels = ["gpt-6", "claude-opus-5-5"] }, file);
+        Assert.Contains("comparedModels", System.IO.File.ReadAllText(file));
+        Assert.Equal(["gpt-6", "claude-opus-5-5"], StateStore.Load(file).ComparedModels);
     }
 }

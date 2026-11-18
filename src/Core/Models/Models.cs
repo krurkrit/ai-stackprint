@@ -150,9 +150,11 @@ public class Settings
     public int MenuWeight { get; set; }
     public bool LogLineNumbers { get; set; }
     public int FadeSeconds { get; set; }
+    public int VirtualListRows { get; set; }
     public int LimitsRefreshMinutes { get; set; }
     public List<string> LimitsEnabled { get; set; } = [];
     public bool CheckUpdates { get; set; }
+    public bool BenchmarksEnabled { get; set; }
     public ThemeColors Light { get; set; } = new();
     public ThemeColors Dark { get; set; } = new();
 
@@ -170,6 +172,10 @@ public class UiState
     public DateTime? ModelDataCheckedUtc { get; set; }  // last model data check, whatever its result
     public string? ModelDataEtag { get; set; }          // GitHub's ETag of the copy in cache/models.json (If-None-Match)
     public string? ModelDataResult { get; set; }        // what the last check found, as shown in Settings
+    public string? BenchmarkKey { get; set; }           // your Artificial Analysis API key: machine-only (state.json is never exported), never shown or logged
+    public DateTime? BenchmarkCheckedUtc { get; set; }  // last benchmark download, whatever its result
+    public string? BenchmarkResult { get; set; }        // what it found, as shown in Settings
+    public List<string> ComparedModels { get; set; } = [];   // models ticked for the radar on the Models page, in the order picked
 }
 
 /// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>
@@ -192,7 +198,10 @@ public class AppState
     public List<Item> Items { get; set; } = [];
     public List<AppInfo> Apps { get; set; } = [];
     public Services.ScanChanges Changes { get; set; } = new([], null);   // since the scan before this one (saved between runs)
-    public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan
+    public List<Services.HealthIssue> Health { get; set; } = [];                 // checks of the last scan, except the projects' (they follow the scan: see ProjectHealth)
+    public List<Services.HealthIssue>? ProjectHealth { get; set; }               // the projects' checks of the last scan; null until they are done (they run after the dashboard shows)
+    public bool HealthReady => ProjectHealth != null;
+    public IEnumerable<Services.HealthIssue> AllHealth => ProjectHealth == null ? Health : Health.Concat(ProjectHealth);
     public List<Services.McpServer> Mcp { get; set; } = [];                      // MCP and LSP servers in the config files and plugins of the last scan
     public List<Services.Hook> Hooks { get; set; } = [];                         // hooks in the settings and hook files and plugins of the last scan
 

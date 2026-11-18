@@ -32,12 +32,17 @@ public static partial class ProjectChecks
     private static void Nested(string project, List<(AppDefinition App, ContextReport Report)> context, IReadOnlyList<AppDefinition> defs, string home, List<ProjectIssue> issues)
     {
         var seen = context.SelectMany(c => c.Report.Findings.Select(f => (c.App.Id, f.Text))).ToHashSet();
-        foreach (var folder in StartFolders(project, defs))
+        var folders = StartFolders(project, defs);
+        // Every folder is read for every app (files only, nothing shared), so the folders are read side by side; "reported once, for the first folder that has it" is decided after, in order
+        var reads = folders.AsParallel().AsOrdered().Select(folder => context.Select(c => ContextBudget.Find(c.App.Context)!.Read(project, folder, home)).ToList()).ToList();
+        for (var i = 0; i < folders.Count; i++)
         {
+            var folder = folders[i];
             var rel = Path.GetRelativePath(project, folder).Replace('\\', '/');
-            foreach (var (app, _) in context)
+            for (var a = 0; a < context.Count; a++)
             {
-                var r = ContextBudget.Find(app.Context)!.Read(project, folder, home);
+                var app = context[a].App;
+                var r = reads[i][a];
                 foreach (var f in r.Findings.Where(f => seen.Add((app.Id, f.Text))))
                 {
                     issues.Add(new([app.Id], folder, new($"When {app.Name} starts in {rel}: {f.Text}", f.Warning)));

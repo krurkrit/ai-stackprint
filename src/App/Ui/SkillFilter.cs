@@ -112,30 +112,41 @@ internal class SkillFilter
     }
 
     /// <summary>The rows, under collapsible heading rows (name and count) when grouped; headings sorted, items keep their order.</summary>
-    public IEnumerable<TableRow> Rows(List<Item> items, Func<Item, TableRow> row, int cols, Action changed)
+    public IEnumerable<TableRow> Rows(List<Item> items, Func<Item, TableRow> row, int cols, Action changed) => RowMakers(items, row, cols, changed).Select(m => m());
+
+    /// <summary>The same rows as makers: a row's controls are built when its maker is called (a long list builds only the rows on screen, see <see cref="Table.Virtual"/>).</summary>
+    public List<Func<TableRow>> RowMakers(List<Item> items, Func<Item, TableRow> row, int cols, Action changed)
     {
-        if (!_byInvoked && !_byFrom) { foreach (var i in items) { yield return row(i); } yield break; }
+        var res = new List<Func<TableRow>>();
+        if (!_byInvoked && !_byFrom)
+        {
+            res.AddRange(items.Select(i => (Func<TableRow>)(() => row(i))));
+            return res;
+        }
+
         string Key(Item i) => _byInvoked && _byFrom ? $"{InvokeLabel(i)} · {AppDetailView.From(i)}" : _byInvoked ? InvokeLabel(i) : AppDetailView.From(i);
         foreach (var g in items.GroupBy(Key).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
         {
-            var open = !_collapsed.Contains(g.Key); var key = g.Key;
-            var cells = new Control[cols];
-            cells[0] = Row(Txt(open ? "▾" : "▸", TextSize.Small, false, Muted), Title(g.Key, TextSize.Body), Txt(g.Count().ToString("N0"), TextSize.Small, false, Muted));
-            Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
-            for (var c = 1; c < cols; c++)
+            var open = !_collapsed.Contains(g.Key); var key = g.Key; var count = g.Count();
+            res.Add(() =>
             {
-                cells[c] = new Panel();
-            }
+                var cells = new Control[cols];
+                cells[0] = Row(Txt(open ? "▾" : "▸", TextSize.Small, false, Muted), Title(key, TextSize.Body), Txt(count.ToString("N0"), TextSize.Small, false, Muted));
+                Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
+                for (var c = 1; c < cols; c++)
+                {
+                    cells[c] = new Panel();
+                }
 
-            yield return new TableRow(cells, () => { if (!_collapsed.Remove(key)) { _collapsed.Add(key); } changed(); });
+                return new TableRow(cells, () => { if (!_collapsed.Remove(key)) { _collapsed.Add(key); } changed(); });
+            });
             if (open)
             {
-                foreach (var i in g)
-                {
-                    yield return row(i);
-                }
+                res.AddRange(g.Select(i => (Func<TableRow>)(() => row(i))));
             }
         }
+
+        return res;
     }
 
     private static string InvokeLabel(Item i) => SkillMatch.Label(i);

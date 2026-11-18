@@ -27,7 +27,7 @@ public sealed class ImportRefusedException(string message) : Exception(message);
 public static partial class DataImport
 {
     /// <summary>Settings that turn on network calls: always left as they are here.</summary>
-    public static readonly string[] Consents = ["limitsEnabled", "checkUpdates"];
+    public static readonly string[] Consents = ["limitsEnabled", "checkUpdates", "benchmarksEnabled"];
 
     public static ImportPlan Plan(string json, DataFiles f, JsonObject? modelSource = null)
     {

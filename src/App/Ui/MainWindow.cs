@@ -50,6 +50,7 @@ internal partial class MainWindow : Window
         }
 
         _s.Settings = SettingsStore.Load();   // first: it hands values older versions kept there to state.json
+        Table.VirtualFrom = _s.Settings.VirtualListRows;
         _s.State = StateStore.Load();
         LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
@@ -81,7 +82,7 @@ internal partial class MainWindow : Window
         _status = status;   // the first scan: the dashboard's controls, each card with the loading icon
         Keys();
         Limits();
-        // Plain text blocks cannot be selected: right-click copies the block's text (one shared menu, no per-block cost)
+        // Right-click on any text copies it (the selection, or the whole block): also for text in buttons and clickable rows, where a drag cannot select (one shared menu, no per-block cost)
         AddHandler(PointerReleasedEvent, CopyMenu, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         ActualThemeVariantChanged += (_, _) => RefreshNav();   // OS theme change or sun/moon click
         Opened += (_, _) => { _perfOpened = System.Diagnostics.Stopwatch.GetTimestamp(); _s.Use(AppCatalog.Read()); Scan(); };
@@ -89,13 +90,15 @@ internal partial class MainWindow : Window
 
     private void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
     {
-        if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Right || e.Source is not TextBlock { Text.Length: > 0 } tb || tb is SelectableTextBlock)
+        if (e.InitialPressMouseButton != Avalonia.Input.MouseButton.Right || e.Source is not TextBlock { Text.Length: > 0 } tb)
         {
             return;
         }
 
-        var item = new MenuItem { Header = "Copy" };
-        item.Click += (_, _) => Toast.Copy(this, tb.Text, "Text");
+        // Selected text copies just the selection; otherwise the block's whole text
+        var chosen = tb is SelectableTextBlock { SelectedText.Length: > 0 } sel ? sel.SelectedText : tb.Text;
+        var item = new MenuItem { Header = tb is SelectableTextBlock { SelectedText.Length: > 0 } ? "Copy selection" : "Copy" };
+        item.Click += (_, _) => Toast.Copy(this, chosen, "Text");
         new ContextMenu { Items = { item } }.Open(tb);
         e.Handled = true;
     }
@@ -217,7 +220,7 @@ internal partial class MainWindow : Window
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));
         nav.Children.Add(Go("brain_circuit", "Models", "Models"));
         nav.Children.Add(Go("document_text", "Logs", "Logs"));
-        var warnings = _s.Health.Count(h => h.Finding.Warning);
+        var warnings = _s.HealthReady ? _s.AllHealth.Count(h => h.Finding.Warning) : 0;   // no count until the projects are checked: it would be too low
         nav.Children.Add(Go("heart_pulse", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
         nav.Children.Add(Section("PROJECTS"));
         foreach (var p in _s.Projects)

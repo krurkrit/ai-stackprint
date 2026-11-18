@@ -2,11 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
-using Avalonia.Layout;
-using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
@@ -14,7 +10,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// The one loading indicator: a turning arc in the accent color. <see cref="Loading"/> shows at once (pass delayed: true to wait 300 ms for quick work).
+/// The one loading indicator: a ring of dots with a running head (<see cref="DotsLoader"/>), in the accent color. <see cref="Loading"/> shows at once (pass delayed: true to wait 300 ms for quick work).
 /// It turns only while on screen.
 /// </summary>
 internal static class Busy
@@ -23,50 +19,9 @@ internal static class Busy
     public const string Class = "busy";
 
     private const int DelayMs = 300;
-    private const double ArcWidth = 2.5;   // spinner line, in the 24-unit icon box (scales with the spinner)
 
-    private static readonly Animation _turn = new()
-    {
-        Duration = TimeSpan.FromSeconds(0.9),
-        Children =
-        {
-            new KeyFrame { Cue = new Cue(0), Setters = { new Setter(RotateTransform.AngleProperty, 0d) } },
-            new KeyFrame { Cue = new Cue(1), Setters = { new Setter(RotateTransform.AngleProperty, 360d) } }
-        }
-    };
-
-    /// <summary>Looping animations cannot use RunAsync, so one turn is run again until the spinner leaves the screen.</summary>
-    private static async Task Spin(Animatable v, CancellationTokenSource cts)
-    {
-        try
-        {
-            while (!cts.IsCancellationRequested)
-            {
-                await _turn.RunAsync(v, cts.Token);
-            }
-        }
-        catch (OperationCanceledException) { }
-        finally { cts.Dispose(); }   // the loop owns its source: done only after the last turn stopped
-    }
-
-    public static Control Spinner(double size = IconSize.S, string key = Accent)
-    {
-        var arc = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse("M12,3 A9,9 0 1 1 3,12"), StrokeThickness = ArcWidth, StrokeLineCap = PenLineCap.Round }
-            .Themed(Avalonia.Controls.Shapes.Shape.StrokeProperty, key);
-        var v = new Viewbox
-        {
-            Width = Size(size),
-            Height = Size(size),
-            Child = new Canvas { Width = Sizes.IconBox, Height = Sizes.IconBox, Children = { arc } },
-            RenderTransform = new RotateTransform(),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        v.Classes.Add(Class);
-        CancellationTokenSource? cts = null;
-        v.AttachedToVisualTree += (_, _) => { cts?.Cancel(); cts = new(); _ = Spin(v, cts); };
-        v.DetachedFromVisualTree += (_, _) => { cts?.Cancel(); cts = null; };   // Spin disposes it
-        return v;
-    }
+    /// <summary>The small loading icon beside text and in cards: a <see cref="DotsLoader"/> of <paramref name="size"/>, in the accent color or <paramref name="key"/>.</summary>
+    public static Control Spinner(double size = IconSize.S, string key = Accent) => new DotsLoader(Size(size), key);
 
     /// <summary>Spinner with a muted label, shown at once (<paramref name="delayed"/>: only after 300 ms, for work that is usually quick).</summary>
     public static Control Loading(string text = "Loading…", double size = IconSize.M, bool delayed = false)

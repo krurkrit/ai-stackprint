@@ -26,7 +26,7 @@ internal class LibraryView(Ctx x, string kind)
 
     public Control Build()
     {
-        var head = new DockPanel();
+        var head = Head();
         var all = x.S.Items.Where(i => Holds(kind, i)).ToList();
         Control? right = kind switch
         {
