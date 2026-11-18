@@ -4,7 +4,9 @@
 using AiStackprint.Services;
 using AiStackprint.Ui;
 
+using Avalonia;
 using Avalonia.Headless.XUnit;
+using Avalonia.Styling;
 
 using Xunit;
 
@@ -39,5 +41,21 @@ public class ThemeTests
         {
             Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");   // WCAG 1.4.11: chart marks need 3:1
         }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_date_picker_and_focused_inputs_take_the_same_border_colors_as_the_other_inputs_and_corners_follow_the_tokens(bool dark)
+    {
+        var app = Application.Current!;
+        var variant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        object? Get(string key) => app.Resources.TryGetResource(key, variant, out var v) ? v : null;
+        Assert.NotNull(Get("TextControlBorderBrush"));
+        Assert.Equal(Get("TextControlBorderBrush"), Get("CalendarDatePickerBorderBrush"));
+        Assert.Equal(Get("TextControlBorderBrushPointerOver"), Get("CalendarDatePickerBorderBrushPointerOver"));
+        Assert.Equal(Get("TextControlBorderBrushPointerOver"), Get("TextControlBorderBrushFocused"));   // the accent: Fluent UI 2 brand focus
+        Assert.Equal(new CornerRadius(Radius.M), Get("ControlCornerRadius"));
+        Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
     }
 }

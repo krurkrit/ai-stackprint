@@ -196,6 +196,14 @@ internal static partial class Theme
             d["RadioButtonOuterEllipseStroke" + s] = b;
         }
         d["TextControlBorderBrushPointerOver"] = d[W.Accent];
+        d["TextControlBorderBrushFocused"] = d[W.Accent];   // Fluent UI 2: the focused input shows the brand color (with a thicker bottom edge)
+        // The date picker looks like the other inputs: card background, divider-colored border, accent under the pointer
+        d["CalendarDatePickerBackground"] = d[W.Surface];
+        d["CalendarDatePickerBackgroundPointerOver"] = d[W.Surface];
+        d["CalendarDatePickerBackgroundPressed"] = d[W.Surface];
+        d["CalendarDatePickerBorderBrush"] = d[W.BorderKey];
+        d["CalendarDatePickerBorderBrushPointerOver"] = d[W.Accent];
+        d["CalendarDatePickerBorderBrushPressed"] = d[W.Accent];
         d["ComboBoxBorderBrushPointerOver"] = d[W.Accent];
         d["ComboBoxBorderBrushPressed"] = d[W.Accent];
         // Fluent accent buttons default to white text; Snowy Owl pairs each accent with its own text color.

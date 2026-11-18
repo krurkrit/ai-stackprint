@@ -27,7 +27,7 @@ internal static partial class Dialogs
         Window? w = null;
         var key = new TextBox { Text = name ?? "", PlaceholderText = "Model name as the app logs it, e.g. my-model", Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
         var boxes = new Dictionary<string, Func<string?>>();   // each field's way to read what is entered (a text box, or a date picker)
-        var grid = new Grid { ColumnDefinitions = new($"{Widths.Label},*,Auto"), ColumnSpacing = Space.L, RowSpacing = Space.S };
+        var grid = new Grid { ColumnDefinitions = new($"{Widths.Label},*,Auto"), ColumnSpacing = Space.L, RowSpacing = Space.M };
         var r = 0;
         void Add(Control label, Control box, Control? after = null)
         {
