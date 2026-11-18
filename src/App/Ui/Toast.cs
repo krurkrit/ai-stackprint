@@ -27,6 +27,7 @@ internal static class Toast
         var t = new Border
         {
             CornerRadius = new CornerRadius(Radius.L),
+            BoxShadow = Theme.PopupShadow(Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark),
             BorderThickness = new Thickness(Stroke.Thin),
             Padding = new Thickness(Space.XL, Space.L),
             HorizontalAlignment = HorizontalAlignment.Right,

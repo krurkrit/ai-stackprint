@@ -14,14 +14,8 @@ internal static partial class Dialogs
 {
     private static Window Shell(string title, Control body, params Button[] buttons)
     {
-        var w = new Window { Title = title, Width = Widths.DialogM, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right };
-        foreach (var b in buttons)
-        {
-            bar.Children.Add(b);
-        }
-
-        w.Content = new StackPanel { Margin = new Thickness(Space.XXL), Spacing = Space.XL, Children = { Txt(title, TextSize.Title, true), body, bar } };
+        var w = new Window();
+        Chrome(w, title, body, Widths.DialogM, buttons);
         return w;
     }
 

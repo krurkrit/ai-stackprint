@@ -79,7 +79,7 @@ internal static partial class Dialogs
 
         var go = Btn("Import (backup first)", () => { done(moved); w!.Close(true); }, true);
         w = Shell("Import", body, Btn("Cancel", () => { done(null); w!.Close(false); }).With(b => b.IsCancel = true), go);
-        w.Width = Widths.DialogL;
+        w.Width = OuterWidth(Widths.DialogL);
         return w;
     }
 

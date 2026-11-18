@@ -118,3 +118,8 @@ Built in `W` (`Widgets*.cs`); use these instead of building the same thing again
 ### Fluent UI 2
 
 The scales follow Fluent UI 2 (the React v9 theme as we know it; not re-checked against Microsoft's pages): spacing ramp 2, 4, 6, 8, 12, 16, 20, 24, 32 with 8 as the default gap; corner radii 2 / 4 / 8 / 12 (small, medium for every control, xLarge for dialogs, 2xLarge for cards); type ramp 10, 12, 14, 16, 20, 24, 32 (caption 2 to title 1); icon sizes 12, 16, 20; control heights 24 (small), 32 (default), 40 (large); Emphasis weight 600 (semibold) by default. Colors stay Snowy Owl (`Theme`). Inputs: a card-colored field with a divider-colored 1 px border, the accent under the pointer and when focused (Fluent 2: brand focus), the same for the date picker (`Theme`); a form row gap of 8. Dialogs and the command palette were checked in light and dark theme against the same scales. Not taken from Fluent 2: card shadows (cards are flat on the page color).
+
+## Dialogs and pop-ups
+- A dialog is a floating card, not a framed window (`Dialogs.Chrome`, used by `Shell` and `AddAppDialog`): no system frame, a transparent window with `Sizes.ShadowRoom` of room for the shadow, a 12 px card (`Radius.XL`) with a 1 px border and the elevation-64 shadow (`Theme.DialogShadow`), the title at `TextSize.Title` with a close button on the right, the body, then the buttons at the bottom right (secondary first, primary last). The card is dragged by its title; Esc and the close button close with `false`. A dialog's outer width is `Dialogs.OuterWidth(card)`.
+- Pop-ups that float over the page (the command palette, toasts) have the elevation-16 shadow (`Theme.PopupShadow`); menus, drop-downs and fly-outs take their corners (8) and shadow from Fluent (`OverlayCornerRadius`).
+

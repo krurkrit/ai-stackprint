@@ -86,6 +86,7 @@ internal static class Sizes
     public const double LogoXL = 56;           // app or project logo beside a page title
     public const double IconBox = 24;          // coordinate box icon paths are drawn in
     public const double Swatch = 28;           // color swatch buttons
+    public const double ShadowRoom = 24;       // transparent room around a dialog card for its shadow
     public const double Splitter = 6;          // drag handle between resizable panes
     public const double LabelColumn = 170;     // name column of dashboard bars
     public const double NumberColumn = 48;     // count column of dashboard bars

@@ -47,6 +47,7 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, TopOffset, 0, 0),
             CornerRadius = new CornerRadius(Radius.XL),
+            BoxShadow = Theme.PopupShadow(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark),
             BorderThickness = new Thickness(Stroke.Thin),
             Padding = new Thickness(Space.L),
             Child = new DockPanel { Children = { _box.Free().With(b => { DockPanel.SetDock(b, Dock.Top); b.Margin = new Thickness(0, 0, 0, Space.L); }), new ScrollViewer { Content = _list.Free() } } }

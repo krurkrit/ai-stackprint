@@ -3,10 +3,7 @@
 
 using AiStackprint.Models;
 using AiStackprint.Services;
-
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 
 using static AiStackprint.Ui.W;
@@ -24,7 +21,6 @@ internal class AddAppDialog : Window
 
     public AddAppDialog()
     {
-        Title = "Add app"; Width = Widths.DialogM; SizeToContent = SizeToContent.Height; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var browse = Btn("Browse...", async () =>
         {
             var r = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "App config folder" });
@@ -35,21 +31,19 @@ internal class AddAppDialog : Window
         });
         var ok = Btn("Save", Save, true);
         ok.IsDefault = true;
-        Content = new StackPanel
+        var body = new StackPanel
         {
-            Margin = new Thickness(Space.XXL),
             Spacing = Space.L,
             Children =
             {
-                Txt("Add an app to scan", TextSize.Title, true), _name, _cat,
+                _name, _cat,
                 new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = Space.M, Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) } },
                 _proj,
                 _refused,
-                Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted),
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right,
-                    Children = { Btn("Cancel", () => Close(null)), ok } }
+                Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted)
             }
         };
+        Dialogs.Chrome(this, "Add an app to scan", body, Widths.DialogM, Btn("Cancel", () => Close(null)).With(b => b.IsCancel = true), ok);
     }
 
     private void Save()

@@ -112,6 +112,16 @@ internal static partial class Theme
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }
 
+    /// <summary>The shadow of a dialog card (Fluent UI 2 elevation 64: a soft close shadow and a deep wide one); stronger on the dark theme.</summary>
+    public static Avalonia.Media.BoxShadows DialogShadow(bool dark) => new(
+        new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 0, Blur = 8, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x66 : (byte)0x33, 0, 0, 0) },
+        [new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 32, Blur = 64, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x80 : (byte)0x3D, 0, 0, 0) }]);
+
+    /// <summary>The shadow of a pop-up that floats over the page (Fluent UI 2 elevation 16): the command palette and toasts.</summary>
+    public static Avalonia.Media.BoxShadows PopupShadow(bool dark) => new(
+        new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 0, Blur = 2, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x66 : (byte)0x1F, 0, 0, 0) },
+        [new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 8, Blur = 16, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x80 : (byte)0x24, 0, 0, 0) }]);
+
     private static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
 
     /// <summary>Parses #RRGGBB / #AARRGGBB; null when empty or invalid.</summary>

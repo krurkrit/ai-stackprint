@@ -179,7 +179,32 @@
       "logs": [
         {"path": "~/.gemini/tmp", "label": "Sessions", "pattern": "*.json", "depth": 3}
       ],
-      "notes": "Skill paths are best-effort; edit apps.json if yours differ. Log paths are best-effort."
+      "notes": "Deprecated: on 2026-05-19 Google announced that Antigravity CLI replaces Gemini CLI, with the shutdown planned for 2026-06-18 (see Antigravity CLI; both share ~/.gemini). Skill paths are best-effort; edit apps.json if yours differ. Log paths are best-effort."
+    },
+    {
+      "id": "antigravity-cli", "name": "Antigravity CLI", "category": "agent", "logo": "antigravity",
+      "detect": ["~/.gemini/antigravity-cli", "~/.gemini/config", "%APPDATA%/Antigravity/bin"],
+      "roots": [
+        {"path": "~/.gemini/config/skills", "level": "User", "label": "Global"},
+        {"path": "~/.gemini/antigravity-cli/skills", "level": "User", "label": "Global"},
+        {"path": "~/.gemini/skills", "level": "User", "label": "Global"}
+      ],
+      "projectRoots": [
+        {"path": ".agents/skills", "level": "Project", "label": "Workspace"}
+      ],
+      "configs": [
+        {"path": "~/.gemini/GEMINI.md", "level": "User", "kind": "instructions", "label": "Global"},
+        {"path": "GEMINI.md", "level": "Project", "kind": "instructions", "nested": true, "label": "Workspace"},
+        {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Workspace"},
+        {"path": "~/.gemini/antigravity-cli/settings.json", "level": "User", "kind": "settings"},
+        {"path": "~/.gemini/config/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"},
+        {"path": ".agents/mcp_config.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
+      ],
+      "logs": [
+        {"path": "~/.gemini/antigravity-cli/brain", "label": "Conversations", "pattern": "transcript.jsonl", "depth": 4},
+        {"path": "~/.gemini/antigravity/brain", "label": "Conversations (app)", "pattern": "transcript.jsonl", "depth": 4}
+      ],
+      "notes": "Replaces Gemini CLI (command: agy). Detected by its own folder (~/.gemini/antigravity-cli), by the shared config folder (~/.gemini/config), or by the folder of the agy launcher the Antigravity app installs (%APPDATA%/Antigravity/bin on Windows): the app and the CLI share these, so the app alone can show it as installed. Paths are from Google's Antigravity CLI docs (settings, skills, MCP, instructions) and are best-effort. A conversation log is the transcript.jsonl of each conversation; its fields are not documented, so it is shown as text and no token usage is read. Hooks (hooks.json) and plugins are not listed yet. The CLI's /usage command shows your quota."
     },
     {
       "id": "windsurf", "context": "windsurf", "name": "Windsurf", "category": "editor", "logo": "windsurf",
