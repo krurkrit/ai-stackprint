@@ -12,17 +12,26 @@ internal class CodexSessionParser : ILogParser
 
     public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0, peak = 0, window = 0;
+        var list = new List<LogEntry>();
+        var models = new HashSet<string>();
+        long inTok = 0, outTok = 0, peak = 0, window = 0;
         foreach (var e in LogParsers.Json(lines))
         {
-            var p = e.Get("payload"); var time = e.Time();
+            var p = e.Get("payload");
+            var time = e.Time();
             switch (e.Str("type"))
             {
-                case "turn_context" when p.Str("model") != "": models.Add(p.Str("model")); break;
+                case "turn_context" when p.Str("model") != "":
+                    models.Add(p.Str("model"));
+                    break;
                 case "event_msg" when p.Str("type") == "token_count":
                     var info = p.Get("info");
                     var total = info.Get("total_token_usage");   // cumulative: keep the latest
-                    if (total.ValueKind == JsonValueKind.Object) { inTok = total.Num("input_tokens"); outTok = total.Num("output_tokens"); }
+                    if (total.ValueKind == JsonValueKind.Object)
+                    {
+                        inTok = total.Num("input_tokens");
+                        outTok = total.Num("output_tokens");
+                    }
                     peak = Math.Max(peak, info.Get("last_token_usage").Num("input_tokens"));   // one reply's input, cached part included
                     window = info.Num("model_context_window") is > 0 and var w ? w : window;
                     break;
@@ -47,7 +56,9 @@ internal class CodexSessionParser : ILogParser
                             }
 
                             break;
-                        case "function_call": list.Add(LogParsers.ToolCall(p.Str("name"), p.Get("arguments"), time, false)); break;
+                        case "function_call":
+                            list.Add(LogParsers.ToolCall(p.Str("name"), p.Get("arguments"), time, false));
+                            break;
                         case "custom_tool_call":
                             list.Add(new("tool", LogParsers.Cut(p.Str("input"), 300), time, false, p.Str("name"), p.Str("name") == "apply_patch" ? ".diff" : ".txt", p.Str("input")));
                             break;
@@ -66,8 +77,10 @@ internal class CodexSessionParser : ILogParser
     /// <summary>The steps <see cref="Parse"/> would make, only counted: tool output is not copied or checked. Codex has no sub-agent steps.</summary>
     public SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        int prompts = 0, calls = 0; long inTok = 0, outTok = 0;
-        var models = new HashSet<string>(); var tools = new Dictionary<string, int>();
+        int prompts = 0, calls = 0;
+        long inTok = 0, outTok = 0;
+        var models = new HashSet<string>();
+        var tools = new Dictionary<string, int>();
         foreach (var e in LogParsers.Json(lines))
         {
             var p = e.Get("payload");
@@ -77,7 +90,8 @@ internal class CodexSessionParser : ILogParser
             }
             else if (e.Is("type", "event_msg") && p.Is("type", "token_count") && p.Get("info").Get("total_token_usage") is { ValueKind: JsonValueKind.Object } total)
             {
-                inTok = total.Num("input_tokens"); outTok = total.Num("output_tokens");
+                inTok = total.Num("input_tokens");
+                outTok = total.Num("output_tokens");
             }
             else if (e.Is("type", "response_item") && p.Is("type", "message") && p.Str("role") is not ("assistant" or "developer" or "system"))
             {
@@ -86,7 +100,9 @@ internal class CodexSessionParser : ILogParser
             }
             else if (e.Is("type", "response_item") && (p.Is("type", "function_call") || p.Is("type", "custom_tool_call")))
             {
-                calls++; var name = p.Str("name"); tools[name] = tools.GetValueOrDefault(name) + 1;
+                calls++;
+                var name = p.Str("name");
+                tools[name] = tools.GetValueOrDefault(name) + 1;
             }
         }
         return new(prompts, calls, 0, inTok, outTok, tools, models);
@@ -102,7 +118,9 @@ internal class CodexSessionParser : ILogParser
             var p = e.Get("payload");
             switch (e.Str("type"))
             {
-                case "session_meta": if (p.Str("cwd") != "") { project = LogParsers.ProjectName(p.Str("cwd")); } break;
+                case "session_meta":
+                    if (p.Str("cwd") != "") { project = LogParsers.ProjectName(p.Str("cwd")); }
+                    break;
                 case "turn_context":
                     if (p.Str("model") != "")
                     {
@@ -129,7 +147,11 @@ internal class CodexSessionParser : ILogParser
                     }
 
                     long dIn = i - pIn, dOut = o - pOut, dCache = c - pCache, dReason = r - pReason, dWrite = cw - pWrite;
-                    pIn = i; pOut = o; pCache = c; pReason = r; pWrite = cw;
+                    pIn = i;
+                    pOut = o;
+                    pCache = c;
+                    pReason = r;
+                    pWrite = cw;
                     if (dIn + dOut <= 0)
                     {
                         break;

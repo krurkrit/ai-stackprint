@@ -26,7 +26,9 @@ internal static class TransferSection
             }
         });
 
-    private static async void Export(Ctx x)
+    private static void Export(Ctx x) => Fire.Forget(ExportAsync(x));
+
+    private static async Task ExportAsync(Ctx x)
     {
         (DataParts Parts, bool All)? choice = null;
         await Dialogs.ExportChoice(c => choice = c).ShowDialog<bool>(x.Owner);
@@ -55,9 +57,15 @@ internal static class TransferSection
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Toast.Show("Could not write the export: " + e.Message, "warning", 8); }
     }
 
-    private static async void Import(Ctx x)
+    private static void Import(Ctx x) => Fire.Forget(ImportAsync(x));
+
+    private static async Task ImportAsync(Ctx x)
     {
-        var files = await x.Owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Import", FileTypeFilter = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }] });
+        var files = await x.Owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import",
+            FileTypeFilter = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }]
+        });
         if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path)
         {
             return;
@@ -68,8 +76,16 @@ internal static class TransferSection
         {
             plan = DataImport.Plan(await File.ReadAllTextAsync(path), DataFiles.Mine);
         }
-        catch (ImportRefusedException e) { await Dialogs.Message(x.Owner, "Cannot import", e.Message, warn: true); return; }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { await Dialogs.Message(x.Owner, "Cannot import", e.Message, warn: true); return; }
+        catch (ImportRefusedException e)
+        {
+            await Dialogs.Message(x.Owner, "Cannot import", e.Message, warn: true);
+            return;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            await Dialogs.Message(x.Owner, "Cannot import", e.Message, warn: true);
+            return;
+        }
 
         if (plan.Changes.Count == 0 && plan.MissingProjects.Count == 0)
         {

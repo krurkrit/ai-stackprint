@@ -17,8 +17,8 @@ public sealed record BenchmarkResult(bool Ok, string Message, int Count);
 /// </summary>
 public static class BenchmarkUpdate
 {
-    public const string Host = "artificialanalysis.ai";
-    public const string Site = "https://artificialanalysis.ai";
+    public static readonly string Host = "artificialanalysis.ai";
+    public static readonly string Site = "https://artificialanalysis.ai";
     private const int MaxPages = 10, MaxBytes = 3_000_000;
     /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
     internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(20) };

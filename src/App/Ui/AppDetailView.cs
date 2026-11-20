@@ -57,9 +57,19 @@ internal class AppDetailView(Ctx x)
         var chips = Row(Chip(d.Category),
             installed ? Status("Installed") : Chip("Not found", BorderKey),
             Chip(d.Origin == AppOrigin.Custom ? "Custom app" : "Built-in"));
-        var title = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center, Children = { H1("Apps", "Apps", d.Name), chips } };
+        var title = new StackPanel
+        {
+            Spacing = Space.M,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children = { H1("Apps", "Apps", d.Name), chips }
+        };
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Top };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.M,
+            VerticalAlignment = VerticalAlignment.Top
+        };
         if (info?.Folder is { } folder)
         {
             actions.Children.Add(Btn("Open config folder", () => PathUtil.OpenFolder(folder), false, "folder_open"));
@@ -81,7 +91,11 @@ internal class AppDetailView(Ctx x)
         head.Children.Add(actions);
         head.Children.Add(Row(AppLogo(d.Logo, d.Category, Sizes.LogoXL), title));
 
-        var sp = new StackPanel { Spacing = Space.XL, Children = { head } };
+        var sp = new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { head }
+        };
         if (info?.Folder is { } f)
         {
             sp.Children.Add(Row(Txt("Config folder", TextSize.Small, false, Muted), Mono(f)));
@@ -105,7 +119,11 @@ internal class AppDetailView(Ctx x)
         [
             Txt(i.Name, TextSize.Body, true), LevelCell(i), Txt(i.Description, TextSize.Small), HoldsCell.For(x, i), Mono(i.Path, TextSize.Caption),
             Row(IconBtn("open", "Open file", () => PathUtil.OpenFile(i.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(i.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, i.Path)))
-        ], () => { _preview = _preview == i.Path ? null : i.Path; x.Go("App:" + i.App); }, _preview == i.Path));
+        ], () =>
+        {
+            _preview = _preview == i.Path ? null : i.Path;
+            x.Go("App:" + i.App);
+        }, _preview == i.Path));
         var body = new StackPanel
         {
             Spacing = Space.L,
@@ -145,7 +163,12 @@ internal class AppDetailView(Ctx x)
 
     private Border Skills(AppDefinition d, List<Item> items)
     {
-        if (_skillsApp != d.Id) { _skillsApp = d.Id; _skillFilter.Reset(); _skillQuery = ""; }
+        if (_skillsApp != d.Id)
+        {
+            _skillsApp = d.Id;
+            _skillFilter.Reset();
+            _skillQuery = "";
+        }
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => Levels.Rank(i.Level)).ToList();
         var index = new ItemSearch(skills, ItemAuthor.For(x.S.Items));
         var query = SearchQuery.Empty;
@@ -168,13 +191,30 @@ internal class AppDetailView(Ctx x)
             var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
             query = SearchQuery.Parse(_skillQuery);
             var table = Table.Virtual(cols, _skillFilter.RowMakers([.. index.Find(query).Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match the search or these filters.");
-            body.Content = new StackPanel { Spacing = Space.XL, Children = { filters, table } };
+            body.Content = new StackPanel
+            {
+                Spacing = Space.XL,
+                Children = { filters, table }
+            };
         }
         Fill();
         // The search box stays outside the part Fill replaces, so it keeps the focus while you type
-        var search = SearchBox("Search skills, or author: level: name:").With(b => { b.Text = _skillQuery; b.IsVisible = skills.Count > 0; ToolTip.SetTip(b, ItemBrowser.SearchTip); })
-            .OnPause(q => { _skillQuery = q; Fill(); });
+        var search = SearchBox("Search skills, or author: level: name:").With(b =>
+        {
+            b.Text = _skillQuery;
+            b.IsVisible = skills.Count > 0;
+            ToolTip.SetTip(b, ItemBrowser.SearchTip);
+        })
+            .OnPause(q =>
+            {
+                _skillQuery = q;
+                Fill();
+            });
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();
-        return Section("sparkle", $"Skills · {skills.Count}", new StackPanel { Spacing = Space.XL, Children = { search, body } }, add);
+        return Section("sparkle", $"Skills · {skills.Count}", new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { search, body }
+        }, add);
     }
 }

@@ -24,21 +24,39 @@ internal class LogSummaryCard
     {
         _files = files;
         var range = new ContentControl();
-        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], Days.ToString(), v => { Days = int.Parse(v); Pills(); Refresh(); });
+        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], Days.ToString(), v =>
+        {
+            Days = int.Parse(v);
+            Pills();
+            Refresh();
+        });
         Pills();
         Refresh();
         return Section("data_pie", "Summary", _body.Free(), range);
     }
 
     /// <summary>Leaving the page: stop any calculation and drop the shown result.</summary>
-    public void Release() { _cts?.Cancel(); _cts = null; _body.Content = null; _files = []; _result = false; }
+    public void Release()
+    {
+        _cts?.Cancel();
+        _cts = null;
+        _body.Content = null;
+        _files = [];
+        _result = false;
+    }
 
     private bool _result;   // a result is on screen
 
     /// <summary>Recomputes, e.g. after the watcher saw new files.</summary>
-    public void Update(IReadOnlyList<LogFile> files) { _files = files; Refresh(); }
+    public void Update(IReadOnlyList<LogFile> files)
+    {
+        _files = files;
+        Refresh();
+    }
 
-    private async void Refresh()
+    private void Refresh() => Fire.Forget(RefreshAsync());
+
+    private async Task RefreshAsync()
     {
         _cts?.Cancel();
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
@@ -46,7 +64,8 @@ internal class LogSummaryCard
 #pragma warning restore S2930
         _body.Content ??= Busy.Loading("Calculating the summary…");   // a refresh keeps the last result on screen
 
-        var files = _files; var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
+        var files = _files;
+        var since = Days == 0 ? (DateTime?)null : DateTime.Now.AddDays(-Days);
         try
         {
             var s = await Task.Run(() => LogSummary.Compute(files, since, cts.Token), cts.Token);
@@ -85,7 +104,10 @@ internal class LogSummaryCard
         }
 
         if (s.Errors + s.Warnings > 0 || s.Files > s.Sessions)
-        { Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null); Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null); }
+        {
+            Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null);
+            Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null);
+        }
         if (s.TextCapped)
         {
             Add("Error count covers the newest 50 MB of text logs");
@@ -93,7 +115,9 @@ internal class LogSummaryCard
 
         if (s.Sessions > 0)
         {
-            Add(ReadableLog.Plural(s.Sessions, "session")); Add(ReadableLog.Plural(s.Prompts, "prompt")); Add(ReadableLog.Plural(s.ToolCalls, "tool call"));
+            Add(ReadableLog.Plural(s.Sessions, "session"));
+            Add(ReadableLog.Plural(s.Prompts, "prompt"));
+            Add(ReadableLog.Plural(s.ToolCalls, "tool call"));
             if (s.SubAgentSteps > 0)
             {
                 Add(ReadableLog.Plural(s.SubAgentSteps, "sub-agent step"));
@@ -109,7 +133,11 @@ internal class LogSummaryCard
                 Add(string.Join(", ", s.Models));
             }
         }
-        var sp = new StackPanel { Spacing = Space.S, Children = { w } };
+        var sp = new StackPanel
+        {
+            Spacing = Space.S,
+            Children = { w }
+        };
         if (s.TopTools.Count > 0)
         {
             sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), TextSize.Small, false, Muted));

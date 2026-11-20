@@ -18,7 +18,7 @@ public record LogStats(int Files, long Bytes, DateTime? Newest, DateTime? Oldest
 public static partial class LogSummary
 {
     /// <summary>Plain-text logs are scanned for errors/warnings up to this many bytes in total.</summary>
-    public const long TextBudget = 50L << 20;
+    internal const long TextBudget = 50L << 20;
 
     [GeneratedRegex(@"\b(ERROR|ERR|FATAL|CRITICAL|Exception)\b|level=error|""level"":\s*""error""", RegexOptions.IgnoreCase)]
     private static partial Regex ErrorLine();
@@ -26,7 +26,7 @@ public static partial class LogSummary
     private static partial Regex WarnLine();
 
     /// <summary>Only the newest part of a session file is parsed.</summary>
-    public const int SessionBytes = 8 << 20;
+    internal const int SessionBytes = 8 << 20;
 
     private static readonly ConcurrentDictionary<(string, long, long), SessionCounts> _cache = new();
 
@@ -34,7 +34,9 @@ public static partial class LogSummary
     public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since, CancellationToken ct = default)
     {
         var files = all.Where(f => since == null || f.Modified >= since).ToList();
-        int errors = 0, warnings = 0; var budget = TextBudget; var capped = false;
+        int errors = 0, warnings = 0;
+        var budget = TextBudget;
+        var capped = false;
         if (_cache.Count > 2000)
         {
             _cache.Clear();
@@ -81,7 +83,11 @@ public static partial class LogSummary
     {
         var parsed = files.Select(f => (File: f, Parser: LogParsers.Find(f.Format))).Where(p => p.Parser != null).ToList();
         var totals = new SessionCounts?[parsed.Count];
-        Parallel.For(0, parsed.Count, new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4) }, i =>
+        Parallel.For(0, parsed.Count, new ParallelOptions
+        {
+            CancellationToken = ct,
+            MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4)
+        }, i =>
         {
             var (f, parser) = parsed[i];
             try

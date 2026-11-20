@@ -22,9 +22,27 @@ public sealed class UsageViewTests : IDisposable
     {
         var t = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
         File.WriteAllText(Path.Combine(_tmp, "s.jsonl"), $"{{\"type\":\"assistant\",\"timestamp\":\"{t}\",\"cwd\":\"/w/p\",\"message\":{{\"id\":\"m1\",\"model\":\"x-model\",\"usage\":{{\"input_tokens\":1500,\"output_tokens\":500}},\"content\":[]}}}}\n");
-        var def = new AppDefinition { Id = "demo", Name = "Demo App", Logs = { new LogSource { Path = _tmp, Pattern = "*.jsonl", Format = "claude-session" } } };
-        var s = new AppState { Defs = [def], Apps = [new AppInfo("demo", "Demo App", "agent", null, true, null)] };
-        var w = new Window { Width = 1200, Height = 900 };
+        var def = new AppDefinition
+        {
+            Id = "demo",
+            Name = "Demo App",
+            Logs = { new LogSource
+            {
+                Path = _tmp,
+                Pattern = "*.jsonl",
+                Format = "claude-session"
+            } }
+        };
+        var s = new AppState
+        {
+            Defs = [def],
+            Apps = [new AppInfo("demo", "Demo App", "agent", null, true, null)]
+        };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 900
+        };
         var x = new Ctx(s, w, _ => { }, () => { });
         var view = new UsageView(x);
         w.Content = view.Build();

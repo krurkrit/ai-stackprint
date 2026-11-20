@@ -11,7 +11,10 @@ public record SearchHit(long Line, string Text, int Column, int Length);
 /// <summary>Searches a whole log file line by line (not just the part on screen). Opens it shared so the app can keep writing.</summary>
 public static class LogSearch
 {
-    public const int MaxHits = 1000;
+    private const int DefaultMax = 1000;
+
+    public static int MaxHits => DefaultMax;
+
     private const int Block = 1 << 16;   // characters read at a time
 
     /// <summary>Builds the matcher for the raw file (<see cref="LogQuery"/>); throws ArgumentException for an invalid regex.</summary>
@@ -22,7 +25,7 @@ public static class LogSearch
     /// Lines that match, with the first match in each line. Reads the file in blocks and tests each line in place:
     /// only a matching line becomes a string, so a large file costs a block of memory, not a copy of every line.
     /// </summary>
-    public static List<SearchHit> File(string path, LogQuery pattern, int max = MaxHits, CancellationToken ct = default)
+    public static List<SearchHit> File(string path, LogQuery pattern, int max = DefaultMax, CancellationToken ct = default)
     {
         var hits = new List<SearchHit>();
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -129,7 +132,8 @@ public static class LogSearch
     public static long LinesBefore(string path, long offset)
     {
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        var buf = new byte[64 * 1024]; long count = 0, left = offset;
+        var buf = new byte[64 * 1024];
+        long count = 0, left = offset;
         while (left > 0)
         {
             var n = fs.Read(buf, 0, (int)Math.Min(buf.Length, left));

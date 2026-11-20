@@ -11,11 +11,26 @@ public sealed record FontRole(string Key, string Label, FontLimit Size, FontLimi
 /// <summary>The font settings of the app (Settings › Appearance); the keys are the keys of <see cref="Settings.Fonts"/>.</summary>
 public static class FontRoles
 {
-    public const string Body = "body", Emphasis = "emphasis", Heading = "heading", Menu = "menu", Log = "log";
+    public static readonly string Body = "body", Emphasis = "emphasis", Heading = "heading", Menu = "menu", Log = "log";
 
-    private static readonly FontLimit _text = new() { Min = 12, Max = 18, Step = 1 };
-    private static readonly FontLimit _code = new() { Min = 10, Max = 18, Step = 1 };
-    private static readonly FontLimit _weights = new() { Min = 300, Max = 700, Step = 100 };
+    private static readonly FontLimit _text = new()
+    {
+        Min = 12,
+        Max = 18,
+        Step = 1
+    };
+    private static readonly FontLimit _code = new()
+    {
+        Min = 10,
+        Max = 18,
+        Step = 1
+    };
+    private static readonly FontLimit _weights = new()
+    {
+        Min = 300,
+        Max = 700,
+        Step = 100
+    };
 
     public static IReadOnlyList<FontRole> All { get; } =
     [

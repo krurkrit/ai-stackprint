@@ -29,11 +29,19 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
 
     public void Open()
     {
-        if (IsOpen) { _box.Focus(); return; }
+        if (IsOpen)
+        {
+            _box.Focus();
+            return;
+        }
         if (!_wired)
         {
             _wired = true;
-            _box.TextChanged += (_, _) => { _pick = 0; Filter(); };
+            _box.TextChanged += (_, _) =>
+            {
+                _pick = 0;
+                Filter();
+            };
             _box.KeyDown += Keys;
         }
         _all = Entries();
@@ -50,7 +58,14 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
             BoxShadow = Theme.PopupShadow(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark),
             BorderThickness = new Thickness(Stroke.Thin),
             Padding = new Thickness(Space.L),
-            Child = new DockPanel { Children = { _box.Free().With(b => { DockPanel.SetDock(b, Dock.Top); b.Margin = new Thickness(0, 0, 0, Space.L); }), new ScrollViewer { Content = _list.Free() } } }
+            Child = new DockPanel
+            {
+                Children = { _box.Free().With(b =>
+                {
+                    DockPanel.SetDock(b, Dock.Top);
+                    b.Margin = new Thickness(0, 0, 0, Space.L);
+                }), new ScrollViewer { Content = _list.Free() } }
+            }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         card.PointerPressed += (_, e) => e.Handled = true;   // clicks inside do not close it
         var dim = new Border { Child = card }.Themed(Border.BackgroundProperty, ScrimKey);
@@ -103,7 +118,8 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         _list.Children.Clear();
         for (var i = 0; i < _shown.Count; i++)
         {
-            var en = _shown[i]; var at = i;
+            var en = _shown[i];
+            var at = i;
             var row = new Border
             {
                 CornerRadius = new CornerRadius(Radius.M),
@@ -117,7 +133,11 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
                 row.Themed(Border.BackgroundProperty, Selected);
             }
 
-            row.PointerReleased += (_, _) => { _pick = at; Run(); };
+            row.PointerReleased += (_, _) =>
+            {
+                _pick = at;
+                Run();
+            };
             _list.Children.Add(row);
         }
         if (_shown.Count == 0)
@@ -128,10 +148,28 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
 
     private void Keys(object? s, KeyEventArgs e)
     {
-        if (e.Key == Key.Down) { _pick = Math.Min(_pick + 1, _shown.Count - 1); Filter(); e.Handled = true; }
-        else if (e.Key == Key.Up) { _pick = Math.Max(_pick - 1, 0); Filter(); e.Handled = true; }
-        else if (e.Key == Key.Enter) { Run(); e.Handled = true; }
-        else if (e.Key == Key.Escape) { Close(); e.Handled = true; }
+        if (e.Key == Key.Down)
+        {
+            _pick = Math.Min(_pick + 1, _shown.Count - 1);
+            Filter();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Up)
+        {
+            _pick = Math.Max(_pick - 1, 0);
+            Filter();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter)
+        {
+            Run();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            Close();
+            e.Handled = true;
+        }
     }
 
     private void Run()

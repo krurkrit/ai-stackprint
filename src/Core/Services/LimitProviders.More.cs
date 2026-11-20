@@ -118,7 +118,12 @@ public partial class CursorLimits : ILimitProvider
             return null;
         }
 
-        using var con = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = db, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
+        using var con = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = db,
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false
+        }.ToString());
         con.Open();
         string? Get(string key)
         {
@@ -148,10 +153,16 @@ public partial class CursorLimits : ILimitProvider
     public static LimitSnapshot Parse(string json, DateTime now)
     {
         using var doc = JsonDocument.Parse(json);
-        var windows = new List<LimitWindow>(); DateTime? reset = null; string? plan = null;
+        var windows = new List<LimitWindow>();
+        DateTime? reset = null;
+        string? plan = null;
         void Walk(JsonElement e, string path)
         {
-            if (e.ValueKind == JsonValueKind.Array) { foreach (var v in e.EnumerateArray()) { Walk(v, path); } return; }
+            if (e.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var v in e.EnumerateArray()) { Walk(v, path); }
+                return;
+            }
             if (e.ValueKind != JsonValueKind.Object)
             {
                 return;

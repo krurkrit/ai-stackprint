@@ -17,8 +17,12 @@ namespace AiStackprint.Services;
 /// <param name="upgrades">Step <c>i</c> turns version <c>i + 1</c> into <c>i + 2</c>; <c>current - 1</c> steps.</param>
 public sealed class VersionedJson(string name, int current, params Func<JsonObject, JsonObject>[] upgrades)
 {
-    public const string Key = "version";
-    private static readonly JsonDocumentOptions _read = new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
+    internal const string Key = "version";
+    private static readonly JsonDocumentOptions _read = new()
+    {
+        CommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
     private static readonly JsonSerializerOptions _write = new() { WriteIndented = true };
     private readonly HashSet<string> _newer = new(StringComparer.OrdinalIgnoreCase);
 

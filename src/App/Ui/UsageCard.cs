@@ -33,15 +33,28 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
     public Control Build()
     {
         var range = new ContentControl();
-        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], prefs.Days.ToString(), v => { prefs.Days = int.Parse(v); Pills(); Refresh(); });
+        void Pills() => range.Content = W.Pills([("7 days", "7"), ("30 days", "30"), ("All", "0")], prefs.Days.ToString(), v =>
+        {
+            prefs.Days = int.Parse(v);
+            Pills();
+            Refresh();
+        });
         Pills();
         var card = Section("data_pie", "Usage", _body, range);
-        card.DetachedFromVisualTree += (_, _) => { _cts?.Cancel(); _body.Content = null; _last = null; _live = null; };
+        card.DetachedFromVisualTree += (_, _) =>
+        {
+            _cts?.Cancel();
+            _body.Content = null;
+            _last = null;
+            _live = null;
+        };
         Refresh();
         return card;
     }
 
-    private async void Refresh()
+    private void Refresh() => Fire.Forget(RefreshAsync());
+
+    private async Task RefreshAsync()
     {
         _cts?.Cancel();
 #pragma warning disable S2930 // disposed in the finally below when done or replaced
@@ -52,7 +65,9 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             _body.Content = Busy.Loading("Calculating usage from the logs…");
         }
 
-        var projects = x.S.Projects.ToList(); var d = def; _live = null;
+        var projects = x.S.Projects.ToList();
+        var d = def;
+        _live = null;
         var since = _since = prefs.Days == 0 ? DateTime.MinValue : DateTime.Today.AddDays(1 - prefs.Days);
         try
         {
@@ -72,7 +87,9 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
                 return;
             }
 
-            _last = r; _live = live; _accounts = accounts;
+            _last = r;
+            _live = live;
+            _accounts = accounts;
             Render();
         }
         catch (OperationCanceledException) { }
@@ -95,9 +112,21 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
             return;
         }
 
-        if (_accounts.Count < 2) { _body.Content = Show(_last); return; }
-        var pills = Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v => { prefs.Account = v; Refresh(); });
-        _body.Content = new StackPanel { Spacing = Space.XL, Children = { Row(Txt("Account", TextSize.Small, false, Muted), pills), Show(_last) } };
+        if (_accounts.Count < 2)
+        {
+            _body.Content = Show(_last);
+            return;
+        }
+        var pills = Pills(_accounts.Select(a => (a, a)).Prepend(("All accounts", "")), _accounts.Contains(prefs.Account) ? prefs.Account : "", v =>
+        {
+            prefs.Account = v;
+            Refresh();
+        });
+        _body.Content = new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { Row(Txt("Account", TextSize.Small, false, Muted), pills), Show(_last) }
+        };
     }
 
     private Control Show(UsageResult r)
@@ -110,7 +139,8 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
 
         long inp = b.Sum(v => v.Input), outp = b.Sum(v => v.Output), cw = b.Sum(v => v.CacheWrite), cr = b.Sum(v => v.CacheRead);
         int msgs = b.Sum(v => v.Messages), sub = b.Sum(v => v.SubAgentMessages);
-        var unpriced = new SortedSet<string>(); decimal total = 0;
+        var unpriced = new SortedSet<string>();
+        decimal total = 0;
         foreach (var v in b)
         {
             if (ModelCatalog.Cost(v) is { } c)
@@ -158,9 +188,23 @@ internal partial class UsageCard(Ctx x, AppDefinition def, UsageCard.Prefs prefs
         Tile("Sessions", r.Sessions.ToString("N0"));
         Tile("Messages", msgs.ToString("N0"), sub > 0 ? $"{sub:N0} from sub-agents" : null);
 
-        var metric = Pills([("Tokens", "t"), ("Cost", "c")], cost ? "c" : "t", v => { prefs.Cost = v == "c"; Render(); }).With(m => m.IsVisible = priced);
-        var cache = new CheckBox { Content = "Include cache reads", IsChecked = prefs.CacheReads, IsVisible = !cost && cr > 0, VerticalAlignment = VerticalAlignment.Center };
-        cache.IsCheckedChanged += (_, _) => { prefs.CacheReads = cache.IsChecked == true; Render(); };
+        var metric = Pills([("Tokens", "t"), ("Cost", "c")], cost ? "c" : "t", v =>
+        {
+            prefs.Cost = v == "c";
+            Render();
+        }).With(m => m.IsVisible = priced);
+        var cache = new CheckBox
+        {
+            Content = "Include cache reads",
+            IsChecked = prefs.CacheReads,
+            IsVisible = !cost && cr > 0,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        cache.IsCheckedChanged += (_, _) =>
+        {
+            prefs.CacheReads = cache.IsChecked == true;
+            Render();
+        };
         var chart = Chart(b, cost, priced, reads, writes, out var legend);
 
         var modelRows = b.GroupBy(v => v.Model).Select(g => (Name: g.Key, In: g.Sum(v => v.Input), Out: g.Sum(v => v.Output), CW: g.Sum(v => v.CacheWrite), CR: g.Sum(v => v.CacheRead), Cost: CostOf(g)))

@@ -7,7 +7,7 @@ namespace AiStackprint.Services;
 public static class Contrast
 {
     /// <summary>Snowy Owl's minimum (stricter than WCAG AAA 7:1).</summary>
-    public const double Minimum = 7.1;
+    public static readonly double Minimum = 7.1;
 
     public static double Ratio(uint fg, uint bg)
     {
@@ -36,7 +36,11 @@ public static class Contrast
 
     private static double Luminance(uint c)
     {
-        double Ch(int shift) { var v = ((c >> shift) & 0xFF) / 255.0; return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4); }
+        double Ch(int shift)
+        {
+            var v = ((c >> shift) & 0xFF) / 255.0;
+            return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+        }
         return 0.2126 * Ch(16) + 0.7152 * Ch(8) + 0.0722 * Ch(0);
     }
 }

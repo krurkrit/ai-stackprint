@@ -48,7 +48,13 @@ public static partial class PluginManager
     public static async Task<(int Code, string Output)> Run(List<string> argv, string? cwd)
     {
         var exe = Which(argv[0]) ?? throw new FileNotFoundException($"\"{argv[0]}\" was not found on PATH.");
-        var psi = new ProcessStartInfo(exe) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        var psi = new ProcessStartInfo(exe)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
         foreach (var a in argv.Skip(1))
         {
             psi.ArgumentList.Add(a);
@@ -66,7 +72,11 @@ public static partial class PluginManager
         output.Append(await err.ConfigureAwait(false));
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         try { await p.WaitForExitAsync(cts.Token).ConfigureAwait(false); }
-        catch (OperationCanceledException) { p.Kill(true); return (-1, output + "\nTimed out after 5 minutes."); }
+        catch (OperationCanceledException)
+        {
+            p.Kill(true);
+            return (-1, output + "\nTimed out after 5 minutes.");
+        }
         return (p.ExitCode, output.ToString().Trim());
     }
 

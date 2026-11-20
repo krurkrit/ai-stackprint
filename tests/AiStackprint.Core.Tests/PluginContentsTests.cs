@@ -10,7 +10,11 @@ namespace AiStackprint.Core.Tests;
 
 public sealed class PluginContentsTests : IDisposable
 {
-    private static readonly AppDefinition _app = new() { Id = "app", Name = "App" };
+    private static readonly AppDefinition _app = new()
+    {
+        Id = "app",
+        Name = "App"
+    };
     private readonly string _tmp = Directory.CreateTempSubdirectory("aiparts-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
@@ -62,7 +66,12 @@ public sealed class PluginContentsTests : IDisposable
         Write("p/config/extra.json", """{ "cache": { "command": "npx", "args": ["redis-mcp"] } }""");
         Write("p/.lsp.json", """{ "ts": { "command": "typescript-language-server", "args": ["--stdio"] } }""");
         Write("mcpb/manifest.json", """{ "name": "files", "server": { "type": "node", "mcp_config": { "command": "node", "args": ["${__dirname}/server/index.js"] } } }""");
-        var plugin = new Item("Plugin", "db@market", "", "App", "Project", Path.Combine(_tmp, "p")) { App = "app", Project = "/work", Scope = "disabled" };
+        var plugin = new Item("Plugin", "db@market", "", "App", "Project", Path.Combine(_tmp, "p"))
+        {
+            App = "app",
+            Project = "/work",
+            Scope = "disabled"
+        };
         var bundle = new Item("Plugin", "files", "", "App", "User", Path.Combine(_tmp, "mcpb")) { App = "app" };
 
         var servers = McpServers.FromPlugins([plugin, bundle]).OrderBy(s => s.Name).ToList();

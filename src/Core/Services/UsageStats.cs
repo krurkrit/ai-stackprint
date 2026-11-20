@@ -71,7 +71,9 @@ public static partial class UsageStats
     public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct = default)
     {
         var first = DateOnly.FromDateTime(since);
-        var all = new List<UsageBucket>(); int sessions = 0, withParser = 0; var capped = false;
+        var all = new List<UsageBucket>();
+        int sessions = 0, withParser = 0;
+        var capped = false;
         foreach (var f in files)
         {
             ct.ThrowIfCancellationRequested();
@@ -95,7 +97,11 @@ public static partial class UsageStats
                 }
 
                 var inRange = buckets.Where(b => b.Day >= first).ToList();
-                if (inRange.Count > 0) { sessions++; all.AddRange(inRange); }
+                if (inRange.Count > 0)
+                {
+                    sessions++;
+                    all.AddRange(inRange);
+                }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // vanished or locked
         }
@@ -106,7 +112,8 @@ public static partial class UsageStats
     public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct = default)
     {
         var withParser = files.Where(f => LogParsers.Find(f.Format) != null).ToList();
-        var events = new List<UsageEvent>(); var limits = new List<LimitSample>();
+        var events = new List<UsageEvent>();
+        var limits = new List<LimitSample>();
         foreach (var f in withParser.Where(f => f.Modified >= now.AddDays(-8)))
         {
             ct.ThrowIfCancellationRequested();
@@ -124,7 +131,8 @@ public static partial class UsageStats
         }
         events.Sort((a, b) => a.Time.CompareTo(b.Time));
 
-        DateTime? blockStart = null; var last = DateTime.MinValue;
+        DateTime? blockStart = null;
+        var last = DateTime.MinValue;
         foreach (var e in events)
         {
             if (blockStart == null || e.Time >= blockStart.Value.AddHours(5) || e.Time - last > TimeSpan.FromHours(5))
@@ -195,11 +203,20 @@ public static partial class UsageStats
 
     public static WindowUse Sum(IEnumerable<UsageEvent> events)
     {
-        long tokens = 0, reads = 0; var n = 0; decimal cost = 0; var priced = false;
+        long tokens = 0, reads = 0;
+        var n = 0;
+        decimal cost = 0;
+        var priced = false;
         foreach (var e in events)
         {
-            tokens += e.Input + e.Output + e.CacheWrite; reads += e.CacheRead; n++;
-            if (ModelCatalog.Cost(e) is { } c) { cost += c; priced = true; }
+            tokens += e.Input + e.Output + e.CacheWrite;
+            reads += e.CacheRead;
+            n++;
+            if (ModelCatalog.Cost(e) is { } c)
+            {
+                cost += c;
+                priced = true;
+            }
         }
         return new(tokens, reads, n, priced ? cost : null);
     }

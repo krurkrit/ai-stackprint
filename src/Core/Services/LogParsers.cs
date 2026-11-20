@@ -108,7 +108,11 @@ public static class LogParsers
     {
         if (input.ValueKind == JsonValueKind.String)
         {
-            try { using var d = JsonDocument.Parse(input.GetString()!); return Summary(d.RootElement.Clone()); }
+            try
+            {
+                using var d = JsonDocument.Parse(input.GetString()!);
+                return Summary(d.RootElement.Clone());
+            }
             catch (JsonException) { return Cut(input.GetString()!, 300); }
         }
         foreach (var k in new[] { "command", "cmd", "file_path", "path", "pattern", "url", "query", "description", "prompt" })
@@ -138,7 +142,11 @@ public static class LogParsers
     {
         if (input.ValueKind == JsonValueKind.String)
         {
-            try { using var d = JsonDocument.Parse(input.GetString()!); input = d.RootElement.Clone(); }
+            try
+            {
+                using var d = JsonDocument.Parse(input.GetString()!);
+                input = d.RootElement.Clone();
+            }
             catch (JsonException) { return new("tool", Cut(input.GetString()!, 300), time, sub, name, ".txt", input.GetString()); }
         }
         var shell = _shells.Contains(name.ToLowerInvariant());
@@ -149,7 +157,11 @@ public static class LogParsers
         return new("tool", Summary(input), time, sub, name, shell ? ".sh" : ".json", detail);
     }
 
-    private static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions _pretty = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
     /// <summary>Highlighting hint for tool output: the file type a Read returned, else JSON or diff when the text looks like it.</summary>
     internal static string? Detect(string text, string? fileHint)
@@ -167,7 +179,12 @@ public static class LogParsers
 
         if (t.StartsWith('{') || t.StartsWith('['))
         {
-            try { using var _ = JsonDocument.Parse(t); return ".json"; } catch (JsonException) { }
+            try
+            {
+                using var _ = JsonDocument.Parse(t);
+                return ".json";
+            }
+            catch (JsonException) { }
         }
 
         return null;

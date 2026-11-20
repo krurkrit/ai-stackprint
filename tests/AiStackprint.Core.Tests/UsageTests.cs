@@ -65,7 +65,14 @@ public class UsageTests
         var table = Table(("claude", P(1, 0)), ("claude-opus", P(10, 100, 1, 12)));
         var b = new UsageBucket(new DateOnly(2026, 11, 11), "claude-opus-5-5", "p", 1_000_000, 500_000, 2_000_000, 100_000, 0, 1, 0);
         Assert.Equal(10m + 50m + 2m + 1.2m, ModelCatalog.Cost(b, table));
-        Assert.Equal(1m, ModelCatalog.Cost(b with { Model = "claude-haiku", Input = 1_000_000, Output = 0, CacheRead = 0, CacheWrite = 0 }, table));
+        Assert.Equal(1m, ModelCatalog.Cost(b with
+        {
+            Model = "claude-haiku",
+            Input = 1_000_000,
+            Output = 0,
+            CacheRead = 0,
+            CacheWrite = 0
+        }, table));
         Assert.Null(ModelCatalog.Cost(b with { Model = "other" }, table));
     }
 
@@ -113,7 +120,13 @@ public class UsageTests
     }
 
     private static ModelPrice P(decimal input, decimal output, decimal? cacheRead = null, decimal? cacheWrite = null) =>
-        new() { Input = input, Output = output, CacheRead = cacheRead, CacheWrite = cacheWrite };
+        new()
+        {
+            Input = input,
+            Output = output,
+            CacheRead = cacheRead,
+            CacheWrite = cacheWrite
+        };
 
     private static ModelTable Table(params (string Key, ModelPrice Price)[] models)
     {
@@ -136,7 +149,8 @@ public class UsageTests
             var info = new FileInfo(path);
             var file = new LogFile("claude", "Sessions", path, info.Length, info.LastWriteTime, null, "claude-session");
             var all = UsageStats.Compute([file], DateTime.MinValue, TestContext.Current.CancellationToken);
-            Assert.Equal(1, all.Sessions); Assert.Equal(1, all.Files);
+            Assert.Equal(1, all.Sessions);
+            Assert.Equal(1, all.Files);
             Assert.Equal(1330L, all.Buckets.Where(b => b.Model == "claude-opus-5-5").Sum(b => b.Input + b.Output + b.CacheRead + b.CacheWrite));
             Assert.Equal(2, all.Buckets.Sum(b => b.Messages));
             var future = UsageStats.Compute([file], DateTime.Now.AddDays(2), TestContext.Current.CancellationToken);

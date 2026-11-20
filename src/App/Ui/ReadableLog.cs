@@ -5,9 +5,7 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
@@ -17,7 +15,7 @@ namespace AiStackprint.Ui;
 /// <summary>A parsed session shown as a conversation. Code in replies, tool inputs and tool results is syntax highlighted.</summary>
 internal partial class ReadableLog
 {
-    public const int MaxSteps = 400;
+    internal const int MaxSteps = 400;
     private readonly Dictionary<LogEntry, Control> _controls = [];
     private readonly Dictionary<LogEntry, Panel> _holders = [];   // each step's slot: the fading highlight is laid over it
     private readonly ScrollViewer _scroll = new();
@@ -25,10 +23,14 @@ internal partial class ReadableLog
     public List<LogEntry> Steps { get; }
 
     /// <summary>Steps built when a file opens; earlier ones are built when asked for ("Show earlier steps", a search hit), so a long session opens fast.</summary>
-    public const int FirstSteps = 60;
+    internal const int FirstSteps = 60;
     private const int MoreSteps = 100;
 
-    private readonly StackPanel _list = new() { Spacing = Space.M, Margin = new Thickness(Space.XL) };
+    private readonly StackPanel _list = new()
+    {
+        Spacing = Space.M,
+        Margin = new Thickness(Space.XL)
+    };
     private int _built;           // steps built, counted from the end of Steps
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
@@ -87,7 +89,13 @@ internal partial class ReadableLog
             _controls[e] = step;
             if (e.SubAgent)
             {
-                step = new Border { BorderThickness = new Thickness(Space.XXS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XXXL, 0, 0, 0), Child = step }
+                step = new Border
+                {
+                    BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
+                    Padding = new Thickness(Space.L, 0, 0, 0),
+                    Margin = new Thickness(Space.XXXL, 0, 0, 0),
+                    Child = step
+                }
                     .Themed(Border.BorderBrushProperty, Accent);
             }
 
@@ -156,106 +164,40 @@ internal partial class ReadableLog
 
             var margin = step.Margin;   // the step's own indent (20 px sides, sub-agent indent), so the highlight lines up with it
             // Fill behind the step (text keeps its contrast) and a ring on top (visible on opaque bubbles too)
-            var fill = new Border { CornerRadius = new CornerRadius(Radius.L), Margin = margin, IsHitTestVisible = false }.Themed(Border.BackgroundProperty, HighlightKey);
-            var ring = new Border { CornerRadius = new CornerRadius(Radius.L), Margin = margin, BorderThickness = new Thickness(Stroke.Medium), IsHitTestVisible = false }.Themed(Border.BorderBrushProperty, HighlightRingKey);
+            var fill = new Border
+            {
+                CornerRadius = new CornerRadius(Radius.L),
+                Margin = margin,
+                IsHitTestVisible = false
+            }.Themed(Border.BackgroundProperty, HighlightKey);
+            var ring = new Border
+            {
+                CornerRadius = new CornerRadius(Radius.L),
+                Margin = margin,
+                BorderThickness = new Thickness(Stroke.Medium),
+                IsHitTestVisible = false
+            }.Themed(Border.BorderBrushProperty, HighlightRingKey);
             holder.Children.Insert(0, fill);
             holder.Children.Add(ring);
             foreach (var b in new[] { fill, ring })
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    b.Transitions = [new Avalonia.Animation.DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromSeconds(seconds), Easing = new Avalonia.Animation.Easings.CubicEaseIn() }];
+                    b.Transitions = [new Avalonia.Animation.DoubleTransition
+                    {
+                        Property = Visual.OpacityProperty,
+                        Duration = TimeSpan.FromSeconds(seconds),
+                        Easing = new Avalonia.Animation.Easings.CubicEaseIn()
+                    }];
                     b.Opacity = 0;
                 }, DispatcherPriority.Background);
             }
 
-            DispatcherTimer.RunOnce(() => { holder.Children.Remove(fill); holder.Children.Remove(ring); }, TimeSpan.FromSeconds(seconds + 0.5));
-        }
-    }
-
-    private static WrapPanel Summary(Session s)
-    {
-        var w = new WrapPanel();
-        void Add(string t) => w.Children.Add(LogChip(t));
-        if (s.Models.Count > 0)
-        {
-            Add(string.Join(", ", s.Models));
-        }
-
-        Add(Plural(s.Entries.Count(e => e.Role == "user"), "prompt"));
-        Add(Plural(s.Entries.Count(e => e.Role == "tool"), "tool call"));
-        if (s.Entries.Any(e => e.SubAgent))
-        {
-            Add(Plural(s.Entries.Count(e => e.SubAgent), "sub-agent step"));
-        }
-
-        if (s.InputTokens + s.OutputTokens > 0)
-        {
-            Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
-        }
-
-        if (PeakContext(s) is { } peak)
-        {
-            Add(peak);
-        }
-
-        if (s.Start is { } a && s.End is { } b)
-        {
-            Add($"{a:yyyy-MM-dd HH:mm} – {b:HH:mm} ({((b - a).TotalMinutes < 1 ? $"{(b - a).TotalSeconds:0} s" : $"{(b - a).TotalMinutes:0} min")})");
-        }
-
-        return w;
-    }
-
-    /// <summary>"Peak context 312K of 1M (31%)": the largest request against the window the log states, else the model data's; null when unknown.</summary>
-    internal static string? PeakContext(Session s)
-    {
-        if (s.PeakContext <= 0)
-        {
-            return null;
-        }
-
-        var window = s.ContextWindow > 0 ? s.ContextWindow : s.Models.Select(m => ModelCatalog.Info(m)?.ContextWindow ?? 0).DefaultIfEmpty(0).Max();
-        return window > 0
-            ? $"Peak context {UsageCard.Fmt(s.PeakContext)} of {UsageCard.Fmt(window)} ({100.0 * s.PeakContext / window:0}%)"
-            : $"Peak context {UsageCard.Fmt(s.PeakContext)}";
-    }
-
-    /// <summary>Conversation text in the body font at the Code &amp; logs size (<paramref name="delta"/> px smaller or larger).</summary>
-    private static TextBlock L(string s, bool bold = false, string key = Text, double delta = 0) =>
-        new TextBlock { Text = s, FontSize = Theme.MonoSize + delta, FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.Themed(TextBlock.ForegroundProperty, key);
-
-    private static Border LogChip(string s) =>
-        new Border { CornerRadius = new CornerRadius(Radius.Pill), Padding = new Thickness(Space.L, Space.XS), Child = L(s, true), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, Space.M, Space.M) }
-            .Themed(Border.BackgroundProperty, Subtle);
-
-    public static string Plural(int n, string word) => $"{n:N0} {word}{(n == 1 ? "" : "s")}";
-
-    private static Control Step(LogEntry e) => e.Role switch
-    {
-        "user" => Message("person", "You", e, Selected, mine: true),
-        "assistant" => Message("bot", "Assistant", e, Surface),
-        "tool" => ToolCall(e),
-        "result" => Folded("Result" + (e.Tool != null ? $" · {e.Tool}" : ""), e.Text, e.Lang),
-        "thinking" => Folded("Thinking", e.Text, null, markdown: true),
-        _ => Folded("Context", e.Text, null, markdown: true)
-    };
-
-    /// <param name="mine">Your own message: indented 20 px from the left; the assistant's keeps 20 px free on the right. Both read left to right.</param>
-    private static Border Message(string icon, string who, LogEntry e, string bg, bool mine = false)
-    {
-        var time = L(e.Time?.ToString("HH:mm:ss") ?? "", false, Muted, -1).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-        var head = Row(Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, Accent), L(who, true), time);
-        var body = new StackPanel { Spacing = Space.S, Children = { head } };
-        foreach (var part in ContextBlocks.Split(TextDecode.Strip(e.Text)))
-        {
-            if (part.Label != null) { body.Children.Add(Injected(part)); continue; }
-            foreach (var (text, lang) in Fences(part.Text))
+            DispatcherTimer.RunOnce(() =>
             {
-                body.Children.Add(lang == null ? MarkdownView.Render(text) : Code(text, lang));
-            }
+                holder.Children.Remove(fill);
+                holder.Children.Remove(ring);
+            }, TimeSpan.FromSeconds(seconds + 0.5));
         }
-        return new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.L, Space.L), Child = body, Margin = mine ? new Thickness(Space.XXL, 0, 0, 0) : new Thickness(0, 0, Space.XXL, 0) }
-            .Themed(Border.BackgroundProperty, bg);
     }
 }

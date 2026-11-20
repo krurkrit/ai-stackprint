@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
 
@@ -14,8 +13,18 @@ internal static partial class W
 {
     public static Button Btn(string text, Action a, bool primary = false, string? icon = null)
     {
-        object content = icon == null ? text : Row(Icon(icon, IconSize.S), new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
-        var b = new Button { Content = content, MinHeight = Theme.InputHeight, Padding = new Thickness(Space.XL, 0), VerticalContentAlignment = VerticalAlignment.Center };
+        object content = icon == null ? text : Row(Icon(icon, IconSize.S), new TextBlock
+        {
+            Text = text,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        var b = new Button
+        {
+            Content = content,
+            MinHeight = Theme.InputHeight,
+            Padding = new Thickness(Space.XL, 0),
+            VerticalContentAlignment = VerticalAlignment.Center
+        };
         if (primary)
         {
             b.Classes.Add("accent");
@@ -35,7 +44,14 @@ internal static partial class W
         danger |= icon == "delete";
         // A danger button's icon takes the button's foreground, so the red hover can change it; the others color the icon itself
         var glyph = danger ? Icon(icon, IconSize.S) : Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key);
-        var b = new Button { Content = glyph, Padding = new Thickness(Space.M), Background = Brushes.Transparent, BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
+        var b = new Button
+        {
+            Content = glyph,
+            Padding = new Thickness(Space.M),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
         if (danger)
         {
             b.Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, key);
@@ -71,7 +87,11 @@ internal static partial class W
     public static Control Pills(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
     {
         // Spacing on the panel, not a margin on each button: one line is exactly 32 px, so a label beside it lines up
-        var wrap = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
+        var wrap = new WrapPanel
+        {
+            ItemSpacing = Space.S,
+            LineSpacing = Space.S
+        };
         foreach (var (label, value) in opts)
         {
             // Even padding with the text centered: Fluent's button padding is 1 px larger at the bottom, which put the label above the middle
@@ -98,7 +118,11 @@ internal static partial class W
 
     public static Control Row(params Control[] c)
     {
-        var sp = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M };
+        var sp = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.M
+        };
         foreach (var x in c)
         {
             if (!x.IsSet(Layoutable.VerticalAlignmentProperty))
@@ -115,10 +139,23 @@ internal static partial class W
     /// <summary>Label, then the options; options wrap onto more lines in a narrow window instead of running off the edge.</summary>
     public static Control FilterRow(string label, params Control[] c)
     {
-        var name = Txt(label, TextSize.Small, false, Muted).With(t => { t.Width = Widths.LabelXS; t.VerticalAlignment = VerticalAlignment.Center; });
+        var name = Txt(label, TextSize.Small, false, Muted).With(t =>
+        {
+            t.Width = Widths.LabelXS;
+            t.VerticalAlignment = VerticalAlignment.Center;
+        });
         DockPanel.SetDock(name, Dock.Left);
-        var opts = new WrapPanel { ItemSpacing = Space.M, LineSpacing = Space.XS, VerticalAlignment = VerticalAlignment.Center };
-        foreach (var x in c) { x.VerticalAlignment = VerticalAlignment.Center; opts.Children.Add(x); }
+        var opts = new WrapPanel
+        {
+            ItemSpacing = Space.M,
+            LineSpacing = Space.XS,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        foreach (var x in c)
+        {
+            x.VerticalAlignment = VerticalAlignment.Center;
+            opts.Children.Add(x);
+        }
         return new DockPanel { Children = { name, opts } };
     }
 
@@ -139,78 +176,10 @@ internal static partial class W
     public static TextBox SearchBox(string placeholder, double minHeight = 0) => new TextBox
     {
         PlaceholderText = placeholder,
-        InnerLeftContent = Icon("search", IconSize.S).Themed(TextElement.ForegroundProperty, Muted).With(i => { i.Margin = new Thickness(Space.L, 0, 0, 0); i.VerticalAlignment = VerticalAlignment.Center; })
+        InnerLeftContent = Icon("search", IconSize.S).Themed(TextElement.ForegroundProperty, Muted).With(i =>
+        {
+            i.Margin = new Thickness(Space.L, 0, 0, 0);
+            i.VerticalAlignment = VerticalAlignment.Center;
+        })
     }.With(t => { if (minHeight > 0) { t.MinHeight = minHeight; } });
-
-    /// <summary>
-    /// Calls <paramref name="changed"/> with the text once typing pauses (150 ms), not on every key, and only when the text differs from the
-    /// last one reported (a text set in code, or typed and undone, is no change). Nothing is reported once the box has left the window:
-    /// a late call would rebuild a page that is gone.
-    /// </summary>
-    public static TextBox OnPause(this TextBox box, Action<string> changed)
-    {
-        var last = box.Text ?? "";
-        var wait = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-        wait.Tick += (_, _) => { wait.Stop(); if ((box.Text ?? "") != last) { last = box.Text ?? ""; changed(last); } };
-        box.TextChanged += (_, _) => { wait.Stop(); wait.Start(); };
-        box.DetachedFromVisualTree += (_, _) => wait.Stop();
-        return box;
-    }
-
-    /// <summary>
-    /// One check box per value; <paramref name="off"/> holds the unchecked values (empty = all checked).
-    /// The last checked box cannot be unchecked: none would hide everything.
-    /// </summary>
-    public static Control Checks(IReadOnlyList<(Control Label, string Value)> opts, HashSet<string> off, Action changed)
-    {
-        var wrap = new WrapPanel { ItemSpacing = Space.XL, LineSpacing = Space.S };
-        foreach (var (label, value) in opts)
-        {
-            var cb = new CheckBox { Content = label, IsChecked = !off.Contains(value) };
-            cb.IsCheckedChanged += (_, _) =>
-            {
-                if (cb.IsChecked == true)
-                {
-                    if (!off.Remove(value))
-                    {
-                        return;
-                    }
-                }
-                else if (opts.Count(o => !off.Contains(o.Value)) <= 1) { cb.IsChecked = true; return; }
-                else
-                {
-                    off.Add(value);
-                }
-
-                changed();
-            };
-            wrap.Children.Add(cb);
-        }
-        return wrap;
-    }
-
-    private static int _radioGroups;
-
-    /// <summary>One choice among <paramref name="opts"/> as radio buttons.</summary>
-    public static Control Radios(IEnumerable<(string label, string value)> opts, string current, Action<string> pick)
-    {
-        var wrap = new WrapPanel { ItemSpacing = Space.XL, LineSpacing = Space.S };
-        var group = "r" + ++_radioGroups;
-        var chosen = current;   // follows the clicks: comparing with the first value missed a return to it ("All" after "Agent only")
-        foreach (var (label, value) in opts)
-        {
-            var rb = new RadioButton { Content = label, GroupName = group, IsChecked = value == current };
-            rb.IsCheckedChanged += (_, _) => { if (rb.IsChecked == true && value != chosen) { chosen = value; pick(value); } };
-            wrap.Children.Add(rb);
-        }
-        return wrap;
-    }
-
-    /// <summary>A single check box with a change callback.</summary>
-    public static CheckBox Check(string label, bool on, Action<bool> set)
-    {
-        var cb = new CheckBox { Content = label, IsChecked = on };
-        cb.IsCheckedChanged += (_, _) => set(cb.IsChecked == true);
-        return cb;
-    }
 }

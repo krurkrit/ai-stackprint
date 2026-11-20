@@ -12,7 +12,7 @@ public record AiFolder(string Name, string Path, List<string> Apps, Dictionary<s
 /// <summary>The hidden folders AI apps keep in a project (.claude, .cursor, .github …), taken from the app definitions: which apps use each, what is inside, how big.</summary>
 public static class AiFolders
 {
-    public const int MaxFiles = 2000;
+    internal const int MaxFiles = 2000;
     private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", ".git" };
 
     public static List<AiFolder> List(string project, IEnumerable<AppDefinition> defs, IEnumerable<Item> items)

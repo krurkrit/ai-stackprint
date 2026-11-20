@@ -21,7 +21,11 @@ internal static class Reveal
     public static T Fade<T>(T c) where T : Control
     {
         c.Opacity = 0;
-        c.Transitions = [new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(FadeMs) }];
+        c.Transitions = [new DoubleTransition
+        {
+            Property = Visual.OpacityProperty,
+            Duration = TimeSpan.FromMilliseconds(FadeMs)
+        }];
         void Show() => Dispatcher.UIThread.Post(() => c.Opacity = 1, DispatcherPriority.Background);
         if (c.IsAttachedToVisualTree())
         {

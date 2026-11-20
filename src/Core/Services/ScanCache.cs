@@ -24,10 +24,18 @@ public static class ScanCache
     private static volatile bool _dirty;   // a file was read this run: the saved cache is out of date
 
     /// <summary>The rule ids for this stamp, matched by <paramref name="match"/> only when the file is new or changed.</summary>
-    internal static string[] Rule(FileStamp key, Func<FileStamp, string[]> match) => Rules.GetOrAdd(key, k => { _dirty = true; return match(k); });
+    internal static string[] Rule(FileStamp key, Func<FileStamp, string[]> match) => Rules.GetOrAdd(key, k =>
+    {
+        _dirty = true;
+        return match(k);
+    });
 
     /// <summary>The SHA-256 for this stamp, computed by <paramref name="hash"/> only when the file is new or changed.</summary>
-    internal static string Hash(FileStamp key, Func<FileStamp, string> hash) => Hashes.GetOrAdd(key, k => { _dirty = true; return hash(k); });
+    internal static string Hash(FileStamp key, Func<FileStamp, string> hash) => Hashes.GetOrAdd(key, k =>
+    {
+        _dirty = true;
+        return hash(k);
+    });
 
     public static string File => Path.Combine(DataFolder.Cache, "scan-cache.json");
 
@@ -92,7 +100,10 @@ public static class ScanCache
     {
         lock (_gate)
         {
-            Rules.Clear(); Hashes.Clear(); _loaded = false; _dirty = false;
+            Rules.Clear();
+            Hashes.Clear();
+            _loaded = false;
+            _dirty = false;
         }
     }
 

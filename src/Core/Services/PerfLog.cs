@@ -19,7 +19,7 @@ public sealed record PerfRow(DateTime At, string Version, string Page, long Buil
 /// </summary>
 public static class PerfLog
 {
-    public const string Header = "at,version,page,build_ms,ready_ms,cpu_ms,heap_mb,working_set_mb";
+    internal const string Header = "at,version,page,build_ms,ready_ms,cpu_ms,heap_mb,working_set_mb";
     private static readonly CultureInfo _inv = CultureInfo.InvariantCulture;
 
     public static string File => Path.Combine(DataFolder.Logs, "perf.log");

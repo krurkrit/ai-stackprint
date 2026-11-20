@@ -29,7 +29,11 @@ public class PieChartTests
         Assert.All(Slices(first), p => Assert.Null(p.Data));
 
         Ui.Show(first.View);
-        Ui.WaitUntil(() => { AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return Ui.Texts(first.View).Contains("4"); });
+        Ui.WaitUntil(() =>
+        {
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            return Ui.Texts(first.View).Contains("4");
+        });
         Assert.All(Slices(first), p => Assert.NotNull(p.Data));
 
         var again = new PieChart(id, _values, 4, "installed");   // a refresh with the same numbers
@@ -43,9 +47,17 @@ public class PieChartTests
         var chart = new PieChart(nameof(Highlight_moves_only_that_slice_out_and_back), _values, 4, "installed");
         Ui.Show(chart.View);
         chart.Highlight(W.Accent);
-        Ui.WaitUntil(() => { AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return Moved(chart).SequenceEqual([true, false]); });   // eases out
+        Ui.WaitUntil(() =>
+        {
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            return Moved(chart).SequenceEqual([true, false]);
+        });   // eases out
         chart.Highlight(null);
-        Ui.WaitUntil(() => { AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return Moved(chart).SequenceEqual([false, false]); });
+        Ui.WaitUntil(() =>
+        {
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            return Moved(chart).SequenceEqual([false, false]);
+        });
     }
 
     private static IEnumerable<bool> Moved(PieChart c) =>

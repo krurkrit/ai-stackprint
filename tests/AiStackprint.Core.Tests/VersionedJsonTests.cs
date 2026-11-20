@@ -19,8 +19,16 @@ public sealed class VersionedJsonTests : IDisposable
 
     /// <summary>v1 → v2 renames "theme" to "look"; v2 → v3 moves it into "appearance".</summary>
     private static VersionedJson Format() => new("thing", 3,
-        v1 => { if (v1.Remove("theme", out var t)) { v1["look"] = t; } return v1; },
-        v2 => { if (v2.Remove("look", out var l)) { v2["appearance"] = new JsonObject { ["theme"] = l }; } return v2; });
+        v1 =>
+        {
+            if (v1.Remove("theme", out var t)) { v1["look"] = t; }
+            return v1;
+        },
+        v2 =>
+        {
+            if (v2.Remove("look", out var l)) { v2["appearance"] = new JsonObject { ["theme"] = l }; }
+            return v2;
+        });
 
     [Fact]
     public void An_old_file_is_upgraded_step_by_step_backed_up_and_written_back()
@@ -57,7 +65,11 @@ public sealed class VersionedJsonTests : IDisposable
     public void Write_puts_the_version_first_and_leaves_no_temporary_file()
     {
         var f = Format();
-        f.Write(File, new JsonObject { ["b"] = 2, ["version"] = 1 });
+        f.Write(File, new JsonObject
+        {
+            ["b"] = 2,
+            ["version"] = 1
+        });
         Assert.Equal("""{"version":3,"b":2}""", JsonNode.Parse(System.IO.File.ReadAllText(File))!.ToJsonString());
         Assert.Equal(["thing.json"], Directory.GetFiles(_dir).Select(Path.GetFileName));
     }

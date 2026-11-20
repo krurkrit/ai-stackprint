@@ -26,7 +26,12 @@ internal class ProjectChecksSection(Ctx x)
 
     public Control Build(string project)
     {
-        if (_project != project || !ReferenceEquals(_scan, x.S.Items)) { _project = project; _scan = x.S.Items; _last = null; }
+        if (_project != project || !ReferenceEquals(_scan, x.S.Items))
+        {
+            _project = project;
+            _scan = x.S.Items;
+            _last = null;
+        }
         if (_last != null)
         {
             _host.Content = Show(_last);
@@ -34,7 +39,11 @@ internal class ProjectChecksSection(Ctx x)
         else
         {
             var defs = x.S.Defs.Where(d => x.ShownApps.Any(a => a.Id == d.Id)).ToList();
-            Busy.Into(_host, "Checking AI files…", _ => ProjectChecks.Run(project, project, defs, PathUtil.Home), r => { _last = r; return Show(r); });
+            Busy.Into(_host, "Checking AI files…", _ => ProjectChecks.Run(project, project, defs, PathUtil.Home), r =>
+            {
+                _last = r;
+                return Show(r);
+            });
         }
 
         return Section("warning", "Checks", _host.Free());

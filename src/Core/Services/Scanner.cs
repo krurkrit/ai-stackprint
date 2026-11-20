@@ -12,7 +12,7 @@ public static partial class Scanner
         { "node_modules", ".git", "bin", "obj", ".venv", "venv", "__pycache__" };
 
     /// <summary>How deep "nested" project roots and files are searched below the project folder.</summary>
-    public const int NestedDepth = 3;
+    internal const int NestedDepth = 3;
 
     /// <summary>Levels whose paths are relative to a project folder.</summary>
     public static bool InProject(string level) => level is "Project" or "Local";
@@ -38,7 +38,12 @@ public static partial class Scanner
         // Bundled roots first, so a skill found again by a broader root keeps its bundled flag after de-duplication
         foreach (var r in d.Roots.Where(r => PathUtil.OsMatches(r.Os)).OrderByDescending(r => r.Bundled))
         {
-            Tagged(rows, () => ReadRoot(PathUtil.Expand(r.Path), r, d.Name, rows), i => i with { App = d.Id, LevelLabel = r.Label, Bundled = r.Bundled });
+            Tagged(rows, () => ReadRoot(PathUtil.Expand(r.Path), r, d.Name, rows), i => i with
+            {
+                App = d.Id,
+                LevelLabel = r.Label,
+                Bundled = r.Bundled
+            });
         }
 
         if (d.PluginManifest != null)
@@ -67,7 +72,12 @@ public static partial class Scanner
             {
                 foreach (var path in Candidates(p, r.Path, r.Nested))
                 {
-                    Tagged(rows, () => ReadRoot(path, r, d.Name, rows), i => i with { App = d.Id, Project = p, LevelLabel = r.Label });
+                    Tagged(rows, () => ReadRoot(path, r, d.Name, rows), i => i with
+                    {
+                        App = d.Id,
+                        Project = p,
+                        LevelLabel = r.Label
+                    });
                 }
             }
 
@@ -86,7 +96,11 @@ public static partial class Scanner
 
             foreach (var s in d.Parts.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
             {
-                Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with { App = d.Id, Project = p });
+                Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with
+                {
+                    App = d.Id,
+                    Project = p
+                });
             }
         }
 
@@ -160,6 +174,11 @@ public static partial class Scanner
 
         var kind = c.Kind switch { "settings" => "Settings", "mcp" => "MCP servers", "ignore" => "Ignore", "hooks" => "Hooks", _ => "Instructions" };
         rows.Add(new Item("Config", Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar)), kind, d.Name, c.Level, path)
-        { App = d.Id, Project = project, LevelLabel = c.Label, AppWritten = c.AppWritten });
+        {
+            App = d.Id,
+            Project = project,
+            LevelLabel = c.Label,
+            AppWritten = c.AppWritten
+        });
     }
 }

@@ -31,30 +31,67 @@ public static partial class MarkdownLite
 
     public static List<MdBlock> Blocks(string md)
     {
-        var res = new List<MdBlock>(); var para = new List<string>();
-        void Flush() { if (para.Count > 0) { res.Add(new(MdKind.Paragraph, string.Join("\n", para))); para.Clear(); } }
+        var res = new List<MdBlock>();
+        var para = new List<string>();
+        void Flush()
+        {
+            if (para.Count > 0)
+            {
+                res.Add(new(MdKind.Paragraph, string.Join("\n", para)));
+                para.Clear();
+            }
+        }
         var lines = md.Replace("\r\n", "\n").Split('\n');
         for (var i = 0; i < lines.Length; i++)
         {
-            var l = lines[i]; var t = l.Trim();
-            if (t == "") { Flush(); continue; }
+            var l = lines[i];
+            var t = l.Trim();
+            if (t == "")
+            {
+                Flush();
+                continue;
+            }
             var h = HeadingLine().Match(l);
-            if (h.Success) { Flush(); res.Add(new(MdKind.Heading, h.Groups[2].Value.Trim(), h.Groups[1].Length)); continue; }
-            if (RuleLine().IsMatch(t)) { Flush(); res.Add(new(MdKind.Rule, "")); continue; }
+            if (h.Success)
+            {
+                Flush();
+                res.Add(new(MdKind.Heading, h.Groups[2].Value.Trim(), h.Groups[1].Length));
+                continue;
+            }
+            if (RuleLine().IsMatch(t))
+            {
+                Flush();
+                res.Add(new(MdKind.Rule, ""));
+                continue;
+            }
             if (t.StartsWith('|') && i + 1 < lines.Length && TableSep().IsMatch(lines[i + 1].Trim()))
             {
                 Flush();
                 var rows = new List<List<string>> { Cells(t) };
                 i += 2;
-                while (i < lines.Length && lines[i].Trim().StartsWith('|')) { rows.Add(Cells(lines[i].Trim())); i++; }
+                while (i < lines.Length && lines[i].Trim().StartsWith('|'))
+                {
+                    rows.Add(Cells(lines[i].Trim()));
+                    i++;
+                }
                 i--;
                 res.Add(new(MdKind.Table, "", 0, rows));
                 continue;
             }
             var b = BulletLine().Match(l);
-            if (b.Success) { Flush(); res.Add(new(MdKind.Bullet, b.Groups[3].Value, b.Groups[1].Length / 2)); continue; }
+            if (b.Success)
+            {
+                Flush();
+                res.Add(new(MdKind.Bullet, b.Groups[3].Value, b.Groups[1].Length / 2));
+                continue;
+            }
             var n = NumberLine().Match(l);
-            if (n.Success) { Flush(); res.Add(new(MdKind.Number, n.Groups[3].Value, n.Groups[1].Length / 2, null, n.Groups[2].Value)); continue; }
+            if (n.Success)
+            {
+                Flush();
+                res.Add(new(MdKind.Number, n.Groups[3].Value, n.Groups[1].Length / 2, null, n.Groups[2].Value));
+                continue;
+            }
             if (t.StartsWith('>'))
             {
                 Flush();
@@ -80,7 +117,8 @@ public static partial class MarkdownLite
 
     public static List<MdSpan> Spans(string text)
     {
-        var res = new List<MdSpan>(); var at = 0;
+        var res = new List<MdSpan>();
+        var at = 0;
         foreach (Match m in InlineToken().Matches(text))
         {
             if (m.Index > at)

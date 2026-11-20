@@ -48,16 +48,33 @@ internal static class MarkdownView
                 return Rich(b.Text, b.Level switch { 1 => TextSize.Title, 2 => TextSize.Subtitle, _ => TextSize.Body }, Heading, link).With(t => t.Margin = new Thickness(0, Space.XS, 0, 0));
             case MdKind.Bullet:
             case MdKind.Number:
-                var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = Space.M, Margin = new Thickness(Space.M + Space.XXL * b.Level, 0, 0, 0) };
+                var g = new Grid
+                {
+                    ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+                    ColumnSpacing = Space.M,
+                    Margin = new Thickness(Space.M + Space.XXL * b.Level, 0, 0, 0)
+                };
                 var mark = Txt(b.Kind == MdKind.Bullet ? "•" : b.Num + ".", TextSize.Body, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Top);
-                var body = Rich(b.Text, TextSize.Body, Body, link); Grid.SetColumn(body, 1);
-                g.Children.Add(mark); g.Children.Add(body);
+                var body = Rich(b.Text, TextSize.Body, Body, link);
+                Grid.SetColumn(body, 1);
+                g.Children.Add(mark);
+                g.Children.Add(body);
                 return g;
             case MdKind.Quote:
-                return new Border { BorderThickness = new Thickness(Space.XS, 0, 0, 0), Padding = new Thickness(Space.L, 0, 0, 0), Margin = new Thickness(Space.XS, 0, 0, 0), Child = Rich(b.Text, TextSize.Body, Body, link) }
+                return new Border
+                {
+                    BorderThickness = new Thickness(Space.XS, 0, 0, 0),
+                    Padding = new Thickness(Space.L, 0, 0, 0),
+                    Margin = new Thickness(Space.XS, 0, 0, 0),
+                    Child = Rich(b.Text, TextSize.Body, Body, link)
+                }
                     .Themed(Border.BorderBrushProperty, BorderKey);
             case MdKind.Rule:
-                return new Border { Height = Stroke.Thin, Margin = new Thickness(0, Space.XS) }.Themed(Border.BackgroundProperty, BorderKey);
+                return new Border
+                {
+                    Height = Stroke.Thin,
+                    Margin = new Thickness(0, Space.XS)
+                }.Themed(Border.BackgroundProperty, BorderKey);
             case MdKind.Table when b.Rows is { Count: > 0 } rows:
                 var n = rows.Max(r => r.Count);
                 var cols = Enumerable.Range(0, n).Select(i => new Col(i < rows[0].Count ? Strip(rows[0][i]) : "", "1*")).ToArray();
@@ -72,7 +89,12 @@ internal static class MarkdownView
     /// <summary>Selectable block with bold / italic / code / link runs. Built when shown, so link color follows the theme.</summary>
     private static SelectableTextBlock Rich(string md, double size, FontWeight weight, Action<string>? onLink)
     {
-        var tb = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = Size(size), FontWeight = weight }.Themed(TextBlock.ForegroundProperty, Text);
+        var tb = new SelectableTextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = Size(size),
+            FontWeight = weight
+        }.Themed(TextBlock.ForegroundProperty, Text);
         var built = false;
         tb.AttachedToVisualTree += (_, _) =>
         {
@@ -101,8 +123,17 @@ internal static class MarkdownView
                     run.FontStyle = FontStyle.Italic;
                 }
 
-                if (s.Code) { run.FontFamily = Theme.Mono; run.FontSize = Theme.MonoSize; }
-                if (s.Url != null) { run.TextDecorations = TextDecorations.Underline; if (link != null) { run.Foreground = link; } links.Add((at, text.Length, s.Url)); }
+                if (s.Code)
+                {
+                    run.FontFamily = Theme.Mono;
+                    run.FontSize = Theme.MonoSize;
+                }
+                if (s.Url != null)
+                {
+                    run.TextDecorations = TextDecorations.Underline;
+                    if (link != null) { run.Foreground = link; }
+                    links.Add((at, text.Length, s.Url));
+                }
                 tb.Inlines.Add(run);
                 at += text.Length;
             }
@@ -145,7 +176,11 @@ internal static class MarkdownView
                 return;
             }
 
-            if (At(e) is { } url) { e.Handled = true; onLink(url); }
+            if (At(e) is { } url)
+            {
+                e.Handled = true;
+                onLink(url);
+            }
         }, Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
     }
 }

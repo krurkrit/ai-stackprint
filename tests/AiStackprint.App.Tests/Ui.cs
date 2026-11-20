@@ -21,7 +21,12 @@ internal static class Ui
     /// <summary>Shows a control in a headless window so it is laid out and attached, like on screen.</summary>
     public static Window Show(Control c)
     {
-        var w = new Window { Width = 1200, Height = 800, Content = c };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 800,
+            Content = c
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         return w;

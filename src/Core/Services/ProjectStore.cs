@@ -17,7 +17,7 @@ public sealed record SavedProject(string Path, DateTime Added);
 /// </summary>
 public static class ProjectStore
 {
-    public const string FileName = "projects.json";
+    internal const string FileName = "projects.json";
     private static readonly VersionedJson _format = new("projects", 1);
 
     public static string File => Path.Combine(DataFolder.Root, FileName);
@@ -70,7 +70,11 @@ public static class ProjectStore
             if (!seen.Exists(s => Same(s, p.Path)))
             {
                 seen.Add(p.Path);
-                a.Add(new JsonObject { ["path"] = ToFile(p.Path, home), ["added"] = p.Added.ToUniversalTime() });
+                a.Add(new JsonObject
+                {
+                    ["path"] = ToFile(p.Path, home),
+                    ["added"] = p.Added.ToUniversalTime()
+                });
             }
         }
 

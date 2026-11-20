@@ -15,11 +15,13 @@ namespace AiStackprint.Services;
 internal partial class ClaudeContext : IContextRule
 {
     public string Id => "claude";
-    public const int WarnChars = 40_000, MaxHops = 4, MemoryLines = 200, MemoryBytes = 25 * 1024;
+    internal const int WarnChars = 40_000, MaxHops = 4, MemoryLines = 200, MemoryBytes = 25 * 1024;
 
     public ContextReport Read(string project, string start, string home)
     {
-        var files = new List<ContextFile>(); var findings = new List<Finding>(); var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<ContextFile>();
+        var findings = new List<Finding>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Add(string path, LoadWhen load, string? note = null)
         {
             if (!File.Exists(path) || !seen.Add(Path.GetFullPath(path)))
@@ -109,7 +111,7 @@ internal partial class ClaudeContext : IContextRule
 internal partial class CodexContext : IContextRule
 {
     public string Id => "codex";
-    public const int DefaultMaxBytes = 32 * 1024;
+    internal const int DefaultMaxBytes = 32 * 1024;
     private static readonly string[] _agentsFiles = ["AGENTS.override.md", "AGENTS.md"];   // in this order, per folder
 
     public ContextReport Read(string project, string start, string home)
@@ -119,7 +121,8 @@ internal partial class CodexContext : IContextRule
         var max = MaxBytesSetting().Match(config) is { Success: true } m && long.TryParse(m.Groups[1].Value, out var n) ? n : DefaultMaxBytes;
         var fallbacks = FallbackSetting().Match(config) is { Success: true } f
             ? Quoted().Matches(f.Groups[1].Value).Select(x => x.Groups[1].Value).ToList() : [];
-        var files = new List<ContextFile>(); var findings = new List<Finding>();
+        var files = new List<ContextFile>();
+        var findings = new List<Finding>();
 
         var global = _agentsFiles.Select(n => Path.Combine(codexHome, n)).FirstOrDefault(p => File.Exists(p) && new FileInfo(p).Length > 0);
         if (global != null)
@@ -141,7 +144,11 @@ internal partial class CodexContext : IContextRule
             var left = Math.Max(0, max - used);
             if (cf.Bytes > left)
             {
-                cf = cf with { Kept = left, Note = left == 0 ? "Not loaded: over project_doc_max_bytes" : $"Cut after {left:N0} bytes" };
+                cf = cf with
+                {
+                    Kept = left,
+                    Note = left == 0 ? "Not loaded: over project_doc_max_bytes" : $"Cut after {left:N0} bytes"
+                };
                 findings.Add(new(left == 0 ? $"{Rel(pick, root)} is not loaded: the files before it already use the {max:N0}-byte limit (project_doc_max_bytes)."
                     : $"{Rel(pick, root)} is cut after {left:N0} of {cf.Bytes:N0} bytes: Codex stops at {max:N0} bytes (project_doc_max_bytes) without a warning."));
             }

@@ -84,12 +84,26 @@ public sealed class BenchmarkTests : IDisposable
     private static string Page(int page, bool more, params string[] slugs) =>
         new JsonObject
         {
-            ["pagination"] = new JsonObject { ["page"] = page, ["has_more"] = more },
+            ["pagination"] = new JsonObject
+            {
+                ["page"] = page,
+                ["has_more"] = more
+            },
             ["data"] = new JsonArray([.. slugs.Select(s => (JsonNode)new JsonObject
             {
-                ["slug"] = s, ["name"] = s.ToUpperInvariant(), ["model_creator"] = new JsonObject { ["name"] = "Maker" },
-                ["evaluations"] = new JsonObject { ["artificial_analysis_intelligence_index"] = 42.5, ["artificial_analysis_engineering_index"] = null },
-                ["performance"] = new JsonObject { ["median_output_tokens_per_second"] = 100, ["median_time_to_first_token_seconds"] = 1.5 },
+                ["slug"] = s,
+                ["name"] = s.ToUpperInvariant(),
+                ["model_creator"] = new JsonObject { ["name"] = "Maker" },
+                ["evaluations"] = new JsonObject
+                {
+                    ["artificial_analysis_intelligence_index"] = 42.5,
+                    ["artificial_analysis_engineering_index"] = null
+                },
+                ["performance"] = new JsonObject
+                {
+                    ["median_output_tokens_per_second"] = 100,
+                    ["median_time_to_first_token_seconds"] = 1.5
+                },
                 ["artificial_analysis_intelligence_index_cost"] = new JsonObject { ["cost_per_task"] = new JsonObject { ["total_cost"] = 0.5 } },
             })])
         }.ToJsonString();

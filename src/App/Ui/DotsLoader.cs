@@ -48,7 +48,8 @@ internal sealed class DotsLoader : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        _on = true; _start = null;
+        _on = true;
+        _start = null;
         TopLevel.GetTopLevel(this)?.RequestAnimationFrame(Frame);
     }
 

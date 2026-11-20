@@ -65,8 +65,19 @@ internal static class AgentGraph
                 Grid.SetColumn(c, g.ColumnDefinitions.Count - 1);
                 g.Children.Add(c);
             }
-            static Control Line() => new Border { Height = Stroke.Medium, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Muted);
-            static Control Dotted(HorizontalAlignment h) => new Border { Width = Sizes.Dot, Height = Sizes.Dot, CornerRadius = new CornerRadius(Radius.Pill), HorizontalAlignment = h, VerticalAlignment = VerticalAlignment.Center }.Themed(Border.BackgroundProperty, Text);
+            static Control Line() => new Border
+            {
+                Height = Stroke.Medium,
+                VerticalAlignment = VerticalAlignment.Center
+            }.Themed(Border.BackgroundProperty, Muted);
+            static Control Dotted(HorizontalAlignment h) => new Border
+            {
+                Width = Sizes.Dot,
+                Height = Sizes.Dot,
+                CornerRadius = new CornerRadius(Radius.Pill),
+                HorizontalAlignment = h,
+                VerticalAlignment = VerticalAlignment.Center
+            }.Themed(Border.BackgroundProperty, Text);
             Col(fk, null);
             Col(s - fk, new Grid { Children = { Line(), Dotted(HorizontalAlignment.Left) } });
             Col(e - s, new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, ChartWrite));
@@ -91,15 +102,29 @@ internal static class AgentGraph
             }
         };
         var axis = Row(Txt(t.Start.ToString("HH:mm:ss"), TextSize.Tiny, false, Muted), Txt("→", TextSize.Tiny, false, Muted), Txt(t.End.ToString("HH:mm:ss"), TextSize.Tiny, false, Muted));
-        return Section("flow", "Sub-agents", new StackPanel { Spacing = Space.M, Children = { rows, axis, legend } });
+        return Section("flow", "Sub-agents", new StackPanel
+        {
+            Spacing = Space.M,
+            Children = { rows, axis, legend }
+        });
     }
 
     private static Grid Lane(string label, Control bar)
     {
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*"), ColumnSpacing = Space.M };
-        var t = Txt(label, TextSize.Caption, false, Muted).With(x => { x.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; x.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; x.VerticalAlignment = VerticalAlignment.Center; });
+        var g = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*"),
+            ColumnSpacing = Space.M
+        };
+        var t = Txt(label, TextSize.Caption, false, Muted).With(x =>
+        {
+            x.TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+            x.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis;
+            x.VerticalAlignment = VerticalAlignment.Center;
+        });
         Grid.SetColumn(bar, 1);
-        g.Children.Add(t); g.Children.Add(bar);
+        g.Children.Add(t);
+        g.Children.Add(bar);
         return g;
     }
 }

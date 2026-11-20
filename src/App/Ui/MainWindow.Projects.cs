@@ -31,7 +31,9 @@ internal partial class MainWindow
         return r.Count == 0 ? null : r[0].TryGetLocalPath();
     }
 
-    private async void AddProject()
+    private void AddProject() => Fire.Forget(AddProjectAsync());
+
+    private async Task AddProjectAsync()
     {
         if (await PickFolder("Project folder") is not { } p)
         {
@@ -53,7 +55,9 @@ internal partial class MainWindow
     }
 
     /// <summary>Asks first; only the entry in the list goes, never the folder.</summary>
-    private async void RemoveProject(string p)
+    private void RemoveProject(string p) => Fire.Forget(RemoveProjectAsync(p));
+
+    private async Task RemoveProjectAsync(string p)
     {
         if (!await Dialogs.Confirm(this, "Remove project", $"Remove {Ctx.ProjectName(p)} from the list?\n{p}\n\nThe folder and its files are not touched; add it again at any time.", "Remove", danger: true))
         {
@@ -68,7 +72,9 @@ internal partial class MainWindow
     }
 
     /// <summary>The folder was moved: the chosen folder takes the old one's place in the list and keeps its added date.</summary>
-    private async void RelocateProject(string old)
+    private void RelocateProject(string old) => Fire.Forget(RelocateProjectAsync(old));
+
+    private async Task RelocateProjectAsync(string old)
     {
         if (await PickFolder($"New location of {Ctx.ProjectName(old)}") is not { } p)
         {

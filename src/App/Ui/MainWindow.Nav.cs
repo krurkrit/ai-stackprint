@@ -15,8 +15,18 @@ internal partial class MainWindow
     private readonly Panel _overlay = new();
     private readonly CommandPalette _palette;
 
-    private void Back() { if (_back.Count == 0) { return; } _forward.Push(_view); Show(_back.Pop()); }
-    private void Forward() { if (_forward.Count == 0) { return; } _back.Push(_view); Show(_forward.Pop()); }
+    private void Back()
+    {
+        if (_back.Count == 0) { return; }
+        _forward.Push(_view);
+        Show(_back.Pop());
+    }
+    private void Forward()
+    {
+        if (_forward.Count == 0) { return; }
+        _back.Push(_view);
+        Show(_forward.Pop());
+    }
 
     private void SetTheme(string mode)
     {
@@ -31,8 +41,16 @@ internal partial class MainWindow
         AddHandler(KeyDownEvent, (_, e) =>
         {
             var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-            if (ctrl && e.Key == Key.K) { _palette.Open(); e.Handled = true; }
-            else if (e.Key == Key.F11) { ToggleFullScreen(); e.Handled = true; }
+            if (ctrl && e.Key == Key.K)
+            {
+                _palette.Open();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.F11)
+            {
+                ToggleFullScreen();
+                e.Handled = true;
+            }
             else if (e.Key == Key.F5)
             {
                 if (_view.StartsWith("Logs"))
@@ -45,19 +63,39 @@ internal partial class MainWindow
                 }
                 e.Handled = true;
             }
-            else if (e.Key == Key.Escape && _palette.IsOpen) { _palette.Close(); e.Handled = true; }
+            else if (e.Key == Key.Escape && _palette.IsOpen)
+            {
+                _palette.Close();
+                e.Handled = true;
+            }
             else if (e.Key == Key.Escape && _x.Escape?.Invoke() == true)
             {
                 e.Handled = true;
             }
-            else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Left) { Back(); e.Handled = true; }
-            else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Right) { Forward(); e.Handled = true; }
+            else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Left)
+            {
+                Back();
+                e.Handled = true;
+            }
+            else if (e.KeyModifiers == KeyModifiers.Alt && e.Key == Key.Right)
+            {
+                Forward();
+                e.Handled = true;
+            }
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         // Mouse back/forward buttons
         AddHandler(PointerReleasedEvent, (_, e) =>
         {
-            if (e.InitialPressMouseButton == MouseButton.XButton1) { Back(); e.Handled = true; }
-            else if (e.InitialPressMouseButton == MouseButton.XButton2) { Forward(); e.Handled = true; }
+            if (e.InitialPressMouseButton == MouseButton.XButton1)
+            {
+                Back();
+                e.Handled = true;
+            }
+            else if (e.InitialPressMouseButton == MouseButton.XButton2)
+            {
+                Forward();
+                e.Handled = true;
+            }
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 

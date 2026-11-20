@@ -46,7 +46,11 @@ public sealed class TransferDialogTests
     {
         var called = false;
         Dictionary<string, string>? moved = [];
-        var w = Dialogs.ImportPreview(Plan(true), m => { called = true; moved = m; });
+        var w = Dialogs.ImportPreview(Plan(true), m =>
+        {
+            called = true;
+            moved = m;
+        });
         w.Show();
         Dispatcher.UIThread.RunJobs();
         Assert.Contains(Ui.Texts(w), t => t.StartsWith("This file holds every value", StringComparison.Ordinal));

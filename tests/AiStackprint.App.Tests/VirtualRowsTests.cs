@@ -17,9 +17,18 @@ public sealed class VirtualRowsTests
 {
     private static (Window W, ScrollViewer Sv, VirtualRows Rows) Open(int count, Func<int, double> height)
     {
-        var rows = new VirtualRows(count, i => new Border { Height = height(i), Child = new TextBlock { Text = "row " + i } });
+        var rows = new VirtualRows(count, i => new Border
+        {
+            Height = height(i),
+            Child = new TextBlock { Text = "row " + i }
+        });
         var sv = new ScrollViewer { Content = new StackPanel { Children = { new TextBlock { Text = "above the list" }, rows } } };
-        var w = new Window { Width = 600, Height = 500, Content = sv };
+        var w = new Window
+        {
+            Width = 600,
+            Height = 500,
+            Content = sv
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         return (w, sv, rows);
@@ -73,13 +82,22 @@ public sealed class VirtualRowsTests
     public void A_virtual_table_has_its_header_and_says_so_when_there_are_no_rows()
     {
         var cols = new[] { new Col("Name", "*") };
-        var w = new Window { Width = 600, Height = 400, Content = new ScrollViewer { Content = Table.Virtual(cols, [], "Nothing here.") } };
+        var w = new Window
+        {
+            Width = 600,
+            Height = 400,
+            Content = new ScrollViewer { Content = Table.Virtual(cols, [], "Nothing here.") }
+        };
         w.Show();
         Assert.Contains("Nothing here.", Ui.Texts(w));
         Assert.Contains("Name", Ui.Texts(w));
 
         var made = new List<int>();
-        var rows = Enumerable.Range(0, 300).Select(i => (Func<TableRow>)(() => { made.Add(i); return new TableRow([W.Txt("item " + i, TextSize.Body)]); })).ToList();
+        var rows = Enumerable.Range(0, 300).Select(i => (Func<TableRow>)(() =>
+        {
+            made.Add(i);
+            return new TableRow([W.Txt("item " + i, TextSize.Body)]);
+        })).ToList();
         w.Content = new ScrollViewer { Content = Table.Virtual(cols, rows) };
         Dispatcher.UIThread.RunJobs();
         Assert.Contains("item 0", Ui.Texts(w));

@@ -22,7 +22,7 @@ public sealed record Catalog(List<AppDefinition> Defs, List<AppDefinition> Shado
 /// </summary>
 public static class AppCatalog
 {
-    public const string CustomPrefix = "custom.";
+    public static readonly string CustomPrefix = "custom.";
 
     internal static readonly JsonSerializerOptions _opt = new()
     {
@@ -48,7 +48,11 @@ public static class AppCatalog
     public static List<AppDefinition> BuiltIn()
     {
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("default/apps.json")!;
-        var o = JsonNode.Parse(s, documentOptions: new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })!.AsObject();
+        var o = JsonNode.Parse(s, documentOptions: new()
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        })!.AsObject();
         return o["apps"].Deserialize<List<AppDefinition>>(_opt) ?? [];
     }
 

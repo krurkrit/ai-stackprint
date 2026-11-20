@@ -35,7 +35,12 @@ internal static partial class DashboardView
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             Children = { new DotsLoader(Sizes.Loader).With(d => d.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center), label }
         };
-        var page = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Margin = new Avalonia.Thickness(Space.Page, Space.XXXL), RowSpacing = Space.XXL };
+        var page = new Grid
+        {
+            RowDefinitions = new RowDefinitions("Auto,*"),
+            Margin = new Avalonia.Thickness(Space.Page, Space.XXXL),
+            RowSpacing = Space.XXL
+        };
         page.Children.Add(head);
         Grid.SetRow(block, 1);
         page.Children.Add(block);

@@ -24,12 +24,21 @@ public static class LogTrash
     public static (List<string> Moved, List<(string Path, string Reason)> Failed) Delete(IEnumerable<string> paths, IEnumerable<LogFile> allowed, string? trashRoot = null)
     {
         var ok = allowed.Select(f => Path.GetFullPath(f.Path)).ToHashSet(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-        var moved = new List<string>(); var failed = new List<(string, string)>();
+        var moved = new List<string>();
+        var failed = new List<(string, string)>();
         foreach (var p in paths)
         {
             var full = Path.GetFullPath(p);
-            if (!ok.Contains(full)) { failed.Add((p, "Not one of this app's log files.")); continue; }
-            try { ToTrash(full, trashRoot); moved.Add(p); }
+            if (!ok.Contains(full))
+            {
+                failed.Add((p, "Not one of this app's log files."));
+                continue;
+            }
+            try
+            {
+                ToTrash(full, trashRoot);
+                moved.Add(p);
+            }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or PlatformNotSupportedException) { failed.Add((p, e.Message)); }
         }
         return (moved, failed);

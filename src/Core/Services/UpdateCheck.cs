@@ -13,8 +13,8 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class UpdateCheck
 {
-    public const string Repo = "krurkrit/ai-stackprint";
-    public const string Host = "api.github.com";
+    public static readonly string Repo = "krurkrit/ai-stackprint";
+    public static readonly string Host = "api.github.com";
     public static readonly TimeSpan Interval = TimeSpan.FromDays(1);
     /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
     internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(10) };

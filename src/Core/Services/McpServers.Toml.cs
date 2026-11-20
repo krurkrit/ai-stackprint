@@ -88,7 +88,11 @@ public static partial class McpServers
         {
             if (quote != null) { if (c == quote) { quote = null; } else { sb.Append(c); } }
             else if (c is '"' or '\'') { quote = c; }
-            else if (c == '.') { res.Add(sb.ToString().Trim()); sb.Clear(); }
+            else if (c == '.')
+            {
+                res.Add(sb.ToString().Trim());
+                sb.Clear();
+            }
             else { sb.Append(c); }
         }
 
@@ -114,10 +118,18 @@ public static partial class McpServers
                 while (true)
                 {
                     Skip(s, ref i);
-                    if (i >= s.Length || s[i] == ']') { i++; return arr; }
+                    if (i >= s.Length || s[i] == ']')
+                    {
+                        i++;
+                        return arr;
+                    }
                     if (Value(s, ref i) is { } v) { arr.Add(v); }
                     Skip(s, ref i);
-                    if (i >= s.Length || s[i] != ',') { i++; return arr; }   // ']' (or the end)
+                    if (i >= s.Length || s[i] != ',')
+                    {
+                        i++;
+                        return arr;
+                    }   // ']' (or the end)
                     i++;
                 }
 
@@ -127,14 +139,22 @@ public static partial class McpServers
                 while (true)
                 {
                     Skip(s, ref i);
-                    if (i >= s.Length || s[i] == '}') { i++; return obj; }
+                    if (i >= s.Length || s[i] == '}')
+                    {
+                        i++;
+                        return obj;
+                    }
                     var eq = Outside(s[i..], '=');
                     if (eq < 0) { return obj; }
                     var key = Keys(s[i..(i + eq)]);
                     i += eq + 1;
                     if (Value(s, ref i) is { } v && key.Count > 0 && Table(obj, key.SkipLast(1)) is { } at) { at[key[^1]] = v; }
                     Skip(s, ref i);
-                    if (i >= s.Length || s[i] != ',') { i++; return obj; }   // '}' (or the end)
+                    if (i >= s.Length || s[i] != ',')
+                    {
+                        i++;
+                        return obj;
+                    }   // '}' (or the end)
                     i++;
                 }
 

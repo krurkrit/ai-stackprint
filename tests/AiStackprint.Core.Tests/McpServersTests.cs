@@ -29,7 +29,11 @@ public sealed class McpServersTests : IDisposable
               "mcpServers": { "fs": { "command": "npx", "args": ["-y", "@x/fs@1.2.0"] } },
               "projects": { "C:/repo": { "mcpServers": { "db": { "type": "http", "url": "https://db.example.com/mcp", "headers": { "Authorization": "Bearer abcdefghijklmnopqrstuvwxyz" } } } } } }
             """);
-        var item = new Item("Config", "claude.json", "MCP servers", "Claude Code", "User", path) { App = "claude-code", LevelLabel = "User and local MCP" };
+        var item = new Item("Config", "claude.json", "MCP servers", "Claude Code", "User", path)
+        {
+            App = "claude-code",
+            LevelLabel = "User and local MCP"
+        };
         var servers = McpServers.Read([item, item with { Description = "Instructions" }]).ToDictionary(s => s.Name);
 
         Assert.Equal(2, servers.Count);

@@ -12,7 +12,11 @@ namespace AiStackprint.Core.Tests;
 public sealed class LimitsTests : IDisposable
 {
     private readonly string _tmp = Directory.CreateTempSubdirectory("aistack-").FullName;
-    public void Dispose() { Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null); Directory.Delete(_tmp, true); }
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null);
+        Directory.Delete(_tmp, true);
+    }
     private static readonly DateTime _now = new(2026, 11, 12, 10, 0, 0, DateTimeKind.Local);
 
     [Fact]
@@ -102,7 +106,8 @@ public sealed class LimitsTests : IDisposable
         Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1893456000).UtcDateTime, LimitProviders.JwtExpiry($"{B64("{}")}.{B64("{\"exp\":1893456000}")}.sig"));
         Assert.Null(LimitProviders.JwtExpiry("not-a-jwt"));
 
-        var t0 = _now; var t1 = _now.AddHours(1);
+        var t0 = _now;
+        var t1 = _now.AddHours(1);
         Assert.Equal(t1.AddHours(8), LimitsService.FullAt(new("5-hour", 10, null), t0, new("5-hour", 20, null), t1));
         Assert.Null(LimitsService.FullAt(new("5-hour", 10, null), t0, new("5-hour", 20, t1.AddHours(2)), t1));   // resets first
         Assert.Null(LimitsService.FullAt(new("5-hour", 20, null), t0, new("5-hour", 20, null), t1));             // not rising
@@ -115,12 +120,22 @@ public sealed class LimitsTests : IDisposable
         var svc = new LimitsService(() => settings);
         var done = new ManualResetEventSlim();
         svc.Updated += _ => { if (!svc.Status("claude-code").Busy) { done.Set(); } };
-        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, []);
+        svc.Request(new AppDefinition
+        {
+            Id = "claude-code",
+            Name = "Claude Code",
+            Limits = "claude"
+        }, []);
         Assert.True(done.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         var st = svc.Status("claude-code");
         Assert.Equal(LimitState.Off, st.State);
         Assert.Null(st.Data);
-        svc.Request(new AppDefinition { Id = "claude-code", Name = "Claude Code", Limits = "claude" }, [], force: true);
+        svc.Request(new AppDefinition
+        {
+            Id = "claude-code",
+            Name = "Claude Code",
+            Limits = "claude"
+        }, [], force: true);
         Assert.False(svc.Status("claude-code").Busy);   // at most once a minute, even when forced
     }
 }
@@ -166,13 +181,21 @@ public sealed class ScanAndHealthTests : IDisposable
         var c = new Item("Config", "CLAUDE.md", "Instructions", "App", "User", cfg) { App = "app" };
         Assert.Null(ScanDiff.Update([a, c], file).Since);
         File.SetLastWriteTimeUtc(cfg, DateTime.UtcNow.AddMinutes(1));
-        var b = a with { Name = "b", Path = "/s/b/SKILL.md" };
+        var b = a with
+        {
+            Name = "b",
+            Path = "/s/b/SKILL.md"
+        };
         var r = ScanDiff.Update([b, c], file);
         Assert.NotNull(r.Since);
         Assert.Equal([("Added", "b"), ("Edited", "CLAUDE.md"), ("Removed", "a")], r.Changes.Select(x => (x.What, x.Name)).OrderBy(x => x.What));
         Assert.Empty(ScanDiff.Update([b, c], file).Changes);
 
-        var state = c with { Name = ".claude.json", AppWritten = true };   // the app saves it on its own: edits are not changes
+        var state = c with
+        {
+            Name = ".claude.json",
+            AppWritten = true
+        };   // the app saves it on its own: edits are not changes
         ScanDiff.Update([state], file);
         File.SetLastWriteTimeUtc(cfg, DateTime.UtcNow.AddMinutes(2));
         Assert.Empty(ScanDiff.Update([state], file).Changes);
@@ -183,7 +206,10 @@ public sealed class ScanAndHealthTests : IDisposable
     {
         var plugin = new Item("Plugin", "gone@market", "", "Claude Code", "User", Path.Combine(_tmp, "nope")) { App = "claude-code" };
         var skills = Enumerable.Range(0, 12).Select(i => new Item("Skill", $"s{i}", new string('d', 900), "Claude Code", "User", Path.Combine(_tmp, $"s{i}", "SKILL.md"))
-        { App = "claude-code", Invokers = ["Agent", "User"] }).ToList();
+        {
+            App = "claude-code",
+            Invokers = ["Agent", "User"]
+        }).ToList();
         var issues = Health.Compute([.. skills, plugin]);
         Assert.Contains(issues, h => h.Area == "Plugins" && h.Finding.Warning && h.Finding.Text.Contains("folder is missing"));
         Assert.Contains(issues, h => h.Subject == "Claude Code skill list" && h.Finding.Warning);

@@ -15,7 +15,11 @@ internal partial class DetailPanel
 {
     private DockPanel Content()
     {
-        var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v => { _tab = v; Render(); });
+        var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v =>
+        {
+            _tab = v;
+            Render();
+        });
         var bar = new DockPanel { Margin = new Thickness(0, 0, 0, Space.L) };
         DockPanel.SetDock(tabs, Dock.Right);
         bar.Children.Add(tabs);
@@ -30,7 +34,11 @@ internal partial class DetailPanel
             crumbs.Add(Txt(Rel(cur), TextSize.Small, false, Muted).With(t => t.FontFamily = Theme.Mono));
             if (FileView.IsMarkdown(cur))
             {
-                crumbs.Add(Btn(_raw ? "Rendered" : "Source", () => { _raw = !_raw; Render(); }, false, _raw ? "document_text" : "code"));
+                crumbs.Add(Btn(_raw ? "Rendered" : "Source", () =>
+                {
+                    _raw = !_raw;
+                    Render();
+                }, false, _raw ? "document_text" : "code"));
             }
 
             crumbs.Add(IconBtn("open", "Open in its app", () => PathUtil.OpenFile(cur)));
@@ -56,7 +64,11 @@ internal partial class DetailPanel
         var dock = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top);
         dock.Children.Add(bar);
-        dock.Children.Add(scrolls ? new ScrollViewer { Content = body, Padding = new Thickness(0, 0, Space.L, 0) } : body);
+        dock.Children.Add(scrolls ? new ScrollViewer
+        {
+            Content = body,
+            Padding = new Thickness(0, 0, Space.L, 0)
+        } : body);
         return dock;
     }
 
@@ -86,7 +98,8 @@ internal partial class DetailPanel
         }
 
         _file = file == MainFile ? null : file;
-        _tab = "Content"; _raw = false;
+        _tab = "Content";
+        _raw = false;
         Render();
     }
 
@@ -106,9 +119,15 @@ internal partial class DetailPanel
     /// A link in the open document. Web links open in the browser; files inside the folder open here; a folder shows Files.
     /// A link that leaves the folder is not followed here: it asks, then opens that place in the file manager.
     /// </summary>
-    private async void Link(string link)
+    private void Link(string link) => Fire.Forget(LinkAsync(link));
+
+    private async Task LinkAsync(string link)
     {
-        if (SkillDoc.IsExternal(link)) { PathUtil.OpenFile(link); return; }
+        if (SkillDoc.IsExternal(link))
+        {
+            PathUtil.OpenFile(link);
+            return;
+        }
         if (link.StartsWith('#') || Current is not { } from)
         {
             return;
@@ -116,7 +135,11 @@ internal partial class DetailPanel
 
         if (SkillDoc.Resolve(Root, from, link) is { } inside)
         {
-            if (Directory.Exists(inside)) { _tab = "Files"; Render(); }
+            if (Directory.Exists(inside))
+            {
+                _tab = "Files";
+                Render();
+            }
             else
             {
                 Open(inside);
@@ -126,7 +149,11 @@ internal partial class DetailPanel
         }
         string outside;
         try { outside = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(from) ?? Root, Uri.UnescapeDataString(link.Split('#')[0]))); }
-        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { Toast.Show("Not a valid link: " + link, "warning"); return; }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            Toast.Show("Not a valid link: " + link, "warning");
+            return;
+        }
         if (await Dialogs.Confirm(x.Owner, "Link outside this folder", $"\"{link}\" points outside {Path.GetFileName(Root)}:\n{outside}\n\nOpen that location in the file manager?", "Open location"))
         {
             PathUtil.OpenFolder(File.Exists(outside) || Directory.Exists(outside) ? outside : Path.GetDirectoryName(outside) ?? outside);

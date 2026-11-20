@@ -69,7 +69,10 @@ public sealed class ContextWindowTests : IDisposable
     {
         // 120 skills × ~100 characters: over 8,000, under 1% of a 1M window (40,000)
         var items = Enumerable.Range(0, 120).Select(i => new Item("Skill", $"skill-{i:000}", new string('d', 80), "Claude Code", "User", Path.Combine(_dir, $"s{i}", "SKILL.md"))
-        { App = "claude-code", Invokers = ["Agent"] }).ToList();
+        {
+            App = "claude-code",
+            Invokers = ["Agent"]
+        }).ToList();
         static bool Listed(List<HealthIssue> h) => h.Any(i => i.Subject == "Claude Code skill list");
         Assert.True(Listed(Health.Compute(items)));
         Assert.False(Listed(Health.Compute(items, "claude-opus-5-5")));   // the built-in data: a 1M window

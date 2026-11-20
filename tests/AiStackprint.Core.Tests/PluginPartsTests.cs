@@ -50,7 +50,11 @@ public sealed class PluginPartsTests : IDisposable
         var esc = Path.Combine(_tmp, "plug").Replace("\\", "\\\\");
         Write("installed_plugins.json", $$"""{ "plugins": { "p@m": [ { "installPath": "{{esc}}" } ] } }""");
         var rows = new List<Item>();
-        PluginReaders.Find("claude")!.Read(Path.Combine(_tmp, "installed_plugins.json"), new AppDefinition { Id = "claude-code", Name = "Claude Code" }, rows);
+        PluginReaders.Find("claude")!.Read(Path.Combine(_tmp, "installed_plugins.json"), new AppDefinition
+        {
+            Id = "claude-code",
+            Name = "Claude Code"
+        }, rows);
         var plugin = rows.Single(r => r.Kind == "Plugin");
         Assert.Equal(["skills", "mcp"], plugin.Provides);
 

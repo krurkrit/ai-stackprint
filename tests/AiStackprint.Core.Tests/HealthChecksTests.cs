@@ -65,12 +65,24 @@ public sealed class HealthChecksTests : IDisposable
         var items = new List<Item>
         {
             new("Skill", "gone", "", "Claude Code", "User", Path.Combine(_tmp, "missing", "SKILL.md")) { App = "claude-code" },
-            new("Skill", "good", "ok", "Claude Code", "User", good) { App = "claude-code", Invokers = ["Agent"] },
-            new("Skill", "good", "ok", "Claude Code", "Project", good) { App = "claude-code", Invokers = ["Agent"] },
+            new("Skill", "good", "ok", "Claude Code", "User", good)
+            {
+                App = "claude-code",
+                Invokers = ["Agent"]
+            },
+            new("Skill", "good", "ok", "Claude Code", "Project", good)
+            {
+                App = "claude-code",
+                Invokers = ["Agent"]
+            },
         };
         for (var i = 0; i < 60; i++)
         {
-            items.Add(new("Skill", "skill-" + i, new string('x', 300), "Claude Code", "User", good) { App = "claude-code", Invokers = ["Agent"] });
+            items.Add(new("Skill", "skill-" + i, new string('x', 300), "Claude Code", "User", good)
+            {
+                App = "claude-code",
+                Invokers = ["Agent"]
+            });
         }
 
         var withHooks = Directory.CreateDirectory(Path.Combine(_tmp, "plug-hooks")).FullName;
@@ -80,8 +92,16 @@ public sealed class HealthChecksTests : IDisposable
         items.Add(new("Plugin", "runs-things", "", "Claude Code", "User", withHooks) { App = "claude-code" });
         items.Add(new("Plugin", "missing", "", "Claude Code", "User", Path.Combine(_tmp, "nope")) { App = "claude-code" });
         items.Add(new("Plugin", "nopath", "", "Claude Code", "User", "") { App = "claude-code" });
-        items.Add(new("Plugin", "twice", "", "Claude Code", "User", withHooks) { App = "claude-code", Scope = "user" });
-        items.Add(new("Plugin", "twice", "", "Claude Code", "Project", withHooks) { App = "claude-code", Scope = "project" });
+        items.Add(new("Plugin", "twice", "", "Claude Code", "User", withHooks)
+        {
+            App = "claude-code",
+            Scope = "user"
+        });
+        items.Add(new("Plugin", "twice", "", "Claude Code", "Project", withHooks)
+        {
+            App = "claude-code",
+            Scope = "project"
+        });
 
         var all = Health.Compute(items).Select(h => h.Finding.Text).ToList();
         Assert.Contains(all, t => t.StartsWith("Cannot read:", StringComparison.Ordinal));

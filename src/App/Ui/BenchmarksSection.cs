@@ -38,7 +38,9 @@ internal static class BenchmarksSection
         finally { _running = false; }
     }
 
-    public static async void Open(Ctx x, string url)
+    public static void Open(Ctx x, string url) => Fire.Forget(OpenAsync(x, url));
+
+    private static async Task OpenAsync(Ctx x, string url)
     {
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
         {
@@ -49,14 +51,24 @@ internal static class BenchmarksSection
     public static Control Build(Ctx x)
     {
         var st = x.S.Settings;
-        var on = new ToggleSwitch { IsChecked = st.BenchmarksEnabled, OnContent = "Download benchmark scores once a day", OffContent = "Download benchmark scores once a day" };
+        var on = new ToggleSwitch
+        {
+            IsChecked = st.BenchmarksEnabled,
+            OnContent = "Download benchmark scores once a day",
+            OffContent = "Download benchmark scores once a day"
+        };
         on.IsCheckedChanged += (_, _) =>
         {
             st.BenchmarksEnabled = on.IsChecked == true;
             SettingsStore.Save(st);
         };
         var saved = !string.IsNullOrWhiteSpace(x.S.State.BenchmarkKey);
-        var key = new TextBox { PasswordChar = '•', PlaceholderText = saved ? "A key is saved; paste a new one to replace it" : "Artificial Analysis API key", Width = Widths.DialogM };
+        var key = new TextBox
+        {
+            PasswordChar = '•',
+            PlaceholderText = saved ? "A key is saved; paste a new one to replace it" : "Artificial Analysis API key",
+            Width = Widths.DialogM
+        };
         var result = new ContentControl();
         var save = Btn("Save key", () => SaveKey(x, key.Text), false, "save");
         var keyRow = saved ? Row(key, save, Btn("Remove key", () => RemoveKey(x), false, "delete")) : Row(key, save);

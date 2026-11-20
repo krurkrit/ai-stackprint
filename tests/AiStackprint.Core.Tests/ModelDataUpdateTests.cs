@@ -102,7 +102,11 @@ public sealed class ModelDataUpdateTests : IDisposable
     [Fact]
     public async Task A_timeout_is_a_failure_not_an_exception()
     {
-        var slow = new Fake(async (_, ct) => { await Task.Delay(5000, ct); return new HttpResponseMessage(HttpStatusCode.OK); });
+        var slow = new Fake(async (_, ct) =>
+        {
+            await Task.Delay(5000, ct);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
         var r = await Run(slow, timeout: TimeSpan.FromMilliseconds(50));
         Assert.False(r.Ok);
         Assert.Contains("in time", r.Message, StringComparison.Ordinal);

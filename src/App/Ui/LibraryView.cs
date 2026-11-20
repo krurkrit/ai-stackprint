@@ -33,10 +33,18 @@ internal class LibraryView(Ctx x, string kind)
             "Skill" => Btn("Add skill", () => AppActions.AddSkillPickApp(x, null), true, "add"),
             "Plugin" when x.S.Defs.Any(d => d.PluginCommands != null) => Btn("Add plugin", () => AppActions.AddPluginPickApp(x), true, "add"),
             "Part" => Pills([($"All {all.Count:N0}", ""), ($"Commands {all.Count(i => i.Kind == "Command"):N0}", "Command"), ($"Agents {all.Count(i => i.Kind == "Agent"):N0}", "Agent")],
-                _type, v => { _type = v; x.Refresh(); }),
+                _type, v =>
+                {
+                    _type = v;
+                    x.Refresh();
+                }),
             _ => null
         };
-        if (right != null) { DockPanel.SetDock(right, Dock.Right); head.Children.Add(right); }
+        if (right != null)
+        {
+            DockPanel.SetDock(right, Dock.Right);
+            head.Children.Add(right);
+        }
         head.Children.Add(H1(kind switch { "Plugin" => "Plugins", "Part" => "Commands & Agents", _ => "Skills" }));
         return _browser.Build([head], [.. all.Where(i => _type == "" || i.Kind == _type)]);
     }

@@ -20,7 +20,11 @@ internal class HealthView(Ctx x)
         var issues = x.S.AllHealth.ToList();
         int warn = issues.Count(i => i.Finding.Warning), info = issues.Count - warn;
         var head = Head();
-        var pills = Pills([($"Warnings {warn:N0}", "w"), ($"All {issues.Count:N0}", "a")], _all ? "a" : "w", v => { _all = v == "a"; x.Refresh(); });
+        var pills = Pills([($"Warnings {warn:N0}", "w"), ($"All {issues.Count:N0}", "a")], _all ? "a" : "w", v =>
+        {
+            _all = v == "a";
+            x.Refresh();
+        });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
         head.Children.Add(H1("Health"));

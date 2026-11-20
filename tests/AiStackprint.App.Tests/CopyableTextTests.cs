@@ -23,11 +23,21 @@ public sealed class CopyableTextTests
     public void Text_can_be_selected_and_the_selection_copied()
     {
         var text = Assert.IsType<CopyableText>(W.Txt("select this sentence please", TextSize.Body));
-        var w = new Window { Width = 500, Height = 200, Content = new StackPanel { Margin = new Thickness(20), Children = { text } } };
+        var w = new Window
+        {
+            Width = 500,
+            Height = 200,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(20),
+                Children = { text }
+            }
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         Assert.False(text.InClickTarget);
-        text.SelectionStart = 7; text.SelectionEnd = 11;
+        text.SelectionStart = 7;
+        text.SelectionEnd = 11;
         Assert.Equal("this", text.SelectedText);
         text.SelectAll();
         Assert.Equal("select this sentence please", text.SelectedText);
@@ -38,7 +48,12 @@ public sealed class CopyableTextTests
     {
         var clicks = 0;
         var table = Table.Build([new Col("Name", "*")], [new TableRow([W.Txt("click me")], () => clicks++)]);
-        var w = new Window { Width = 500, Height = 200, Content = table };
+        var w = new Window
+        {
+            Width = 500,
+            Height = 200,
+            Content = table
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         var text = w.GetVisualDescendants().OfType<CopyableText>().First(t => t.Text == "click me");
@@ -57,7 +72,12 @@ public sealed class CopyableTextTests
         var clicks = 0;
         var button = new Button { Content = W.Txt("press") };
         button.Click += (_, _) => clicks++;
-        var w = new Window { Width = 300, Height = 120, Content = button };
+        var w = new Window
+        {
+            Width = 300,
+            Height = 120,
+            Content = button
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         var text = w.GetVisualDescendants().OfType<CopyableText>().Single();

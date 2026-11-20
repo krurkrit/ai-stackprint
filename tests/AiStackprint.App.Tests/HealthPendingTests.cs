@@ -41,7 +41,11 @@ public sealed class HealthPendingTests
     [AvaloniaFact]
     public void The_dashboard_shows_loading_on_the_Health_tile_until_the_projects_are_checked_and_then_the_count()
     {
-        var w = new Window { Width = 1300, Height = 900 };
+        var w = new Window
+        {
+            Width = 1300,
+            Height = 900
+        };
         var s = State(false);
         var x = new Ctx(s, w, _ => { }, () => { });
         w.Content = new ScrollViewer { Content = DashboardView.Build(x) };
@@ -60,7 +64,11 @@ public sealed class HealthPendingTests
     [AvaloniaFact]
     public void The_Health_page_says_the_projects_are_being_checked_and_lists_their_findings_when_done()
     {
-        var w = new Window { Width = 1300, Height = 900 };
+        var w = new Window
+        {
+            Width = 1300,
+            Height = 900
+        };
         var s = State(false);
         var x = new Ctx(s, w, _ => { }, () => { });
         var view = new HealthView(x);

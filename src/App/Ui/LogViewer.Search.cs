@@ -43,11 +43,16 @@ internal partial class LogViewer
     }
 
     /// <summary>Raw: searches the whole file in the background. Conversation: searches the steps. Results go in the side panel.</summary>
-    private async void Search()
+    private void Search() => Fire.Forget(SearchAsync());
+
+    private async Task SearchAsync()
     {
         _wait.Stop();
         _search?.Cancel();
-        _hits.Clear(); _jumps.Clear(); _at = -1; _count = null;
+        _hits.Clear();
+        _jumps.Clear();
+        _at = -1;
+        _count = null;
         var p = Pattern();
         if (p == null || _file == null)
         {
@@ -112,12 +117,21 @@ internal partial class LogViewer
         }
 
         var lastShown = _firstLine + _raw.Count(c => c == '\n');
-        if (_only.IsChecked == true) { _only.IsChecked = false; Render(false); }
+        if (_only.IsChecked == true)
+        {
+            _only.IsChecked = false;
+            Render(false);
+        }
         if (h.Line < _firstLine || h.Line > lastShown)
         {
             try { (_raw, _firstLine) = LogSearch.Window(_file.Path, h.Line); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _status.Text = "Cannot read: " + e.Message; return; }
-            _window = true; Follow = false;
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                _status.Text = "Cannot read: " + e.Message;
+                return;
+            }
+            _window = true;
+            Follow = false;
             _status.Text = $"Showing lines {_firstLine:N0}–{_firstLine + _raw.Count(c => c == '\n') - 1:N0} around the match";
             Render(false);
         }
@@ -138,13 +152,23 @@ internal partial class LogViewer
 
     private static Border Panel(Control head, IEnumerable<Control>? rows = null)
     {
-        var sp = new StackPanel { Spacing = Space.XXS, Children = { head.With(h => h.Margin = new Thickness(Space.XS, 0, 0, Space.S)) } };
+        var sp = new StackPanel
+        {
+            Spacing = Space.XXS,
+            Children = { head.With(h => h.Margin = new Thickness(Space.XS, 0, 0, Space.S)) }
+        };
         if (rows != null)
         {
             sp.Children.AddRange(rows);
         }
 
-        return new Border { Width = Widths.Popup, CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S), Child = new ScrollViewer { Content = sp } }.Themed(Border.BackgroundProperty, Background);
+        return new Border
+        {
+            Width = Widths.Popup,
+            CornerRadius = new CornerRadius(Radius.M),
+            Padding = new Thickness(Space.S),
+            Child = new ScrollViewer { Content = sp }
+        }.Themed(Border.BackgroundProperty, Background);
     }
 
     /// <summary>A result row: where (line or time and role), the text with the matches highlighted; a click goes there.</summary>
@@ -158,8 +182,18 @@ internal partial class LogViewer
             Background = Avalonia.Media.Brushes.Transparent,
             Child = new StackPanel
             {
-                Children = { Txt(where, TextSize.Caption, false, Accent).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; }),
-                Table.Marked(Txt(text, TextSize.Caption), text, q.Spans(text)).With(t => { t.FontFamily = Theme.Mono; t.FontSize = Theme.MonoSize; t.TextWrapping = Avalonia.Media.TextWrapping.Wrap; t.MaxLines = 3; }) }
+                Children = { Txt(where, TextSize.Caption, false, Accent).With(t =>
+                {
+                    t.FontFamily = Theme.Mono;
+                    t.FontSize = Theme.MonoSize;
+                }),
+                Table.Marked(Txt(text, TextSize.Caption), text, q.Spans(text)).With(t =>
+                {
+                    t.FontFamily = Theme.Mono;
+                    t.FontSize = Theme.MonoSize;
+                    t.TextWrapping = Avalonia.Media.TextWrapping.Wrap;
+                    t.MaxLines = 3;
+                }) }
             }
         };
         b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);

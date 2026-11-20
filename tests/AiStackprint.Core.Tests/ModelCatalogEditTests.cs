@@ -45,7 +45,12 @@ public sealed class ModelCatalogEditTests : IDisposable
     [Fact]
     public void Only_values_that_differ_from_the_data_are_written()
     {
-        Assert.Null(ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?> { ["price.input"] = "5", ["price.output"] = "20", ["contextWindow"] = "1,000,000" }));
+        Assert.Null(ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?>
+        {
+            ["price.input"] = "5",
+            ["price.output"] = "20",
+            ["contextWindow"] = "1,000,000"
+        }));
         Assert.Equal("""{"claude-opus-5-5":{"price":{"input":5}}}""", Saved().ToJsonString());
         var row = Row("claude-opus-5-5");
         Assert.Equal("5", row.Values["price.input"]);
@@ -56,15 +61,27 @@ public sealed class ModelCatalogEditTests : IDisposable
     [Fact]
     public void An_empty_value_or_the_data_value_removes_the_change()
     {
-        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?> { ["price.input"] = "5", ["maxOutput"] = "64000" });
-        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?> { ["price.input"] = "4", ["maxOutput"] = "" });
+        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?>
+        {
+            ["price.input"] = "5",
+            ["maxOutput"] = "64000"
+        });
+        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?>
+        {
+            ["price.input"] = "4",
+            ["maxOutput"] = ""
+        });
         Assert.Equal("{}", Saved().ToJsonString());
     }
 
     [Fact]
     public void Reset_removes_one_field_or_the_whole_model()
     {
-        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?> { ["price.input"] = "5", ["retires"] = "2027-01-01" });
+        ModelCatalog.Save(_data, File_, "claude-opus-5-5", new Dictionary<string, string?>
+        {
+            ["price.input"] = "5",
+            ["retires"] = "2027-01-01"
+        });
         ModelCatalog.Reset(File_, "claude-opus-5-5", "price.input");
         Assert.Equal("""{"claude-opus-5-5":{"retires":"2027-01-01"}}""", Saved().ToJsonString());
         Assert.Equal(["retires"], Row("claude-opus-5-5").Changed);
@@ -75,7 +92,11 @@ public sealed class ModelCatalogEditTests : IDisposable
     [Fact]
     public void A_model_not_in_the_data_is_added_as_custom_and_removed_by_reset()
     {
-        Assert.Null(ModelCatalog.Save(_data, File_, " My-Model ", new Dictionary<string, string?> { ["price.input"] = "1.5", ["price.output"] = "3" }));
+        Assert.Null(ModelCatalog.Save(_data, File_, " My-Model ", new Dictionary<string, string?>
+        {
+            ["price.input"] = "1.5",
+            ["price.output"] = "3"
+        }));
         var row = Row("my-model");
         Assert.True(row.Added);
         Assert.Equal("custom", row.Provider);

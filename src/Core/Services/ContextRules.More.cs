@@ -19,7 +19,9 @@ internal partial class GeminiContext : IContextRule
     {
         var gemini = Path.Combine(home, ".gemini");
         var names = Names(ReadText(Path.Combine(gemini, "settings.json")));
-        var files = new List<ContextFile>(); var findings = new List<Finding>(); var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<ContextFile>();
+        var findings = new List<Finding>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Add(string path, LoadWhen load, string? note = null)
         {
             if (!File.Exists(path) || !seen.Add(Path.GetFullPath(path)))
@@ -102,11 +104,12 @@ internal class CopilotContext : IContextRule
 internal class CursorContext : IContextRule
 {
     public string Id => "cursor";
-    public const int RuleLines = 500;
+    internal const int RuleLines = 500;
 
     public ContextReport Read(string project, string start, string home)
     {
-        var files = new List<ContextFile>(); var findings = new List<Finding>();
+        var files = new List<ContextFile>();
+        var findings = new List<Finding>();
         var rules = Path.Combine(project, ".cursor", "rules");
         foreach (var f in FilesIn(rules, "*.mdc"))
         {
@@ -134,7 +137,11 @@ internal class CursorContext : IContextRule
         }
 
         var legacy = Path.Combine(project, ".cursorrules");
-        if (File.Exists(legacy)) { files.Add(Measure(legacy, LoadWhen.Always, null, "Deprecated: move to .cursor/rules")); findings.Add(new(".cursorrules is deprecated; move it into .cursor/rules as .mdc files.", false)); }
+        if (File.Exists(legacy))
+        {
+            files.Add(Measure(legacy, LoadWhen.Always, null, "Deprecated: move to .cursor/rules"));
+            findings.Add(new(".cursorrules is deprecated; move it into .cursor/rules as .mdc files.", false));
+        }
         return new ContextReport(Id, "characters", null, null, files, findings);
     }
 }

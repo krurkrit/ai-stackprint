@@ -25,7 +25,12 @@ public static partial class Scanner
         }
 
         var patterns = s.Pattern.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var options = new EnumerationOptions { RecurseSubdirectories = s.Depth > 0, MaxRecursionDepth = s.Depth, IgnoreInaccessible = true };
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = s.Depth > 0,
+            MaxRecursionDepth = s.Depth,
+            IgnoreInaccessible = true
+        };
         try
         {
             foreach (var f in Directory.EnumerateFiles(path, "*", options).Where(f => patterns.Any(p => FileSystemName.MatchesSimpleExpression(p, Path.GetFileName(f)))))

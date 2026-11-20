@@ -11,7 +11,11 @@ namespace AiStackprint.Core.Tests;
 public class ItemSearchTests
 {
     private static Item Skill(string name, string desc = "", string? author = null, string app = "claude-code", string source = "Claude Code", string level = "User") =>
-        new("Skill", name, desc, source, level, $"/home/me/.claude/skills/{name}/SKILL.md") { App = app, Author = author };
+        new("Skill", name, desc, source, level, $"/home/me/.claude/skills/{name}/SKILL.md")
+        {
+            App = app,
+            Author = author
+        };
 
     private static readonly Item[] _items =
     [
@@ -20,7 +24,12 @@ public class ItemSearchTests
         Skill("code-review", "Review a pull request", "Anthropic"),
         Skill("my-pdf-export", "Export pages"),
         Skill("deploy", "Ship to staging; makes a PDF report", "Jane", app: "codex", source: "Codex", level: "Project"),
-        new Item("Plugin", "fmt@acme", "Formats code", "Claude Code", "User", "/p/fmt") { App = "claude-code", Author = "Acme", Keywords = ["lint", "prettier"] },
+        new Item("Plugin", "fmt@acme", "Formats code", "Claude Code", "User", "/p/fmt")
+        {
+            App = "claude-code",
+            Author = "Acme",
+            Keywords = ["lint", "prettier"]
+        },
     ];
 
     private static List<string> Find(string q) => new ItemSearch(_items.OrderBy(i => i.Name, StringComparer.Ordinal)).Find(q).Select(i => i.Name).ToList();
@@ -82,7 +91,11 @@ public class ItemSearchTests
     [Fact]
     public void Author_of_a_plugins_skill_is_the_plugins_author()
     {
-        var plugin = new Item("Plugin", "fmt@acme", "", "Claude Code", "User", "/p") { App = "claude-code", Author = "Acme" };
+        var plugin = new Item("Plugin", "fmt@acme", "", "Claude Code", "User", "/p")
+        {
+            App = "claude-code",
+            Author = "Acme"
+        };
         var inside = Skill("format", source: "Claude Code · fmt") with { Plugin = "fmt@acme" };
         var market = Skill("other", source: "Claude Code · x") with { Plugin = "x@shop" };
         var bundled = Skill("sys", source: "Codex") with { Bundled = true };

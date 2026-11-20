@@ -41,7 +41,11 @@ internal sealed class PieChart
     /// <param name="id">Names the chart so a rebuild of the same chart animates from what was shown before.</param>
     public PieChart(string id, IReadOnlyList<(double Value, string Key, string Tip)> values, int total, string caption)
     {
-        var canvas = new Canvas { Width = Size, Height = Size };
+        var canvas = new Canvas
+        {
+            Width = Size,
+            Height = Size
+        };
         double sum = values.Sum(s => s.Value), at = 0;
         var target = new Dictionary<string, (double, double)>();
         foreach (var (value, key, _) in values.Where(s => s.Value > 0))
@@ -70,11 +74,25 @@ internal sealed class PieChart
             {
                 Transitions =
                 [
-                    new DoubleTransition { Property = TranslateTransform.XProperty, Duration = TimeSpan.FromMilliseconds(150), Easing = new CubicEaseOut() },
-                    new DoubleTransition { Property = TranslateTransform.YProperty, Duration = TimeSpan.FromMilliseconds(150), Easing = new CubicEaseOut() },
+                    new DoubleTransition
+                    {
+                        Property = TranslateTransform.XProperty,
+                        Duration = TimeSpan.FromMilliseconds(150),
+                        Easing = new CubicEaseOut()
+                    },
+                    new DoubleTransition
+                    {
+                        Property = TranslateTransform.YProperty,
+                        Duration = TimeSpan.FromMilliseconds(150),
+                        Easing = new CubicEaseOut()
+                    },
                 ]
             };
-            var path = Ring(from0, from1, key).With(p => { p.RenderTransform = move; p.RenderTransformOrigin = RelativePoint.TopLeft; });
+            var path = Ring(from0, from1, key).With(p =>
+            {
+                p.RenderTransform = move;
+                p.RenderTransformOrigin = RelativePoint.TopLeft;
+            });
             ToolTip.SetTip(path, tip);
             path.PointerEntered += (_, _) => Highlight(key);
             path.PointerExited += (_, _) => Highlight(null);
@@ -83,8 +101,14 @@ internal sealed class PieChart
         }
 
         _number = Title(_from.ToString("N0"), TextSize.Display).With(t => t.TextAlignment = TextAlignment.Center);
-        var mid = new StackPanel { Width = Inner * 2 - 16, IsHitTestVisible = false, Children = { _number, Txt(caption, TextSize.Caption, false, Muted).With(t => t.TextAlignment = TextAlignment.Center) } };
-        Canvas.SetLeft(mid, Size / 2 - mid.Width / 2); Canvas.SetTop(mid, Size / 2 - 24);
+        var mid = new StackPanel
+        {
+            Width = Inner * 2 - 16,
+            IsHitTestVisible = false,
+            Children = { _number, Txt(caption, TextSize.Caption, false, Muted).With(t => t.TextAlignment = TextAlignment.Center) }
+        };
+        Canvas.SetLeft(mid, Size / 2 - mid.Width / 2);
+        Canvas.SetTop(mid, Size / 2 - 24);
         canvas.Children.Add(mid);
         if (animate)
         {
@@ -130,7 +154,12 @@ internal sealed class PieChart
 
     /// <summary>Ring segment from <paramref name="a0"/> to <paramref name="a1"/> degrees; a card-colored edge leaves a gap between slices.</summary>
     private static Path Ring(double a0, double a1, string key) =>
-        new Path { Data = Geometry(a0, a1), StrokeThickness = Stroke.Medium, StrokeJoin = PenLineJoin.Round }
+        new Path
+        {
+            Data = Geometry(a0, a1),
+            StrokeThickness = Stroke.Medium,
+            StrokeJoin = PenLineJoin.Round
+        }
             .Themed(Shape.FillProperty, key).Themed(Shape.StrokeProperty, Surface);
 
     private static StreamGeometry? Geometry(double a0, double a1)

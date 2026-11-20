@@ -20,13 +20,26 @@ internal static class DayBars
     {
         var max = bars.Max(v => v.Parts.Sum());
         const double barHeight = 140;
-        var grid = new Grid { ColumnSpacing = Space.XS, Height = barHeight + 22, Margin = new Thickness(0, Space.S, 0, 0) };
+        var grid = new Grid
+        {
+            ColumnSpacing = Space.XS,
+            Height = barHeight + 22,
+            Margin = new Thickness(0, Space.S, 0, 0)
+        };
         var step = Math.Max(1, (int)Math.Ceiling(bars.Count / 8.0));
         for (var i = 0; i < bars.Count; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            var col = new Grid { RowDefinitions = new RowDefinitions($"{barHeight},Auto"), Background = Avalonia.Media.Brushes.Transparent };   // transparent: the tooltip works over the whole column
-            var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = ColumnWidth };
+            var col = new Grid
+            {
+                RowDefinitions = new RowDefinitions($"{barHeight},Auto"),
+                Background = Avalonia.Media.Brushes.Transparent
+            };   // transparent: the tooltip works over the whole column
+            var stack = new StackPanel
+            {
+                VerticalAlignment = VerticalAlignment.Bottom,
+                MaxWidth = ColumnWidth
+            };
             for (var j = bars[i].Parts.Length - 1; j >= 0; j--)
             {
                 if (bars[i].Parts[j] > 0)
@@ -35,9 +48,14 @@ internal static class DayBars
                 }
             }
 
-            var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", TextSize.Tiny, false, Muted).With(t => { t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; t.HorizontalAlignment = HorizontalAlignment.Center; });
+            var label = Txt(i % step == 0 ? bars[i].Day.ToString("MM-dd") : "", TextSize.Tiny, false, Muted).With(t =>
+            {
+                t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+                t.HorizontalAlignment = HorizontalAlignment.Center;
+            });
             Grid.SetRow(label, 1);
-            col.Children.Add(stack); col.Children.Add(label);
+            col.Children.Add(stack);
+            col.Children.Add(label);
             ToolTip.SetTip(col, bars[i].Tip);
             Grid.SetColumn(col, i);
             grid.Children.Add(col);

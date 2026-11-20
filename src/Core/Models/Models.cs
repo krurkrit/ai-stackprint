@@ -202,5 +202,9 @@ public class AppState
 
     public AppDefinition? Def(string id) => Defs.FirstOrDefault(d => d.Id == id);
 
-    public void Use(Services.Catalog c) { Defs = c.Defs; ShadowedApps = c.Shadowed; }
+    public void Use(Services.Catalog c)
+    {
+        Defs = c.Defs;
+        ShadowedApps = c.Shadowed;
+    }
 }

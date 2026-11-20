@@ -39,7 +39,12 @@ public sealed class ContextTests : IDisposable
         Id = "codex",
         Name = "Codex",
         Context = "codex",
-        Configs = { new AiStackprint.Models.ConfigFile { Path = "AGENTS.md", Level = "Project", Kind = "instructions" } },
+        Configs = { new AiStackprint.Models.ConfigFile
+        {
+            Path = "AGENTS.md",
+            Level = "Project",
+            Kind = "instructions"
+        } },
     };
 
     [Fact]

@@ -44,8 +44,17 @@ public sealed class DataTransferTests : IDisposable
         s.LimitsEnabled = ["claude-code"];
         SettingsStore.Save(s, there.Settings);
         ModelCatalog.Save(_models, there.Models, "claude-opus-5-5", new Dictionary<string, string?> { ["price.input"] = "5" });
-        ModelCatalog.Save(_models, there.Models, "my-model", new Dictionary<string, string?> { ["price.input"] = "1", ["price.output"] = "2" });
-        AppCatalog.SaveUser(new AppDefinition { Id = "my-tool", Name = "My Tool", Category = "cli" }, there.Apps);
+        ModelCatalog.Save(_models, there.Models, "my-model", new Dictionary<string, string?>
+        {
+            ["price.input"] = "1",
+            ["price.output"] = "2"
+        });
+        AppCatalog.SaveUser(new AppDefinition
+        {
+            Id = "my-tool",
+            Name = "My Tool",
+            Category = "cli"
+        }, there.Apps);
         var project = Directory.CreateDirectory(Path.Combine(_root, "work", "demo")).FullName;
         ProjectStore.Save([new(project, new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc)), new(Path.Combine(_root, "gone"), DateTime.UtcNow)], there.Projects, there.Home);
         return (there, project);

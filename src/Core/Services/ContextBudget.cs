@@ -74,7 +74,11 @@ public static partial class ContextBudget
         for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
         {
             list.Add(d.FullName);
-            if (Same(d.FullName, top)) { list.Reverse(); return list; }
+            if (Same(d.FullName, top))
+            {
+                list.Reverse();
+                return list;
+            }
         }
         return [start];
     }
@@ -144,7 +148,11 @@ public static partial class ContextBudget
 
     /// <summary>Markdown files under a folder (any depth), sorted.</summary>
     public static List<string> FilesIn(string dir, string pattern) =>
-        Directory.Exists(dir) ? [.. Directory.EnumerateFiles(dir, pattern, new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).Order(StringComparer.OrdinalIgnoreCase)] : [];
+        Directory.Exists(dir) ? [.. Directory.EnumerateFiles(dir, pattern, new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true
+        }).Order(StringComparer.OrdinalIgnoreCase)] : [];
 
     public static bool Same(string a, string b) =>
         string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar),
@@ -190,9 +198,21 @@ public static partial class ContextBudget
             try { target = ResolveImport(imp, file, home); }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { continue; }
             var name = Path.GetFileName(file);
-            if (!File.Exists(target)) { findings.Add(new($"{name} imports @{imp}, which does not exist.")); continue; }
-            if (hop > maxHops) { findings.Add(new($"{name} imports @{imp} more than {maxHops} hops deep; it is not loaded.")); continue; }
-            if (!seen.Add(Path.GetFullPath(target))) { findings.Add(new($"@{imp} is imported more than once (or in a loop); it loads once.", false)); continue; }
+            if (!File.Exists(target))
+            {
+                findings.Add(new($"{name} imports @{imp}, which does not exist."));
+                continue;
+            }
+            if (hop > maxHops)
+            {
+                findings.Add(new($"{name} imports @{imp} more than {maxHops} hops deep; it is not loaded."));
+                continue;
+            }
+            if (!seen.Add(Path.GetFullPath(target)))
+            {
+                findings.Add(new($"@{imp} is imported more than once (or in a loop); it loads once.", false));
+                continue;
+            }
             var note = project != null && Inside(file, project) && !Inside(target, project) ? "Outside the project: asks before loading the first time" : null;
             files.Add(Measure(target, LoadWhen.Imported, file, note));
             AddImports(target, home, project, maxHops, files, findings, seen, hop + 1);

@@ -16,7 +16,7 @@ namespace AiStackprint.Services;
 public static partial class ModelRetirement
 {
     /// <summary>A retirement this many days away or less is a warning; later ones are information.</summary>
-    public const int SoonDays = 90;
+    internal const int SoonDays = 90;
 
     public static List<HealthIssue> ForHealth(IEnumerable<Item> items, DateOnly today, ModelTable? table = null)
     {

@@ -31,7 +31,15 @@ internal static partial class Dialogs
     public static async Task<bool> Preview(Window owner, string title, string intro, string text, string ok)
     {
         Window? w = null;
-        var body = new StackPanel { Spacing = Space.M, Children = { Txt(intro, TextSize.Small, false, Muted), new ScrollViewer { MaxHeight = Heights.Viewer, Content = Mono(text, TextSize.Small) } } };
+        var body = new StackPanel
+        {
+            Spacing = Space.M,
+            Children = { Txt(intro, TextSize.Small, false, Muted), new ScrollViewer
+            {
+                MaxHeight = Heights.Viewer,
+                Content = Mono(text, TextSize.Small)
+            } }
+        };
         w = Shell(title, body, Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), Btn(ok, () => w!.Close(true), true));
         return await w.ShowDialog<bool>(owner);
     }
@@ -40,7 +48,11 @@ internal static partial class Dialogs
     public static Task Message(Window owner, string title, string text, bool mono = false, bool warn = false)
     {
         Window? w = null;
-        Control body = mono ? new ScrollViewer { MaxHeight = Heights.ViewerS, Content = Mono(text == "" ? "(no output)" : text) } : Txt(text);
+        Control body = mono ? new ScrollViewer
+        {
+            MaxHeight = Heights.ViewerS,
+            Content = Mono(text == "" ? "(no output)" : text)
+        } : Txt(text);
         if (warn)
         {
             var icon = Icon("warning", IconSize.M).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey).With(i => i.VerticalAlignment = VerticalAlignment.Top);
@@ -49,7 +61,11 @@ internal static partial class Dialogs
             body = new DockPanel { Children = { icon, body } };
         }
 
-        w = Shell(title, body, Btn("Close", () => w!.Close(), true).With(b => { b.IsDefault = true; b.IsCancel = true; }));
+        w = Shell(title, body, Btn("Close", () => w!.Close(), true).With(b =>
+        {
+            b.IsDefault = true;
+            b.IsCancel = true;
+        }));
         return w.ShowDialog(owner);
     }
 
@@ -58,8 +74,17 @@ internal static partial class Dialogs
     {
         Window? w = null;
         var text = new TextBox { PlaceholderText = textLabel ?? "" };
-        var pick = new ComboBox { ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
-        var body = new StackPanel { Spacing = Space.M, Children = { Txt(intro, TextSize.Small, false, Muted) } };
+        var pick = new ComboBox
+        {
+            ItemsSource = choices,
+            SelectedIndex = 0,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        var body = new StackPanel
+        {
+            Spacing = Space.M,
+            Children = { Txt(intro, TextSize.Small, false, Muted) }
+        };
         if (textLabel != null)
         {
             body.Children.Add(text);

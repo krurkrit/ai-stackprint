@@ -30,9 +30,27 @@ public sealed class LogsViewTests : IDisposable
             File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(-i));
         }
 
-        var def = new AppDefinition { Id = "app", Name = "Test app", Category = "cli", Logs = [new LogSource { Path = _tmp, Pattern = "*.log" }] };
-        var s = new AppState { Defs = [def], Apps = [new AppInfo("app", "Test app", "cli", null, true, null)] };
-        var w = new Window { Width = 1200, Height = 700 };
+        var def = new AppDefinition
+        {
+            Id = "app",
+            Name = "Test app",
+            Category = "cli",
+            Logs = [new LogSource
+            {
+                Path = _tmp,
+                Pattern = "*.log"
+            }]
+        };
+        var s = new AppState
+        {
+            Defs = [def],
+            Apps = [new AppInfo("app", "Test app", "cli", null, true, null)]
+        };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 700
+        };
         var x = new Ctx(s, w, _ => { }, () => { });
         var view = new LogsView(x);
         w.Content = view.Build("app");
@@ -77,7 +95,11 @@ public sealed class LogsViewTests : IDisposable
             var at = cell.TranslatePoint(new Point(2, 2), w)!.Value;
             w.MouseDown(at, MouseButton.Left);
             w.MouseUp(at, MouseButton.Left);
-            for (var i = 0; i < 25 && !Opened(); i++) { Avalonia.Threading.Dispatcher.UIThread.RunJobs(); Thread.Sleep(20); }
+            for (var i = 0; i < 25 && !Opened(); i++)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Thread.Sleep(20);
+            }
         }
 
         Assert.True(Opened());

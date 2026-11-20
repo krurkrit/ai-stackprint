@@ -9,9 +9,9 @@ namespace AiStackprint.Core.Tests;
 /// <summary>Short ways to read and change the font settings in tests.</summary>
 internal static class FontTestHelpers
 {
-    public static ResolvedFont Font(this Settings s, string key = FontRoles.Body) => new FontRuleSet(s.Fonts).Resolve(key);
+    public static ResolvedFont Font(this Settings s, string? key = null) => new FontRuleSet(s.Fonts).Resolve(key ?? FontRoles.Body);
 
-    public static void SetSize(this Settings s, double size, string key = FontRoles.Body) => new FontRuleSet(s.Fonts).SetNumber(key, FontProp.Size, size);
+    public static void SetSize(this Settings s, double size, string? key = null) => new FontRuleSet(s.Fonts).SetNumber(key ?? FontRoles.Body, FontProp.Size, size);
 
     /// <summary>Gives the setting its own weight (leaving link or adjust), as a user typing a value would.</summary>
     public static void SetWeight(this Settings s, int weight, string key)

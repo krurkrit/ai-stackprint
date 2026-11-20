@@ -6,7 +6,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
@@ -28,11 +27,21 @@ internal partial class DetailPanel(Ctx x)
     private Action _close = () => { };
 
     /// <summary>The page was left: a new host and no callback into the old page, so nothing here keeps that page in memory.</summary>
-    public void Leave() { _host = new(); _close = () => { }; }
+    public void Leave()
+    {
+        _host = new();
+        _close = () => { };
+    }
 
     public Control Build(Item item, Action close)
     {
-        if (_item == null || !ItemBrowser.Same(_item, item)) { _file = null; _back.Clear(); _tab = "Content"; _raw = false; }   // a rescan keeps the open file
+        if (_item == null || !ItemBrowser.Same(_item, item))
+        {
+            _file = null;
+            _back.Clear();
+            _tab = "Content";
+            _raw = false;
+        }   // a rescan keeps the open file
         _item = item;
         _close = close;
         Render();
@@ -52,18 +61,37 @@ internal partial class DetailPanel(Ctx x)
     {
         var head = Header();
         DockPanel.SetDock(head, Dock.Top);
-        var meta = new ScrollViewer { Content = Meta(), Padding = new Thickness(0, 0, Space.XL, 0) };
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SidePanel},*"), ColumnSpacing = Space.XXL };
+        var meta = new ScrollViewer
+        {
+            Content = Meta(),
+            Padding = new Thickness(0, 0, Space.XL, 0)
+        };
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions($"{Widths.SidePanel},*"),
+            ColumnSpacing = Space.XXL
+        };
         var content = Content();
         Grid.SetColumn(content, 1);
-        grid.Children.Add(meta); grid.Children.Add(content);
-        _host.Content = new DockPanel { Margin = new Thickness(Space.Page, Space.L, Space.Page, Space.XL), Children = { head, grid } };
+        grid.Children.Add(meta);
+        grid.Children.Add(content);
+        _host.Content = new DockPanel
+        {
+            Margin = new Thickness(Space.Page, Space.L, Space.Page, Space.XL),
+            Children = { head, grid }
+        };
     }
 
     private DockPanel Header()
     {
         var d = x.S.Def(It.App);
-        var chips = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S, VerticalAlignment = VerticalAlignment.Center, Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) } };
+        var chips = new WrapPanel
+        {
+            ItemSpacing = Space.S,
+            LineSpacing = Space.S,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children = { Chip(It.Kind), Chip(AppDetailView.LevelLabel(It), LevelKey(It.Level)) }
+        };
         if (It.Version != null)
         {
             chips.Children.Add(Chip(It.Version));
@@ -114,14 +142,22 @@ internal partial class DetailPanel(Ctx x)
             sp.Children.Add(Sel(It.Description, TextSize.Body));
         }
 
-        var kv = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.LabelS},*"), RowSpacing = Space.S, ColumnSpacing = Space.L };
+        var kv = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions($"{Widths.LabelS},*"),
+            RowSpacing = Space.S,
+            ColumnSpacing = Space.L
+        };
         void Add(string k, Control v)
         {
             kv.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var r = kv.RowDefinitions.Count - 1;
             var a = Txt(k, TextSize.Small, false, Muted);
-            Grid.SetRow(a, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
-            kv.Children.Add(a); kv.Children.Add(v);
+            Grid.SetRow(a, r);
+            Grid.SetRow(v, r);
+            Grid.SetColumn(v, 1);
+            kv.Children.Add(a);
+            kv.Children.Add(v);
         }
         void AddText(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) { Add(k, Sel(v, TextSize.Small)); } }
         Add("App", AppLink(x, It.App, It.Source));
@@ -130,7 +166,11 @@ internal partial class DetailPanel(Ctx x)
             AddText("App's term", It.LevelLabel);
         }
 
-        if (It.Kind == "Skill") { Add("Invoked by", AppDetailView.InvokeCell(It)); AddText("From", AppDetailView.From(It)); }
+        if (It.Kind == "Skill")
+        {
+            Add("Invoked by", AppDetailView.InvokeCell(It));
+            AddText("From", AppDetailView.From(It));
+        }
         AddText("Plugin", It.Plugin);
         AddText("Scope", It.Kind == "Plugin" ? It.Scope : null);
         AddText("Author", It.Author);
@@ -170,82 +210,5 @@ internal partial class DetailPanel(Ctx x)
         }
 
         return sp;
-    }
-
-    /// <summary>Front matter key as a label: "metadata.version" → "Version", "allowed-tools" → "Allowed tools".</summary>
-    private static string Label(string key)
-    {
-        var k = key[(key.LastIndexOf('.') + 1)..].Replace('-', ' ').Replace('_', ' ');
-        return k.Length == 0 ? key : char.ToUpperInvariant(k[0]) + k[1..];
-    }
-
-    /// <summary>
-    /// What a plugin brings (<see cref="PluginParts"/>: its manifest or its folders), with counts where its folder has them.
-    /// Hooks, MCP and LSP servers run programs on this computer, so they are flagged.
-    /// </summary>
-    private Control Contents()
-    {
-        int Count(string dir, string pattern) { var p = Path.Combine(Root, dir); return Directory.Exists(p) ? Directory.EnumerateFiles(p, pattern, SearchOption.AllDirectories).Count() : 0; }
-        bool Has(string key) => It.Provides.Contains(key);
-        var skills = x.S.Items.Count(i => i.Kind == "Skill" && i.Plugin == It.Name && i.App == It.App);
-        var parts = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
-        foreach (var (key, label, n) in new[] { ("skills", "skills", skills), ("commands", "commands", Count("commands", "*.md")), ("agents", "agents", Count("agents", "*.md")) })
-        {
-            if (n > 0 || Has(key))
-            {
-                parts.Children.Add(Chip(n > 0 ? $"{n} {label}" : PluginParts.Name(key)));   // named in the manifest at another place: no count
-            }
-        }
-
-        foreach (var (key, label, tip) in new[]
-        {
-            ("hooks", "Hooks · runs commands", "Hooks run commands on this computer when the app does certain things."),
-            ("mcp", "MCP servers · runs programs", "MCP servers are programs the app starts on this computer."),
-            ("lsp", "LSP servers · runs programs", "Language servers are programs the app starts on this computer for code intelligence.")
-        })
-        {
-            if (Has(key))
-            {
-                parts.Children.Add(Chip(label, WarningKey).With(c => ToolTip.SetTip(c, tip)));
-            }
-        }
-
-        return parts.Children.Count == 0 ? new Panel() : new StackPanel { Spacing = Space.S, Children = { Txt("Contains", TextSize.Small, false, Muted), parts } };
-    }
-
-    private static StackPanel Findings(List<Finding> f)
-    {
-        var sp = new StackPanel { Spacing = Space.S, Children = { Txt("Checks", TextSize.Small, false, Muted) } };
-        foreach (var x in f)
-        {
-            sp.Children.Add(new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-                ColumnSpacing = Space.M,
-                Children =
-            {
-                Icon(x.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, x.Warning ? WarningKey : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
-                Txt(x.Text, TextSize.Small).With(t => Grid.SetColumn(t, 1))
-            }
-            });
-        }
-
-        return sp;
-    }
-
-    /// <summary>App logo and name that opens the app page.</summary>
-    public static Control AppLink(Ctx x, string appId, string fallback)
-    {
-        var d = x.S.Def(appId);
-        var b = new Border
-        {
-            Background = Avalonia.Media.Brushes.Transparent,
-            Cursor = Hand,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            Child = AppName(d?.Logo, d?.Category ?? "custom", d?.Name ?? fallback, Sizes.LogoS)
-        };
-        ToolTip.SetTip(b, "Open the app page");
-        b.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { e.Handled = true; x.Go("App:" + appId); } };
-        return b;
     }
 }

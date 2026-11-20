@@ -22,12 +22,31 @@ public sealed class McpViewTests
         {
             Mcp =
             [
-                new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false) { Apps = ["claude-code"], Level = "User" },
-                new McpServer("db-server", "uvx db", "/r/.mcp.json", "Not pinned: db", true) { Apps = ["claude-code"], Level = "Project", Project = "/r" },
-                new McpServer("gopls", "gopls serve", "/p/.lsp.json", null, false) { Apps = ["claude-code"], Level = "User", Kind = "LSP", Plugin = "go-tools@market" },
+                new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false)
+                {
+                    Apps = ["claude-code"],
+                    Level = "User"
+                },
+                new McpServer("db-server", "uvx db", "/r/.mcp.json", "Not pinned: db", true)
+                {
+                    Apps = ["claude-code"],
+                    Level = "Project",
+                    Project = "/r"
+                },
+                new McpServer("gopls", "gopls serve", "/p/.lsp.json", null, false)
+                {
+                    Apps = ["claude-code"],
+                    Level = "User",
+                    Kind = "LSP",
+                    Plugin = "go-tools@market"
+                },
             ]
         };
-        var w = new Window { Width = 1200, Height = 800 };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 800
+        };
         McpView? view = null;
         var x = new Ctx(s, w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build() };
         view = new McpView(x);

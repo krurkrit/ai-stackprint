@@ -12,17 +12,30 @@ internal class ClaudeSessionParser : ILogParser
 
     public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        var list = new List<LogEntry>(); var models = new HashSet<string>(); long inTok = 0, outTok = 0, peak = 0;
+        var list = new List<LogEntry>();
+        var models = new HashSet<string>();
+        long inTok = 0, outTok = 0, peak = 0;
         var seen = new HashSet<string>();   // a streamed reply is written on several lines with the same id and usage: count it once
         var calls = new Dictionary<string, (string Tool, string? File)>();   // tool_use id -> name, file type it touched
-        var start = 0; var agent = "";
-        void Tag() { if (agent != "") { for (var k = start; k < list.Count; k++) { list[k] = list[k] with { Agent = agent }; } } start = list.Count; }   // sub-agent id on the steps of the previous line
+        var start = 0;
+        var agent = "";
+        void Tag()
+        {
+            if (agent != "") { for (var k = start; k < list.Count; k++) { list[k] = list[k] with { Agent = agent }; } }
+            start = list.Count;
+        }   // sub-agent id on the steps of the previous line
         foreach (var e in LogParsers.Json(lines))
         {
-            Tag(); agent = e.Str("agentId");
-            var type = e.Str("type"); var time = e.Time();
+            Tag();
+            agent = e.Str("agentId");
+            var type = e.Str("type");
+            var time = e.Time();
             var sub = e.Get("isSidechain").ValueKind == JsonValueKind.True;
-            if (type == "summary") { list.Add(new("system", "Summary: " + e.Str("summary"), time, sub)); continue; }
+            if (type == "summary")
+            {
+                list.Add(new("system", "Summary: " + e.Str("summary"), time, sub));
+                continue;
+            }
             if (type is not ("user" or "assistant"))
             {
                 continue;
@@ -37,14 +50,19 @@ internal class ClaudeSessionParser : ILogParser
             if (msg.Str("id") is not { Length: > 0 } mid || seen.Add(mid + ":" + e.Str("requestId")))
             {
                 var u = msg.Get("usage");
-                inTok += u.Num("input_tokens"); outTok += u.Num("output_tokens");
+                inTok += u.Num("input_tokens");
+                outTok += u.Num("output_tokens");
                 if (!sub)
                 {
                     peak = Math.Max(peak, u.Num("input_tokens") + u.Num("cache_read_input_tokens") + u.Num("cache_creation_input_tokens"));   // the main conversation's context
                 }
             }
             var content = msg.Get("content");
-            if (content.ValueKind == JsonValueKind.String) { list.Add(new(type, content.GetString()!, time, sub)); continue; }
+            if (content.ValueKind == JsonValueKind.String)
+            {
+                list.Add(new(type, content.GetString()!, time, sub));
+                continue;
+            }
             if (content.ValueKind != JsonValueKind.Array)
             {
                 continue;
@@ -54,8 +72,12 @@ internal class ClaudeSessionParser : ILogParser
             {
                 switch (b.Str("type"))
                 {
-                    case "text" when b.Str("text").Trim() != "": list.Add(new(type, b.Str("text"), time, sub)); break;
-                    case "thinking": list.Add(new("thinking", b.Str("thinking"), time, sub)); break;
+                    case "text" when b.Str("text").Trim() != "":
+                        list.Add(new(type, b.Str("text"), time, sub));
+                        break;
+                    case "thinking":
+                        list.Add(new("thinking", b.Str("thinking"), time, sub));
+                        break;
                     case "tool_use":
                         calls[b.Str("id")] = (b.Str("name"), LogParsers.FileHint(b.Get("input")));
                         list.Add(LogParsers.ToolCall(b.Str("name"), b.Get("input"), time, sub));
@@ -75,8 +97,11 @@ internal class ClaudeSessionParser : ILogParser
     /// <summary>The steps <see cref="Parse"/> would make, only counted: no text is copied, cut or checked for JSON.</summary>
     public SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        int prompts = 0, calls = 0, subSteps = 0; long inTok = 0, outTok = 0;
-        var models = new HashSet<string>(); var tools = new Dictionary<string, int>(); var seen = new HashSet<string>();
+        int prompts = 0, calls = 0, subSteps = 0;
+        long inTok = 0, outTok = 0;
+        var models = new HashSet<string>();
+        var tools = new Dictionary<string, int>();
+        var seen = new HashSet<string>();
         foreach (var e in LogParsers.Json(lines))
         {
             var sub = e.Get("isSidechain").ValueKind == JsonValueKind.True;
@@ -99,19 +124,33 @@ internal class ClaudeSessionParser : ILogParser
             }
 
             if (msg.Str("id") is not { Length: > 0 } mid || seen.Add(mid + ":" + e.Str("requestId")))
-            { inTok += msg.Get("usage").Num("input_tokens"); outTok += msg.Get("usage").Num("output_tokens"); }
+            {
+                inTok += msg.Get("usage").Num("input_tokens");
+                outTok += msg.Get("usage").Num("output_tokens");
+            }
             var content = msg.Get("content");
             var steps = 0;
             if (content.ValueKind == JsonValueKind.String)
             {
-                steps = 1; prompts += user ? 1 : 0;
+                steps = 1;
+                prompts += user ? 1 : 0;
             }
             else if (content.ValueKind == JsonValueKind.Array)
             {
                 foreach (var b in content.EnumerateArray())
                 {
-                    if (b.Is("type", "text") && !string.IsNullOrWhiteSpace(b.Str("text"))) { steps++; prompts += user ? 1 : 0; }
-                    else if (b.Is("type", "tool_use")) { steps++; calls++; var name = b.Str("name"); tools[name] = tools.GetValueOrDefault(name) + 1; }
+                    if (b.Is("type", "text") && !string.IsNullOrWhiteSpace(b.Str("text")))
+                    {
+                        steps++;
+                        prompts += user ? 1 : 0;
+                    }
+                    else if (b.Is("type", "tool_use"))
+                    {
+                        steps++;
+                        calls++;
+                        var name = b.Str("name");
+                        tools[name] = tools.GetValueOrDefault(name) + 1;
+                    }
                     else if (b.Is("type", "thinking") || b.Is("type", "tool_result")) { steps++; }
                 }
             }
@@ -131,7 +170,8 @@ internal class ClaudeSessionParser : ILogParser
                 continue;
             }
 
-            var msg = e.Get("message"); var u = msg.Get("usage");
+            var msg = e.Get("message");
+            var u = msg.Get("usage");
             if (u.ValueKind != JsonValueKind.Object || e.Time() is not { } time)
             {
                 continue;

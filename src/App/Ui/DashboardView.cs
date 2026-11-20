@@ -30,7 +30,13 @@ internal static partial class DashboardView
 
         var all = s.AllHealth.ToList();
         var warn = all.Count(h => h.Finding.Warning);
-        var tiles = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = Space.XL, RowSpacing = Space.XL };
+        var tiles = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,*,*,*"),
+            RowDefinitions = new RowDefinitions("Auto,Auto"),
+            ColumnSpacing = Space.XL,
+            RowSpacing = Space.XL
+        };
         var cards = new[]
         {
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
@@ -39,15 +45,34 @@ internal static partial class DashboardView
             s.HealthReady ? Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", all.Count - warn, ChartRead)) : HealthPending(x)
         };
         var radar = Categories(apps, () => x.Go("Apps"));
-        Grid.SetRowSpan(radar, 2); Grid.SetColumnSpan(radar, 2);   // 2 x 2 tiles on the left; the four tiles fill the right
+        Grid.SetRowSpan(radar, 2);
+        Grid.SetColumnSpan(radar, 2);   // 2 x 2 tiles on the left; the four tiles fill the right
         tiles.Children.Add(radar);
-        for (var i = 0; i < cards.Length; i++) { Grid.SetColumn(cards[i], 2 + i % 2); Grid.SetRow(cards[i], i / 2); tiles.Children.Add(cards[i]); }
+        for (var i = 0; i < cards.Length; i++)
+        {
+            Grid.SetColumn(cards[i], 2 + i % 2);
+            Grid.SetRow(cards[i], i / 2);
+            tiles.Children.Add(cards[i]);
+        }
 
-        var charts = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = Space.XL };
-        var left = new StackPanel { Spacing = Space.XL, Children = { Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")), Section("wrench_screwdriver", "What plugins add", PluginContents(x)), Section("sparkle", "Skills by app", ByApp(x, "Skill")) } };
-        var right = new StackPanel { Spacing = Space.XL, Children = { Section("people", "Plugins and skills by author", ByAuthor(x)), Recent(x) } };
+        var charts = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,*"),
+            ColumnSpacing = Space.XL
+        };
+        var left = new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { Section("puzzle_piece", "Plugins by app", ByApp(x, "Plugin")), Section("wrench_screwdriver", "What plugins add", PluginContents(x)), Section("sparkle", "Skills by app", ByApp(x, "Skill")) }
+        };
+        var right = new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { Section("people", "Plugins and skills by author", ByAuthor(x)), Recent(x) }
+        };
         Grid.SetColumn(right, 1);
-        charts.Children.Add(left); charts.Children.Add(right);
+        charts.Children.Add(left);
+        charts.Children.Add(right);
         return Page(head, tiles, LimitsView.Strip(x), charts);
     }
 
@@ -62,12 +87,21 @@ internal static partial class DashboardView
 
         var inst = cats.Sum(g => g.Count());
         var pie = new PieChart("categories", [.. cats.Select(g => ((double)g.Count(), CategoryKey(g.Key), $"{AppsView.Cap(g.Key)}: {g.Count()}"))], inst, inst == 1 ? "app" : "apps");
-        var legend = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
+        var legend = new StackPanel
+        {
+            Spacing = Space.M,
+            VerticalAlignment = VerticalAlignment.Center
+        };
         foreach (var g in cats)
         {
             var n = g.Count();
             var key = CategoryKey(g.Key);
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = Space.L, Background = Brushes.Transparent };
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+                ColumnSpacing = Space.L,
+                Background = Brushes.Transparent
+            };
             row.PointerEntered += (_, _) => pie.Highlight(key);   // the legend row points at its slice
             row.PointerExited += (_, _) => pie.Highlight(null);
             row.Children.Add(Dot(CategoryKey(g.Key)));
@@ -75,11 +109,23 @@ internal static partial class DashboardView
             row.Children.Add(Txt(n.ToString("N0"), TextSize.Small, false, Muted).With(t => Grid.SetColumn(t, 2)));
             legend.Children.Add(row);
         }
-        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = Space.XXXL, HorizontalAlignment = HorizontalAlignment.Center };
+        var body = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            ColumnSpacing = Space.XXXL,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         legend.MinWidth = Widths.Legend;
-        body.Children.Add(pie.View); body.Children.Add(legend.With(l => Grid.SetColumn(l, 1)));
+        body.Children.Add(pie.View);
+        body.Children.Add(legend.With(l => Grid.SetColumn(l, 1)));
         // Scales down (never up) when the card is narrower than donut + legend, instead of the legend running under the next cards
-        var fit = new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = body, VerticalAlignment = VerticalAlignment.Center };
+        var fit = new Viewbox
+        {
+            Stretch = Stretch.Uniform,
+            StretchDirection = StretchDirection.DownOnly,
+            Child = body,
+            VerticalAlignment = VerticalAlignment.Center
+        };
         var card = Section("apps", "Apps by category", fit);
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();
@@ -151,123 +197,4 @@ internal static partial class DashboardView
         sp.Children.Add(Row(DotText("Skills", ChartIn), DotText("Plugins", ChartOut)).With(r => r.Margin = new Thickness(0, Space.XS, 0, 0)));
         return sp;
     }
-
-    /// <summary>Label | stacked bar scaled to the largest row | count. Clickable when <paramref name="open"/> is set.</summary>
-    private static Control Bar(Control label, (int N, string Key)[] segs, int total, int max, Action? open, string tip)
-    {
-        var bar = new Grid { Height = Sizes.Bar, ColumnSpacing = Space.Hair, VerticalAlignment = VerticalAlignment.Center };
-        var col = 0;
-        foreach (var (n, key) in segs.Where(s => s.N > 0))
-        {
-            bar.ColumnDefinitions.Add(new ColumnDefinition(n, GridUnitType.Star));
-            bar.Children.Add(new Border().Themed(Border.BackgroundProperty, key).With(b => Grid.SetColumn(b, col++)));
-        }
-        if (max > total)
-        {
-            bar.ColumnDefinitions.Add(new ColumnDefinition(max - total, GridUnitType.Star));
-        }
-
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Sizes.LabelColumn},*,{Sizes.NumberColumn}"), ColumnSpacing = Space.L, Background = Brushes.Transparent };
-        g.Children.Add(label.With(l => l.VerticalAlignment = VerticalAlignment.Center));
-        g.Children.Add(new Border { Child = bar, VerticalAlignment = VerticalAlignment.Center }.With(b => Grid.SetColumn(b, 1)));
-        g.Children.Add(Txt(total.ToString("N0"), TextSize.Small, false, Muted).With(t => { Grid.SetColumn(t, 2); t.HorizontalAlignment = HorizontalAlignment.Right; t.VerticalAlignment = VerticalAlignment.Center; }));
-        ToolTip.SetTip(g, tip);
-        // The same padding with or without a click, so a row that opens nothing ("Other") lines up with the others
-        var row = new Border { CornerRadius = new CornerRadius(Radius.M), Padding = new Thickness(Space.S, Space.XS), Background = Brushes.Transparent, Child = g };
-        if (open == null)
-        {
-            return row;
-        }
-
-        row.Cursor = Hand;
-        row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
-        row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
-        row.PointerReleased += (_, _) => open();
-        return row;
-    }
-
-    /// <summary>Skills, plugins and config files added, removed or edited since the scan before (saved between runs).</summary>
-    private static Border Recent(Ctx x)
-    {
-        var c = x.S.Changes;
-        var title = c.Since is { } since ? $"Changed since {(since.Date == DateTime.Today ? since.ToString("HH:mm") : since.ToString("yyyy-MM-dd HH:mm"))}" : "Changes";
-        Control body;
-        if (c.Since == null)
-        {
-            body = Txt("Changes show here from the next scan on.", TextSize.Small, false, Muted);
-        }
-        else if (c.Changes.Count == 0)
-        {
-            body = Txt("Nothing was added, removed or edited.", TextSize.Small, false, Muted);
-        }
-        else
-        {
-            var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(
-            [
-                Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
-                Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted), Txt(ch.Detail ?? "", TextSize.Caption, false, Muted)
-            ], ch.What == "Removed" ? null : ch.Kind is "MCP server" or "LSP server" ? () => x.Go("Mcp") : ch.Kind == "Hook" ? () => x.Go("Hooks") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
-            body = new StackPanel { Spacing = Space.S, Children = { Table.Build([new Col("", "100"), new Col("", ".9*"), new Col("Name", "1.6*"), new Col("App", "1.2*"), new Col("", "1.6*")], rows) } };
-            if (c.Changes.Count > 12)
-            {
-                ((StackPanel)body).Children.Add(Txt($"… and {c.Changes.Count - 12} more", TextSize.Caption, false, Muted));
-            }
-        }
-        return Section("arrow_sync", title, body);
-    }
-
-    /// <summary>The Health tile while the projects' checks run (after the dashboard shows): a count now would be too low.</summary>
-    private static Border HealthPending(Ctx x)
-    {
-        // The same stack as the finished tile (number, bar, legend line), so the card keeps its size when the count arrives
-        var card = Section("heart_pulse", "Health", new StackPanel
-        {
-            Spacing = Space.L,
-            Children =
-            {
-                Title("0", TextSize.Display).With(t => { t.Opacity = 0; t.HorizontalAlignment = HorizontalAlignment.Right; }),
-                new Border { Height = Sizes.Bar }.Themed(Border.BackgroundProperty, BorderKey),
-                Busy.Status("Checking projects…", out _)
-            }
-        });
-        card.Cursor = Hand;
-        card.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { x.Go("Health"); } };
-        return card;
-    }
-
-    private static Border Tile(string icon, string title, string big, Action open, params (string label, int n, string key)[] segs)
-    {
-        var grid = new Grid { Height = Sizes.Bar, ColumnSpacing = Space.XXS };
-        var legend = new WrapPanel { ItemSpacing = Space.XL, LineSpacing = Space.XS };
-        var col = 0;
-        foreach (var (label, n, key) in segs)
-        {
-            if (n > 0)
-            {
-                grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(n, GridUnitType.Star)));
-                grid.Children.Add(new Border().Themed(Border.BackgroundProperty, key).With(b => Grid.SetColumn(b, col++)));
-            }
-            if (n > 0)
-            {
-                legend.Children.Add(DotText($"{label} {n}", key).With(d => d.TextWrapping = TextWrapping.Wrap));   // a narrow tile wraps instead of cutting off the count
-            }
-        }
-        if (col == 0)
-        {
-            grid.Children.Add(new Border().Themed(Border.BackgroundProperty, BorderKey));
-        }
-
-        var card = Section(icon, title, new StackPanel
-        {
-            Spacing = Space.L,
-            Children = { Title(big, TextSize.Display).With(t => { t.FontFeatures = _tabular; t.HorizontalAlignment = HorizontalAlignment.Right; }),
-                new Border { Child = grid }, legend }
-        });
-        card.Cursor = Hand;
-        card.PointerReleased += (_, _) => open();
-        return card;
-    }
-
-    /// <summary>Tabular figures: numbers line up.</summary>
-    private static readonly FontFeatureCollection _tabular = [FontFeature.Parse("tnum")];
 }

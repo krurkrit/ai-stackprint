@@ -38,7 +38,11 @@ public static partial class DataImport
         JsonObject data;
         try
         {
-            data = JsonNode.Parse(json, documentOptions: new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) as JsonObject
+            data = JsonNode.Parse(json, documentOptions: new()
+            {
+                CommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            }) as JsonObject
                 ?? throw new ImportRefusedException("This is not an AI Stackprint export.");
         }
         catch (JsonException e) { throw new ImportRefusedException($"This is not valid JSON (line {e.LineNumber + 1})."); }

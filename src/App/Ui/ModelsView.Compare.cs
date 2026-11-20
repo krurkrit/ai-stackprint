@@ -75,7 +75,11 @@ internal partial class ModelsView
 
     private void FillComparePane()
     {
-        var slots = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*,*"), ColumnSpacing = Space.L };
+        var slots = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,*,*,*"),
+            ColumnSpacing = Space.L
+        };
         for (var i = 0; i < _slots.Length; i++)
         {
             var slot = Slot(i);
@@ -84,7 +88,11 @@ internal partial class ModelsView
         }
 
         FillResults();
-        _comparePane.Content = new StackPanel { Spacing = Space.XL, Children = { slots, _results.Free() } };
+        _comparePane.Content = new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { slots, _results.Free() }
+        };
     }
 
     /// <summary>One type-ahead box: typing narrows the list to models whose name or provider holds every word; a model in another slot is not offered.</summary>
@@ -168,16 +176,31 @@ internal partial class ModelsView
         }
 
         var scores = ModelCompare.Score(models, _rows);
-        var legend = new StackPanel { Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center, MinWidth = Widths.LabelL };
+        var legend = new StackPanel
+        {
+            Spacing = Space.M,
+            VerticalAlignment = VerticalAlignment.Center,
+            MinWidth = Widths.LabelL
+        };
         for (var i = 0; i < models.Count; i++)
         {
-            var dot = new Border { Width = Sizes.Dot, Height = Sizes.Dot, CornerRadius = new CornerRadius(Radius.Pill) }.Themed(Border.BackgroundProperty, RadarChart.SeriesKeys[i]);
+            var dot = new Border
+            {
+                Width = Sizes.Dot,
+                Height = Sizes.Dot,
+                CornerRadius = new CornerRadius(Radius.Pill)
+            }.Themed(Border.BackgroundProperty, RadarChart.SeriesKeys[i]);
             legend.Children.Add(Row(dot, Txt(models[i].Key, TextSize.Body, true), Txt(models[i].Provider, TextSize.Small, false, Muted)));
         }
 
         legend.Children.Add(Txt("Each axis runs from the worst (0%) to the best (100%) of all models: the biggest size or the lowest price is best (100% on a price is only for free). The scale is logarithmic. Hover a corner for the real value.", TextSize.Caption, false, Muted)
             .With(t => t.MaxWidth = Widths.LabelL * 1.5));
-        var body = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXL, Children = { RadarChart.Build(ModelCompare.Axes, scores, [.. RadarChart.SeriesKeys.Take(models.Count)], RawText), legend } };
+        var body = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.XXL,
+            Children = { RadarChart.Build(ModelCompare.Axes, scores, [.. RadarChart.SeriesKeys.Take(models.Count)], RawText), legend }
+        };
         _results.Content = new StackPanel
         {
             Spacing = Space.XL,

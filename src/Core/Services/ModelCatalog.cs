@@ -16,7 +16,11 @@ namespace AiStackprint.Services;
 /// </summary>
 public static partial class ModelCatalog
 {
-    private static readonly JsonDocumentOptions _read = new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
+    private static readonly JsonDocumentOptions _read = new()
+    {
+        CommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
     private static readonly Lazy<JsonObject> _builtIn = new(() =>
     {
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("default/models.json")!;
@@ -67,7 +71,11 @@ public static partial class ModelCatalog
             }
         }
 
-        var table = new ModelTable { Updated = Updated(source), Downloaded = useDownloaded };
+        var table = new ModelTable
+        {
+            Updated = Updated(source),
+            Downloaded = useDownloaded
+        };
         foreach (var (key, node) in merged)
         {
             try

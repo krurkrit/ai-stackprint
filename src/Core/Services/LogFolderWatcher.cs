@@ -43,11 +43,23 @@ public sealed class LogFolderWatcher : IDisposable
 
             try
             {
-                var w = new FileSystemWatcher(dir, pattern) { IncludeSubdirectories = recursive, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size };
+                var w = new FileSystemWatcher(dir, pattern)
+                {
+                    IncludeSubdirectories = recursive,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size
+                };
                 w.Changed += (_, e) => Kick(e.FullPath, false);
                 w.Created += (_, e) => Kick(e.FullPath, IsNew(e.FullPath));
-                w.Deleted += (_, e) => { Forget(e.FullPath); Kick(e.FullPath, true); };
-                w.Renamed += (_, e) => { Kick(e.OldFullPath, true); Kick(e.FullPath, true); };
+                w.Deleted += (_, e) =>
+                {
+                    Forget(e.FullPath);
+                    Kick(e.FullPath, true);
+                };
+                w.Renamed += (_, e) =>
+                {
+                    Kick(e.OldFullPath, true);
+                    Kick(e.FullPath, true);
+                };
                 w.Error += (_, _) => Kick(dir, true);   // buffer overflow: find the files again
                 w.EnableRaisingEvents = true;
                 _watchers.Add(w);
@@ -109,7 +121,9 @@ public sealed class LogFolderWatcher : IDisposable
         lock (_lock)
         {
             b = new Batch([.. _paths], _structure);
-            _paths.Clear(); _structure = false; _pending = false;
+            _paths.Clear();
+            _structure = false;
+            _pending = false;
         }
         Changed?.Invoke(b);
     }
@@ -122,7 +136,11 @@ public sealed class LogFolderWatcher : IDisposable
         }
 
         var now = Stamp();
-        if (now != _stamp) { _stamp = now; Kick(_newest, now.Size < 0); }
+        if (now != _stamp)
+        {
+            _stamp = now;
+            Kick(_newest, now.Size < 0);
+        }
     }
 
     private (long Size, long Ticks) Stamp()
@@ -132,13 +150,18 @@ public sealed class LogFolderWatcher : IDisposable
             return default;
         }
 
-        try { var i = new FileInfo(_newest); return i.Exists ? (i.Length, i.LastWriteTimeUtc.Ticks) : (-1, 0); }
+        try
+        {
+            var i = new FileInfo(_newest);
+            return i.Exists ? (i.Length, i.LastWriteTimeUtc.Ticks) : (-1, 0);
+        }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return (-2, 0); }
     }
 
     public void Dispose()
     {
-        _poll.Dispose(); _debounce.Dispose();
+        _poll.Dispose();
+        _debounce.Dispose();
         foreach (var w in _watchers)
         {
             w.Dispose();

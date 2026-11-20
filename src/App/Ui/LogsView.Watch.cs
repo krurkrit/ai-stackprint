@@ -17,7 +17,9 @@ internal partial class LogsView
             return;
         }
 
-        _watcher?.Dispose(); _watcher = null; _watching = def?.Id;
+        _watcher?.Dispose();
+        _watcher = null;
+        _watching = def?.Id;
         if (def == null)
         {
             return;
@@ -81,7 +83,11 @@ internal partial class LogsView
 
         FillTable(def);
         _summary.Update(_files);
-        if (_file?.Path != open.Path) { x.Go("Logs:" + def.Id); return; }   // the open file is gone: show the newest
+        if (_file?.Path != open.Path)
+        {
+            x.Go("Logs:" + def.Id);
+            return;
+        }   // the open file is gone: show the newest
         if (_file != null && (_file.Path, _file.Size, _file.Modified) != open)
         {
             _viewer.FileChanged();

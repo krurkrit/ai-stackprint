@@ -19,10 +19,10 @@ public sealed record ModelScore(string Key, IReadOnlyList<double> Percent, IRead
 /// </summary>
 public static class ModelCompare
 {
-    public const int MinModels = 2, MaxModels = 4;
+    public static readonly int MinModels = 2, MaxModels = 4;
 
     /// <summary>The percent of the cheapest paid price; 100 % is only for free.</summary>
-    public const double PaidBest = 95;
+    internal const double PaidBest = 95;
 
     public static readonly CompareAxis[] Axes =
     [

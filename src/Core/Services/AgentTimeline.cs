@@ -13,7 +13,7 @@ public record AgentTimeline(DateTime Start, DateTime End, List<AgentLane> Lanes,
 /// <summary>When sub-agents branched off the main session, ran (also in parallel) and came back. Null when the session has none.</summary>
 public static class AgentTimelines
 {
-    public const int MaxLanes = 30;
+    internal const int MaxLanes = 30;
 
     public static AgentTimeline? Build(IReadOnlyList<LogEntry> entries)
     {
@@ -24,18 +24,34 @@ public static class AgentTimelines
         }
 
         // One lane per agent id; without ids, one lane per unbroken run of sub-agent steps
-        var lanes = new List<List<LogEntry>>(); var byAgent = new Dictionary<string, int>(); var run = -1; var prevSub = false;
+        var lanes = new List<List<LogEntry>>();
+        var byAgent = new Dictionary<string, int>();
+        var run = -1;
+        var prevSub = false;
         foreach (var e in timed)
         {
-            if (!e.SubAgent) { prevSub = false; continue; }
+            if (!e.SubAgent)
+            {
+                prevSub = false;
+                continue;
+            }
             int idx;
             if (!string.IsNullOrEmpty(e.Agent))
             {
-                if (!byAgent.TryGetValue(e.Agent, out idx)) { idx = lanes.Count; byAgent[e.Agent] = idx; lanes.Add([]); }
+                if (!byAgent.TryGetValue(e.Agent, out idx))
+                {
+                    idx = lanes.Count;
+                    byAgent[e.Agent] = idx;
+                    lanes.Add([]);
+                }
             }
             else
             {
-                if (!prevSub || run < 0) { run = lanes.Count; lanes.Add([]); }
+                if (!prevSub || run < 0)
+                {
+                    run = lanes.Count;
+                    lanes.Add([]);
+                }
                 idx = run;
             }
             lanes[idx].Add(e);

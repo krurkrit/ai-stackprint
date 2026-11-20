@@ -41,7 +41,11 @@ public static class PathUtil
     /// <summary>Opens a file with its default app (a folder opens in the file manager).</summary>
     public static void OpenFile(string path)
     {
-        if (Directory.Exists(path)) { OpenFolder(path); return; }
+        if (Directory.Exists(path))
+        {
+            OpenFolder(path);
+            return;
+        }
         Start(Os == "windows" ? new ProcessStartInfo(path) { UseShellExecute = true } : Tool(path));
     }
 

@@ -159,9 +159,21 @@ public sealed class LimitsService(Func<Settings> settings)
         finally
         {
             // Whatever happened, the app is not left "busy" forever: the next refresh can run
-            lock (_lock) { if (e.Running) { e.Running = false; e.Fetched = DateTime.UtcNow; e.Status = e.Status with { Busy = false }; } }
+            lock (_lock)
+            {
+                if (e.Running)
+                {
+                    e.Running = false;
+                    e.Fetched = DateTime.UtcNow;
+                    e.Status = e.Status with { Busy = false };
+                }
+            }
         }
-        lock (_lock) { e.Status = next; e.RetryAfter = retry; }
+        lock (_lock)
+        {
+            e.Status = next;
+            e.RetryAfter = retry;
+        }
         Updated?.Invoke(d.Id);
     }
 

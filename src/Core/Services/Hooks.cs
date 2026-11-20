@@ -52,7 +52,13 @@ public static partial class Hooks
             {
                 // where relative script paths start: the project, a user hook file's own folder (Cursor runs ~/.cursor/hooks.json from ~/.cursor), else home
                 var from = first.Project ?? (first.Description == "Hooks" ? Path.GetDirectoryName(f)! : home);
-                res.AddRange(InFile(f, from, home).Select(h => h with { Apps = [.. g.Select(i => i.App).Distinct()], Level = first.Level, LevelLabel = first.LevelLabel, Project = first.Project }));
+                res.AddRange(InFile(f, from, home).Select(h => h with
+                {
+                    Apps = [.. g.Select(i => i.App).Distinct()],
+                    Level = first.Level,
+                    LevelLabel = first.LevelLabel,
+                    Project = first.Project
+                }));
             }
         }
 
@@ -201,7 +207,12 @@ public static partial class Hooks
             note = Join(note, "downloads and runs code in one step");
         }
 
-        return h with { Missing = missing, Note = note, Warn = note != null };
+        return h with
+        {
+            Missing = missing,
+            Note = note,
+            Warn = note != null
+        };
     }
 
     private static string FirstLine(string s)

@@ -26,7 +26,7 @@ public sealed record Benchmark(string Slug, string Name, string Creator, double?
 /// <summary>The benchmark rows saved in cache/benchmarks.json, and which of them belong to a model of the catalog.</summary>
 public static class BenchmarkStore
 {
-    public const int Version = 2;
+    internal const int Version = 2;
     public static string CacheFile => Path.Combine(DataFolder.Cache, "benchmarks.json");
 
     /// <summary>The rows of the saved copy; empty when there is none or it is not readable.</summary>
@@ -49,7 +49,12 @@ public static class BenchmarkStore
         var models = new JsonArray();
         foreach (var b in rows)
         {
-            var o = new JsonObject { ["slug"] = b.Slug, ["name"] = b.Name, ["creator"] = b.Creator };
+            var o = new JsonObject
+            {
+                ["slug"] = b.Slug,
+                ["name"] = b.Name,
+                ["creator"] = b.Creator
+            };
             foreach (var f in BenchmarkCompare.Fields)
             {
                 if (b.Get(f) is { } v)
@@ -62,7 +67,11 @@ public static class BenchmarkStore
         }
 
         var tmp = file + ".tmp";
-        File.WriteAllText(tmp, new JsonObject { ["version"] = Version, ["models"] = models }.ToJsonString());
+        File.WriteAllText(tmp, new JsonObject
+        {
+            ["version"] = Version,
+            ["models"] = models
+        }.ToJsonString());
         File.Move(tmp, file, overwrite: true);
     }
 

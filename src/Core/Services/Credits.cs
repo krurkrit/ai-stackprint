@@ -20,7 +20,12 @@ public record Credit(string Name, string Group, string License, string Url, stri
 /// <summary>The credits list: the built-in default/credits.json, sorted A to Z by name.</summary>
 public static class Credits
 {
-    private static readonly JsonSerializerOptions _opt = new() { PropertyNameCaseInsensitive = true, ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
+    private static readonly JsonSerializerOptions _opt = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
 
     private sealed record Doc(List<Credit> Credits);
 

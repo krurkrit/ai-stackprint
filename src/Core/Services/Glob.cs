@@ -27,7 +27,11 @@ public static class Glob
         var depth = 0;
         foreach (var c in v)
         {
-            if (c == ',' && depth == 0) { Add(); continue; }
+            if (c == ',' && depth == 0)
+            {
+                Add();
+                continue;
+            }
             depth += c == '{' ? 1 : c == '}' && depth > 0 ? -1 : 0;
             sb.Append(c);
         }
@@ -131,7 +135,11 @@ public static class ProjectFiles
             var key = (Path.GetFullPath(project), max);
             if (!_recent.TryGetValue(key, out var hit) || DateTime.UtcNow - hit.At > _keep)
             {
-                hit = (DateTime.UtcNow, new(() => { var l = Walk(project, out var c, max); return (l, c); }));
+                hit = (DateTime.UtcNow, new(() =>
+                {
+                    var l = Walk(project, out var c, max);
+                    return (l, c);
+                }));
                 _recent[key] = hit;
             }
 
@@ -155,7 +163,12 @@ public static class ProjectFiles
         var root = Path.TrimEndingDirectorySeparator(project).Length + 1;
         var files = new System.IO.Enumeration.FileSystemEnumerable<string>(project,
             (ref System.IO.Enumeration.FileSystemEntry e) => string.Concat(e.Directory.Length > root ? string.Concat(e.Directory[root..], "/") : "", e.FileName).Replace('\\', '/'),
-            new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = _skipped })
+            new EnumerationOptions
+            {
+                RecurseSubdirectories = true,
+                IgnoreInaccessible = true,
+                AttributesToSkip = _skipped
+            })
         {
             ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => !e.IsDirectory,
             ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => !_skip.Contains(e.FileName.ToString())

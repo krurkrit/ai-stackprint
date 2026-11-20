@@ -45,7 +45,12 @@ internal static partial class Dialogs
             }
         };
 
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right };
+        var bar = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.M,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
         foreach (var b in buttons)
         {
             bar.Children.Add(b);
@@ -58,7 +63,11 @@ internal static partial class Dialogs
             CornerRadius = new CornerRadius(Radius.XL),
             BorderThickness = new Thickness(Stroke.Thin),
             BoxShadow = Theme.DialogShadow(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark),
-            Child = new StackPanel { Spacing = Space.XL, Children = { header, body, bar } }
+            Child = new StackPanel
+            {
+                Spacing = Space.XL,
+                Children = { header, body, bar }
+            }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         w.KeyDown += (_, e) =>
         {

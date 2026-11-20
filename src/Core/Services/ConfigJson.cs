@@ -9,8 +9,12 @@ namespace AiStackprint.Services;
 /// <summary>Reading apps' config files for display: JSON with comments, and values that look secret, which are never shown.</summary>
 internal static partial class ConfigJson
 {
-    public const string Hidden = "•••";
-    public static readonly JsonDocumentOptions Jsonc = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    internal const string Hidden = "•••";
+    public static readonly JsonDocumentOptions Jsonc = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip
+    };
 
     /// <summary>A literal secret: a known token shape, or a long value under a key/token/secret name that is not a reference (${VAR}, {env:VAR}, $VAR) or a placeholder.</summary>
     public static bool LooksSecret(string name, string value)

@@ -26,7 +26,12 @@ internal sealed class OpenCodeFileReader : IPluginReader
         {
             foreach (var f in Directory.EnumerateFiles(path).Where(f => _code.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase)))
             {
-                rows.Add(new Item("Plugin", Path.GetFileNameWithoutExtension(f), "", ctx.App.Name, ctx.Level, f) { App = ctx.App.Id, Project = ctx.Project, LevelLabel = ctx.Source?.Label });
+                rows.Add(new Item("Plugin", Path.GetFileNameWithoutExtension(f), "", ctx.App.Name, ctx.Level, f)
+                {
+                    App = ctx.App.Id,
+                    Project = ctx.Project,
+                    LevelLabel = ctx.Source?.Label
+                });
             }
 
             foreach (var d in Directory.EnumerateDirectories(path).Where(d => !Path.GetFileName(d).StartsWith('.')))
@@ -52,7 +57,11 @@ internal sealed class OpenCodeConfigReader : IPluginReader
 
         try
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            using var doc = JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
             if (doc.RootElement.ValueKind != JsonValueKind.Object)
             {
                 return;
@@ -77,7 +86,12 @@ internal sealed class OpenCodeConfigReader : IPluginReader
                     var at = spec.LastIndexOf('@');   // "@scope/name@1.2.0": the version follows the last @, never the first
                     var (name, version) = at > 0 ? (spec[..at], spec[(at + 1)..]) : (spec, null);
                     rows.Add(new Item("Plugin", name, "npm package named in " + Path.GetFileName(path), ctx.App.Name, ctx.Level, path)
-                    { App = ctx.App.Id, Project = ctx.Project, Version = version, LevelLabel = ctx.Source?.Label });
+                    {
+                        App = ctx.App.Id,
+                        Project = ctx.Project,
+                        Version = version,
+                        LevelLabel = ctx.Source?.Label
+                    });
                 }
             }
         }
@@ -128,7 +142,8 @@ internal sealed class GooseExtensionReader : IPluginReader
             {
                 if (line.Length > 0 && !char.IsWhiteSpace(line[0]))
                 {
-                    Flush(); key = null;
+                    Flush();
+                    key = null;
                     inside = line.TrimEnd() == "extensions:";
                     continue;
                 }
@@ -149,7 +164,8 @@ internal sealed class GooseExtensionReader : IPluginReader
                 if (indent == 2)
                 {
                     Flush();
-                    key = t[..colon]; ext = new Dictionary<string, string>(StringComparer.Ordinal);
+                    key = t[..colon];
+                    ext = new Dictionary<string, string>(StringComparer.Ordinal);
                 }
                 else if (indent == 4 && ext != null)
                 {
@@ -177,7 +193,11 @@ internal sealed class EnabledListReader : IPluginReader
 
         try
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            using var doc = JsonDocument.Parse(File.ReadAllText(path), new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
             if (doc.RootElement.ValueKind != JsonValueKind.Object || !doc.RootElement.TryGetProperty("enabledPlugins", out var list) || list.ValueKind != JsonValueKind.Object)
             {
                 return;
@@ -186,7 +206,12 @@ internal sealed class EnabledListReader : IPluginReader
             foreach (var p in list.EnumerateObject())
             {
                 rows.Add(new Item("Plugin", p.Name, "", ctx.App.Name, ctx.Level, path)
-                { App = ctx.App.Id, Project = ctx.Project, LevelLabel = ctx.Source?.Label, Scope = p.Value.ValueKind == JsonValueKind.False ? "disabled" : null });
+                {
+                    App = ctx.App.Id,
+                    Project = ctx.Project,
+                    LevelLabel = ctx.Source?.Label,
+                    Scope = p.Value.ValueKind == JsonValueKind.False ? "disabled" : null
+                });
             }
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { }

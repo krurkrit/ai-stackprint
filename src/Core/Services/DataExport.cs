@@ -32,16 +32,21 @@ public sealed record DataFiles(string Settings, string Models, string Apps, stri
 /// </summary>
 public static class DataExport
 {
-    public const string FileName = "ai-stackprint-export.json";
+    public static readonly string FileName = "ai-stackprint-export.json";
 
     /// <summary>The export format's version; an import refuses a newer one.</summary>
-    public const int Version = 1;
+    internal const int Version = 1;
 
     /// <param name="allValues">Every value (settings with their defaults, models with the model data) instead of only your changes.</param>
     /// <param name="modelSource">The model data before your changes; null: the data in use.</param>
     public static JsonObject Build(DataParts parts, bool allValues, DataFiles f, DateOnly today, JsonObject? modelSource = null)
     {
-        var o = new JsonObject { ["version"] = Version, ["exported"] = today.ToString("yyyy-MM-dd"), ["values"] = allValues ? "all" : "changes" };
+        var o = new JsonObject
+        {
+            ["version"] = Version,
+            ["exported"] = today.ToString("yyyy-MM-dd"),
+            ["values"] = allValues ? "all" : "changes"
+        };
         if (parts.HasFlag(DataParts.Settings))
         {
             var mine = MySettings(f.Settings);

@@ -16,7 +16,7 @@ namespace AiStackprint.Ui;
 internal static class Busy
 {
     /// <summary>Style class on every spinner: a page has data still loading while one is on screen (the --perf run waits for none).</summary>
-    public const string Class = "busy";
+    internal const string Class = "busy";
 
     private const int DelayMs = 300;
 
@@ -54,7 +54,9 @@ internal static class Busy
     /// Runs <paramref name="work"/> off the UI thread with the spinner in <paramref name="host"/>, then shows the result.
     /// Expected errors (files, network) replace the spinner with the message and a Retry button, never a spinner left turning.
     /// </summary>
-    public static async void Into<T>(ContentControl host, string label, Func<CancellationToken, T> work, Func<T, Control> show, CancellationToken ct = default)
+    public static void Into<T>(ContentControl host, string label, Func<CancellationToken, T> work, Func<T, Control> show, CancellationToken ct = default) => Fire.Forget(IntoAsync<T>(host, label, work, show, ct));
+
+    private static async Task IntoAsync<T>(ContentControl host, string label, Func<CancellationToken, T> work, Func<T, Control> show, CancellationToken ct = default)
     {
         host.Content = Loading(label);
         try

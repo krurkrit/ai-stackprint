@@ -40,7 +40,11 @@ public static partial class ProjectChecks
 
             JsonDocument doc;
             try { doc = JsonDocument.Parse(ContextBudget.ReadText(path), Jsonc); }
-            catch (JsonException e) { issues.Add(new([.. g.Select(x => x.App.Id).Distinct()], path, new($"{g.Key} is not valid JSON (line {e.LineNumber + 1}): the app may ignore it."))); continue; }
+            catch (JsonException e)
+            {
+                issues.Add(new([.. g.Select(x => x.App.Id).Distinct()], path, new($"{g.Key} is not valid JSON (line {e.LineNumber + 1}): the app may ignore it.")));
+                continue;
+            }
 
             using (doc)
             {

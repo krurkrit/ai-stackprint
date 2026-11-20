@@ -22,8 +22,8 @@ public sealed record ModelDataResult(bool Saved, bool Ok, string Message, string
 /// </summary>
 public static class ModelDataUpdate
 {
-    public const string RepoPath = "default/models.json";
-    public const int MaxBytes = 2_000_000;
+    internal const string RepoPath = "default/models.json";
+    internal const int MaxBytes = 2_000_000;
     /// <summary>The Usage page notes model data older than this: the weekly data has not reached this copy.</summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromDays(60);
     /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>

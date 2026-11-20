@@ -109,14 +109,19 @@ public partial class DesignTokenTests
             {
                 switch (code[i])
                 {
-                    case '(' or '[' or '{': depth++; break;
+                    case '(' or '[' or '{':
+                        depth++;
+                        break;
                     case ')' or ']' or '}':
                         if (--depth == 0)
                         {
                             args.Add(code[start..i].Trim());
                         }
                         break;
-                    case ',' when depth == 1: args.Add(code[start..i].Trim()); start = i + 1; break;
+                    case ',' when depth == 1:
+                        args.Add(code[start..i].Trim());
+                        start = i + 1;
+                        break;
                 }
             }
 

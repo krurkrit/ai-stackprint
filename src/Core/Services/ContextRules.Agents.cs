@@ -113,7 +113,8 @@ internal sealed class QwenContext : IContextRule
     {
         var qwen = Environment.GetEnvironmentVariable("QWEN_HOME") is { Length: > 0 } q ? q : Path.Combine(home, ".qwen");
         var names = GeminiContext.Names(ReadText(Path.Combine(qwen, "settings.json")), "QWEN.md");
-        var files = new List<ContextFile>(); var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<ContextFile>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Add(string path, string? note = null)
         {
             if (File.Exists(path) && seen.Add(Path.GetFullPath(path)))
@@ -148,7 +149,11 @@ internal sealed class QwenContext : IContextRule
 /// </summary>
 internal sealed class OpenCodeContext : IContextRule
 {
-    private static readonly JsonDocumentOptions _jsonc = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    private static readonly JsonDocumentOptions _jsonc = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip
+    };
     public string Id => "opencode";
 
     public ContextReport Read(string project, string start, string home)
@@ -156,7 +161,8 @@ internal sealed class OpenCodeContext : IContextRule
         var claude = Environment.GetEnvironmentVariable("OPENCODE_DISABLE_CLAUDE_CODE") is not ("1" or "true");
         var claudePrompt = claude && Environment.GetEnvironmentVariable("OPENCODE_DISABLE_CLAUDE_CODE_PROMPT") is not ("1" or "true");
         var config = Path.Combine(home, ".config", "opencode");
-        var files = new List<ContextFile>(); var findings = new List<Finding>();
+        var files = new List<ContextFile>();
+        var findings = new List<Finding>();
 
         var global = Path.Combine(config, "AGENTS.md");
         if (File.Exists(global))
@@ -172,8 +178,16 @@ internal sealed class OpenCodeContext : IContextRule
         {
             var agents = Path.Combine(dir, "AGENTS.md");
             var claudeMd = Path.Combine(dir, "CLAUDE.md");
-            if (File.Exists(agents)) { files.Add(Measure(agents, LoadWhen.Always, null, "First AGENTS.md going up")); break; }
-            if (claude && File.Exists(claudeMd)) { files.Add(Measure(claudeMd, LoadWhen.Always, null, "Claude Code's file (no AGENTS.md)")); break; }
+            if (File.Exists(agents))
+            {
+                files.Add(Measure(agents, LoadWhen.Always, null, "First AGENTS.md going up"));
+                break;
+            }
+            if (claude && File.Exists(claudeMd))
+            {
+                files.Add(Measure(claudeMd, LoadWhen.Always, null, "Claude Code's file (no AGENTS.md)"));
+                break;
+            }
         }
 
         foreach (var (file, root) in new[] { (Path.Combine(config, "opencode.json"), config), (Path.Combine(config, "opencode.jsonc"), config),
@@ -206,7 +220,11 @@ internal sealed class OpenCodeContext : IContextRule
         List<string>? all = null;
         foreach (var entry in list)
         {
-            if (SkillDoc.IsExternal(entry)) { findings.Add(new($"{name} also loads {entry} from the web at launch (not measured here).", false)); continue; }
+            if (SkillDoc.IsExternal(entry))
+            {
+                findings.Add(new($"{name} also loads {entry} from the web at launch (not measured here).", false));
+                continue;
+            }
             var rx = Glob.ToRegex(entry);
             var matched = entry.IndexOfAny(['*', '?', '{', '[']) < 0
                 ? [entry]

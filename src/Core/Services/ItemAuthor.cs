@@ -12,7 +12,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class ItemAuthor
 {
-    public const string Local = "Local";
+    internal const string Local = "Local";
 
     /// <param name="all">Every scanned item, so a plugin's skills find the plugin's author.</param>
     public static Func<Item, string> For(IEnumerable<Item> all)

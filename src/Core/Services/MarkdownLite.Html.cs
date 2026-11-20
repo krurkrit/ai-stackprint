@@ -65,7 +65,8 @@ public static partial class MarkdownLite
             var t = line.TrimStart();
             if (fence == null && (t.StartsWith("```", StringComparison.Ordinal) || t.StartsWith("~~~", StringComparison.Ordinal)))
             {
-                sb.Append(Convert(prose.ToString(), plain)); prose.Clear();
+                sb.Append(Convert(prose.ToString(), plain));
+                prose.Clear();
                 fence = t[..3];
                 sb.Append(line).Append('\n');
             }
@@ -112,7 +113,11 @@ public static partial class MarkdownLite
         }
 
         var kept = new List<string>();
-        string Keep(string code) { kept.Add(code); return $"\x01{kept.Count - 1}\x01"; }
+        string Keep(string code)
+        {
+            kept.Add(code);
+            return $"\x01{kept.Count - 1}\x01";
+        }
 
         s = CodeSpan().Replace(s, m => Keep(m.Value));
         s = Dropped().Replace(s, "");

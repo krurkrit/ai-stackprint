@@ -65,7 +65,13 @@ internal sealed partial class FontSetting
         var weights = _set.Weights(_key);
         var items = weights.Select(w => FontWeights.Label(w)).ToList();
         var current = FontWeights.Label(_set.Resolve(_key).Weight);
-        var combo = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : null, Width = Widths.FontWeight, IsEnabled = mode != FontMode.Link };
+        var combo = new ComboBox
+        {
+            ItemsSource = items,
+            SelectedItem = items.Contains(current) ? current : null,
+            Width = Widths.FontWeight,
+            IsEnabled = mode != FontMode.Link
+        };
         combo.SelectionChanged += (_, _) =>
         {
             if (combo.SelectedIndex is >= 0 and var i && items[i] != current)

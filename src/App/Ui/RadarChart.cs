@@ -28,19 +28,32 @@ internal static class RadarChart
     /// <param name="rawText">Formats the raw value of an axis (axis index, value) for the tooltip.</param>
     public static Control Build(IReadOnlyList<CompareAxis> axes, IReadOnlyList<ModelScore> scores, IReadOnlyList<string> colors, Func<int, double?, string> rawText)
     {
-        var canvas = new Canvas { Width = Width, Height = Height };
+        var canvas = new Canvas
+        {
+            Width = Width,
+            Height = Height
+        };
         var n = axes.Count;
         Point At(int axis, double percent) => new(Width / 2 + Radius * percent / 100 * Math.Cos(Angle(axis, n)), Height / 2 + Radius * percent / 100 * Math.Sin(Angle(axis, n)));
 
         for (var r = 1; r <= Rings; r++)
         {
-            canvas.Children.Add(new Polygon { Points = [.. Enumerable.Range(0, n).Select(a => At(a, 100.0 * r / Rings))], StrokeThickness = Stroke.Thin }
+            canvas.Children.Add(new Polygon
+            {
+                Points = [.. Enumerable.Range(0, n).Select(a => At(a, 100.0 * r / Rings))],
+                StrokeThickness = Stroke.Thin
+            }
                 .Themed(Shape.StrokeProperty, BorderKey));
         }
 
         for (var a = 0; a < n; a++)
         {
-            canvas.Children.Add(new Line { StartPoint = new Point(Width / 2, Height / 2), EndPoint = At(a, 100), StrokeThickness = Stroke.Thin }.Themed(Shape.StrokeProperty, BorderKey));
+            canvas.Children.Add(new Line
+            {
+                StartPoint = new Point(Width / 2, Height / 2),
+                EndPoint = At(a, 100),
+                StrokeThickness = Stroke.Thin
+            }.Themed(Shape.StrokeProperty, BorderKey));
             canvas.Children.Add(AxisLabel(axes[a].Label, At(a, 100), Math.Cos(Angle(a, n))));
         }
 
@@ -48,8 +61,19 @@ internal static class RadarChart
         {
             var key = colors[i];
             var pts = Enumerable.Range(0, n).Select(a => At(a, scores[i].Percent[a])).ToList();
-            canvas.Children.Add(new Polygon { Points = pts, Opacity = FillOpacity, IsHitTestVisible = false }.Themed(Shape.FillProperty, key));
-            canvas.Children.Add(new Polygon { Points = pts, StrokeThickness = Stroke.Medium, StrokeJoin = PenLineJoin.Round, IsHitTestVisible = false }.Themed(Shape.StrokeProperty, key));
+            canvas.Children.Add(new Polygon
+            {
+                Points = pts,
+                Opacity = FillOpacity,
+                IsHitTestVisible = false
+            }.Themed(Shape.FillProperty, key));
+            canvas.Children.Add(new Polygon
+            {
+                Points = pts,
+                StrokeThickness = Stroke.Medium,
+                StrokeJoin = PenLineJoin.Round,
+                IsHitTestVisible = false
+            }.Themed(Shape.StrokeProperty, key));
         }
 
         // Corners last, so they sit on top and take the pointer
@@ -60,9 +84,15 @@ internal static class RadarChart
             {
                 var p = At(a, scores[i].Percent[a]);
                 var raw = rawText(a, scores[i].Raw[a]);
-                var dot = new Ellipse { Width = Dot * 2, Height = Dot * 2, StrokeThickness = Stroke.Medium }.Themed(Shape.FillProperty, key).Themed(Shape.StrokeProperty, Surface);
+                var dot = new Ellipse
+                {
+                    Width = Dot * 2,
+                    Height = Dot * 2,
+                    StrokeThickness = Stroke.Medium
+                }.Themed(Shape.FillProperty, key).Themed(Shape.StrokeProperty, Surface);
                 ToolTip.SetTip(dot, $"{scores[i].Key}\n{axes[a].Label}: {raw}" + (scores[i].Raw[a] == null ? "" : $"  ({scores[i].Percent[a]:0}% on the scale of all models)"));
-                Canvas.SetLeft(dot, p.X - Dot); Canvas.SetTop(dot, p.Y - Dot);
+                Canvas.SetLeft(dot, p.X - Dot);
+                Canvas.SetTop(dot, p.Y - Dot);
                 canvas.Children.Add(dot);
             }
         }
@@ -80,7 +110,8 @@ internal static class RadarChart
         t.VerticalAlignment = VerticalAlignment.Center;
         var left = cos > 0.3 ? end.X + LabelGap : cos < -0.3 ? end.X - LabelGap - LabelWidth : end.X - LabelWidth / 2;
         var top = end.Y + (end.Y < Height / 2 - 1 ? -2 * LabelGap - Space.XS : end.Y > Height / 2 + 1 ? LabelGap : -Space.M);
-        Canvas.SetLeft(t, left); Canvas.SetTop(t, top);
+        Canvas.SetLeft(t, left);
+        Canvas.SetTop(t, top);
         return t;
     }
 }

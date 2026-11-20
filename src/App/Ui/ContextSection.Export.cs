@@ -8,7 +8,9 @@ namespace AiStackprint.Ui;
 internal partial class ContextSection
 {
     /// <summary>Previews AGENTS.md built from the loaded files; on confirm creates it, or replaces it after a backup (refused if it changed since the preview opened).</summary>
-    private async void Export(string project)
+    private void Export(string project) => Fire.Forget(ExportAsync(project));
+
+    private async Task ExportAsync(string project)
     {
         if (_last == null)
         {

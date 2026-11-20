@@ -33,7 +33,11 @@ public sealed class ModelsViewTests : IDisposable
 
     private (Window W, ModelsView View) Open(string? select = null, UiState? state = null)
     {
-        var w = new Window { Width = 1400, Height = 900 };
+        var w = new Window
+        {
+            Width = 1400,
+            Height = 900
+        };
         ModelsView? view = null;
         var x = new Ctx(new AppState { State = state ?? new UiState() }, w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build(select) };
         view = new ModelsView(x, Edits, _ => { });   // not the real state.json
@@ -136,7 +140,11 @@ public sealed class ModelsViewTests : IDisposable
     [AvaloniaFact]
     public void Two_models_in_the_slots_show_the_facts_and_the_radar_with_raw_values_in_tooltips()
     {
-        var (w, _) = Open(null, new UiState { ModelsTab = "Compare", ComparedModels = ["claude-opus-5-5", "gpt-6"] });
+        var (w, _) = Open(null, new UiState
+        {
+            ModelsTab = "Compare",
+            ComparedModels = ["claude-opus-5-5", "gpt-6"]
+        });
         Assert.Equal(["claude-opus-5-5", "gpt-6", "", ""], Slots(w).Select(s => s.Text ?? ""));
         var texts = Ui.Texts(w);
         Assert.Contains("Facts", texts);

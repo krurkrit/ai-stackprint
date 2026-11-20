@@ -29,7 +29,15 @@ public sealed class LogReaderTests : IDisposable
         Write("logs/sub/b.log", "b", new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Local));
         Write("logs/sub/deep/c.log", "c", new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Local));
         Write("logs/notes.txt", "x", new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Local));
-        var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = Path.Combine(_tmp, "logs"), Depth = 1 } } };
+        var d = new AppDefinition
+        {
+            Id = "x",
+            Logs = { new LogSource
+            {
+                Path = Path.Combine(_tmp, "logs"),
+                Depth = 1
+            } }
+        };
         var found = LogReader.Find(d, []);
         Assert.Equal(["b.log", "a.log"], found.Select(f => Path.GetFileName(f.Path)));
     }
@@ -38,7 +46,15 @@ public sealed class LogReaderTests : IDisposable
     public void Find_resolves_project_sources_per_project()
     {
         Write("p1/.app/logs/run.log", "r", DateTime.Now);
-        var d = new AppDefinition { Id = "x", Logs = { new LogSource { Path = ".app/logs", Level = "Project" } } };
+        var d = new AppDefinition
+        {
+            Id = "x",
+            Logs = { new LogSource
+            {
+                Path = ".app/logs",
+                Level = "Project"
+            } }
+        };
         var f = Assert.Single(LogReader.Find(d, [Path.Combine(_tmp, "p1"), Path.Combine(_tmp, "p2")]));
         Assert.Equal(Path.Combine(_tmp, "p1"), f.Project);
     }
@@ -66,7 +82,8 @@ public sealed class LogReaderTests : IDisposable
     {
         var f = Path.Combine(_tmp, "live.log");
         using var w = new FileStream(f, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-        w.Write("hello\n"u8); w.Flush();
+        w.Write("hello\n"u8);
+        w.Flush();
         Assert.Equal("hello\n", LogReader.Tail(f).Text);
     }
 

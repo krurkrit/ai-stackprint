@@ -19,19 +19,34 @@ internal static partial class Dialogs
         var parts = DataParts.All;
         var all = false;
         CheckBox Part(string label, DataParts p) => Check(label, true, on => parts = on ? parts | p : parts & ~p);
-        var go = Btn("Export…", () => { if (parts != DataParts.None) { done((parts, all)); w!.Close(true); } }, true).With(b => b.IsDefault = true);
+        var go = Btn("Export…", () =>
+        {
+            if (parts != DataParts.None)
+            {
+                done((parts, all));
+                w!.Close(true);
+            }
+        }, true).With(b => b.IsDefault = true);
         var body = new StackPanel
         {
             Spacing = Space.L,
             Children =
             {
                 Txt("One file to move your setup to another computer or keep as a copy. No state, caches, logs or secrets; paths under your home folder are written as ~/.", TextSize.Small, false, Muted),
-                new WrapPanel { ItemSpacing = Space.XL, Children = { Part("Settings", DataParts.Settings), Part("Models", DataParts.Models), Part("Apps", DataParts.Apps), Part("Projects", DataParts.Projects) } },
+                new WrapPanel
+                {
+                    ItemSpacing = Space.XL,
+                    Children = { Part("Settings", DataParts.Settings), Part("Models", DataParts.Models), Part("Apps", DataParts.Apps), Part("Projects", DataParts.Projects) }
+                },
                 Radios([("Only my changes", "c"), ("All values", "a")], "c", v => all = v == "a"),
                 Txt("Only my changes: what you changed from the defaults and the model data. All values: every setting and every model, as this version has them.", TextSize.Caption, false, Muted),
             }
         };
-        w = Shell("Export", body, Btn("Cancel", () => { done(null); w!.Close(false); }).With(b => b.IsCancel = true), go);
+        w = Shell("Export", body, Btn("Cancel", () =>
+        {
+            done(null);
+            w!.Close(false);
+        }).With(b => b.IsCancel = true), go);
         return w;
     }
 
@@ -77,8 +92,16 @@ internal static partial class Dialogs
             body.Children.Add(Line("info", Muted, Txt(n, TextSize.Small, false, Muted)));
         }
 
-        var go = Btn("Import (backup first)", () => { done(moved); w!.Close(true); }, true);
-        w = Shell("Import", body, Btn("Cancel", () => { done(null); w!.Close(false); }).With(b => b.IsCancel = true), go);
+        var go = Btn("Import (backup first)", () =>
+        {
+            done(moved);
+            w!.Close(true);
+        }, true);
+        w = Shell("Import", body, Btn("Cancel", () =>
+        {
+            done(null);
+            w!.Close(false);
+        }).With(b => b.IsCancel = true), go);
         w.Width = OuterWidth(Widths.DialogL);
         return w;
     }
@@ -86,7 +109,11 @@ internal static partial class Dialogs
     /// <summary>An icon, text that wraps in the space left, then any controls at the end.</summary>
     private static Grid Line(string icon, string key, TextBlock text, params Control[] end)
     {
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*" + string.Concat(end.Select(_ => ",Auto"))), ColumnSpacing = Space.M };
+        var g = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*" + string.Concat(end.Select(_ => ",Auto"))),
+            ColumnSpacing = Space.M
+        };
         g.Children.Add(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, key).With(i => i.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center));
         text.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
         Grid.SetColumn(text, 1);

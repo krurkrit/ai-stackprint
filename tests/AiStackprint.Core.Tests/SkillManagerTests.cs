@@ -80,8 +80,20 @@ public sealed class SkillManagerTests : IDisposable
     {
         var d = new AppDefinition
         {
-            Roots = { new ScanRoot { Path = "/sys/skills", Level = "System" }, new ScanRoot { Path = "/u/flat", Layout = "flat-md" }, new ScanRoot { Path = "/u/skills" } },
-            ProjectRoots = { new ScanRoot { Path = ".app/skills", Level = "Project" } }
+            Roots = { new ScanRoot
+            {
+                Path = "/sys/skills",
+                Level = "System"
+            }, new ScanRoot
+            {
+                Path = "/u/flat",
+                Layout = "flat-md"
+            }, new ScanRoot { Path = "/u/skills" } },
+            ProjectRoots = { new ScanRoot
+            {
+                Path = ".app/skills",
+                Level = "Project"
+            } }
         };
         Assert.Equal("/u/skills", SkillManager.TargetRoot(d, "User", null)!.Replace('\\', '/'));
         Assert.Equal(Path.Combine(_tmp, ".app", "skills"), SkillManager.TargetRoot(d, "Project", _tmp));

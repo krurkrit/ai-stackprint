@@ -20,14 +20,22 @@ internal class McpView(Ctx x)
     private ContentControl _table = new();
     private TextBox? _box;
     /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
-    public void Leave() { _table = new(); _box = null; }
+    public void Leave()
+    {
+        _table = new();
+        _box = null;
+    }
 
     public Control Build()
     {
         var all = x.S.Mcp;
         var head = Head();
         var pills = Pills([($"All {all.Count:N0}", ""), ($"MCP {all.Count(s => s.Kind == "MCP"):N0}", "MCP"), ($"LSP {all.Count(s => s.Kind == "LSP"):N0}", "LSP"),
-            ($"Warnings {all.Count(s => s.Warn):N0}", "w")], _show, v => { _show = v; x.Refresh(); });
+            ($"Warnings {all.Count(s => s.Warn):N0}", "w")], _show, v =>
+            {
+                _show = v;
+                x.Refresh();
+            });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
         head.Children.Add(H1("Servers"));
@@ -35,7 +43,11 @@ internal class McpView(Ctx x)
         var intro = Txt($"{ReadableLog.Plural(all.Count, "server")} in {ReadableLog.Plural(apps, "app")}. MCP servers give the model tools: programs the apps start, " +
             "or web services they connect to. LSP servers give the agent code intelligence (errors, definitions). Programs run with your rights. Secret-looking values are hidden. " +
             "Goose and Continue keep servers in YAML and are not read here (Goose extensions are on the Plugins page).", TextSize.Small, false, Muted);
-        _box ??= SearchBox("Search name, app, command, plugin or file").With(b => b.Text = _query).OnPause(t => { _query = t.Trim(); Fill(); });
+        _box ??= SearchBox("Search name, app, command, plugin or file").With(b => b.Text = _query).OnPause(t =>
+        {
+            _query = t.Trim();
+            Fill();
+        });
         Fill();
         return Page(head, intro, _box.Free(), _table.Free());
     }
@@ -52,7 +64,12 @@ internal class McpView(Ctx x)
             s.Apps.Count == 1 ? DetailPanel.AppLink(x, s.Apps[0], s.Apps[0]) : Txt(AppName(s), TextSize.Small),
             Level(s.Level, s.Project != null ? $"{s.Level} · {Ctx.ProjectName(s.Project)}" : s.Level, s.LevelLabel),
             Chip(s.Kind),
-            Mono(s.What, TextSize.Caption).With(t => { t.MaxLines = 3; t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis; ToolTip.SetTip(t, t.Text); }),   // a long command shows 3 lines; the whole command is in the tooltip and copies with a right-click
+            Mono(s.What, TextSize.Caption).With(t =>
+            {
+                t.MaxLines = 3;
+                t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis;
+                ToolTip.SetTip(t, t.Text);
+            }),   // a long command shows 3 lines; the whole command is in the tooltip and copies with a right-click
             Txt(s.Note ?? "", TextSize.Caption, false, s.Warn ? WarningKey : Muted),
             SourceCell.For(x, s.Plugin, s.Apps.FirstOrDefault() ?? "", s.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(s.File))

@@ -26,9 +26,20 @@ internal static partial class Dialogs
     internal static Window ModelEditor(ModelRow? row, string? name, ModelEdits edits)
     {
         Window? w = null;
-        var key = new TextBox { Text = name ?? "", PlaceholderText = "Model name as the app logs it, e.g. my-model", Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
+        var key = new TextBox
+        {
+            Text = name ?? "",
+            PlaceholderText = "Model name as the app logs it, e.g. my-model",
+            Width = Widths.Field,
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
         var boxes = new Dictionary<string, Func<string?>>();   // each field's way to read what is entered (a text box, or a date picker)
-        var grid = new Grid { ColumnDefinitions = new($"{Widths.Label},*,Auto"), ColumnSpacing = Space.L, RowSpacing = Space.M };
+        var grid = new Grid
+        {
+            ColumnDefinitions = new($"{Widths.Label},*,Auto"),
+            ColumnSpacing = Space.L,
+            RowSpacing = Space.M
+        };
         var r = 0;
         void Add(Control label, Control box, Control? after = null)
         {
@@ -62,7 +73,15 @@ internal static partial class Dialogs
             if (f == "retires")
             {
                 // A date is picked, not typed: no format to get wrong
-                var picker = new CalendarDatePicker { SelectedDateFormat = CalendarDatePickerFormat.Custom, CustomDateFormatString = "yyyy-MM-dd", PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left, SelectedDate = ParseDate(current) };
+                var picker = new CalendarDatePicker
+                {
+                    SelectedDateFormat = CalendarDatePickerFormat.Custom,
+                    CustomDateFormatString = "yyyy-MM-dd",
+                    PlaceholderText = Hint(f, data),
+                    Width = Widths.Field,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    SelectedDate = ParseDate(current)
+                };
                 // The picker has no clear button of its own: one sits after it, outside the field, while a date is set
                 var clear = IconBtn("dismiss", "Clear the date", () => picker.SelectedDate = null, danger: true);
                 // Joined to the field: same height and the input's border color, no gap
@@ -78,7 +97,13 @@ internal static partial class Dialogs
             }
             else
             {
-                var box = new TextBox { Text = current, PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left };
+                var box = new TextBox
+                {
+                    Text = current,
+                    PlaceholderText = Hint(f, data),
+                    Width = Widths.Field,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
                 input = box;
                 get = () => box.Text;
                 set = v => box.Text = v;
@@ -106,7 +131,11 @@ internal static partial class Dialogs
                 error.IsVisible = true;
             }
         }, true).With(b => b.IsDefault = true);
-        var body = new StackPanel { Spacing = Space.L, Children = { Txt(intro, TextSize.Small, false, Muted), grid, error } };
+        var body = new StackPanel
+        {
+            Spacing = Space.L,
+            Children = { Txt(intro, TextSize.Small, false, Muted), grid, error }
+        };
         w = Shell(row == null ? "Add model" : "Edit model", body, Btn("Cancel", () => w!.Close(false)).With(b => b.IsCancel = true), save);
         return w;
     }

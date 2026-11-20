@@ -27,7 +27,11 @@ public sealed class AppsViewTests
             ]
         };
         s.Settings.HideNotInstalled = false;
-        var w = new Window { Width = width, Height = 800 };
+        var w = new Window
+        {
+            Width = width,
+            Height = 800
+        };
         AppsView? view = null;
         var x = new Ctx(s, w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build() };
         view = new AppsView(x);

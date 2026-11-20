@@ -73,7 +73,12 @@ public sealed class AntigravityCliTests
         {
             Directory.CreateDirectory(Path.Combine(home, ".gemini", "config"));
             File.WriteAllText(Path.Combine(home, ".gemini", "config", "mcp_config.json"), "{}");
-            var def = new AiStackprint.Models.AppDefinition { Id = "agy-test", Name = "Agy test", Category = "agent" };
+            var def = new AiStackprint.Models.AppDefinition
+            {
+                Id = "agy-test",
+                Name = "Agy test",
+                Category = "agent"
+            };
             def.Detect.Add(Path.Combine(home, ".gemini", "antigravity-cli"));
             def.Detect.Add(Path.Combine(home, ".gemini", "config"));
             var r = Scanner.Collect([def], []);

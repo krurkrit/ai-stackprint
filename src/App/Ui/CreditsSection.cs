@@ -47,7 +47,9 @@ internal static class CreditsSection
         _ => "wrench"
     };
 
-    private static async void Open(Ctx x, string url)
+    private static void Open(Ctx x, string url) => Fire.Forget(OpenAsync(x, url));
+
+    private static async Task OpenAsync(Ctx x, string url)
     {
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
         {

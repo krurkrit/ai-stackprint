@@ -28,7 +28,12 @@ public static class PluginParts
         new("lsp", "LSP servers", "lspServers", ".lsp.json", null),
     ];
 
-    private static readonly EnumerationOptions _near = new() { RecurseSubdirectories = true, MaxRecursionDepth = 2, IgnoreInaccessible = true };
+    private static readonly EnumerationOptions _near = new()
+    {
+        RecurseSubdirectories = true,
+        MaxRecursionDepth = 2,
+        IgnoreInaccessible = true
+    };
 
     public static string Name(string key) => All.FirstOrDefault(p => p.Key == key)?.Label ?? key;
 

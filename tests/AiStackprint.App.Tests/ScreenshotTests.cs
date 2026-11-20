@@ -23,7 +23,7 @@ namespace AiStackprint.App.Tests;
 /// They are written only when the environment variable <c>STACKPRINT_SHOTS</c> names a folder (build/test-and-capture.ps1 sets it); otherwise these tests do nothing.
 /// Each shot also checks that the page finished loading, so a page stuck on its loading icon fails here.
 /// </summary>
-public sealed class ScreenshotTests : IDisposable
+public sealed partial class ScreenshotTests : IDisposable
 {
     private static readonly string? _out = Environment.GetEnvironmentVariable("STACKPRINT_SHOTS");
     private static readonly string[] _themes = ["Light", "Dark"];
@@ -74,7 +74,12 @@ public sealed class ScreenshotTests : IDisposable
     /// <summary>A window on the theme's main background, so a page looks as it does next to the side menu.</summary>
     private static Window Open(Control content, double width = 1280, double height = 900)
     {
-        var w = new Window { Width = width, Height = height, Content = new Border { Child = content }.Themed(Border.BackgroundProperty, W.MainKey) };
+        var w = new Window
+        {
+            Width = width,
+            Height = height,
+            Content = new Border { Child = content }.Themed(Border.BackgroundProperty, W.MainKey)
+        };
         w.Show();
         Settle();
         return w;
@@ -88,9 +93,24 @@ public sealed class ScreenshotTests : IDisposable
         {
             Defs =
             [
-                new AppDefinition { Id = "claude-code", Name = "Claude Code", Category = "agent" },
-                new AppDefinition { Id = "gemini-cli", Name = "Gemini CLI", Category = "cli" },
-                new AppDefinition { Id = "cursor", Name = "Cursor", Category = "ide" },
+                new AppDefinition
+                {
+                    Id = "claude-code",
+                    Name = "Claude Code",
+                    Category = "agent"
+                },
+                new AppDefinition
+                {
+                    Id = "gemini-cli",
+                    Name = "Gemini CLI",
+                    Category = "cli"
+                },
+                new AppDefinition
+                {
+                    Id = "cursor",
+                    Name = "Cursor",
+                    Category = "ide"
+                },
             ],
             Apps =
             [
@@ -104,9 +124,17 @@ public sealed class ScreenshotTests : IDisposable
                 Skill("review", "User", ["Agent"]),
                 Skill("deploy", "Project", ["User"]),
                 new Item("Plugin", "git-helper", "Git tools", "Claude Code", "User", Path.Combine(_tmp, "plugin")) { App = "claude-code" },
-                new Item("Command", "ship", "Ship it", "Claude Code · git-helper", "User", Path.Combine(_tmp, "plugin", "commands", "ship.md")) { App = "claude-code", Plugin = "git-helper" },
+                new Item("Command", "ship", "Ship it", "Claude Code · git-helper", "User", Path.Combine(_tmp, "plugin", "commands", "ship.md"))
+                {
+                    App = "claude-code",
+                    Plugin = "git-helper"
+                },
             ],
-            Mcp = [new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false) { Apps = ["claude-code"], Level = "User" }],
+            Mcp = [new McpServer("fs-server", "npx -y fs@1.0.0", "/u/.claude.json", null, false)
+            {
+                Apps = ["claude-code"],
+                Level = "User"
+            }],
             Hooks = [new Hook("Stop", null, "echo done", "command", "/u/.claude/settings.json") { Apps = ["claude-code"] }],
         };
         s.Health = [new HealthIssue("Skills", "review", "claude-code", new Finding("No description.", true), s.Items[1])];
@@ -116,7 +144,11 @@ public sealed class ScreenshotTests : IDisposable
     }
 
     private Item Skill(string name, string level, IReadOnlyList<string> invokers) =>
-        new("Skill", name, name + " skill", "Claude Code", level, Path.Combine(_tmp, name, "SKILL.md")) { App = "claude-code", Invokers = invokers };
+        new("Skill", name, name + " skill", "Claude Code", level, Path.Combine(_tmp, name, "SKILL.md"))
+        {
+            App = "claude-code",
+            Invokers = invokers
+        };
 
     private static Ctx Context(AppState s, Window? owner = null) => new(s, owner ?? new Window(), _ => { }, () => { }) { Limits = new LimitsService(() => s.Settings) };
 
@@ -163,7 +195,12 @@ public sealed class ScreenshotTests : IDisposable
         {
             Style(theme);
             var set = new FontRuleSet(SettingsStore.Defaults().Fonts);
-            var rows = new StackPanel { Spacing = Space.L, Margin = new Thickness(Space.XXL), Width = 760 };
+            var rows = new StackPanel
+            {
+                Spacing = Space.L,
+                Margin = new Thickness(Space.XXL),
+                Width = 760
+            };
             var controls = new List<FontSetting>();
             foreach (var role in FontRoles.All)
             {
@@ -182,74 +219,6 @@ public sealed class ScreenshotTests : IDisposable
             controls.ForEach(c => c.Refresh());
             Shot(w, $"fonts-edited-{theme.ToLowerInvariant()}");
             w.Close();
-        }
-    }
-
-    [AvaloniaFact]
-    public void Features_and_dialogs()
-    {
-        Assert.SkipUnless(_out != null, "Set STACKPRINT_SHOTS to a folder to write screenshots.");
-        var data = JsonNode.Parse("""
-            {
-              "claude-opus-5-5": { "provider": "anthropic", "contextWindow": 1000000, "maxOutput": 128000, "retires": "2027-02-01", "price": { "input": 4, "output": 20 } },
-              "gpt-6": { "provider": "openai", "contextWindow": 400000, "price": { "input": 2, "output": 8 } }
-            }
-            """)!.AsObject();
-        var file = Path.Combine(_tmp, "models.json");
-        var edits = new ModelEdits(() => ModelCatalog.Rows(data, file), (k, v) => ModelCatalog.Save(data, file, k, v), (k, f) => ModelCatalog.Reset(file, k, f));
-        foreach (var theme in _themes)
-        {
-            var t = theme.ToLowerInvariant();
-            Style(theme);
-            var s = State();
-
-            // Apps grouped by category: the Expand all / Collapse all icons over the table
-            var apps = Open(new AppsView(Context(s)).Build());
-            if (apps.GetVisualDescendants().OfType<CheckBox>().FirstOrDefault(c => c.Content as string == "Category") is { } byCategory)
-            {
-                byCategory.IsChecked = true;
-                Settle();
-            }
-
-            Shot(apps, $"feature-apps-grouped-{t}");
-            apps.Close();
-
-            // Models: the compare tab, then the editor with its date picker and the clear button
-            var models = new Window { Width = 1280, Height = 900 };
-            var mx = Context(new AppState { State = new UiState() }, models);
-            var view = new ModelsView(mx, edits, _ => { });
-            models.Content = new Border { Child = view.Build(null) }.Themed(Border.BackgroundProperty, W.MainKey);
-            models.Show();
-            Shot(models, $"feature-models-{t}");
-            models.Close();
-
-            var editor = Dialogs.ModelEditor(edits.Rows().Single(r => r.Key == "claude-opus-5-5"), null, edits);
-            editor.Show();
-            Settle();
-            Shot(editor, $"feature-model-editor-{t}");
-            editor.Close();
-
-            var add = Dialogs.ModelEditor(null, "my-local", edits);
-            add.Show();
-            Settle();
-            Shot(add, $"feature-model-add-{t}");
-            add.Close();
-
-            // Export and import
-            var export = Dialogs.ExportChoice(_ => { });
-            export.Show();
-            Settle();
-            Shot(export, $"feature-export-{t}");
-            export.Close();
-
-            var plan = new ImportPlan([], false,
-                [new(DataParts.Settings, "theme", "System", "Dark"), new(DataParts.Models, "claude-opus-5-5 · price.input", "4", "5")],
-                ["/gone/demo"], ["Settings: checkUpdates is not imported (network calls stay as they are here)."]);
-            var import = Dialogs.ImportPreview(plan, _ => { });
-            import.Show();
-            Settle();
-            Shot(import, $"feature-import-{t}");
-            import.Close();
         }
     }
 }

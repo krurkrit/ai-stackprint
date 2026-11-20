@@ -24,9 +24,20 @@ internal static class SourceCell
         {
             link.Cursor = Hand;
             ToolTip.SetTip(link, "Open the plugin");
-            link.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == MouseButton.Left) { e.Handled = true; x.Open(item); } };
+            link.PointerReleased += (_, e) =>
+            {
+                if (e.InitialPressMouseButton == MouseButton.Left)
+                {
+                    e.Handled = true;
+                    x.Open(item);
+                }
+            };
         }
 
-        return new StackPanel { Spacing = Space.XXS, Children = { link, path } };
+        return new StackPanel
+        {
+            Spacing = Space.XXS,
+            Children = { link, path }
+        };
     }
 }

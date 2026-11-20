@@ -27,7 +27,11 @@ public static class Health
         {
             SkillDoc doc;
             try { doc = SkillDoc.Read(s.Path); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { res.Add(new("Skills", s.Name, s.App, new("Cannot read: " + e.Message), s)); continue; }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                res.Add(new("Skills", s.Name, s.App, new("Cannot read: " + e.Message), s));
+                continue;
+            }
             foreach (var f in SkillCheck.Check(s.Path, doc))
             {
                 res.Add(new("Skills", s.Name, s.App, f, s));
@@ -54,7 +58,11 @@ public static class Health
 
         foreach (var p in items.Where(i => i.Kind == "Plugin"))
         {
-            if (p.Path == "" || !Directory.Exists(p.Path)) { res.Add(new("Plugins", p.Name, p.App, new("Listed as installed, but its folder is missing: " + (p.Path == "" ? "(no path)" : p.Path)), p)); continue; }
+            if (p.Path == "" || !Directory.Exists(p.Path))
+            {
+                res.Add(new("Plugins", p.Name, p.App, new("Listed as installed, but its folder is missing: " + (p.Path == "" ? "(no path)" : p.Path)), p));
+                continue;
+            }
             if (File.Exists(Path.Combine(p.Path, "hooks", "hooks.json")))
             {
                 res.Add(new("Plugins", p.Name, p.App, new("Has hooks: runs commands on this computer when the app does certain things.", false), p));
@@ -73,5 +81,9 @@ public static class Health
         return res;
     }
 
-    private static int Rank(string level) { var i = Array.IndexOf(["System", "Local", "Project", "User"], level); return i < 0 ? 9 : i; }
+    private static int Rank(string level)
+    {
+        var i = Array.IndexOf(["System", "Local", "Project", "User"], level);
+        return i < 0 ? 9 : i;
+    }
 }

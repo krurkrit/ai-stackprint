@@ -16,7 +16,11 @@ public sealed class ScanCacheTests : IDisposable
     private readonly string _tmp = Directory.CreateTempSubdirectory("aicache-").FullName;
     private string CacheFile => Path.Combine(_tmp, "scan-cache.json");
 
-    public void Dispose() { ScanCache.Clear(); Directory.Delete(_tmp, true); }
+    public void Dispose()
+    {
+        ScanCache.Clear();
+        Directory.Delete(_tmp, true);
+    }
 
     private Item Skill(string name, string body)
     {
@@ -46,7 +50,14 @@ public sealed class ScanCacheTests : IDisposable
     {
         var s = Skill("clean", "Nothing to see.\n");
         var info = new FileInfo(s.Path);
-        File.WriteAllText(CacheFile, JsonSerializer.Serialize(new[] { new { P = s.Path, S = info.Length, T = info.LastWriteTimeUtc.Ticks, R = new[] { "download-run" }, H = (string?)null } }));
+        File.WriteAllText(CacheFile, JsonSerializer.Serialize(new[] { new
+        {
+            P = s.Path,
+            S = info.Length,
+            T = info.LastWriteTimeUtc.Ticks,
+            R = new[] { "download-run" },
+            H = (string?)null
+        } }));
         ScanCache.Clear();
         ScanCache.Load(CacheFile);
         Assert.Contains(SafetyScan.Check([s], _tmp), i => i.Finding.Text.Contains("downloads and runs"));   // the file was not read: the saved result was used
@@ -81,7 +92,8 @@ public sealed class ScanCacheTests : IDisposable
         Assert.NotEqual("[]", File.ReadAllText(CacheFile));
 
         File.WriteAllText(CacheFile, "[]");
-        SafetyScan.Check([s], _tmp); Fingerprint.Of(s);
+        SafetyScan.Check([s], _tmp);
+        Fingerprint.Of(s);
         ScanCache.Save(CacheFile);
         Assert.Equal("[]", File.ReadAllText(CacheFile));
     }

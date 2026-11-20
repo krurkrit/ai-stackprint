@@ -48,14 +48,33 @@ public sealed class ScannerTests : IDisposable
         {
             Id = "app",
             Name = "App",
-            ProjectRoots = { new ScanRoot { Path = ".app/skills", Level = "Project", Nested = true, Label = "REPO" } },
-            Configs = { new ConfigFile { Path = "RULES.md", Level = "Project", Nested = true }, new ConfigFile { Path = "LOCAL.md", Level = "Local" } }
+            ProjectRoots = { new ScanRoot
+            {
+                Path = ".app/skills",
+                Level = "Project",
+                Nested = true,
+                Label = "REPO"
+            } },
+            Configs = { new ConfigFile
+            {
+                Path = "RULES.md",
+                Level = "Project",
+                Nested = true
+            }, new ConfigFile
+            {
+                Path = "LOCAL.md",
+                Level = "Local"
+            } }
         };
         File.WriteAllText(Path.Combine(proj, "LOCAL.md"), "l");
         var items = Scanner.Collect([d], [proj]).Items;
         var skills = items.Where(i => i.Kind == "Skill").ToList();
         Assert.Equal(["api-skill", "root-skill"], skills.Select(s => s.Name).Order());
-        Assert.All(skills, s => { Assert.Equal(proj, s.Project); Assert.Equal("REPO", s.LevelLabel); });
+        Assert.All(skills, s =>
+        {
+            Assert.Equal(proj, s.Project);
+            Assert.Equal("REPO", s.LevelLabel);
+        });
         Assert.Equal(2, items.Count(i => i.Kind == "Config" && i.Name == "RULES.md"));
         var local = Assert.Single(items, i => i.Name == "LOCAL.md");
         Assert.Equal("Local", local.Level);
@@ -72,7 +91,11 @@ public sealed class ScannerTests : IDisposable
         {
             Id = "codex",
             Name = "Codex",
-            Roots = { new ScanRoot { Path = home }, new ScanRoot { Path = Path.Combine(home, ".system"), Bundled = true } }
+            Roots = { new ScanRoot { Path = home }, new ScanRoot
+            {
+                Path = Path.Combine(home, ".system"),
+                Bundled = true
+            } }
         };
         var skills = Scanner.Collect([d], []).Items.Where(i => i.Kind == "Skill").ToList();
         Assert.True(Assert.Single(skills, s => s.Name == "skill-creator").Bundled);

@@ -16,8 +16,8 @@ public static partial class Generator
     /// <summary>Direct providers kept (LiteLLM's <c>litellm_provider</c>); the schema lists the same plus <c>custom</c>.</summary>
     public static readonly string[] Providers = ["anthropic", "openai", "gemini", "xai", "deepseek", "mistral"];
 
-    public const string SourceName = "LiteLLM model_prices_and_context_window.json";
-    public const string SourceUrl = "https://github.com/BerriAI/litellm";
+    internal const string SourceName = "LiteLLM model_prices_and_context_window.json";
+    internal const string SourceUrl = "https://github.com/BerriAI/litellm";
 
     private static readonly string[] _modes = ["chat", "responses"];
     private static readonly (string LiteLlm, string Ours)[] _prices =
@@ -75,7 +75,13 @@ public static partial class Generator
             ["$schema"] = "./models.schema.json",
             ["version"] = 1,
             ["updated"] = date,
-            ["source"] = new JsonObject { ["name"] = SourceName, ["url"] = SourceUrl, ["commit"] = commit, ["license"] = "MIT" },
+            ["source"] = new JsonObject
+            {
+                ["name"] = SourceName,
+                ["url"] = SourceUrl,
+                ["commit"] = commit,
+                ["license"] = "MIT"
+            },
             ["models"] = models,
         };
     }

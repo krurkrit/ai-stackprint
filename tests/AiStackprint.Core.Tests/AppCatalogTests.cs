@@ -17,7 +17,12 @@ public sealed class AppCatalogTests : IDisposable
 
     public void Dispose() => Directory.Delete(_dir, true);
 
-    private static AppDefinition App(string id, string name) => new() { Id = id, Name = name, Category = "agent" };
+    private static AppDefinition App(string id, string name) => new()
+    {
+        Id = id,
+        Name = name,
+        Category = "agent"
+    };
 
     [Fact]
     public void Built_in_apps_come_from_default_apps_json()

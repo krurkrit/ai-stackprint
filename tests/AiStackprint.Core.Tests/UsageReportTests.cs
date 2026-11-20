@@ -19,7 +19,17 @@ public sealed class UsageReportTests : IDisposable
         var t = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
         File.WriteAllText(Path.Combine(dir, "s.jsonl"),
             $"{{\"type\":\"assistant\",\"timestamp\":\"{t}\",\"cwd\":\"/w/proj\",\"message\":{{\"id\":\"{id}1\",\"model\":\"{model}\",\"usage\":{{\"input_tokens\":{input},\"output_tokens\":{output}}},\"content\":[]}}}}\n");
-        return new AppDefinition { Id = id, Name = id, Logs = { new LogSource { Path = dir, Pattern = "*.jsonl", Format = "claude-session" } } };
+        return new AppDefinition
+        {
+            Id = id,
+            Name = id,
+            Logs = { new LogSource
+            {
+                Path = dir,
+                Pattern = "*.jsonl",
+                Format = "claude-session"
+            } }
+        };
     }
 
     [Fact]
@@ -27,7 +37,11 @@ public sealed class UsageReportTests : IDisposable
     {
         var small = App("small", "claude-opus-5-5", 10, 5);
         var big = App("big", "no-such-model-xyz", 1000, 500);
-        var none = new AppDefinition { Id = "none", Name = "None" };
+        var none = new AppDefinition
+        {
+            Id = "none",
+            Name = "None"
+        };
         var report = UsageReport.Compute([small, none, big], [], DateTime.Today.AddDays(-1), TestContext.Current.CancellationToken);
         Assert.Equal(["big", "small"], report.Select(a => a.App.Id));
         Assert.Equal(1500, report[0].Tokens);

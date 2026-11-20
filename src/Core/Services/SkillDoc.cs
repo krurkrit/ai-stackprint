@@ -12,7 +12,7 @@ namespace AiStackprint.Services;
 public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string Body, int Lines, bool HasFront, bool FrontClosed)
 {
     /// <summary>Largest file read for the panel; bigger files are shown as their start.</summary>
-    public const int MaxBytes = 512 * 1024;
+    internal const int MaxBytes = 512 * 1024;
 
     public string Get(string key) => Front.TryGetValue(key, out var v) ? v : "";
 
@@ -52,14 +52,27 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     private static Dictionary<string, string> ParseFront(string[] lines)
     {
         var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        string? key = null, parent = null; var block = false;
+        string? key = null, parent = null;
+        var block = false;
         foreach (var raw in lines)
         {
-            if (raw.Trim() == "" || raw.TrimStart().StartsWith('#')) { if (block && key != null) { d[key] += "\n"; } continue; }
+            if (raw.Trim() == "" || raw.TrimStart().StartsWith('#'))
+            {
+                if (block && key != null) { d[key] += "\n"; }
+                continue;
+            }
             var indented = char.IsWhiteSpace(raw[0]);
             var t = raw.Trim();
-            if (indented && block && key != null) { d[key] = (d[key] + " " + t).Trim(); continue; }
-            if (t.StartsWith("- ") && key != null && (indented || parent == key)) { d[key] = d[key] == "" ? Clean(t[2..]) : d[key] + ", " + Clean(t[2..]); continue; }
+            if (indented && block && key != null)
+            {
+                d[key] = (d[key] + " " + t).Trim();
+                continue;
+            }
+            if (t.StartsWith("- ") && key != null && (indented || parent == key))
+            {
+                d[key] = d[key] == "" ? Clean(t[2..]) : d[key] + ", " + Clean(t[2..]);
+                continue;
+            }
             var m = KeyLine().Match(t);
             if (!m.Success)
             {
@@ -151,7 +164,13 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
             return res;
         }
 
-        var opt = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 5, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.Hidden | FileAttributes.System };
+        var opt = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            MaxRecursionDepth = 5,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
+        };
         foreach (var f in new DirectoryInfo(root).EnumerateFiles("*", opt))
         {
             var rel = Path.GetRelativePath(root, f.FullName);

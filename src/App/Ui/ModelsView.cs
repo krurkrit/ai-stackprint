@@ -35,7 +35,16 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
     private TabControl? _tabs;
 
     /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
-    public void Leave() { _table = new(); _results = new(); _catalogPane = new(); _comparePane = new(); _tabs = null; _box = null; _selected = null; }
+    public void Leave()
+    {
+        _table = new();
+        _results = new();
+        _catalogPane = new();
+        _comparePane = new();
+        _tabs = null;
+        _box = null;
+        _selected = null;
+    }
 
     public Control Build(string? select = null)
     {
@@ -66,10 +75,22 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
             TextSize.Small, false, Muted);
         var providers = _rows.GroupBy(r => r.Provider).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
             .Select(g => ($"{g.Key} {g.Count():N0}", g.Key));
-        var pills = Pills([($"All {_rows.Count:N0}", ""), .. providers], _provider, v => { _provider = v; x.Refresh(); });
-        _box ??= SearchBox("Search model or provider").With(b => b.Text = _query).OnPause(t => { _query = t.Trim(); Fill(); });
+        var pills = Pills([($"All {_rows.Count:N0}", ""), .. providers], _provider, v =>
+        {
+            _provider = v;
+            x.Refresh();
+        });
+        _box ??= SearchBox("Search model or provider").With(b => b.Text = _query).OnPause(t =>
+        {
+            _query = t.Trim();
+            Fill();
+        });
         Fill();
-        _catalogPane.Content = new StackPanel { Spacing = Space.L, Children = { pills, _box.Free(), _table.Free() } };
+        _catalogPane.Content = new StackPanel
+        {
+            Spacing = Space.L,
+            Children = { pills, _box.Free(), _table.Free() }
+        };
         var compareOpen = x.S.State.ModelsTab == "Compare";
         if (compareOpen)
         {
@@ -78,7 +99,15 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
 
         _tabs = new TabControl
         {
-            ItemsSource = new[] { new TabItem { Header = "Catalog", Content = _catalogPane.Free() }, new TabItem { Header = "Compare", Content = _comparePane.Free() } },
+            ItemsSource = new[] { new TabItem
+            {
+                Header = "Catalog",
+                Content = _catalogPane.Free()
+            }, new TabItem
+            {
+                Header = "Compare",
+                Content = _comparePane.Free()
+            } },
             SelectedIndex = compareOpen ? 1 : 0
         };
         _tabs.SelectionChanged += (_, e) =>
@@ -147,7 +176,9 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         : long.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? UsageCard.Fmt(n)
         : v;
 
-    private async void Edit(ModelRow? row, string? name)
+    private void Edit(ModelRow? row, string? name) => Fire.Forget(EditAsync(row, name));
+
+    private async Task EditAsync(ModelRow? row, string? name)
     {
         if (await Dialogs.Model(x.Owner, row, name, _edits))
         {
@@ -156,7 +187,9 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         }
     }
 
-    private async void Reset(ModelRow r)
+    private void Reset(ModelRow r) => Fire.Forget(ResetAsync(r));
+
+    private async Task ResetAsync(ModelRow r)
     {
         var what = r.Added ? $"Remove {r.Key} from your models?" : $"Drop your changes to {r.Key} ({string.Join(", ", r.Changed.Select(ModelCatalog.Label))}) and use the model data's values?";
         if (await Dialogs.Confirm(x.Owner, r.Added ? "Remove model" : "Reset model", what, r.Added ? "Remove" : "Reset"))

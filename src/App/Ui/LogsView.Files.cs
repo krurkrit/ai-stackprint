@@ -45,7 +45,11 @@ internal partial class LogsView
         _table.Content = rest == 0 ? table : new StackPanel
         {
             Spacing = Space.M,
-            Children = { table, Btn($"Show {Math.Min(rest, RowsStep)} more ({rest} older not shown)", () => { _rows += RowsStep; FillTable(def); }) }
+            Children = { table, Btn($"Show {Math.Min(rest, RowsStep)} more ({rest} older not shown)", () =>
+            {
+                _rows += RowsStep;
+                FillTable(def);
+            }) }
         };
     }
 
@@ -72,9 +76,15 @@ internal partial class LogsView
         _viewerHost.Content = _viewer.Build(_file, () => x.Go("Logs:" + _app));
     }
 
-    private async void Delete(List<LogFile> files)
+    private void Delete(List<LogFile> files) => Fire.Forget(DeleteAsync(files));
+
+    private async Task DeleteAsync(List<LogFile> files)
     {
-        if (files.Count == 0) { await Dialogs.Message(x.Owner, "Delete logs", "No files selected."); return; }
+        if (files.Count == 0)
+        {
+            await Dialogs.Message(x.Owner, "Delete logs", "No files selected.");
+            return;
+        }
         var active = files.Where(f => LogTrash.IsActive(f)).ToList();
         var msg = $"Move {ReadableLog.Plural(files.Count, "file")} ({LogViewer.Size(files.Sum(f => f.Size))}) to the {(OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash")}? You can restore them from there.";
         if (files.Any(f => f.Format != null))

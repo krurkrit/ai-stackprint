@@ -13,7 +13,7 @@ namespace AiStackprint.Services;
 public static partial class CrashReport
 {
     /// <summary>Browsers and GitHub refuse very long links; the entry is cut to stay under this.</summary>
-    public const int MaxUrl = 7000;
+    internal const int MaxUrl = 7000;
 
     /// <summary>The newest entry in crash.log (heading line and stack trace); null when there is none.</summary>
     public static string? LastEntry(string? folder = null)

@@ -91,8 +91,16 @@ public sealed partial class FontRuleSet
                 break;
             case FontMode.Adjust:
                 var up = Resolve(r.Parent);
-                if (prop == FontProp.Size) { r.Size.Mode = mode; r.Size.Value = Math.Round(now.Size - up.Size, 4); }
-                else { r.Weight.Mode = mode; r.Weight.Value = Math.Round((double)(now.Weight - up.Weight), 4); }
+                if (prop == FontProp.Size)
+                {
+                    r.Size.Mode = mode;
+                    r.Size.Value = Math.Round(now.Size - up.Size, 4);
+                }
+                else
+                {
+                    r.Weight.Mode = mode;
+                    r.Weight.Value = Math.Round((double)(now.Weight - up.Weight), 4);
+                }
                 break;
             default:
                 if (prop == FontProp.Family) { r.Family.Mode = mode; }
@@ -106,9 +114,18 @@ public sealed partial class FontRuleSet
     {
         switch (prop)
         {
-            case FontProp.Family: r.Family.Mode = FontMode.Set; r.Family.Value = now.Family; break;
-            case FontProp.Size: r.Size.Mode = FontMode.Set; r.Size.Value = now.Size; break;
-            default: r.Weight.Mode = FontMode.Set; r.Weight.Value = now.Weight; break;
+            case FontProp.Family:
+                r.Family.Mode = FontMode.Set;
+                r.Family.Value = now.Family;
+                break;
+            case FontProp.Size:
+                r.Size.Mode = FontMode.Set;
+                r.Size.Value = now.Size;
+                break;
+            default:
+                r.Weight.Mode = FontMode.Set;
+                r.Weight.Value = now.Weight;
+                break;
         }
     }
 

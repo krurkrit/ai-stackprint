@@ -25,7 +25,12 @@ public sealed class PageHeadTests
         }
 
         head.Children.Add(W.H1("Title"));
-        var w = new Window { Width = 800, Height = 300, Content = W.Page(head) };
+        var w = new Window
+        {
+            Width = 800,
+            Height = 300,
+            Content = W.Page(head)
+        };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         return w.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "Title").TranslatePoint(default, w)!.Value.Y;

@@ -112,7 +112,8 @@ internal sealed class VirtualRows : Panel
                 Children.Add(c);
             }
 
-            var before = HeightOf(i); var wasKnown = _heights[i] >= 0;
+            var before = HeightOf(i);
+            var wasKnown = _heights[i] >= 0;
             c.Measure(new Size(availableSize.Width, double.PositiveInfinity));
             _heights[i] = c.DesiredSize.Height;
             if (!wasKnown && tops[i] + before <= _viewTop)
@@ -127,7 +128,8 @@ internal sealed class VirtualRows : Panel
             Dispatcher.UIThread.Post(() => sv.Offset = new Vector(sv.Offset.X, Math.Max(0, sv.Offset.Y + shift)), DispatcherPriority.Render);
         }
 
-        _first = a; _last = b;
+        _first = a;
+        _last = b;
         var known = _heights.Where(h => h >= 0).ToList();
         if (known.Count > 0)
         {

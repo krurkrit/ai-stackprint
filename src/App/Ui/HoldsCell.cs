@@ -26,7 +26,14 @@ internal static class HoldsCell
             {
                 t.Cursor = Hand;
                 ToolTip.SetTip(t, page == "Mcp" ? "Open the Servers page" : "Open the Hooks page");
-                t.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == MouseButton.Left) { e.Handled = true; x.Go(page); } };
+                t.PointerReleased += (_, e) =>
+                {
+                    if (e.InitialPressMouseButton == MouseButton.Left)
+                    {
+                        e.Handled = true;
+                        x.Go(page);
+                    }
+                };
             }
 
             wrap.Children.Add(t);

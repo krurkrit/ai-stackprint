@@ -116,7 +116,11 @@ public static class SettingsStore
     private static JsonObject ReadDefaults()
     {
         using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("default/settings.json")!;
-        var o = JsonNode.Parse(s, documentOptions: new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })!.AsObject();
+        var o = JsonNode.Parse(s, documentOptions: new()
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        })!.AsObject();
         o.Remove(VersionedJson.Key);
         return o;
     }

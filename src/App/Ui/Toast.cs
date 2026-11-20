@@ -32,7 +32,11 @@ internal static class Toast
             Padding = new Thickness(Space.XL, Space.L),
             HorizontalAlignment = HorizontalAlignment.Right,
             Child = Row(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, TextSize.Small)),
-            Transitions = [new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(400) }]
+            Transitions = [new DoubleTransition
+            {
+                Property = Visual.OpacityProperty,
+                Duration = TimeSpan.FromMilliseconds(400)
+            }]
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         Host.Children.Add(t);
         while (Host.Children.Count(c => c.Tag is not Pinned) > 3)
@@ -62,7 +66,9 @@ internal static class Toast
     }
 
     /// <summary>Copies text to the clipboard and confirms it.</summary>
-    public static async void Copy(TopLevel owner, string text, string what = "Path")
+    public static void Copy(TopLevel owner, string text, string what = "Path") => Fire.Forget(CopyAsync(owner, text, what));
+
+    private static async Task CopyAsync(TopLevel owner, string text, string what = "Path")
     {
         if (owner.Clipboard is not { } c)
         {
@@ -70,7 +76,11 @@ internal static class Toast
         }
 
         try { await c.SetTextAsync(text); }
-        catch (System.Runtime.InteropServices.ExternalException) { Show("Could not copy: the clipboard is busy. Try again.", "warning"); return; }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            Show("Could not copy: the clipboard is busy. Try again.", "warning");
+            return;
+        }
         Show($"{what} copied", "copy");
     }
 }

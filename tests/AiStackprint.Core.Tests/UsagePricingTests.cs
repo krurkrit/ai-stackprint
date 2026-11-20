@@ -20,15 +20,36 @@ public class UsagePricingTests
         t.Models["claude-opus-5-5"] = new ModelInfo
         {
             Provider = "anthropic",
-            Price = new() { Input = 4, Output = 20, CacheRead = 0.2m, CacheWrite = 5, CacheWrite1h = 8 },
-            Multipliers = new() { ["fast"] = 2, ["us"] = 1.1m },
+            Price = new()
+            {
+                Input = 4,
+                Output = 20,
+                CacheRead = 0.2m,
+                CacheWrite = 5,
+                CacheWrite1h = 8
+            },
+            Multipliers = new()
+            {
+                ["fast"] = 2,
+                ["us"] = 1.1m
+            },
             WebSearch = 0.01m,
         };
         t.Models["gpt-6.1-sol"] = new ModelInfo
         {
             Provider = "openai",
-            Price = new() { Input = 2, Output = 10, CacheRead = 0.1m },
-            Above = [new PriceTier { Tokens = 272_000, Input = 4, Output = 15 }],
+            Price = new()
+            {
+                Input = 2,
+                Output = 10,
+                CacheRead = 0.1m
+            },
+            Above = [new PriceTier
+            {
+                Tokens = 272_000,
+                Input = 4,
+                Output = 15
+            }],
         };
         return t;
     }

@@ -14,7 +14,12 @@ public sealed partial class LogQuery
     private static readonly TimeSpan _timeout = TimeSpan.FromMilliseconds(200);
     private readonly Regex[] _parts;
 
-    private LogQuery(Regex[] parts, string? role, string? tool) { _parts = parts; Role = role; Tool = tool; }
+    private LogQuery(Regex[] parts, string? role, string? tool)
+    {
+        _parts = parts;
+        Role = role;
+        Tool = tool;
+    }
 
     /// <summary>role: value (user, assistant, thinking, tool, result, system), or null.</summary>
     public string? Role { get; }

@@ -83,9 +83,17 @@ public sealed class SystemEdgeTests : IDisposable
     public void A_system_with_nothing_to_open_it_with_is_not_an_error()
     {
         var tried = 0;
-        PathUtil.Launcher = _ => { tried++; throw new System.ComponentModel.Win32Exception("no program"); };
+        PathUtil.Launcher = _ =>
+        {
+            tried++;
+            throw new System.ComponentModel.Win32Exception("no program");
+        };
         PathUtil.OpenFile(Path.Combine(_tmp, "none.txt"));
-        PathUtil.Launcher = _ => { tried++; throw new InvalidOperationException("no process"); };
+        PathUtil.Launcher = _ =>
+        {
+            tried++;
+            throw new InvalidOperationException("no process");
+        };
         PathUtil.OpenFolder(_tmp);
         Assert.Equal(2, tried);   // both were tried and neither raised
     }

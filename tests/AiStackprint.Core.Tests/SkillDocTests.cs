@@ -105,7 +105,11 @@ public sealed class SkillDocTests : IDisposable
                            "bare@shop": [ { "installPath": "{{Esc("none")}}" } ] } }
             """);
         var found = new List<Item>();
-        PluginReaders.Find("claude")!.Read(registry, new AppDefinition { Id = "claude-code", Name = "Claude Code" }, found);
+        PluginReaders.Find("claude")!.Read(registry, new AppDefinition
+        {
+            Id = "claude-code",
+            Name = "Claude Code"
+        }, found);
         var by = found.Where(i => i.Kind == "Plugin").ToDictionary(i => i.Name);
         Assert.Equal(("Formats code", "Acme", "2.5.1"), (by["fmt@acme-market"].Description, by["fmt@acme-market"].Author, by["fmt@acme-market"].Version));
         Assert.Equal(["format", "lint"], by["fmt@acme-market"].Keywords);   // strings only, no blanks or repeats

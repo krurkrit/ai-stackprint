@@ -14,8 +14,18 @@ public enum FontProp { Family, Size, Weight }
 /// </summary>
 public sealed partial class FontRuleSet(Dictionary<string, FontRule> rules)
 {
-    private static readonly FontLimit _sizeLimit = new() { Min = 1, Max = 400, Step = 1 };
-    private static readonly FontLimit _weightLimit = new() { Min = 100, Max = 900, Step = 100 };
+    private static readonly FontLimit _sizeLimit = new()
+    {
+        Min = 1,
+        Max = 400,
+        Step = 1
+    };
+    private static readonly FontLimit _weightLimit = new()
+    {
+        Min = 100,
+        Max = 900,
+        Step = 100
+    };
 
     public IReadOnlyDictionary<string, FontRule> Rules => rules;
 

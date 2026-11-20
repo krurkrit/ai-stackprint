@@ -18,7 +18,9 @@ internal partial class LogViewer
     /// Opens a file: the loading icon shows in the viewer while the file is read and parsed off the UI thread, then the text fades in. A newer call (another file,
     /// F5) makes an older one that is still reading stop. Changes of the open file while it is followed use <see cref="Load"/>, which keeps the scroll position.
     /// </summary>
-    private async void LoadAsync(bool toEnd)
+    private void LoadAsync(bool toEnd) => Fire.Forget(LoadAsyncCore(toEnd));
+
+    private async Task LoadAsyncCore(bool toEnd)
     {
         if (_file is not { } f)
         {
@@ -43,9 +45,17 @@ internal partial class LogViewer
 
         _readSize = r.Bytes;
         _status.Text = r.Problem ?? (r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "");
-        if (r.Problem != null) { _raw = ""; _readable = null; }
+        if (r.Problem != null)
+        {
+            _raw = "";
+            _readable = null;
+        }
         else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd); }
-        else { _raw = r.Raw; _firstLine = r.FirstLine; }
+        else
+        {
+            _raw = r.Raw;
+            _firstLine = r.FirstLine;
+        }
         Render(toEnd);
         if (_view.Content is Control shown)
         {

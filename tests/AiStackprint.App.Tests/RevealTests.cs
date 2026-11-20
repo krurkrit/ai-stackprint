@@ -15,12 +15,20 @@ public sealed class RevealTests
     [AvaloniaFact]
     public void Busy_Into_shows_the_loading_icon_first_then_the_result_which_fades_in()
     {
-        var w = new Window { Width = 800, Height = 600 };
+        var w = new Window
+        {
+            Width = 800,
+            Height = 600
+        };
         var host = new ContentControl();
         w.Content = host;
         w.Show();
         using var gate = new ManualResetEventSlim();
-        Busy.Into(host, "Loading it…", _ => { gate.Wait(TestContext.Current.CancellationToken); return "done"; }, r => new TextBlock { Text = r });
+        Busy.Into(host, "Loading it…", _ =>
+        {
+            gate.Wait(TestContext.Current.CancellationToken);
+            return "done";
+        }, r => new TextBlock { Text = r });
         Assert.Contains("Loading it…", Ui.Texts(w));
         gate.Set();
         Ui.WaitUntil(() => Ui.Texts(w).Contains("done"));
@@ -36,7 +44,11 @@ public sealed class RevealTests
     [AvaloniaFact]
     public void The_dashboard_before_the_first_scan_has_its_title_and_one_loading_block_for_the_page()
     {
-        var w = new Window { Width = 1200, Height = 900 };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 900
+        };
         w.Content = DashboardView.Loading(out var status);
         w.Show();
         var t = Ui.Texts(w);
@@ -52,13 +64,21 @@ public sealed class RevealTests
     [AvaloniaFact]
     public void A_control_faded_after_it_is_already_in_the_window_still_becomes_visible()
     {
-        var w = new Window { Width = 400, Height = 300 };
+        var w = new Window
+        {
+            Width = 400,
+            Height = 300
+        };
         var host = new ContentControl { Content = new Border() };
         w.Content = host;
         w.Show();
         var b = (Border)host.Content;
         Reveal.Fade(b);
-        Ui.WaitUntil(() => { Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick(); return b.Opacity > 0; });   // the fade runs on the render clock
+        Ui.WaitUntil(() =>
+        {
+            Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            return b.Opacity > 0;
+        });   // the fade runs on the render clock
         Assert.True(b.Opacity > 0);
     }
 
@@ -69,7 +89,12 @@ public sealed class RevealTests
         File.WriteAllText(file, "hello from the file");
         try
         {
-            var w = new Window { Width = 800, Height = 600, Content = FileView.Open(file, false, _ => { }) };
+            var w = new Window
+            {
+                Width = 800,
+                Height = 600,
+                Content = FileView.Open(file, false, _ => { })
+            };
             w.Show();
             Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.Contains("hello from the file")));
         }

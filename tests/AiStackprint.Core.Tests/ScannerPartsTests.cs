@@ -49,7 +49,17 @@ public sealed class ScannerPartsTests : IDisposable
     public void Agents_use_their_front_matter_name_and_projects_are_scanned()
     {
         Write("repo/.app/agents/x.md", "---\nname: reviewer\ndescription: Reads diffs\n---\n");
-        var d = new AppDefinition { Id = "app", Name = "App", Parts = { new PartSource { Path = ".app/agents", Level = "Project", Kind = "agent" } } };
+        var d = new AppDefinition
+        {
+            Id = "app",
+            Name = "App",
+            Parts = { new PartSource
+            {
+                Path = ".app/agents",
+                Level = "Project",
+                Kind = "agent"
+            } }
+        };
         var repo = Path.Combine(_tmp, "repo");
         var a = Assert.Single(Scanner.Collect([d], [repo]).Items, i => i.Kind == "Agent");
         Assert.Equal("reviewer", a.Name);

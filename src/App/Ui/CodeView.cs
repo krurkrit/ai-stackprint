@@ -116,9 +116,16 @@ internal sealed class CodeView : Border, IDisposable
             return;
         }
 
-        _textMate.Dispose(); _textMate = null;
+        _textMate.Dispose();
+        _textMate = null;
 #pragma warning disable S2696 // see Install
-        if (--_live <= 0) { _live = 0; _registry = null; _shared = null; MemoryTrim.Request(); }
+        if (--_live <= 0)
+        {
+            _live = 0;
+            _registry = null;
+            _shared = null;
+            MemoryTrim.Request();
+        }
 #pragma warning restore S2696   // the grammars are the largest thing the app loads
     }
 
@@ -157,8 +164,14 @@ internal sealed class CodeView : Border, IDisposable
         }
 
         var tv = _editor.TextArea.TextView;
-        if (_flash == null) { _flash = new Flasher(); tv.BackgroundRenderers.Add(_flash); }
-        _flash.From = Math.Max(1, fromLine); _flash.Start = DateTime.UtcNow; _flash.Seconds = seconds;
+        if (_flash == null)
+        {
+            _flash = new Flasher();
+            tv.BackgroundRenderers.Add(_flash);
+        }
+        _flash.From = Math.Max(1, fromLine);
+        _flash.Start = DateTime.UtcNow;
+        _flash.Seconds = seconds;
         _flash.Brush = this.TryFindResource(W.HighlightKey, ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
         _flashTimer ??= new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(60), Avalonia.Threading.DispatcherPriority.Render, (_, _) =>
         {
@@ -174,7 +187,10 @@ internal sealed class CodeView : Border, IDisposable
     /// <summary>Draws the fading tint behind the flashed lines.</summary>
     private sealed class Flasher : AvaloniaEdit.Rendering.IBackgroundRenderer
     {
-        public int From; public DateTime Start; public double Seconds; public Avalonia.Media.IBrush? Brush;
+        public int From;
+        public DateTime Start;
+        public double Seconds;
+        public Avalonia.Media.IBrush? Brush;
         private double Progress => (DateTime.UtcNow - Start).TotalSeconds / Seconds;
         public bool Done => Seconds <= 0 || Progress >= 1;
         public AvaloniaEdit.Rendering.KnownLayer Layer => AvaloniaEdit.Rendering.KnownLayer.Background;

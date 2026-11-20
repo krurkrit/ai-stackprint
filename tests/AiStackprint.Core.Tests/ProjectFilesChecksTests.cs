@@ -38,7 +38,17 @@ public sealed class ProjectFilesChecksTests : IDisposable
         Write("src/a.ts", "x");
         Write("app.log", "x");
         Write(".cursorignore", "*.log\nnothing/\n");
-        var defs = new[] { new AppDefinition { Id = "cursor", Name = "Cursor", Configs = { new ConfigFile { Path = ".cursorignore", Level = "Project", Kind = "ignore" } } } };
+        var defs = new[] { new AppDefinition
+        {
+            Id = "cursor",
+            Name = "Cursor",
+            Configs = { new ConfigFile
+            {
+                Path = ".cursorignore",
+                Level = "Project",
+                Kind = "ignore"
+            } }
+        } };
         var check = ProjectChecks.Run(Project, Project, defs, Home);
         var ig = Assert.Single(check.Ignores);
         Assert.Equal(1, ig.Hidden);
@@ -54,7 +64,17 @@ public sealed class ProjectFilesChecksTests : IDisposable
         Write("CLAUDE.md", "See `src/real.ts` and `docs/guide.md` and `src/gone.ts` and `docs/old/plan.md:12`.\n"
             + "Not paths: `https://x.io/a/b`, `src/**/*.ts`, `path/to/file.md`, `npm run build`, `bin/Debug/app.dll`.\n"
             + "```\nsrc/in-fence.ts\n```\n");
-        var defs = new[] { new AppDefinition { Id = "claude-code", Name = "Claude Code", Context = "claude", Configs = { new ConfigFile { Path = "CLAUDE.md", Level = "Project" } } } };
+        var defs = new[] { new AppDefinition
+        {
+            Id = "claude-code",
+            Name = "Claude Code",
+            Context = "claude",
+            Configs = { new ConfigFile
+            {
+                Path = "CLAUDE.md",
+                Level = "Project"
+            } }
+        } };
         var issue = Assert.Single(ProjectChecks.Run(Project, Project, defs, Home).Issues, i => i.Finding.Text.Contains("paths that do not exist"));
         Assert.Contains("src/gone.ts", issue.Finding.Text);
         Assert.Contains("docs/old/plan.md:12", issue.Finding.Text);

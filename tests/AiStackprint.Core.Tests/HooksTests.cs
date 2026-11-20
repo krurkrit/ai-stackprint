@@ -25,7 +25,11 @@ public sealed class HooksTests : IDisposable
     }
 
     private static Item Config(string path, string kind, string level, string? project = null, string app = "app") =>
-        new("Config", Path.GetFileName(path), kind, "App", level, path) { App = app, Project = project };
+        new("Config", Path.GetFileName(path), kind, "App", level, path)
+        {
+            App = app,
+            Project = project
+        };
 
     [Fact]
     public void Claude_and_Gemini_settings_hooks_are_read_with_their_matcher_and_masked_command()
@@ -101,7 +105,11 @@ public sealed class HooksTests : IDisposable
         Write("plug/scripts/ok.sh");
         Write("plug/hooks/hooks.json", """{ "hooks": { "PreToolUse": [ { "matcher": "Bash", "hooks": [ { "type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/ok.sh" } ] } ] } }""");
         Write("plug/more/extra.json", """{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/missing.sh" } ] } ] } }""");
-        var plugin = new Item("Plugin", "guard@market", "d", "App", "User", dir) { App = "claude-code", Scope = "disabled" };
+        var plugin = new Item("Plugin", "guard@market", "d", "App", "User", dir)
+        {
+            App = "claude-code",
+            Scope = "disabled"
+        };
         var hooks = Hooks.FromPlugins([plugin], Home);
 
         Assert.Equal(["PreToolUse · Bash", "Stop"], hooks.Select(h => h.Name));

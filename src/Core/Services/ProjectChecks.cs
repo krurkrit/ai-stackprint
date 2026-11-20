@@ -33,7 +33,11 @@ public static partial class ProjectChecks
             .Select(a => (a.App, a.Rule!.Read(project, start, home))).ToList();
         var issues = new List<ProjectIssue>();
         // One walk of the project folder for every check that needs its files (a big project took 0.8 s to list, and it was listed twice)
-        var listed = new Lazy<(List<string> Files, bool Complete)>(() => { var l = ProjectFiles.List(project, out var c); return (l, c); });
+        var listed = new Lazy<(List<string> Files, bool Complete)>(() =>
+        {
+            var l = ProjectFiles.List(project, out var c);
+            return (l, c);
+        });
         Patterns(project, context, listed, issues);
         Duplicates(context, issues);
         Empty(project, context, issues);

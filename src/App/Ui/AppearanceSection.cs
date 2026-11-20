@@ -21,7 +21,15 @@ internal static class AppearanceSection
     /// <summary>Typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
     private static NumericUpDown SizeBox(double value, int min, int max, Action<double> set)
     {
-        var box = new NumericUpDown { Minimum = min, Maximum = max, Increment = 1, FormatString = "0", MinWidth = Widths.FieldS, Value = (decimal)Math.Clamp(Math.Round(value), min, max) };
+        var box = new NumericUpDown
+        {
+            Minimum = min,
+            Maximum = max,
+            Increment = 1,
+            FormatString = "0",
+            MinWidth = Widths.FieldS,
+            Value = (decimal)Math.Clamp(Math.Round(value), min, max)
+        };
         box.ValueChanged += (_, e) =>
         {
             if (e.NewValue is not { } v)
@@ -30,7 +38,11 @@ internal static class AppearanceSection
             }
 
             var n = Math.Clamp(Math.Round((double)v), min, max);
-            if (Math.Abs(n - value) > 0.001) { value = n; set(n); }
+            if (Math.Abs(n - value) > 0.001)
+            {
+                value = n;
+                set(n);
+            }
         };
         return box;
     }
@@ -38,23 +50,45 @@ internal static class AppearanceSection
     public static Control Build(Ctx x)
     {
         var st = x.S.Settings;
-        void Change(Action a) { a(); SettingsStore.Save(st); x.Restyle(); }
+        void Change(Action a)
+        {
+            a();
+            SettingsStore.Save(st);
+            x.Restyle();
+        }
 
         var installed = _installed.Value;
         var monoKnown = new[] { "JetBrains Mono", "Cascadia Mono", "Cascadia Code", "Consolas", "Fira Code", "Fira Mono", "Source Code Pro", "Menlo", "Monaco", "SF Mono", "DejaVu Sans Mono", "Ubuntu Mono", "Courier New" };
         var monos = installed.Where(f => monoKnown.Contains(f, StringComparer.OrdinalIgnoreCase) || f.Contains("Mono", StringComparison.OrdinalIgnoreCase) || f.Contains("Code", StringComparison.OrdinalIgnoreCase)).ToList();
 
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*"), RowSpacing = Space.L, ColumnSpacing = Space.XL };
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions($"{Widths.Label},*"),
+            RowSpacing = Space.L,
+            ColumnSpacing = Space.XL
+        };
         void Add(string label, Control c, string? hint = null)
         {
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             var r = grid.RowDefinitions.Count - 1;
             var l = Txt(label, TextSize.Body, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
             var v = hint == null ? c : Row(c, Txt(hint, TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
-            Grid.SetRow(l, r); Grid.SetRow(v, r); Grid.SetColumn(v, 1);
-            grid.Children.Add(l); grid.Children.Add(v);
+            Grid.SetRow(l, r);
+            Grid.SetRow(v, r);
+            Grid.SetColumn(v, 1);
+            grid.Children.Add(l);
+            grid.Children.Add(v);
         }
-        void Group(string name) { Add("", new Panel()); grid.Children.RemoveAt(grid.Children.Count - 2); grid.Children.Add(Title(name, TextSize.Body).With(t => { Grid.SetRow(t, grid.RowDefinitions.Count - 1); Grid.SetColumnSpan(t, 2); })); }
+        void Group(string name)
+        {
+            Add("", new Panel());
+            grid.Children.RemoveAt(grid.Children.Count - 2);
+            grid.Children.Add(Title(name, TextSize.Body).With(t =>
+            {
+                Grid.SetRow(t, grid.RowDefinitions.Count - 1);
+                Grid.SetColumnSpan(t, 2);
+            }));
+        }
 
         Group("Fonts");
         var set = new FontRuleSet(st.Fonts);
@@ -72,10 +106,19 @@ internal static class AppearanceSection
         }
 
         Group("Logs");
-        var lines = new ToggleSwitch { IsChecked = st.LogLineNumbers, OnContent = "Shown", OffContent = "Hidden" };
+        var lines = new ToggleSwitch
+        {
+            IsChecked = st.LogLineNumbers,
+            OnContent = "Shown",
+            OffContent = "Hidden"
+        };
         lines.IsCheckedChanged += (_, _) => Change(() => st.LogLineNumbers = lines.IsChecked == true);
         Add("Line numbers", lines, "Logs only; the config editor always shows them");
-        Add("New log lines", SizeBox(st.FadeSeconds, 0, 60, n => { st.FadeSeconds = (int)n; SettingsStore.Save(st); }), "Seconds new lines and steps stay highlighted while they fade; 0 = off");
+        Add("New log lines", SizeBox(st.FadeSeconds, 0, 60, n =>
+        {
+            st.FadeSeconds = (int)n;
+            SettingsStore.Save(st);
+        }), "Seconds new lines and steps stay highlighted while they fade; 0 = off");
 
         var preview = new Border
         {
@@ -98,7 +141,9 @@ internal static class AppearanceSection
             st.Fonts.Clear();
             foreach (var (k, v) in d.Fonts) { st.Fonts[k] = v; }
             controls.ForEach(c => c.Refresh());
-            st.LogLineNumbers = d.LogLineNumbers; st.Light = new(); st.Dark = new();
+            st.LogLineNumbers = d.LogLineNumbers;
+            st.Light = new();
+            st.Dark = new();
         }), false, "arrow_reset");
         var colors = new StackPanel
         {
@@ -106,7 +151,11 @@ internal static class AppearanceSection
             Children = { Title("Colors", TextSize.Body), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", TextSize.Caption, false, Muted),
             ColorSettings.Build(st, Change) }
         };
-        return Section("text_font", "Appearance", new StackPanel { Spacing = Space.XL, Children = { grid, preview, colors } }, reset);
+        return Section("text_font", "Appearance", new StackPanel
+        {
+            Spacing = Space.XL,
+            Children = { grid, preview, colors }
+        }, reset);
     }
 
     private const string NotInstalled = " (not installed)";
@@ -142,7 +191,12 @@ internal static class AppearanceSection
 
     internal static ComboBox Combo(List<string> items, string current, Action<string> pick)
     {
-        var c = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : items.FirstOrDefault(), MinWidth = Widths.Field };
+        var c = new ComboBox
+        {
+            ItemsSource = items,
+            SelectedItem = items.Contains(current) ? current : items.FirstOrDefault(),
+            MinWidth = Widths.Field
+        };
         c.SelectionChanged += (_, _) => { if (c.SelectedItem is string s && s != current) { pick(s); } };
         return c;
     }

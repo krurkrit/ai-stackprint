@@ -65,11 +65,28 @@ internal class ClaudePluginReader : IPluginReader
                     var project = Str("projectPath") is "" ? null : Str("projectPath");
                     var m = Manifest(dir);
                     rows.Add(new Item("Plugin", p.Name, m.Description, app.Name, level, dir)
-                    { App = app.Id, Scope = scope, Project = project, Version = Str("version") is "" ? null : Str("version"), Author = m.Author ?? Market(p.Name), Keywords = m.Keywords, Provides = m.Provides });
+                    {
+                        App = app.Id,
+                        Scope = scope,
+                        Project = project,
+                        Version = Str("version") is "" ? null : Str("version"),
+                        Author = m.Author ?? Market(p.Name),
+                        Keywords = m.Keywords,
+                        Provides = m.Provides
+                    });
                     if (dir != "")
                     {
-                        Scanner.Tagged(rows, () => Scanner.ReadRoot(dir, new ScanRoot { Level = level, Depth = 6 }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
-                            i => i with { App = app.Id, Plugin = p.Name, Project = project });
+                        Scanner.Tagged(rows, () => Scanner.ReadRoot(dir, new ScanRoot
+                        {
+                            Level = level,
+                            Depth = 6
+                        }, $"{app.Name} · {p.Name.Split('@')[0]}", rows),
+                            i => i with
+                            {
+                                App = app.Id,
+                                Plugin = p.Name,
+                                Project = project
+                            });
                         PluginContents.Add(rows, dir, m, new(app, level, project, p.Name));
                     }
                 }

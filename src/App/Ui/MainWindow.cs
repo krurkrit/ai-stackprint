@@ -9,8 +9,6 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Media;
-using Avalonia.Styling;
 
 using static AiStackprint.Ui.W;
 
@@ -40,7 +38,10 @@ internal partial class MainWindow : Window
 
     public MainWindow()
     {
-        Title = "AI Stackprint"; Width = StartWidth; Height = StartHeight; MinWidth = MinimumWidth;
+        Title = "AI Stackprint";
+        Width = StartWidth;
+        Height = StartHeight;
+        MinWidth = MinimumWidth;
         using (var icon = typeof(MainWindow).Assembly.GetManifestResourceStream("app-icon.ico"))
         {
             if (icon != null)
@@ -54,29 +55,72 @@ internal partial class MainWindow : Window
         _s.State = StateStore.Load();
         LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
-        _x = new Ctx(_s, this, Go, Scan) { AddApp = AddApp, AddProject = AddProject, Restyle = Restyle, Reload = Reload, Refresh = Refresh, Open = OpenItem, Browse = Browse, Limits = new LimitsService(() => _s.Settings) };
-        _skills = new LibraryView(_x, "Skill"); _plugins = new LibraryView(_x, "Plugin"); _parts = new LibraryView(_x, "Part"); _apps = new AppsView(_x); _detail = new AppDetailView(_x);
-        _project = new ProjectView(_x, RemoveProject, RelocateProject); _settings = new SettingsView(_x); _logs = new LogsView(_x); _health = new HealthView(_x); _mcp = new McpView(_x); _hooks = new HooksView(_x); _usage = new UsageView(_x); _models = new ModelsView(_x);
+        _x = new Ctx(_s, this, Go, Scan)
+        {
+            AddApp = AddApp,
+            AddProject = AddProject,
+            Restyle = Restyle,
+            Reload = Reload,
+            Refresh = Refresh,
+            Open = OpenItem,
+            Browse = Browse,
+            Limits = new LimitsService(() => _s.Settings)
+        };
+        _skills = new LibraryView(_x, "Skill");
+        _plugins = new LibraryView(_x, "Plugin");
+        _parts = new LibraryView(_x, "Part");
+        _apps = new AppsView(_x);
+        _detail = new AppDetailView(_x);
+        _project = new ProjectView(_x, RemoveProject, RelocateProject);
+        _settings = new SettingsView(_x);
+        _logs = new LogsView(_x);
+        _health = new HealthView(_x);
+        _mcp = new McpView(_x);
+        _hooks = new HooksView(_x);
+        _usage = new UsageView(_x);
+        _models = new ModelsView(_x);
         _palette = new CommandPalette(_x, _overlay, Go);
         _side = new Border
         {
             Width = OpenWidth,
             ClipToBounds = true,
             Padding = new Thickness(Space.L, Space.L),
-            Transitions = [new DoubleTransition { Property = WidthProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }]
+            Transitions = [new DoubleTransition
+            {
+                Property = WidthProperty,
+                Duration = TimeSpan.FromMilliseconds(160),
+                Easing = new CubicEaseOut()
+            }]
         }.Themed(Border.BackgroundProperty, SideKey);
         var main = new DockPanel();
         main.Children.Add(_body);
-        var root = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), RowDefinitions = new RowDefinitions("Auto,*") }.Themed(Panel.BackgroundProperty, MainKey);
+        var root = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            RowDefinitions = new RowDefinitions("Auto,*")
+        }.Themed(Panel.BackgroundProperty, MainKey);
         var bar = TitleBar();
         Grid.SetColumnSpan(bar, 2);
-        Grid.SetRow(_side, 1); Grid.SetRow(main, 1);
+        Grid.SetRow(_side, 1);
+        Grid.SetRow(main, 1);
         GoAction = Go;
         Grid.SetColumn(main, 1);
-        root.Children.Add(bar); root.Children.Add(_side); root.Children.Add(main);
-        Toast.Host = new StackPanel { Spacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, Space.XXXL, Space.XXL) };
-        Grid.SetColumnSpan(Toast.Host, 2); Grid.SetColumnSpan(_overlay, 2); Grid.SetRowSpan(Toast.Host, 2); Grid.SetRowSpan(_overlay, 2);
-        root.Children.Add(Toast.Host); root.Children.Add(_overlay);
+        root.Children.Add(bar);
+        root.Children.Add(_side);
+        root.Children.Add(main);
+        Toast.Host = new StackPanel
+        {
+            Spacing = Space.M,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, Space.XXXL, Space.XXL)
+        };
+        Grid.SetColumnSpan(Toast.Host, 2);
+        Grid.SetColumnSpan(_overlay, 2);
+        Grid.SetRowSpan(Toast.Host, 2);
+        Grid.SetRowSpan(_overlay, 2);
+        root.Children.Add(Toast.Host);
+        root.Children.Add(_overlay);
         Content = root;
         _body.Content = DashboardView.Loading(out var status);
         _status = status;   // the first scan: the dashboard's controls, each card with the loading icon
@@ -85,7 +129,12 @@ internal partial class MainWindow : Window
         // Right-click on any text copies it (the selection, or the whole block): also for text in buttons and clickable rows, where a drag cannot select (one shared menu, no per-block cost)
         AddHandler(PointerReleasedEvent, CopyMenu, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         ActualThemeVariantChanged += (_, _) => RefreshNav();   // OS theme change or sun/moon click
-        Opened += (_, _) => { _perfOpened = System.Diagnostics.Stopwatch.GetTimestamp(); _s.Use(AppCatalog.Read()); Scan(); };
+        Opened += (_, _) =>
+        {
+            _perfOpened = System.Diagnostics.Stopwatch.GetTimestamp();
+            _s.Use(AppCatalog.Read());
+            Scan();
+        };
     }
 
     private void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
@@ -101,149 +150,5 @@ internal partial class MainWindow : Window
         item.Click += (_, _) => Toast.Copy(this, chosen, "Text");
         new ContextMenu { Items = { item } }.Open(tb);
         e.Handled = true;
-    }
-
-    /// <summary>Sidebar row: icon + label when open, icon with tooltip when collapsed.</summary>
-    private Button NavBtn(string icon, string text, Action a, bool active = false)
-    {
-        var full = _navOpen;
-        var glyph = Icon(icon, IconSize.L);
-        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.L, Children = { glyph } };
-        if (full)
-        {
-            content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
-        }
-
-        var b = new Button
-        {
-            Content = content,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            MinHeight = Sizes.NavItem,
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            HorizontalContentAlignment = full ? HorizontalAlignment.Left : HorizontalAlignment.Center,
-            Padding = new Thickness(full ? Space.L : 0, 0),
-            FontWeight = MenuWeight,
-            FontSize = Size(TextSize.Body * MenuScale)
-        };
-        if (MenuFont != null)
-        {
-            b.FontFamily = MenuFont;
-        }
-
-        if (active)
-        {
-            b.Themed(BackgroundProperty, Surface).Themed(ForegroundProperty, Accent);
-            b.CornerRadius = new CornerRadius(Radius.L);
-        }
-        HoverStyle(b);
-        if (!full)
-        {
-            ToolTip.SetTip(b, text);
-        }
-
-        b.Click += (_, _) => a();
-        return b;
-    }
-
-    /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own hover and pressed colors.</summary>
-    private static void HoverStyle(Button b)
-    {
-        b.CornerRadius = new CornerRadius(Radius.L);
-        var app = Application.Current!;
-        foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
-        {
-            var d = new ResourceDictionary();
-            foreach (var s in new[] { "PointerOver", "Pressed" })
-            {
-                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg))
-                {
-                    d["ButtonBackground" + s] = bg;
-                }
-
-                if (app.TryGetResource("AccentButtonForeground" + s, v, out var fg))
-                {
-                    d["ButtonForeground" + s] = fg;
-                }
-            }
-            b.Resources.ThemeDictionaries[v] = d;
-        }
-    }
-
-    private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
-
-    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Part (commands and agents), Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
-    private void Go(string view)
-    {
-        if (view != _view) { _back.Push(_view); _forward.Clear(); }
-        Show(view);
-    }
-
-    private void Show(string view)
-    {
-        var rescan = _view == "Settings" && view != "Settings" && _x.SettingsChanged;
-        _view = view;
-        if (rescan) { _x.SettingsChanged = false; Scan(); }
-        else
-        {
-            Refresh();
-        }
-    }
-
-    /// <summary>Skills or Plugins page filtered to an app and/or a search text.</summary>
-    private void Browse(string kind, string? app, string? query)
-    {
-        (kind switch { "Plugin" => _plugins, "Part" => _parts, _ => _skills }).Filter(app, query);
-        Go(kind);
-    }
-
-    /// <summary>Opens a skill or plugin on its page with the panel showing it.</summary>
-    private void OpenItem(Item i)
-    {
-        if (i.Kind == "Plugin") { _plugins.Select(i); Go("Plugin"); }
-        else if (i.Kind == "Skill") { _skills.Select(i); Go("Skill"); }
-        else if (i.Kind is "Command" or "Agent") { _parts.Select(i); Go("Part"); }
-        else
-        {
-            Go("App:" + i.App);
-        }
-    }
-
-    private Control Section(string title) => _navOpen
-        ? Txt(title, TextSize.Tiny, false, Muted).With(t => t.Margin = new Thickness(Space.L, Space.XL, 0, Space.XS))
-        : new Border { Height = Stroke.Thin, Margin = new Thickness(Space.M, Space.L) }.Themed(Border.BackgroundProperty, BorderKey);
-
-    private void RefreshNav()
-    {
-        var nav = new StackPanel { Spacing = Space.XXS };
-        nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
-        nav.Children.Add(Go("apps", "Apps", "Apps"));
-        nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
-        nav.Children.Add(Go("sparkle", "Skills", "Skill"));
-        nav.Children.Add(Go("bot", "Commands & Agents", "Part"));
-        nav.Children.Add(Go("server", "Servers", "Mcp"));
-        nav.Children.Add(Go("flash", "Hooks", "Hooks"));
-        nav.Children.Add(Go("data_pie", "Usage", "Usage"));
-        nav.Children.Add(Go("brain_circuit", "Models", "Models"));
-        nav.Children.Add(Go("document_text", "Logs", "Logs"));
-        var warnings = _s.HealthReady ? _s.AllHealth.Count(h => h.Finding.Warning) : 0;   // no count until the projects are checked: it would be too low
-        nav.Children.Add(Go("heart_pulse", warnings > 0 && _navOpen ? $"Health · {warnings}" : "Health", "Health"));
-        nav.Children.Add(Section("PROJECTS"));
-        foreach (var p in _s.Projects)
-        {
-            nav.Children.Add(ProjectRow(p));
-        }
-
-        nav.Children.Add(NavBtn("folder_add", "Add project folder", AddProject));
-
-        var foot = new StackPanel { Spacing = Space.M, Margin = new Thickness(0, Space.L, 0, 0) };
-        foot.Children.Add(Go("settings", "Settings", "Settings"));
-        UpdateRescan();   // the title bar's button
-
-        var dock = new DockPanel();
-        DockPanel.SetDock(foot, Dock.Bottom);
-        dock.Children.Add(foot);
-        dock.Children.Add(new ScrollViewer { Content = nav });
-        _side.Child = dock;
     }
 }

@@ -53,13 +53,29 @@ internal partial class MainWindow
         };
         var search = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b =>
         {
-            b.MinHeight = 0; b.Height = Sizes.CompactControl; b.Padding = new Thickness(Space.L, 0); b.Width = Widths.TitleSearch; b.VerticalAlignment = VerticalAlignment.Center;   // shorter than the bar, like an input in it
-            b.HorizontalContentAlignment = HorizontalAlignment.Left; b.Themed(BackgroundProperty, SideKey);
+            b.MinHeight = 0;
+            b.Height = Sizes.CompactControl;
+            b.Padding = new Thickness(Space.L, 0);
+            b.Width = Widths.TitleSearch;
+            b.VerticalAlignment = VerticalAlignment.Center;   // shorter than the bar, like an input in it
+            b.HorizontalContentAlignment = HorizontalAlignment.Left;
+            b.Themed(BackgroundProperty, SideKey);
             ToolTip.SetTip(b, "Find apps, skills, plugins, projects and actions");
         });
-        var row = new Grid { Height = TitleBarHeight, ColumnDefinitions = new ColumnDefinitions("*,Auto,*") };   // the search box stays in the middle of the window
+        var row = new Grid
+        {
+            Height = TitleBarHeight,
+            ColumnDefinitions = new ColumnDefinitions("*,Auto,*")
+        };   // the search box stays in the middle of the window
         Grid.SetColumn(search, 1);
-        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Margin = new Thickness(0, 0, Space.M, 0), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
+        var right = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.XXS,
+            Margin = new Thickness(0, 0, Space.M, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
         _rescanBtn = TitleBtn("scan_text", "Rescan (F5)", Scan);
         right.Children.Add(_rescanBtn);
         _themeHost.Content = ThemeSwitch();
@@ -68,7 +84,12 @@ internal partial class MainWindow
         {
             _maxBtn = TitleBtn("maximize", "Maximize", ToggleMaximize);
             PropertyChanged += (_, e) => { if (e.Property == WindowStateProperty) { UpdateMaxButton(); } };
-            right.Children.Add(new Border { Width = Stroke.Thin, Height = IconSize.M, Margin = new Thickness(Space.M, 0) }.Themed(Border.BackgroundProperty, BorderKey));   // theme | window buttons
+            right.Children.Add(new Border
+            {
+                Width = Stroke.Thin,
+                Height = IconSize.M,
+                Margin = new Thickness(Space.M, 0)
+            }.Themed(Border.BackgroundProperty, BorderKey));   // theme | window buttons
             right.Children.Add(TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized));
             right.Children.Add(_maxBtn);
             right.Children.Add(DangerHover(TitleBtn("dismiss", "Close", Close)));
@@ -78,7 +99,12 @@ internal partial class MainWindow
         row.Children.Add(left);
         row.Children.Add(search);
         row.Children.Add(right);
-        var bar = new Border { Height = TitleBarHeight, Child = row, Background = Avalonia.Media.Brushes.Transparent }.Themed(Border.BackgroundProperty, MainKey);
+        var bar = new Border
+        {
+            Height = TitleBarHeight,
+            Child = row,
+            Background = Avalonia.Media.Brushes.Transparent
+        }.Themed(Border.BackgroundProperty, MainKey);
         // Drag and double-click handled here, not through Avalonia's title-bar role: with that role Windows took some button clicks as drags.
         // Buttons handle their own presses, so this only sees presses on the empty bar.
         bar.PointerPressed += (_, e) =>
@@ -114,7 +140,11 @@ internal partial class MainWindow
     /// <summary>System / moon / sun in one rounded group at the right of the title bar; the chosen one is filled with the selection color.</summary>
     private Border ThemeSwitch()
     {
-        var group = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS };
+        var group = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = Space.XXS
+        };
         foreach (var (mode, icon, tip) in _themes)
         {
             var on = mode == _s.Settings.Theme;
@@ -129,14 +159,27 @@ internal partial class MainWindow
             group.Children.Add(b);
         }
 
-        return new Border { Child = group, Padding = new Thickness(Space.XXS), CornerRadius = new CornerRadius(Radius.L + Space.XXS), BorderThickness = new Thickness(Stroke.Thin) }
+        return new Border
+        {
+            Child = group,
+            Padding = new Thickness(Space.XXS),
+            CornerRadius = new CornerRadius(Radius.L + Space.XXS),
+            BorderThickness = new Thickness(Stroke.Thin)
+        }
             .Themed(Border.BorderBrushProperty, BorderKey);
     }
 
     /// <summary>Title-bar icon button: muted icon, Rescan colors (accent fill, accent text) under the pointer.</summary>
     private static Button TitleBtn(string icon, string tip, Action a)
     {
-        var b = new Button { Content = Icon(icon, IconSize.S), Padding = new Thickness(Space.M), Background = Avalonia.Media.Brushes.Transparent, BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };   // no border: only the theme group has one
+        var b = new Button
+        {
+            Content = Icon(icon, IconSize.S),
+            Padding = new Thickness(Space.M),
+            Background = Avalonia.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center
+        };   // no border: only the theme group has one
         b.Themed(ForegroundProperty, Muted);   // the icon inherits it, so the hover text color applies too
         HoverStyle(b);
         ToolTip.SetTip(b, tip);
@@ -157,7 +200,11 @@ internal partial class MainWindow
 
     private void ToggleFullScreen()
     {
-        if (WindowState == WindowState.FullScreen) { WindowState = _beforeFullScreen; return; }
+        if (WindowState == WindowState.FullScreen)
+        {
+            WindowState = _beforeFullScreen;
+            return;
+        }
         _beforeFullScreen = WindowState == WindowState.Minimized ? WindowState.Normal : WindowState;
         WindowState = WindowState.FullScreen;
     }
@@ -170,7 +217,12 @@ internal partial class MainWindow
             return;   // the title bar is not built yet
         }
 
-        _rescanBtn.Content = _scanning ? new Panel { Width = IconSize.S, Height = IconSize.S, Children = { Busy.Spinner(IconSize.S, Accent) } } : Icon("scan_text", IconSize.S);
+        _rescanBtn.Content = _scanning ? new Panel
+        {
+            Width = IconSize.S,
+            Height = IconSize.S,
+            Children = { Busy.Spinner(IconSize.S, Accent) }
+        } : Icon("scan_text", IconSize.S);
         ToolTip.SetTip(_rescanBtn, _scanning ? "Scanning…" : "Rescan (F5)");
     }
 

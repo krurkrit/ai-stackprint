@@ -37,7 +37,9 @@ public static class BenchmarkCompare
             var v = all.Select(b => b.Get(a.Field)).Where(d => d is > 0).Select(d => Log(a.Field) ? Math.Log(d!.Value) : d!.Value).ToList();
             return v.Count == 0 ? (0.0, 0.0) : (v.Min(), v.Max());
         }).ToArray();
-        var scores = new List<ModelScore>(); var variants = new List<string>(); var missing = new List<string>();
+        var scores = new List<ModelScore>();
+        var variants = new List<string>();
+        var missing = new List<string>();
         foreach (var key in keys)
         {
             if (BenchmarkStore.Best(key, catalogKeys, all) is not { } b)

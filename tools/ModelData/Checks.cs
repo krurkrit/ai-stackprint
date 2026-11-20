@@ -10,8 +10,8 @@ namespace AiStackprint.ModelData;
 /// <summary>What must hold before a new default/models.json is proposed, and what a reviewer should look at.</summary>
 public static class Checks
 {
-    public const int MaxBytes = 500_000;
-    public const double MinShare = 0.8;
+    public static readonly int MaxBytes = 500_000;
+    internal const double MinShare = 0.8;
     private static readonly string[] _priceFields = ["input", "output", "cacheRead", "cacheWrite", "cacheWrite1h"];
     private static readonly HashSet<string> _modelFields = ["provider", "contextWindow", "maxOutput", "price", "above", "multipliers", "webSearch", "retires", "successor", "retiresSource", "source"];
 

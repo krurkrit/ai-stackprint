@@ -61,7 +61,11 @@ internal sealed partial class FontSetting
 
     private Control Layout()
     {
-        var wrap = new WrapPanel { ItemSpacing = Space.M, LineSpacing = Space.S };
+        var wrap = new WrapPanel
+        {
+            ItemSpacing = Space.M,
+            LineSpacing = Space.S
+        };
         wrap.Children.Add(ParentBox());
         wrap.Children.Add(Field(FontProp.Family, FamilyBox()));
         wrap.Children.Add(Field(FontProp.Size, SizeBox()));
@@ -77,7 +81,12 @@ internal sealed partial class FontSetting
         var keys = FontRoles.All.Select(r => r.Key).Where(k => _set.Has(k) && _set.ParentChoices(_key).Contains(k)).ToList();
         var items = keys.Select(FontRoles.Label).Prepend(none).ToList();
         var current = ParentKey.Length == 0 ? none : FontRoles.Label(ParentKey);
-        var box = new ComboBox { ItemsSource = items, SelectedItem = items.Contains(current) ? current : none, Width = Widths.FontParent - IconSize.S - Space.S };
+        var box = new ComboBox
+        {
+            ItemsSource = items,
+            SelectedItem = items.Contains(current) ? current : none,
+            Width = Widths.FontParent - IconSize.S - Space.S
+        };
         box.SelectionChanged += (_, _) =>
         {
             if (box.SelectedItem is string s && s != current)

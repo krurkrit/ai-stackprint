@@ -9,7 +9,13 @@ namespace AiStackprint.ModelData;
 /// <summary>Stable layout: two-space indent, one model per block, small objects (price, tiers, multipliers) on one line, LF line ends.</summary>
 public static class Writer
 {
-    private static readonly JsonSerializerOptions _indented = new() { WriteIndented = true, IndentSize = 2, NewLine = "\n", Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions _indented = new()
+    {
+        WriteIndented = true,
+        IndentSize = 2,
+        NewLine = "\n",
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
     private static readonly JsonSerializerOptions _inline = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public static string Write(JsonObject file)

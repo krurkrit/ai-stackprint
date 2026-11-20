@@ -70,13 +70,18 @@ internal partial class UsageCard
         {
             var stale = l.ResetsAt < DateTime.Now;   // window already reset: the reading is old
             var pct = stale ? 0 : Math.Clamp(l.UsedPercent, 0, 100);
-            var bar = new Grid { Height = Sizes.BarThin, ColumnDefinitions = [] };
+            var bar = new Grid
+            {
+                Height = Sizes.BarThin,
+                ColumnDefinitions = []
+            };
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(pct, 0.001), GridUnitType.Star));
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(100 - pct, 0.001), GridUnitType.Star));
             var fill = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent);
             var rest = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle);
             Grid.SetColumn(rest, 1);
-            bar.Children.Add(fill); bar.Children.Add(rest);
+            bar.Children.Add(fill);
+            bar.Children.Add(rest);
             sp.Children.Add(new StackPanel
             {
                 Spacing = Space.XS,
@@ -111,17 +116,32 @@ internal partial class UsageCard
 
     private static decimal? CostOf(IEnumerable<UsageBucket> g)
     {
-        decimal sum = 0; var any = false;
+        decimal sum = 0;
+        var any = false;
         foreach (var v in g)
         {
-            if (ModelCatalog.Cost(v) is { } c) { sum += c; any = true; }
+            if (ModelCatalog.Cost(v) is { } c)
+            {
+                sum += c;
+                any = true;
+            }
         }
 
         return any ? sum : null;
     }
 
     internal static Border Stat(string label, string value) =>
-        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.XL, Space.L), MinWidth = Widths.FieldS, Child = new StackPanel { Spacing = Space.XXS, Children = { Title(value, TextSize.Title), Txt(label, TextSize.Caption, false, Muted) } } }
+        new Border
+        {
+            CornerRadius = new CornerRadius(Radius.L),
+            Padding = new Thickness(Space.XL, Space.L),
+            MinWidth = Widths.FieldS,
+            Child = new StackPanel
+            {
+                Spacing = Space.XXS,
+                Children = { Title(value, TextSize.Title), Txt(label, TextSize.Caption, false, Muted) }
+            }
+        }
             .Themed(Border.BackgroundProperty, Subtle);
 
     /// <summary>1.2K / 3.4M / 5.6B.</summary>

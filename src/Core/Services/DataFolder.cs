@@ -10,7 +10,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public static class DataFolder
 {
-    public const string Note = "MOVED.txt";
+    internal const string Note = "MOVED.txt";
 
     public static string Root => Path.Combine(PathUtil.Home, ".ai-stackprint");
     public static string Cache => Path.Combine(Root, "cache");
@@ -51,7 +51,11 @@ public static class DataFolder
 
             string[] files;
             try { files = Directory.GetFiles(old, "*", SearchOption.AllDirectories); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { failed++; continue; }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                failed++;
+                continue;
+            }
 
             var left = new List<string>();
             foreach (var file in files)

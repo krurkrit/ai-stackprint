@@ -12,12 +12,16 @@ public class FileChangedException(string path) : IOException($"{Path.GetFileName
 /// <summary>Reads and saves app config files edited in the UI. Saving validates JSON, refuses to overwrite newer changes, and backs up the original first.</summary>
 public static class ConfigEditor
 {
-    public const long MaxEditBytes = 2 * 1024 * 1024;
+    internal const long MaxEditBytes = 2 * 1024 * 1024;
     public static string BackupRoot => DataFolder.ConfigBackups;
 
     public record Stamp(DateTime Modified, long Length);
 
-    public static Stamp StampOf(string path) { var f = new FileInfo(path); return new Stamp(f.LastWriteTimeUtc, f.Length); }
+    public static Stamp StampOf(string path)
+    {
+        var f = new FileInfo(path);
+        return new Stamp(f.LastWriteTimeUtc, f.Length);
+    }
 
     public static bool CanEdit(string path) => File.Exists(path) && new FileInfo(path).Length <= MaxEditBytes;
 
@@ -40,7 +44,11 @@ public static class ConfigEditor
 
         try
         {
-            using var _ = JsonDocument.Parse(text, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+            using var _ = JsonDocument.Parse(text, new JsonDocumentOptions
+            {
+                CommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            });
             return null;
         }
         catch (JsonException e) { return $"Invalid JSON: {e.Message}"; }

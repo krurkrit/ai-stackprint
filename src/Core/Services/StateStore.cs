@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// <summary>state.json: what the app remembers on this machine (<see cref="UiState"/>), apart from your settings. Never exported.</summary>
 public static class StateStore
 {
-    public const string FileName = "state.json";
+    internal const string FileName = "state.json";
     private static readonly VersionedJson _format = new("state", 1);
 
     public static string File => Path.Combine(DataFolder.Root, FileName);

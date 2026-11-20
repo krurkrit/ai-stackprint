@@ -17,7 +17,11 @@ public static class LimitProviders
     public static readonly ILimitProvider[] All = [new ClaudeLimits(), new CodexLimits(), new CopilotLimits(), new CursorLimits(), new GeminiLimits()];
     public static ILimitProvider? Find(string? id) => id == null ? null : All.FirstOrDefault(p => p.Id == id);
 
-    internal static readonly JsonDocumentOptions _lenient = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    internal static readonly JsonDocumentOptions _lenient = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip
+    };
 
     internal static JsonDocument? ReadJson(string path)
     {
@@ -119,7 +123,8 @@ public partial class ClaudeLimits : ILimitProvider
     public static LimitSnapshot Parse(string json, DateTime now)
     {
         using var doc = JsonDocument.Parse(json);
-        var windows = new List<LimitWindow>(); string? note = null;
+        var windows = new List<LimitWindow>();
+        string? note = null;
         foreach (var p in doc.RootElement.EnumerateObject())
         {
             if (p.Name == "extra_usage" && p.Value.ValueKind == JsonValueKind.Object && p.Value.TryGetProperty("is_enabled", out var on) && on.ValueKind == JsonValueKind.True)

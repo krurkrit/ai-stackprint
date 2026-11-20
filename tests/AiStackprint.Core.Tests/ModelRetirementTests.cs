@@ -18,7 +18,12 @@ public sealed class ModelRetirementTests : IDisposable
     private static ModelTable Table()
     {
         var t = new ModelTable();
-        t.Models["claude-sonnet-4-5"] = new ModelInfo { Retires = "2026-11-30", Successor = "claude-sonnet-5-5", RetiresSource = "https://example.com/deprecations" };
+        t.Models["claude-sonnet-4-5"] = new ModelInfo
+        {
+            Retires = "2026-11-30",
+            Successor = "claude-sonnet-5-5",
+            RetiresSource = "https://example.com/deprecations"
+        };
         t.Models["gpt-4.1"] = new ModelInfo { Retires = "2027-09-01" };
         t.Models["o3"] = new ModelInfo { Retires = "2026-01-01" };
         t.Models["claude-opus-5-5"] = new ModelInfo();

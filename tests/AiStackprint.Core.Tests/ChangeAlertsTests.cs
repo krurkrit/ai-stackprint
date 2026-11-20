@@ -41,7 +41,12 @@ public sealed class ChangeAlertsTests : IDisposable
     {
         var dir = Directory.CreateDirectory(Path.Combine(_tmp, "plug")).FullName;
         File.WriteAllText(Path.Combine(dir, "plugin.json"), "{}");
-        var p = new Item("Plugin", "plug", "d", "App", "User", dir) { App = "app", Provides = ["skills"], Version = "1.2.0" };
+        var p = new Item("Plugin", "plug", "d", "App", "User", dir)
+        {
+            App = "app",
+            Provides = ["skills"],
+            Version = "1.2.0"
+        };
         ScanDiff.Update([p], Snapshot);
         var c = Assert.Single(ScanDiff.Update([p with { Version = "1.3.0" }], Snapshot).Changes);
         Assert.Equal("version 1.2.0 → 1.3.0", c.Detail);

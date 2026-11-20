@@ -14,11 +14,11 @@ public record Finding(string Text, bool Warning = true);
 /// </summary>
 public static partial class SkillCheck
 {
-    public const int NameMax = 64, DescriptionMax = 1024, CompatibilityMax = 500, BodyLines = 500;
+    internal const int NameMax = 64, DescriptionMax = 1024, CompatibilityMax = 500, BodyLines = 500;
     /// <summary>Claude Code: each description is cut at this many characters in the skill list it keeps in context.</summary>
-    public const int ClaudeDescriptionCap = 1536;
+    internal const int ClaudeDescriptionCap = 1536;
     /// <summary>Claude Code: the skill list's budget is 1% of the context window; this is the documented fallback.</summary>
-    public const int ClaudeListingFallback = 8000;
+    internal const int ClaudeListingFallback = 8000;
 
     /// <summary>
     /// The skill list's budget in characters: 1% of the context window at about 4 characters per token (the fallback is the same 1% of a
@@ -45,7 +45,8 @@ public static partial class SkillCheck
             }
             else
             {
-                var name = doc.Get("name"); var folder = Path.GetFileName(root);
+                var name = doc.Get("name");
+                var folder = Path.GetFileName(root);
                 if (name == "")
                 {
                     f.Add(new("No name in the front matter."));
@@ -102,8 +103,16 @@ public static partial class SkillCheck
             }
 
             var full = SkillDoc.Resolve(root, file, link);
-            if (full == null) { yield return new($"Link leaves the skill folder: {link}"); continue; }
-            if (!File.Exists(full) && !Directory.Exists(full)) { yield return new($"Broken link: {link}"); continue; }
+            if (full == null)
+            {
+                yield return new($"Link leaves the skill folder: {link}");
+                continue;
+            }
+            if (!File.Exists(full) && !Directory.Exists(full))
+            {
+                yield return new($"Broken link: {link}");
+                continue;
+            }
             if (!nested || !full.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             {
                 continue;

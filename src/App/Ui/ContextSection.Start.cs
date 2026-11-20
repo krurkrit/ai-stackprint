@@ -15,7 +15,12 @@ internal partial class ContextSection
     private void StartMenu(string project, Control at)
     {
         var menu = new ContextMenu();
-        void Add(string header, Action pick) { var m = new MenuItem { Header = header }; m.Click += (_, _) => pick(); menu.Items.Add(m); }
+        void Add(string header, Action pick)
+        {
+            var m = new MenuItem { Header = header };
+            m.Click += (_, _) => pick();
+            menu.Items.Add(m);
+        }
         if (!ContextBudget.Same(_start!, project))
         {
             Add("Project folder", () => Use(project));
@@ -37,20 +42,32 @@ internal partial class ContextSection
 
     private void Use(string start)
     {
-        _start = start; _last = null; _preview = null;
+        _start = start;
+        _last = null;
+        _preview = null;
         x.Refresh();
     }
 
-    private async void PickStart(string project)
+    private void PickStart(string project) => Fire.Forget(PickStartAsync(project));
+
+    private async Task PickStartAsync(string project)
     {
         var start = await x.Owner.StorageProvider.TryGetFolderFromPathAsync(project);
-        var r = await x.Owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Session starts in", SuggestedStartLocation = start });
+        var r = await x.Owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Session starts in",
+            SuggestedStartLocation = start
+        });
         if (r.Count == 0 || r[0].TryGetLocalPath() is not { } p)
         {
             return;
         }
 
-        if (!ContextBudget.Same(p, project) && !ContextBudget.Inside(p, project)) { Toast.Show("Pick a folder inside the project", "warning"); return; }
+        if (!ContextBudget.Same(p, project) && !ContextBudget.Inside(p, project))
+        {
+            Toast.Show("Pick a folder inside the project", "warning");
+            return;
+        }
         Use(p);
     }
 }

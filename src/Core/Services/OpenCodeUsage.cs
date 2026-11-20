@@ -25,7 +25,12 @@ internal class OpenCodeUsage : ILogParser
         var list = new List<UsageEvent>();
         try
         {
-            using var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
+            using var db = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false
+            }.ToString());
             db.Open();
             var tables = new HashSet<string>();
             using (var r = Query(db, "select name from sqlite_master where type = 'table'"))
@@ -52,7 +57,11 @@ internal class OpenCodeUsage : ILogParser
                 while (r.Read())
                 {
                     JsonElement m;
-                    try { using var d = JsonDocument.Parse(r.GetString(2)); m = d.RootElement.Clone(); }
+                    try
+                    {
+                        using var d = JsonDocument.Parse(r.GetString(2));
+                        m = d.RootElement.Clone();
+                    }
                     catch (JsonException) { continue; }
                     var t = m.Get("tokens");
                     if (m.Str("role") != "assistant" || t.ValueKind != JsonValueKind.Object)
@@ -78,7 +87,11 @@ internal class OpenCodeUsage : ILogParser
                     var model = "";
                     if (!r.IsDBNull(3))
                     {
-                        try { using var d = JsonDocument.Parse(r.GetString(3)); model = d.RootElement.Str("id"); }
+                        try
+                        {
+                            using var d = JsonDocument.Parse(r.GetString(3));
+                            model = d.RootElement.Str("id");
+                        }
                         catch (JsonException) { }
                     }
 

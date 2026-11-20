@@ -47,7 +47,12 @@ internal sealed partial class CodexPluginReader : IPluginReader
                 }
                 else
                 {
-                    rows.Add(new Item("Plugin", id, "", ctx.App.Name, ctx.Level, path) { App = ctx.App.Id, Scope = enabled ? null : "disabled", Bundled = bundled });
+                    rows.Add(new Item("Plugin", id, "", ctx.App.Name, ctx.Level, path)
+                    {
+                        App = ctx.App.Id,
+                        Scope = enabled ? null : "disabled",
+                        Bundled = bundled
+                    });
                 }
             }
 

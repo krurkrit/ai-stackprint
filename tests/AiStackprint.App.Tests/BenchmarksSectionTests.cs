@@ -19,7 +19,11 @@ public sealed class BenchmarksSectionTests
     {
         var s = new AppState { State = state };
         s.Settings.BenchmarksEnabled = enabled;
-        var w = new Window { Width = 1000, Height = 700 };
+        var w = new Window
+        {
+            Width = 1000,
+            Height = 700
+        };
         w.Content = new ScrollViewer { Content = BenchmarksSection.Build(new Ctx(s, w, _ => { }, () => { })) };
         w.Show();
         Dispatcher.UIThread.RunJobs();
@@ -40,7 +44,12 @@ public sealed class BenchmarksSectionTests
     [AvaloniaFact]
     public void With_a_key_the_card_never_shows_it_and_offers_Remove_key()
     {
-        var w = Open(new UiState { BenchmarkKey = "aa_secret-value", BenchmarkCheckedUtc = new DateTime(2026, 11, 17, 8, 0, 0, DateTimeKind.Utc), BenchmarkResult = "742 models saved." }, true);
+        var w = Open(new UiState
+        {
+            BenchmarkKey = "aa_secret-value",
+            BenchmarkCheckedUtc = new DateTime(2026, 11, 17, 8, 0, 0, DateTimeKind.Utc),
+            BenchmarkResult = "742 models saved."
+        }, true);
         var texts = Ui.Texts(w);
         Assert.Contains("A key is saved.", texts);
         Assert.DoesNotContain(texts, t => t.Contains("aa_secret-value"));

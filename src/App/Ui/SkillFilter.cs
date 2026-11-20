@@ -31,10 +31,24 @@ internal class SkillFilter
     {
         _changed = () => { };
         var box = _fromBox = new ComboBox { MinWidth = Widths.FieldM };
-        box.SelectionChanged += (_, _) => { if (!_building && box == _fromBox) { _from = (box.SelectedItem as Opt)?.Id ?? ""; _changed(); } };   // an old box says nothing
+        box.SelectionChanged += (_, _) =>
+        {
+            if (!_building && box == _fromBox)
+            {
+                _from = (box.SelectedItem as Opt)?.Id ?? "";
+                _changed();
+            }
+        };   // an old box says nothing
     }
 
-    public void Reset() { _offLevels.Clear(); _invoked = ""; _from = ""; _byInvoked = _byFrom = false; _collapsed.Clear(); }
+    public void Reset()
+    {
+        _offLevels.Clear();
+        _invoked = "";
+        _from = "";
+        _byInvoked = _byFrom = false;
+        _collapsed.Clear();
+    }
 
     public bool Match(Item i) => SkillMatch.Shows(i, _offLevels, _invoked, _from);
 
@@ -70,7 +84,11 @@ internal class SkillFilter
             // One choice: the combinations are exclusive. Counts follow the level and source filters.
             var inScope = items.Where(i => SkillMatch.Shows(i, _offLevels, "", _from)).ToList();
             var opts = invoked.Select(v => ($"{v} {inScope.Count(i => SkillMatch.Label(i) == v):N0}", v)).Prepend(($"All {inScope.Count:N0}", ""));
-            sp.Children.Add(FilterRow("Invoked by", Radios(opts, _invoked, v => { _invoked = v; changed(); })));
+            sp.Children.Add(FilterRow("Invoked by", Radios(opts, _invoked, v =>
+            {
+                _invoked = v;
+                changed();
+            })));
         }
 
         if (invoked.Count < 2)
@@ -95,12 +113,20 @@ internal class SkillFilter
         var by = new List<Control>();
         if (invoked.Count > 1)
         {
-            by.Add(Check("Invoked by", _byInvoked, v => { _byInvoked = v; changed(); }));
+            by.Add(Check("Invoked by", _byInvoked, v =>
+            {
+                _byInvoked = v;
+                changed();
+            }));
         }
 
         if (froms.Count > 1)
         {
-            by.Add(Check("From", _byFrom, v => { _byFrom = v; changed(); }));
+            by.Add(Check("From", _byFrom, v =>
+            {
+                _byFrom = v;
+                changed();
+            }));
         }
 
         if (by.Count > 0)
@@ -127,7 +153,9 @@ internal class SkillFilter
         string Key(Item i) => _byInvoked && _byFrom ? $"{InvokeLabel(i)} · {AppDetailView.From(i)}" : _byInvoked ? InvokeLabel(i) : AppDetailView.From(i);
         foreach (var g in items.GroupBy(Key).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
         {
-            var open = !_collapsed.Contains(g.Key); var key = g.Key; var count = g.Count();
+            var open = !_collapsed.Contains(g.Key);
+            var key = g.Key;
+            var count = g.Count();
             res.Add(() =>
             {
                 var cells = new Control[cols];
@@ -138,7 +166,11 @@ internal class SkillFilter
                     cells[c] = new Panel();
                 }
 
-                return new TableRow(cells, () => { if (!_collapsed.Remove(key)) { _collapsed.Add(key); } changed(); });
+                return new TableRow(cells, () =>
+                {
+                    if (!_collapsed.Remove(key)) { _collapsed.Add(key); }
+                    changed();
+                });
             });
             if (open)
             {

@@ -16,14 +16,24 @@ internal class SettingsView(Ctx x)
     public Control Build()
     {
         var st = x.S.Settings;
-        var notInstalled = new ToggleSwitch { IsChecked = st.HideNotInstalled, OnContent = "Hide apps that are not installed", OffContent = "Hide apps that are not installed" };
+        var notInstalled = new ToggleSwitch
+        {
+            IsChecked = st.HideNotInstalled,
+            OnContent = "Hide apps that are not installed",
+            OffContent = "Hide apps that are not installed"
+        };
         notInstalled.IsCheckedChanged += (_, _) => Save(() => st.HideNotInstalled = notInstalled.IsChecked == true);
 
         var rows = x.S.Defs.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).Select(d =>
         {
             var hidden = st.HiddenApps.Contains(d.Id);
             var info = x.Info(d.Id);
-            var shown = new ToggleSwitch { IsChecked = !hidden, OnContent = "Shown", OffContent = "Hidden" };
+            var shown = new ToggleSwitch
+            {
+                IsChecked = !hidden,
+                OnContent = "Shown",
+                OffContent = "Hidden"
+            };
             shown.IsCheckedChanged += (_, _) => Save(() =>
             {
                 st.HiddenApps.Remove(d.Id);

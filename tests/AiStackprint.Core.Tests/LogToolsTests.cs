@@ -131,7 +131,16 @@ public sealed class LogToolsTests : IDisposable
     public void Roots_and_restat_follow_the_log_sources()
     {
         var f = Log("sessions/p1/s.jsonl", "{}\n");
-        var def = new AppDefinition { Id = "app", Logs = { new LogSource { Path = Path.Combine(_tmp, "sessions"), Pattern = "*.jsonl", Depth = 2 }, new LogSource { Path = Path.Combine(_tmp, "one.log") } } };
+        var def = new AppDefinition
+        {
+            Id = "app",
+            Logs = { new LogSource
+            {
+                Path = Path.Combine(_tmp, "sessions"),
+                Pattern = "*.jsonl",
+                Depth = 2
+            }, new LogSource { Path = Path.Combine(_tmp, "one.log") } }
+        };
         File.WriteAllText(Path.Combine(_tmp, "one.log"), "x");
         var roots = LogReader.Roots(def, []);
         Assert.Contains((Path.Combine(_tmp, "sessions"), "*.jsonl", true), roots);

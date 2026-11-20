@@ -30,9 +30,18 @@ internal class UsageView(Ctx x)
 
     public Control Build()
     {
-        if (!ReferenceEquals(_scan, x.S.Items) || _cachedDays != _days) { _scan = x.S.Items; _cachedDays = _days; _last = null; }
+        if (!ReferenceEquals(_scan, x.S.Items) || _cachedDays != _days)
+        {
+            _scan = x.S.Items;
+            _cachedDays = _days;
+            _last = null;
+        }
         var head = Head();
-        var pills = Pills([("7 days", "7"), ("30 days", "30")], _days.ToString(), v => { _days = int.Parse(v); x.Refresh(); });
+        var pills = Pills([("7 days", "7"), ("30 days", "30")], _days.ToString(), v =>
+        {
+            _days = int.Parse(v);
+            x.Refresh();
+        });
         DockPanel.SetDock(pills, Dock.Right);
         head.Children.Add(pills);
         head.Children.Add(H1("Usage"));
@@ -46,7 +55,11 @@ internal class UsageView(Ctx x)
             var defs = x.S.Defs.Where(d => x.ShownApps.Any(a => a.Id == d.Id)).ToList();
             var projects = x.S.Projects.ToList();
             var since = DateTime.Today.AddDays(1 - _days);
-            Busy.Into(_host, "Calculating usage from the logs…", ct => UsageReport.Compute(defs, projects, since, ct), r => { _last = r; return Show(r); });
+            Busy.Into(_host, "Calculating usage from the logs…", ct => UsageReport.Compute(defs, projects, since, ct), r =>
+            {
+                _last = r;
+                return Show(r);
+            });
         }
 
         return Page(head, intro, _host.Free());

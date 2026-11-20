@@ -26,7 +26,11 @@ public static partial class PluginManifests
         "extension.toml", "extension.json", "manifest.json", "package.json",
     ];
 
-    private static readonly JsonDocumentOptions _json = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    private static readonly JsonDocumentOptions _json = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip
+    };
 
     /// <summary>The first manifest of <paramref name="manifests"/> found in <paramref name="folder"/>, or null.</summary>
     public static string? Find(string folder, IReadOnlyList<string>? manifests = null) =>
@@ -143,8 +147,17 @@ public static partial class PluginManifests
         var skills = Path.Combine(folder, "skills");
         if (Directory.Exists(skills))
         {
-            Scanner.Tagged(rows, () => Scanner.ReadRoot(skills, new ScanRoot { Level = ctx.Level, Depth = 4 }, $"{ctx.App.Name} · {name.Split('@')[0]}", rows),
-                i => i with { App = ctx.App.Id, Plugin = name, Project = ctx.Project });
+            Scanner.Tagged(rows, () => Scanner.ReadRoot(skills, new ScanRoot
+            {
+                Level = ctx.Level,
+                Depth = 4
+            }, $"{ctx.App.Name} · {name.Split('@')[0]}", rows),
+                i => i with
+                {
+                    App = ctx.App.Id,
+                    Plugin = name,
+                    Project = ctx.Project
+                });
         }
 
         PluginContents.Add(rows, folder, m, new(ctx.App, ctx.Level, ctx.Project, name));

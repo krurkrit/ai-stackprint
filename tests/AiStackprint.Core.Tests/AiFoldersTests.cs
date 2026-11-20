@@ -20,8 +20,31 @@ public sealed class AiFoldersTests : IDisposable
         Directory.CreateDirectory(Path.Combine(_tmp, ".other"));
         File.WriteAllText(Path.Combine(_tmp, ".app", "commands", "a.md"), "12345");
         File.WriteAllText(Path.Combine(_tmp, ".app", "notes.txt"), "123");
-        var d = new AppDefinition { Id = "app", Name = "App", Parts = { new PartSource { Path = ".app/commands", Level = "Project" } }, Configs = { new ConfigFile { Path = "RULES.md", Level = "Project" } } };
-        var d2 = new AppDefinition { Id = "o", Name = "Other", ProjectRoots = { new ScanRoot { Path = ".missing/skills", Level = "Project" } } };
+        var d = new AppDefinition
+        {
+            Id = "app",
+            Name = "App",
+            Parts = { new PartSource
+            {
+                Path = ".app/commands",
+                Level = "Project"
+            } },
+            Configs = { new ConfigFile
+            {
+                Path = "RULES.md",
+                Level = "Project"
+            } }
+        };
+        var d2 = new AppDefinition
+        {
+            Id = "o",
+            Name = "Other",
+            ProjectRoots = { new ScanRoot
+            {
+                Path = ".missing/skills",
+                Level = "Project"
+            } }
+        };
         var items = new[] { new Item("Command", "a", "", "App", "Project", Path.Combine(_tmp, ".app", "commands", "a.md")) { Project = _tmp } };
         var f = Assert.Single(AiFolders.List(_tmp, [d, d2], items));
         Assert.Equal(".app", f.Name);

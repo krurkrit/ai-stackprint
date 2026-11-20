@@ -36,7 +36,11 @@ internal static class CrashNotice
                 {
                     Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt("AI Stackprint closed unexpectedly last time", TextSize.Small, true)),
                     Txt("Report opens a new GitHub issue in your browser with the error from crash.log (your home folder and user name removed). You can read and edit it before you submit; nothing is sent until you do.", TextSize.Caption, false, Muted),
-                    Row(Btn("Report on GitHub", () => { Report(x); Toast.Unpin(_card); }, true, "open"),
+                    Row(Btn("Report on GitHub", () =>
+                    {
+                        Report(x);
+                        Toast.Unpin(_card);
+                    }, true, "open"),
                         Btn("Open crash.log", () => PathUtil.OpenFile(CrashLog.File)),
                         Btn("Close", () => Toast.Unpin(_card)))
                 }
@@ -45,7 +49,9 @@ internal static class CrashNotice
         Toast.Pin(_card);
     }
 
-    private static async void Report(Ctx x)
+    private static void Report(Ctx x) => Fire.Forget(ReportAsync(x));
+
+    private static async Task ReportAsync(Ctx x)
     {
         if (CrashReport.ForLastCrash() is not { } url)
         {

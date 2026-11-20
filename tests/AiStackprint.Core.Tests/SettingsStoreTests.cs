@@ -121,7 +121,11 @@ public sealed class SettingsStoreTests : IDisposable
     {
         var file = Path.Combine(_dir, StateStore.FileName);
         Assert.Equal(340, StateStore.Load(file).PanelHeight);
-        StateStore.Save(new UiState { PanelHeight = 500, UpdateDismissed = "1.0.0" }, file);
+        StateStore.Save(new UiState
+        {
+            PanelHeight = 500,
+            UpdateDismissed = "1.0.0"
+        }, file);
         var s = StateStore.Load(file);
         Assert.Equal((500d, "1.0.0"), (s.PanelHeight, s.UpdateDismissed));
     }

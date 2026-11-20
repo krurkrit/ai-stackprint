@@ -17,7 +17,11 @@ internal class AddAppDialog : Window
     private readonly TextBox _folder = new() { PlaceholderText = "Config folder, e.g. ~/.myapp (used to detect and scan)" };
     private readonly TextBox _proj = new() { PlaceholderText = "Optional project-relative skills folder, e.g. .myapp/skills" };
     private readonly TextBlock _refused = Txt("", TextSize.Small, false, ErrorKey).With(t => t.IsVisible = false);
-    private readonly ComboBox _cat = new() { ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" }, SelectedIndex = 0 };
+    private readonly ComboBox _cat = new()
+    {
+        ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" },
+        SelectedIndex = 0
+    };
 
     public AddAppDialog()
     {
@@ -37,7 +41,12 @@ internal class AddAppDialog : Window
             Children =
             {
                 _name, _cat,
-                new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = Space.M, Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) } },
+                new Grid
+                {
+                    ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+                    ColumnSpacing = Space.M,
+                    Children = { _folder, browse.With(b => Grid.SetColumn(b, 1)) }
+                },
                 _proj,
                 _refused,
                 Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted)
@@ -61,11 +70,20 @@ internal class AddAppDialog : Window
             Name = name,
             Category = _cat.SelectedItem as string ?? "custom",
             Detect = { folder },
-            Roots = { new ScanRoot { Path = folder, Level = "User", Depth = 4 } }
+            Roots = { new ScanRoot
+            {
+                Path = folder,
+                Level = "User",
+                Depth = 4
+            } }
         };
         if (!string.IsNullOrWhiteSpace(_proj.Text))
         {
-            def.ProjectRoots.Add(new ScanRoot { Path = _proj.Text.Trim(), Level = "Project" });
+            def.ProjectRoots.Add(new ScanRoot
+            {
+                Path = _proj.Text.Trim(),
+                Level = "Project"
+            });
         }
 
         if (AppCatalog.Refuse(def) is { } why)

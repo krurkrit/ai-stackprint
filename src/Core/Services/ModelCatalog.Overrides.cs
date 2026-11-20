@@ -77,7 +77,11 @@ public static partial class ModelCatalog
                     continue;   // the same as the model data now
                 }
 
-                mine[key] = models.ContainsKey(key) ? new JsonObject { ["price"] = diff } : new JsonObject { ["provider"] = "custom", ["price"] = diff };
+                mine[key] = models.ContainsKey(key) ? new JsonObject { ["price"] = diff } : new JsonObject
+                {
+                    ["provider"] = "custom",
+                    ["price"] = diff
+                };
                 changed = true;
             }
 

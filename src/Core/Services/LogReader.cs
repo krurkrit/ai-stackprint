@@ -10,7 +10,7 @@ namespace AiStackprint.Services;
 /// <summary>Finds an app's log files and reads their end. Read-only; opens files shared so apps can keep writing.</summary>
 public static class LogReader
 {
-    public const int MaxFiles = 300;
+    public static readonly int MaxFiles = 300;
 
     /// <summary>Log files for an app, newest first, capped at <see cref="MaxFiles"/>.</summary>
     /// <param name="usage">Also the usage-only sources (the Usage card); the Logs page leaves them out.</param>
@@ -70,7 +70,12 @@ public static class LogReader
     public static LogFile? Restat(LogFile f)
     {
         var found = new List<LogFile>();
-        Collect(f.Path, new LogSource { Label = f.Label, Format = f.Format, Account = f.Account }, f.App, f.Project, found);
+        Collect(f.Path, new LogSource
+        {
+            Label = f.Label,
+            Format = f.Format,
+            Account = f.Account
+        }, f.App, f.Project, found);
         return found.FirstOrDefault();
     }
 
@@ -78,13 +83,23 @@ public static class LogReader
     {
         try
         {
-            if (File.Exists(path)) { Add(new FileInfo(path)); return; }
+            if (File.Exists(path))
+            {
+                Add(new FileInfo(path));
+                return;
+            }
             if (!Directory.Exists(path))
             {
                 return;
             }
 
-            var opt = new EnumerationOptions { RecurseSubdirectories = s.Depth > 0, MaxRecursionDepth = s.Depth, IgnoreInaccessible = true, MatchCasing = MatchCasing.CaseInsensitive };
+            var opt = new EnumerationOptions
+            {
+                RecurseSubdirectories = s.Depth > 0,
+                MaxRecursionDepth = s.Depth,
+                IgnoreInaccessible = true,
+                MatchCasing = MatchCasing.CaseInsensitive
+            };
             foreach (var f in new DirectoryInfo(path).EnumerateFiles(s.Pattern, opt))
             {
                 Add(f);
@@ -94,10 +109,12 @@ public static class LogReader
 
         void Add(FileInfo f)
         {
-            var size = f.Length; var time = f.LastWriteTime;
+            var size = f.Length;
+            var time = f.LastWriteTime;
             if (f.Extension == ".db" && new FileInfo(f.FullName + "-wal") is { Exists: true } wal)
             {
-                size += wal.Length; if (wal.LastWriteTime > time)
+                size += wal.Length;
+                if (wal.LastWriteTime > time)
                 {
                     time = wal.LastWriteTime;
                 }
@@ -120,7 +137,11 @@ public static class LogReader
         }
 
         var from = 0;
-        if (start > 0) { var nl = Array.IndexOf(buf, (byte)'\n', 0, n); from = nl < 0 ? 0 : nl + 1; }   // drop the partial first line
+        if (start > 0)
+        {
+            var nl = Array.IndexOf(buf, (byte)'\n', 0, n);
+            from = nl < 0 ? 0 : nl + 1;
+        }   // drop the partial first line
         return (Encoding.UTF8.GetString(buf, from, n - from), start > 0);
     }
 
@@ -129,7 +150,12 @@ public static class LogReader
     {
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         using var r = new StreamReader(fs, Encoding.UTF8, true);
-        if (fs.Length > maxBytes) { fs.Seek(fs.Length - maxBytes, SeekOrigin.Begin); r.DiscardBufferedData(); r.ReadLine(); }   // drop the partial first line
+        if (fs.Length > maxBytes)
+        {
+            fs.Seek(fs.Length - maxBytes, SeekOrigin.Begin);
+            r.DiscardBufferedData();
+            r.ReadLine();
+        }   // drop the partial first line
         while (r.ReadLine() is { } line)
         {
             yield return line;
@@ -149,7 +175,9 @@ public static class LogReader
             fs.Seek(fs.Length - maxBytes, SeekOrigin.Begin);
         }
 
-        var buf = new byte[1 << 15]; var len = 0; var first = !partial;
+        var buf = new byte[1 << 15];
+        var len = 0;
+        var first = !partial;
         while (true)
         {
             if (len == buf.Length)
@@ -158,7 +186,8 @@ public static class LogReader
             }
 
             var read = fs.Read(buf, len, buf.Length - len);
-            var end = len + read; var start = 0;
+            var end = len + read;
+            var start = 0;
             if (first && end >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF)
             {
                 start = 3;   // byte order mark
@@ -183,7 +212,8 @@ public static class LogReader
                     yield return Line(buf, start, nl);
                 }
 
-                partial = false; start = nl + 1;
+                partial = false;
+                start = nl + 1;
             }
 
             len = end - start;

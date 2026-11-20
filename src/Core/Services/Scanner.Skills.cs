@@ -80,14 +80,16 @@ public static partial class Scanner
 
                     if (l.StartsWith("name:"))
                     {
-                        var n = Clean(l[5..]); if (n != "")
+                        var n = Clean(l[5..]);
+                        if (n != "")
                         {
                             name = n;
                         }
                     }
                     else if (l.StartsWith("author:") || (block == "metadata" && l.Length > 0 && char.IsWhiteSpace(l[0]) && l.TrimStart().StartsWith("author:")))
                     {
-                        var a = Clean(l.TrimStart()[7..]); if (a != "")
+                        var a = Clean(l.TrimStart()[7..]);
+                        if (a != "")
                         {
                             author = a;
                         }
@@ -117,7 +119,11 @@ public static partial class Scanner
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         // Agent: the agent may load it; User: you can invoke it (e.g. /name). disable-model-invocation wins when both flags are set.
         string[] invokers = modelOff ? ["User"] : userOff ? ["Agent"] : ["Agent", "User"];
-        return new Item("Skill", name, desc, source, level, file) { Invokers = invokers, Author = author };
+        return new Item("Skill", name, desc, source, level, file)
+        {
+            Invokers = invokers,
+            Author = author
+        };
     }
 
     private static string Clean(string s) => s.Trim().Trim('"', '\'');

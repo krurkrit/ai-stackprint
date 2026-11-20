@@ -45,13 +45,22 @@ internal static partial class DashboardView
             .OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase).Take(TopKeywords).ToList();
         if (keywords.Count > 0)
         {
-            var wrap = new WrapPanel { ItemSpacing = Space.S, LineSpacing = Space.S };
+            var wrap = new WrapPanel
+            {
+                ItemSpacing = Space.S,
+                LineSpacing = Space.S
+            };
             foreach (var g in keywords)
             {
                 wrap.Children.Add(Keyword(g.Key, g.Count(), () => x.Browse("Plugin", null, $"keyword:\"{g.Key}\"")));
             }
 
-            sp.Children.Add(new StackPanel { Spacing = Space.S, Margin = new Avalonia.Thickness(0, Space.M, 0, 0), Children = { Txt("Top keywords", TextSize.Caption, true, Muted), wrap } });
+            sp.Children.Add(new StackPanel
+            {
+                Spacing = Space.S,
+                Margin = new Avalonia.Thickness(0, Space.M, 0, 0),
+                Children = { Txt("Top keywords", TextSize.Caption, true, Muted), wrap }
+            });
         }
 
         return sp;

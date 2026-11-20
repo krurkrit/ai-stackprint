@@ -24,7 +24,9 @@ internal partial class MainWindow
     private long _perfOpened, _perfScanMs;   // when the window opened (Stopwatch time stamp); how long the first scan took
     private List<(string Name, long Ms)> _perfSteps = [];   // the first scan's steps
 
-    private async void RunPerf()
+    private void RunPerf() => Fire.Forget(RunPerfAsync());
+
+    private async Task RunPerfAsync()
     {
         var at = DateTime.Now;   // one time stamp for the whole run: perf-report.txt compares runs by it
         var version = UpdateCheck.Label;
@@ -80,7 +82,8 @@ internal partial class MainWindow
             pages.Add(("Project", "Project:" + _s.Projects[0]));
         }
 
-        pages.AddRange([("Settings", "Settings"), ("Logs again", "Logs"), ("Dashboard", "Dashboard")]); return pages;
+        pages.AddRange([("Settings", "Settings"), ("Logs again", "Logs"), ("Dashboard", "Dashboard")]);
+        return pages;
     }
 
     /// <summary>Waits until the page is laid out and no loading icon is left on it (at most a minute).</summary>

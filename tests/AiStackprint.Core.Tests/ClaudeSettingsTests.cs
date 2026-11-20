@@ -27,9 +27,24 @@ public sealed class ClaudeSettingsTests : IDisposable
         Name = "Claude Code",
         Configs =
         {
-            new ConfigFile { Path = "~/.claude/settings.json", Level = "User", Kind = "settings" },
-            new ConfigFile { Path = ".claude/settings.json", Level = "Project", Kind = "settings" },
-            new ConfigFile { Path = ".claude/settings.local.json", Level = "Local", Kind = "settings" }
+            new ConfigFile
+            {
+                Path = "~/.claude/settings.json",
+                Level = "User",
+                Kind = "settings"
+            },
+            new ConfigFile
+            {
+                Path = ".claude/settings.json",
+                Level = "Project",
+                Kind = "settings"
+            },
+            new ConfigFile
+            {
+                Path = ".claude/settings.local.json",
+                Level = "Local",
+                Kind = "settings"
+            }
         }
     };
 

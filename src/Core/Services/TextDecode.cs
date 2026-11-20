@@ -25,7 +25,11 @@ public static partial class TextDecode
     [GeneratedRegex(@"data:image/[a-z+.-]+;base64,[A-Za-z0-9+/=]{200,}")]
     private static partial Regex DataUrl();
 
-    private static readonly JsonSerializerOptions _pretty = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions _pretty = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
     /// <summary>Removes ANSI escape sequences (colors, cursor moves, window titles).</summary>
     public static string Strip(string s) => s.Contains('\x1B') ? AnsiCode().Replace(s, "").Replace("\r\n", "\n") : s;
@@ -70,7 +74,10 @@ public static partial class TextDecode
     /// <summary>The ANSI text as colored runs (SGR codes: 30-37, 90-97, 38;5;n, 38;2;r;g;b, bold, reset). Other codes are dropped.</summary>
     public static List<AnsiRun> Runs(string s)
     {
-        var runs = new List<AnsiRun>(); var at = 0; int? fg = null; var bold = false;
+        var runs = new List<AnsiRun>();
+        var at = 0;
+        int? fg = null;
+        var bold = false;
         foreach (Match m in AnsiCode().Matches(s))
         {
             if (m.Index > at)
@@ -89,7 +96,11 @@ public static partial class TextDecode
             for (var i = 0; i < codes.Length; i++)
             {
                 var c = codes[i] == "" ? 0 : int.TryParse(codes[i], out var n) ? n : -1;
-                if (c == 0) { fg = null; bold = false; }
+                if (c == 0)
+                {
+                    fg = null;
+                    bold = false;
+                }
                 else if (c == 1)
                 {
                     bold = true;
@@ -112,9 +123,16 @@ public static partial class TextDecode
                 }
                 else if (c == 38 && i + 1 < codes.Length)
                 {
-                    if (codes[i + 1] == "5" && i + 2 < codes.Length && int.TryParse(codes[i + 2], out var idx)) { fg = Palette256(idx); i += 2; }
+                    if (codes[i + 1] == "5" && i + 2 < codes.Length && int.TryParse(codes[i + 2], out var idx))
+                    {
+                        fg = Palette256(idx);
+                        i += 2;
+                    }
                     else if (codes[i + 1] == "2" && i + 4 < codes.Length && int.TryParse(codes[i + 2], out var r) && int.TryParse(codes[i + 3], out var g) && int.TryParse(codes[i + 4], out var b))
-                    { fg = Rgb(r, g, b); i += 4; }
+                    {
+                        fg = Rgb(r, g, b);
+                        i += 4;
+                    }
                 }
             }
         }
@@ -140,7 +158,11 @@ public static partial class TextDecode
             return i;
         }
 
-        if (i >= 232) { var g = 8 + 10 * (i - 232); return Rgb(g, g, g); }
+        if (i >= 232)
+        {
+            var g = 8 + 10 * (i - 232);
+            return Rgb(g, g, g);
+        }
         var v = i - 16;
         return Rgb(Level(v / 36), Level(v / 6 % 6), Level(v % 6));
     }
@@ -189,10 +211,19 @@ public static partial class TextDecode
             return new(p0, ".json", null, p0 != text);
         }
 
-        var t = text; var changed = false;
-        if (LooksEscaped(t)) { t = Unescape(t); changed = true; }
+        var t = text;
+        var changed = false;
+        if (LooksEscaped(t))
+        {
+            t = Unescape(t);
+            changed = true;
+        }
         var shortened = DataUrl().Replace(t, m => $"[image data, {Math.Max(1, m.Length * 3 / 4 / 1024)} KB]");
-        if (shortened != t) { t = shortened; changed = true; }
+        if (shortened != t)
+        {
+            t = shortened;
+            changed = true;
+        }
         if (t.Contains('\x1B'))
         {
             return new(Strip(t), null, Runs(t), true);

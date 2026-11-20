@@ -20,7 +20,11 @@ public sealed record PluginOwner(AppDefinition App, string Level, string? Projec
 /// </summary>
 public static class PluginContents
 {
-    private static readonly JsonDocumentOptions _json = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+    private static readonly JsonDocumentOptions _json = new()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip
+    };
 
     public static void Add(List<Item> rows, string folder, PluginManifest m, PluginOwner owner)
     {
@@ -36,10 +40,21 @@ public static class PluginContents
             foreach (var at in Places(folder, field, named))
             {
                 var dir = Directory.Exists(at) ? at : Path.GetDirectoryName(at)!;
-                var source = new PartSource { Kind = kind, Level = owner.Level, Depth = 3, Pattern = Directory.Exists(at) ? pattern : Path.GetFileName(at) };
+                var source = new PartSource
+                {
+                    Kind = kind,
+                    Level = owner.Level,
+                    Depth = 3,
+                    Pattern = Directory.Exists(at) ? pattern : Path.GetFileName(at)
+                };
                 var start = rows.Count;
                 Scanner.Tagged(rows, () => Scanner.ReadParts(dir, source, owner.Source, rows),
-                    i => i with { App = owner.App.Id, Plugin = owner.Id, Project = owner.Project });
+                    i => i with
+                    {
+                        App = owner.App.Id,
+                        Plugin = owner.Id,
+                        Project = owner.Project
+                    });
                 Dedupe(rows, start, seen);
             }
         }

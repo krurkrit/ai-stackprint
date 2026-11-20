@@ -38,7 +38,7 @@ public static partial class McpServers
 {
     private static readonly string[] _keys = ["mcpServers", "servers", "mcp", "context_servers"];
     private static readonly string[] _runners = ["npx", "npx.cmd", "uvx", "bunx", "pnpx"];
-    public const string NotPinned = "Not pinned: ", PlainKey = "Key in plain text";
+    internal const string NotPinned = "Not pinned: ", PlainKey = "Key in plain text";
     private const int MaxNames = 4;   // env names shown in a note
 
     /// <summary>Every server in the config files of a scan.</summary>
@@ -52,7 +52,13 @@ public static partial class McpServers
             foreach (var s in InFile(g.Key))
             {
                 var local = s.Project != null && first.Project == null;   // kept per project in a user file
-                res.Add(s with { Apps = apps, Level = local ? "Local" : first.Level, LevelLabel = local ? "Local (user file)" : first.LevelLabel, Project = s.Project ?? first.Project });
+                res.Add(s with
+                {
+                    Apps = apps,
+                    Level = local ? "Local" : first.Level,
+                    LevelLabel = local ? "Local (user file)" : first.LevelLabel,
+                    Project = s.Project ?? first.Project
+                });
             }
         }
 

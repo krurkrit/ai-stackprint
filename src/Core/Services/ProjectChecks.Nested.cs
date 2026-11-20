@@ -13,7 +13,7 @@ namespace AiStackprint.Services;
 public static partial class ProjectChecks
 {
     /// <summary>At most this many start folders are checked (the first ones in name order), so a large monorepo stays quick.</summary>
-    public const int MaxStartFolders = 50;
+    internal const int MaxStartFolders = 50;
     private const int StartDepth = 3;
 
     /// <summary>Folders below the project that hold an instruction file (AGENTS.md, CLAUDE.md, GEMINI.md …), in name order; at most <see cref="MaxStartFolders"/>.</summary>

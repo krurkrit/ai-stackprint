@@ -17,14 +17,24 @@ internal class ConfigPanel : StackPanel
     private readonly Ctx _x;
     private readonly string _path;
     private readonly CodeView? _code;
-    private readonly StackPanel _bar = new() { Orientation = Orientation.Horizontal, Spacing = Space.M };
-    private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted).With(t => { t.VerticalAlignment = VerticalAlignment.Center; t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap; });
+    private readonly StackPanel _bar = new()
+    {
+        Orientation = Orientation.Horizontal,
+        Spacing = Space.M
+    };
+    private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted).With(t =>
+    {
+        t.VerticalAlignment = VerticalAlignment.Center;
+        t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+    });
     private ConfigEditor.Stamp? _stamp;
     private string _original = "";
 
     public ConfigPanel(Ctx x, string path)
     {
-        _x = x; _path = path; Spacing = Space.M;
+        _x = x;
+        _path = path;
+        Spacing = Space.M;
         if (Directory.Exists(path))
         {
             Children.Add(Txt("Folder contents", TextSize.Caption, false, Muted));
@@ -32,12 +42,21 @@ internal class ConfigPanel : StackPanel
             return;
         }
         _code = new CodeView(path) { Height = Heights.ViewerS };
-        try { (_original, _stamp) = ConfigEditor.Read(path); _code.Text = _original; }
+        try
+        {
+            (_original, _stamp) = ConfigEditor.Read(path);
+            _code.Text = _original;
+        }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { _status.Text = "Cannot read: " + e.Message; }
         _code.Changed += (_, _) => { if (!_code.ReadOnly) { _status.Text = _code.Text == _original ? "Editing" : "Unsaved changes"; } };
         var head = new DockPanel { Children = { _bar.With(b => DockPanel.SetDock(b, Dock.Right)), Row(Title(Path.GetFileName(path), TextSize.Body), _status) } };
         Children.Add(head);
-        Children.Add(new Border { CornerRadius = new CornerRadius(Radius.M), ClipToBounds = true, Child = _code });
+        Children.Add(new Border
+        {
+            CornerRadius = new CornerRadius(Radius.M),
+            ClipToBounds = true,
+            Child = _code
+        });
         ShowBar();
     }
 
@@ -73,14 +92,35 @@ internal class ConfigPanel : StackPanel
         }
     }
 
-    private void Edit() { _code!.ReadOnly = false; _status.Text = "Editing"; ShowBar(); }
-
-    private void Cancel() { _code!.Text = _original; _code.ReadOnly = true; _status.Text = ""; ShowBar(); }
-
-    private async void Save()
+    private void Edit()
     {
-        if (_code!.Text == _original) { Cancel(); return; }
-        if (ConfigEditor.Validate(_path, _code.Text) is { } error) { await Dialogs.Message(_x.Owner, "Not saved", error); return; }
+        _code!.ReadOnly = false;
+        _status.Text = "Editing";
+        ShowBar();
+    }
+
+    private void Cancel()
+    {
+        _code!.Text = _original;
+        _code.ReadOnly = true;
+        _status.Text = "";
+        ShowBar();
+    }
+
+    private void Save() => Fire.Forget(SaveAsync());
+
+    private async Task SaveAsync()
+    {
+        if (_code!.Text == _original)
+        {
+            Cancel();
+            return;
+        }
+        if (ConfigEditor.Validate(_path, _code.Text) is { } error)
+        {
+            await Dialogs.Message(_x.Owner, "Not saved", error);
+            return;
+        }
         if (!await Dialogs.Confirm(_x.Owner, $"Save {Path.GetFileName(_path)}?",
                 $"Writes {_path}.\nThe current file is copied to {ConfigEditor.BackupRoot} first.", "Save"))
         {
@@ -91,12 +131,18 @@ internal class ConfigPanel : StackPanel
         {
             var backup = ConfigEditor.Save(_path, _code.Text, _stamp!);
             (_original, _stamp) = ConfigEditor.Read(_path);
-            _code.ReadOnly = true; _status.Text = "Saved · backup kept"; ToolTip.SetTip(_status, backup); ShowBar();
+            _code.ReadOnly = true;
+            _status.Text = "Saved · backup kept";
+            ToolTip.SetTip(_status, backup);
+            ShowBar();
         }
         catch (FileChangedException e)
         {
             if (await Dialogs.Confirm(_x.Owner, "File changed on disk", e.Message + "\nReload it? Your edits are discarded.", "Reload"))
-            { (_original, _stamp) = ConfigEditor.Read(_path); Cancel(); }
+            {
+                (_original, _stamp) = ConfigEditor.Read(_path);
+                Cancel();
+            }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
         {

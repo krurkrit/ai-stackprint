@@ -28,11 +28,20 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
     private static bool Applies(Item i, string project) => i.Project == project || (i.Project == null && !Scanner.InProject(i.Level));
 
     /// <summary>The page was left: see <see cref="ItemBrowser.Leave"/>.</summary>
-    public void Leave() { _browser.Leave(); _context.Leave(); _checks.Leave(); }
+    public void Leave()
+    {
+        _browser.Leave();
+        _context.Leave();
+        _checks.Leave();
+    }
 
     public Control Build(string project)
     {
-        if (_project != project) { _project = project; _browser.Reset(); }
+        if (_project != project)
+        {
+            _project = project;
+            _browser.Reset();
+        }
         if (!Directory.Exists(project))
         {
             return Missing(project);   // reached from search or Back after the folder was moved or deleted
@@ -45,16 +54,31 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
             Btn("Open folder", () => PathUtil.OpenFolder(project), false, "folder_open"),
             DangerBtn("Remove from list", () => removeProject(project), "dismiss"));
         actions.VerticalAlignment = VerticalAlignment.Top;
-        var title = new StackPanel { Spacing = Space.S, Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) } };
+        var title = new StackPanel
+        {
+            Spacing = Space.S,
+            Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) }
+        };
         var head = new DockPanel();
         DockPanel.SetDock(actions, Dock.Right);
         head.Children.Add(actions);
         head.Children.Add(Row(IconTile("folder", Sizes.LogoXL), title));
 
-        var summary = new WrapPanel { Children = { Levels.InfoButton().With(b => { b.Margin = new Avalonia.Thickness(0, 0, 4, 0); b.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center; }) } };
+        var summary = new WrapPanel
+        {
+            Children = { Levels.InfoButton().With(b =>
+            {
+                b.Margin = new Avalonia.Thickness(0, 0, 4, 0);
+                b.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            }) }
+        };
         foreach (var l in _order)
         {
-            summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => { c.Margin = new Avalonia.Thickness(0, 0, 8, 0); c.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center; }));
+            summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c =>
+            {
+                c.Margin = new Avalonia.Thickness(0, 0, 8, 0);
+                c.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            }));
         }
 
         var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), _claude.Build(project), AiFoldersSection.Build(x, project, all), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };
@@ -72,7 +96,11 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
                 Row(Btn("Choose new location", () => relocateProject(project), true, "folder_open"), DangerBtn("Remove from list", () => removeProject(project), "delete"))
             }
         };
-        var title = new StackPanel { Spacing = Space.S, Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) } };
+        var title = new StackPanel
+        {
+            Spacing = Space.S,
+            Children = { H1("Projects", null, Ctx.ProjectName(project)), Mono(project) }
+        };
         return Page(Row(IconTile("folder", Sizes.LogoXL), title), Section("warning", "Folder not found", text));
     }
 

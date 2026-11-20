@@ -19,7 +19,12 @@ internal static partial class UpdateView
     public static Control Settings(Ctx x)
     {
         var st = x.S.Settings;
-        var daily = new ToggleSwitch { IsChecked = st.CheckUpdates, OnContent = "Check GitHub for updates and model data once a day", OffContent = "Check GitHub for updates and model data once a day" };
+        var daily = new ToggleSwitch
+        {
+            IsChecked = st.CheckUpdates,
+            OnContent = "Check GitHub for updates and model data once a day",
+            OffContent = "Check GitHub for updates and model data once a day"
+        };
         daily.IsCheckedChanged += (_, _) =>
         {
             st.CheckUpdates = daily.IsChecked == true;
@@ -45,7 +50,9 @@ internal static partial class UpdateView
     }
 
     /// <summary>After the first scan: checks when the daily check is on and due, and shows the notice for a newer version not put off with Later.</summary>
-    public static async void Startup(Ctx x)
+    public static void Startup(Ctx x) => Fire.Forget(StartupAsync(x));
+
+    private static async Task StartupAsync(Ctx x)
     {
         var st = x.S.Settings;
         if (!st.CheckUpdates)
@@ -74,7 +81,9 @@ internal static partial class UpdateView
         }
     }
 
-    private static async void CheckNow(Ctx x, ContentControl result)
+    private static void CheckNow(Ctx x, ContentControl result) => Fire.Forget(CheckNowAsync(x, result));
+
+    private static async Task CheckNowAsync(Ctx x, ContentControl result)
     {
         result.Content = Busy.Loading("Checking…", 14);
         try
@@ -111,8 +120,17 @@ internal static partial class UpdateView
                 Children =
                 {
                     Row(Icon("arrow_sync", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt($"AI Stackprint {r.Version} is available", TextSize.Small, true)),
-                    Row(Btn("Release page", () => { Open(x, r); Toast.Unpin(_notice); }, true, "open"),
-                        Btn("Later", () => { x.S.State.UpdateDismissed = r.Version.ToString(); StateStore.Save(x.S.State); Toast.Unpin(_notice); }))
+                    Row(Btn("Release page", () =>
+                    {
+                        Open(x, r);
+                        Toast.Unpin(_notice);
+                    }, true, "open"),
+                        Btn("Later", () =>
+                        {
+                            x.S.State.UpdateDismissed = r.Version.ToString();
+                            StateStore.Save(x.S.State);
+                            Toast.Unpin(_notice);
+                        }))
                 }
             }
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
@@ -120,7 +138,9 @@ internal static partial class UpdateView
     }
 
     /// <summary>Opens the release page in the browser; <see cref="UpdateCheck.Parse"/> only accepts pages of this project.</summary>
-    private static async void Open(Ctx x, UpdateCheck.Release r)
+    private static void Open(Ctx x, UpdateCheck.Release r) => Fire.Forget(OpenAsync(x, r));
+
+    private static async Task OpenAsync(Ctx x, UpdateCheck.Release r)
     {
         if (!await x.Owner.Launcher.LaunchUriAsync(new Uri(r.Url)))
         {

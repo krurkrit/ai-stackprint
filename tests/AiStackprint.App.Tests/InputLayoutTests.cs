@@ -46,13 +46,34 @@ public class InputLayoutTests
             new TextBox { Text = "Hello" },
             W.SearchBox("Search"),
             new NumericUpDown { Value = 3 },
-            new ComboBox { ItemsSource = new[] { "One" }, SelectedIndex = 0 },
+            new ComboBox
+            {
+                ItemsSource = new[] { "One" },
+                SelectedIndex = 0
+            },
             new CheckBox { Content = "Check" },
             new RadioButton { Content = "Radio" },
         };
-        var area = new TextBox { Text = FiveLines, AcceptsReturn = true };
-        var tallArea = new TextBox { Text = FiveLines, AcceptsReturn = true, Height = 400 };
-        var wrapped = new CheckBox { Content = new TextBlock { Text = "A long label that wraps onto several lines", TextWrapping = Avalonia.Media.TextWrapping.Wrap }, Width = 90 };
+        var area = new TextBox
+        {
+            Text = FiveLines,
+            AcceptsReturn = true
+        };
+        var tallArea = new TextBox
+        {
+            Text = FiveLines,
+            AcceptsReturn = true,
+            Height = 400
+        };
+        var wrapped = new CheckBox
+        {
+            Content = new TextBlock
+            {
+                Text = "A long label that wraps onto several lines",
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            },
+            Width = 90
+        };
         var panel = new StackPanel { Width = 300 };
         panel.Children.AddRange(one);
         panel.Children.AddRange([area, tallArea, wrapped]);
@@ -88,7 +109,11 @@ public class InputLayoutTests
     [AvaloniaFact]
     public void A_date_picker_has_the_height_and_text_position_of_a_text_box_and_a_focused_input_has_one_line_on_every_side()
     {
-        var picker = new CalendarDatePicker { SelectedDate = new DateTime(2026, 6, 9, 0, 0, 0, DateTimeKind.Unspecified), Width = 300 };
+        var picker = new CalendarDatePicker
+        {
+            SelectedDate = new DateTime(2026, 6, 9, 0, 0, 0, DateTimeKind.Unspecified),
+            Width = 300
+        };
         var box = new TextBox { Text = "2026-06-09" };
         Ui.Show(new StackPanel { Children = { picker, box } });
         Assert.Equal(box.Bounds.Height, picker.Bounds.Height);

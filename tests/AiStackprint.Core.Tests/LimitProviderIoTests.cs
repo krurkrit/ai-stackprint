@@ -118,7 +118,11 @@ public sealed class LimitProviderIoTests : IDisposable
     [Fact]
     public void Codex_without_logs_has_no_figures_from_them()
     {
-        var def = new AiStackprint.Models.AppDefinition { Id = "codex-cli", Name = "Codex CLI" };
+        var def = new AiStackprint.Models.AppDefinition
+        {
+            Id = "codex-cli",
+            Name = "Codex CLI"
+        };
         Assert.Null(new CodexLimits().FromLogs(def, []));
     }
 

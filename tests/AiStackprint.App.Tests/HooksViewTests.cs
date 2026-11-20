@@ -22,13 +22,33 @@ public sealed class HooksViewTests
         {
             Hooks =
             [
-                new Hook("Stop", null, "echo done", "command", "/u/.claude/settings.json") { Apps = ["claude-code"], Level = "User" },
+                new Hook("Stop", null, "echo done", "command", "/u/.claude/settings.json")
+                {
+                    Apps = ["claude-code"],
+                    Level = "User"
+                },
                 new Hook("afterFileEdit", null, "bash ./gone.sh", "command", "/r/.cursor/hooks.json")
-                    { Apps = ["cursor"], Level = "Project", Project = "/r", Missing = "/r/gone.sh", Note = "runs /r/gone.sh, which does not exist", Warn = true },
-                new Hook("PreToolUse", "Bash", "bash ${CLAUDE_PLUGIN_ROOT}/guard.sh", "command", "/p/hooks/hooks.json") { Apps = ["claude-code"], Level = "User", Plugin = "guard@market" },
+                    {
+                        Apps = ["cursor"],
+                        Level = "Project",
+                        Project = "/r",
+                        Missing = "/r/gone.sh",
+                        Note = "runs /r/gone.sh, which does not exist",
+                        Warn = true
+                    },
+                new Hook("PreToolUse", "Bash", "bash ${CLAUDE_PLUGIN_ROOT}/guard.sh", "command", "/p/hooks/hooks.json")
+                {
+                    Apps = ["claude-code"],
+                    Level = "User",
+                    Plugin = "guard@market"
+                },
             ]
         };
-        var w = new Window { Width = 1200, Height = 800 };
+        var w = new Window
+        {
+            Width = 1200,
+            Height = 800
+        };
         HooksView? view = null;
         var x = new Ctx(s, w, _ => { }, () => { }) { Refresh = () => w.Content = view!.Build() };
         view = new HooksView(x);

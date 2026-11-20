@@ -43,11 +43,21 @@ internal partial class ModelsView
             return Section("data_pie", "Benchmarks", Hint("Artificial Analysis has no scores for these models: " + string.Join(", ", r.Missing) + ".", null));
         }
 
-        var legend = new StackPanel { Spacing = Space.M, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, MinWidth = Widths.LabelL };
+        var legend = new StackPanel
+        {
+            Spacing = Space.M,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            MinWidth = Widths.LabelL
+        };
         foreach (var (s, i) in r.Scores.Select((s, i) => (s, i)))
         {
             var color = RadarChart.SeriesKeys[_picked.IndexOf(s.Key) % RadarChart.SeriesKeys.Length];
-            var dot = new Border { Width = Sizes.Dot, Height = Sizes.Dot, CornerRadius = new Avalonia.CornerRadius(Radius.Pill) }.Themed(Border.BackgroundProperty, color);
+            var dot = new Border
+            {
+                Width = Sizes.Dot,
+                Height = Sizes.Dot,
+                CornerRadius = new Avalonia.CornerRadius(Radius.Pill)
+            }.Themed(Border.BackgroundProperty, color);
             legend.Children.Add(Row(dot, Txt(s.Key, TextSize.Body, true), Txt(r.Variants[i], TextSize.Small, false, Muted)));
         }
 
@@ -70,7 +80,11 @@ internal partial class ModelsView
 
     private static Control Hint(string text, Control? button, Control? extra = null)
     {
-        var sp = new StackPanel { Spacing = Space.L, Children = { Txt(text, TextSize.Small, false, Muted) } };
+        var sp = new StackPanel
+        {
+            Spacing = Space.L,
+            Children = { Txt(text, TextSize.Small, false, Muted) }
+        };
         if (button != null)
         {
             sp.Children.Add(Row(button, extra ?? new Control()));
