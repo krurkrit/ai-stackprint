@@ -111,6 +111,9 @@ public static class ProjectFiles
         ".git", ".hg", ".svn", ".vs", ".idea", "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__", ".next", ".nuxt", ".gradle", ".turbo",
     };
 
+    // Hidden files are skipped on Windows only: on Linux and macOS every dotfile (.cursorignore, .github) counts as hidden, and those are the project's AI files
+    private static readonly FileAttributes _skipped = OperatingSystem.IsWindows() ? FileAttributes.Hidden | FileAttributes.System : FileAttributes.System;
+
     private static readonly TimeSpan _keep = TimeSpan.FromSeconds(30);
     private static readonly Dictionary<(string, int), (DateTime At, Lazy<(List<string> Files, bool Complete)> Listing)> _recent = [];
 
@@ -144,7 +147,7 @@ public static class ProjectFiles
 
     /// <summary>
     /// One native pass over the folder tree (a folder per call and a relative-path call per file took 0.8 s for 20,000 files; this takes about 0.2 s).
-    /// Hidden and system files and unreadable folders are skipped, as before.
+    /// Hidden (Windows only) and system files and unreadable folders are skipped.
     /// </summary>
     private static List<string> Walk(string project, out bool complete, int max)
     {
@@ -152,7 +155,7 @@ public static class ProjectFiles
         var root = Path.TrimEndingDirectorySeparator(project).Length + 1;
         var files = new System.IO.Enumeration.FileSystemEnumerable<string>(project,
             (ref System.IO.Enumeration.FileSystemEntry e) => string.Concat(e.Directory.Length > root ? string.Concat(e.Directory[root..], "/") : "", e.FileName).Replace('\\', '/'),
-            new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
+            new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = _skipped })
         {
             ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => !e.IsDirectory,
             ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => !_skip.Contains(e.FileName.ToString())
