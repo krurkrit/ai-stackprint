@@ -16,7 +16,8 @@ public static class UpdateCheck
     public const string Repo = "krurkrit/ai-stackprint";
     public const string Host = "api.github.com";
     public static readonly TimeSpan Interval = TimeSpan.FromDays(1);
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
+    internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     /// <summary>A release on GitHub: its version and its page.</summary>
     public record Release(Version Version, string Url);
@@ -61,7 +62,7 @@ public static class UpdateCheck
         using var req = new HttpRequestMessage(HttpMethod.Get, $"https://{Host}/repos/{Repo}/releases/latest");
         req.Headers.UserAgent.ParseAdd("AiStackprint/" + Current);   // GitHub refuses requests without one
         req.Headers.Accept.ParseAdd("application/vnd.github+json");
-        using var res = await _http.SendAsync(req, ct).ConfigureAwait(false);
+        using var res = await Http.SendAsync(req, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             return null;   // no release published yet

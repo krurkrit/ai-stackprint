@@ -20,11 +20,12 @@ public static class BenchmarkUpdate
     public const string Host = "artificialanalysis.ai";
     public const string Site = "https://artificialanalysis.ai";
     private const int MaxPages = 10, MaxBytes = 3_000_000;
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
+    internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(20) };
 
     public static bool Due(DateTime? lastUtc, DateTime nowUtc) => UpdateCheck.Due(lastUtc, nowUtc);
 
-    public static Task<BenchmarkResult> RunAsync(string key, CancellationToken ct = default) => RunAsync(_http, key, BenchmarkStore.CacheFile, ct);
+    public static Task<BenchmarkResult> RunAsync(string key, CancellationToken ct = default) => RunAsync(Http, key, BenchmarkStore.CacheFile, ct);
 
     /// <summary>All pages of the free language-model list; never throws for network or data problems (they are the result's message).</summary>
     public static async Task<BenchmarkResult> RunAsync(HttpClient http, string key, string cacheFile, CancellationToken ct = default)

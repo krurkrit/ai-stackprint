@@ -8,7 +8,20 @@ name: Coverage
 on:
   schedule:
     - cron: '0 3 * * *'   # every day 03:00 UTC
-  workflow_dispatch:       # run by hand: always runs
+  workflow_dispatch:       # run by hand: always runs; tick the services to send the result to
+    inputs:
+      codecov:
+        description: Send to Codecov
+        type: boolean
+        default: false
+      coveralls:
+        description: Send to Coveralls
+        type: boolean
+        default: false
+      codacy:
+        description: Send to Codacy
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -63,7 +76,7 @@ jobs:
       # Three services to try side by side. Each is independent: one failing or missing its secret does not stop the others.
       # Secrets (Settings > Secrets and variables > Actions): CODECOV_TOKEN, CODACY_PROJECT_TOKEN. Coveralls needs none for a public repo.
       - name: Codecov
-        if: steps.changed.outputs.run == 'true' && env.CODECOV_TOKEN != ''
+        if: steps.changed.outputs.run == 'true' && (github.event_name != 'workflow_dispatch' || inputs.codecov) && env.CODECOV_TOKEN != ''
         continue-on-error: true
         uses: codecov/codecov-action@v5
         with:
@@ -72,7 +85,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Coveralls
-        if: steps.changed.outputs.run == 'true'
+        if: steps.changed.outputs.run == 'true' && (github.event_name != 'workflow_dispatch' || inputs.coveralls)
         continue-on-error: true
         uses: coverallsapp/github-action@v2
         with:
@@ -81,7 +94,7 @@ jobs:
           format: cobertura
 
       - name: Codacy
-        if: steps.changed.outputs.run == 'true' && env.CODACY_PROJECT_TOKEN != ''
+        if: steps.changed.outputs.run == 'true' && (github.event_name != 'workflow_dispatch' || inputs.codacy) && env.CODACY_PROJECT_TOKEN != ''
         continue-on-error: true
         uses: codacy/codacy-coverage-reporter-action@v1
         with:

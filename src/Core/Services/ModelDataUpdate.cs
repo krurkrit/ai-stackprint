@@ -26,7 +26,8 @@ public static class ModelDataUpdate
     public const int MaxBytes = 2_000_000;
     /// <summary>The Usage page notes model data older than this: the weekly data has not reached this copy.</summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromDays(60);
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
+    internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(10) };
 
     public static Uri Url { get; } = new($"https://{UpdateCheck.Host}/repos/{UpdateCheck.Repo}/contents/{RepoPath}");
 
@@ -35,7 +36,7 @@ public static class ModelDataUpdate
         DateOnly.TryParseExact(updated, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d)
             && nowUtc.Date - d.ToDateTime(TimeOnly.MinValue) > StaleAfter;
 
-    public static Task<ModelDataResult> RunAsync(string? etag, CancellationToken ct = default) => RunAsync(_http, ModelCatalog.CacheFile, etag, ct);
+    public static Task<ModelDataResult> RunAsync(string? etag, CancellationToken ct = default) => RunAsync(Http, ModelCatalog.CacheFile, etag, ct);
 
     /// <summary>One request; never throws for network or data problems (they are the result's message).</summary>
     public static async Task<ModelDataResult> RunAsync(HttpClient http, string cacheFile, string? etag, CancellationToken ct = default)

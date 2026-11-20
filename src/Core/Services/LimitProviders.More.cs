@@ -101,10 +101,14 @@ public partial class CursorLimits : ILimitProvider
     public string Id => "cursor";
     public string Host => "cursor.com";
 
+    /// <summary>Another database file, for tests (null = the one Cursor keeps).</summary>
+    internal static string? DbOverride { get; set; }
+
     private static string Db(string home) =>
-        OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cursor", "User", "globalStorage", "state.vscdb")
+        DbOverride ??
+        (OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cursor", "User", "globalStorage", "state.vscdb")
         : OperatingSystem.IsMacOS() ? Path.Combine(home, "Library", "Application Support", "Cursor", "User", "globalStorage", "state.vscdb")
-        : Path.Combine(home, ".config", "Cursor", "User", "globalStorage", "state.vscdb");
+        : Path.Combine(home, ".config", "Cursor", "User", "globalStorage", "state.vscdb"));
 
     public Credential? Credential(string home)
     {

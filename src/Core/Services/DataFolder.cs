@@ -12,7 +12,7 @@ public static class DataFolder
 {
     public const string Note = "MOVED.txt";
 
-    public static string Root { get; } = Path.Combine(PathUtil.Home, ".ai-stackprint");
+    public static string Root => Path.Combine(PathUtil.Home, ".ai-stackprint");
     public static string Cache => Path.Combine(Root, "cache");
     public static string Logs => Path.Combine(Root, "logs");
     public static string Backups => Path.Combine(Root, "backups");

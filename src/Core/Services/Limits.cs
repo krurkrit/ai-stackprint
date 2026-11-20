@@ -46,7 +46,8 @@ public class LimitHttpException(HttpStatusCode code, TimeSpan? retryAfter) : Htt
 /// </summary>
 public sealed class LimitsService(Func<Settings> settings)
 {
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
+    internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(10) };
     public static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(1);
 
     private sealed class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
@@ -139,7 +140,7 @@ public sealed class LimitsService(Func<Settings> settings)
             else
             {
                 e.CredStamp = Stamp(c.File);
-                var snap = await p.Fetch(_http, c, CancellationToken.None).ConfigureAwait(false);
+                var snap = await p.Fetch(Http, c, CancellationToken.None).ConfigureAwait(false);
                 next = new(LimitState.Ok, snap with { Plan = snap.Plan ?? c.Plan }, old, null, false);
             }
         }
