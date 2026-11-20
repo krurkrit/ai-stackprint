@@ -1,4 +1,9 @@
 # AI Stackprint
+[![Coverage workflow](https://github.com/krurkrit/ai-stackprint/actions/workflows/coverage.yml/badge.svg)](https://github.com/krurkrit/ai-stackprint/actions/workflows/coverage.yml)
+[![Codecov](https://codecov.io/gh/krurkrit/ai-stackprint/graph/badge.svg)](https://codecov.io/gh/krurkrit/ai-stackprint)
+[![Coveralls](https://coveralls.io/repos/github/krurkrit/ai-stackprint/badge.svg?branch=main)](https://coveralls.io/github/krurkrit/ai-stackprint?branch=main)
+<!-- Codacy: add the grade and coverage badges from its project Settings > Badges (they carry a project id) -->
+
 Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project / User / System). Avalonia 12 + .NET 10, free (MIT, see `LICENSE`).
 
 Download the installer for Windows, Linux or macOS from [Releases](https://github.com/krurkrit/ai-stackprint/releases) (on a Mac see [docs/install-macos.md](docs/install-macos.md): the installer is not notarized yet, Gatekeeper needs one extra step), or run from source with `dotnet run --project src/App` (needs the .NET 10 SDK). See `AGENTS.md` for contributor rules and `docs/` for architecture and adding apps.
