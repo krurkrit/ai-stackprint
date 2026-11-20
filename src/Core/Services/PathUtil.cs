@@ -26,8 +26,10 @@ public static class PathUtil
         return p.Replace('/', Path.DirectorySeparatorChar);
     }
 
+    private static readonly AsyncLocal<string?> _osOverride = new();
+
     /// <summary>The operating system as the app definitions name it: windows, macos or linux. Tests set another to run the other branches.</summary>
-    internal static string? OsOverride { get; set; }
+    internal static string? OsOverride { get => _osOverride.Value; set => _osOverride.Value = value; }   // per test flow: tests running in parallel do not see each other's
 
     private static string Os => OsOverride ?? (OperatingSystem.IsWindows() ? "windows" : OperatingSystem.IsMacOS() ? "macos" : "linux");
 
