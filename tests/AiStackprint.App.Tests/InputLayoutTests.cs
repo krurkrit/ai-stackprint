@@ -28,7 +28,7 @@ public class InputLayoutTests
             foreach (var size in new[] { 12d, 14d, 18d })
             {
                 var settings = SettingsStore.Defaults();
-                settings.FontSize = size;
+                new AiStackprint.Services.FontRuleSet(settings.Fonts).SetNumber("body", AiStackprint.Services.FontProp.Size, size);
                 Theme.Appearance(Application.Current!, settings);
                 Check(size);
             }
@@ -83,6 +83,21 @@ public class InputLayoutTests
         var label = Text(wrapped);
         var lineHeight = label.Bounds.Height / Lines(label);
         Assert.Equal(Top(box, wrapped) + box.Bounds.Height / 2, Top(label, wrapped) + lineHeight / 2, 1.0);   // FluentAvalonia's box is a little larger: within 1 px of level
+    }
+
+    [AvaloniaFact]
+    public void A_date_picker_has_the_height_and_text_position_of_a_text_box_and_a_focused_input_has_one_line_on_every_side()
+    {
+        var picker = new CalendarDatePicker { SelectedDate = new DateTime(2026, 6, 9, 0, 0, 0, DateTimeKind.Unspecified), Width = 300 };
+        var box = new TextBox { Text = "2026-06-09" };
+        Ui.Show(new StackPanel { Children = { picker, box } });
+        Assert.Equal(box.Bounds.Height, picker.Bounds.Height);
+        var inner = picker.GetVisualDescendants().OfType<TextPresenter>().First();
+        var text = box.GetVisualDescendants().OfType<TextPresenter>().First();
+        Assert.Equal(text.TranslatePoint(default, box), inner.TranslatePoint(default, picker));
+
+        Assert.True(Application.Current!.TryGetResource("TextControlBorderThemeThicknessFocused", Avalonia.Styling.ThemeVariant.Light, out var focused));
+        Assert.Equal(new Thickness(1), focused);   // the theme's own is thicker at the bottom
     }
 
     [AvaloniaFact]

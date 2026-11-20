@@ -21,14 +21,11 @@ internal static partial class DashboardView
 {
     private const int TopAuthors = 10;
 
-    public static Control Build(Ctx x, Action addProject)
+    public static Control Build(Ctx x)
     {
         var s = x.S;
         var apps = x.ShownApps.ToList();
         var head = Head();
-        var btns = Row(Btn("Add project folder", addProject, false, "folder_add"), Btn("Rescan", x.Rescan, true, "arrow_sync"));
-        DockPanel.SetDock(btns, Dock.Right);
-        head.Children.Add(btns);
         head.Children.Add(H1("Dashboard"));
 
         var all = s.AllHealth.ToList();
@@ -172,7 +169,7 @@ internal static partial class DashboardView
 
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Sizes.LabelColumn},*,{Sizes.NumberColumn}"), ColumnSpacing = Space.L, Background = Brushes.Transparent };
         g.Children.Add(label.With(l => l.VerticalAlignment = VerticalAlignment.Center));
-        g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S), ClipToBounds = true, Child = bar, VerticalAlignment = VerticalAlignment.Center }.With(b => Grid.SetColumn(b, 1)));
+        g.Children.Add(new Border { Child = bar, VerticalAlignment = VerticalAlignment.Center }.With(b => Grid.SetColumn(b, 1)));
         g.Children.Add(Txt(total.ToString("N0"), TextSize.Small, false, Muted).With(t => { Grid.SetColumn(t, 2); t.HorizontalAlignment = HorizontalAlignment.Right; t.VerticalAlignment = VerticalAlignment.Center; }));
         ToolTip.SetTip(g, tip);
         // The same padding with or without a click, so a row that opens nothing ("Other") lines up with the others
@@ -222,7 +219,17 @@ internal static partial class DashboardView
     /// <summary>The Health tile while the projects' checks run (after the dashboard shows): a count now would be too low.</summary>
     private static Border HealthPending(Ctx x)
     {
-        var card = Section("heart_pulse", "Health", Busy.Status("Checking projects…", out _));
+        // The same stack as the finished tile (number, bar, legend line), so the card keeps its size when the count arrives
+        var card = Section("heart_pulse", "Health", new StackPanel
+        {
+            Spacing = Space.L,
+            Children =
+            {
+                Title("0", TextSize.Display).With(t => { t.Opacity = 0; t.HorizontalAlignment = HorizontalAlignment.Right; }),
+                new Border { Height = Sizes.Bar }.Themed(Border.BackgroundProperty, BorderKey),
+                Busy.Status("Checking projects…", out _)
+            }
+        });
         card.Cursor = Hand;
         card.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { x.Go("Health"); } };
         return card;
@@ -254,7 +261,7 @@ internal static partial class DashboardView
         {
             Spacing = Space.L,
             Children = { Title(big, TextSize.Display).With(t => { t.FontFeatures = _tabular; t.HorizontalAlignment = HorizontalAlignment.Right; }),
-                new Border { CornerRadius = new CornerRadius(Radius.S), ClipToBounds = true, Child = grid }, legend }
+                new Border { Child = grid }, legend }
         });
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();

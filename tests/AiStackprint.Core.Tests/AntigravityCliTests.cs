@@ -22,6 +22,47 @@ public sealed class AntigravityCliTests
         Assert.Contains(d.ProjectRoots, r => r.Path == ".agents/skills");
         Assert.Contains(d.Configs, c => c.Path == "~/.gemini/config/mcp_config.json" && c.Kind == "mcp");
         Assert.Contains(d.Logs, l => l.Pattern == "transcript.jsonl");
+        Assert.Contains(d.Configs, c => c.Path == "~/.gemini/config/hooks.json" && c.Kind == "hooks");
+        Assert.Contains(d.Configs, c => c.Path == ".agents/hooks.json" && c.Kind == "hooks" && c.Level == "Project");
+    }
+
+    [Fact]
+    public void Hooks_json_is_read_by_name_and_event_with_matcher_groups_plain_lists_and_the_enabled_flag()
+    {
+        var home = Directory.CreateTempSubdirectory("agy-hooks").FullName;
+        try
+        {
+            var file = Path.Combine(home, "hooks.json");
+            File.WriteAllText(file, """
+                {
+                  "lint": { "PostToolUse": [ { "matcher": "run_command", "hooks": [ { "type": "command", "command": "echo lint", "timeout": 10 } ] } ] },
+                  "guard": { "enabled": false, "PreToolUse": [ { "matcher": "", "hooks": [ { "command": "echo guard" } ] } ] },
+                  "context": { "PreInvocation": [ { "type": "command", "command": "echo ctx" } ], "SessionStart": [ { "command": "echo start" } ] }
+                }
+                """);
+            var hooks = Hooks.InFile(file, home, home);
+            Assert.Equal(4, hooks.Count);
+            var lint = hooks.Single(h => h.Event == "PostToolUse");
+            Assert.Equal("run_command", lint.Matcher);
+            Assert.Equal("echo lint", lint.What);
+            Assert.Contains("hook lint", lint.Note);
+            Assert.Contains("switched off", hooks.Single(h => h.Event == "PreToolUse").Note);
+            Assert.Equal(["PreInvocation", "SessionStart"], hooks.Where(h => h.Matcher == null).Select(h => h.Event).Order());
+        }
+        finally { Directory.Delete(home, true); }
+    }
+
+    [Fact]
+    public void A_settings_style_hooks_file_is_still_read_the_old_way()
+    {
+        var home = Directory.CreateTempSubdirectory("agy-hooks2").FullName;
+        try
+        {
+            var file = Path.Combine(home, "settings.json");
+            File.WriteAllText(file, """{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "echo done" } ] } ] } }""");
+            Assert.Equal("Stop", Assert.Single(Hooks.InFile(file, home, home)).Event);
+        }
+        finally { Directory.Delete(home, true); }
     }
 
     [Fact]

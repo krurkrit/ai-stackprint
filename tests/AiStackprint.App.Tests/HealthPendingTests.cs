@@ -44,13 +44,13 @@ public sealed class HealthPendingTests
         var w = new Window { Width = 1300, Height = 900 };
         var s = State(false);
         var x = new Ctx(s, w, _ => { }, () => { });
-        w.Content = new ScrollViewer { Content = DashboardView.Build(x, () => { }) };
+        w.Content = new ScrollViewer { Content = DashboardView.Build(x) };
         w.Show();
         Dispatcher.UIThread.RunJobs();
         Assert.Contains("Checking projects…", Ui.Texts(w));
 
         s.ProjectHealth = State(true).ProjectHealth;
-        w.Content = new ScrollViewer { Content = DashboardView.Build(x, () => { }) };
+        w.Content = new ScrollViewer { Content = DashboardView.Build(x) };
         Dispatcher.UIThread.RunJobs();
         var t = Ui.Texts(w);
         Assert.DoesNotContain("Checking projects…", t);

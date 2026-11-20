@@ -198,13 +198,15 @@
         {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "label": "Workspace"},
         {"path": "~/.gemini/antigravity-cli/settings.json", "level": "User", "kind": "settings"},
         {"path": "~/.gemini/config/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"},
-        {"path": ".agents/mcp_config.json", "level": "Project", "kind": "mcp", "label": "Workspace"}
+        {"path": ".agents/mcp_config.json", "level": "Project", "kind": "mcp", "label": "Workspace"},
+        {"path": "~/.gemini/config/hooks.json", "level": "User", "kind": "hooks", "label": "Global"},
+        {"path": ".agents/hooks.json", "level": "Project", "kind": "hooks", "label": "Workspace"}
       ],
       "logs": [
         {"path": "~/.gemini/antigravity-cli/brain", "label": "Conversations", "pattern": "transcript.jsonl", "depth": 4},
         {"path": "~/.gemini/antigravity/brain", "label": "Conversations (app)", "pattern": "transcript.jsonl", "depth": 4}
       ],
-      "notes": "Replaces Gemini CLI (command: agy). Detected by its own folder (~/.gemini/antigravity-cli), by the shared config folder (~/.gemini/config), or by the folder of the agy launcher the Antigravity app installs (%APPDATA%/Antigravity/bin on Windows): the app and the CLI share these, so the app alone can show it as installed. Paths are from Google's Antigravity CLI docs (settings, skills, MCP, instructions) and are best-effort. A conversation log is the transcript.jsonl of each conversation; its fields are not documented, so it is shown as text and no token usage is read. Hooks (hooks.json) and plugins are not listed yet. The CLI's /usage command shows your quota."
+      "notes": "Replaces Gemini CLI (command: agy). Detected by its own folder (~/.gemini/antigravity-cli), by the shared config folder (~/.gemini/config), or by the folder of the agy launcher the Antigravity app installs (%APPDATA%/Antigravity/bin on Windows): the app and the CLI share these, so the app alone can show it as installed. Paths are from Google's Antigravity CLI docs (settings, skills, MCP, instructions) and are best-effort. A conversation log is the transcript.jsonl of each conversation; its fields are not documented, so it is shown as text and no token usage is read. Hooks are read from ~/.gemini/config/hooks.json and .agents/hooks.json (format from Google's docs: named hooks with events and an optional enabled flag); plugins are not listed yet. Token usage is not in the transcript files: reports place it in the conversations' SQLite databases as protobuf, an internal format, so it is not read. The CLI's /usage command shows your quota."
     },
     {
       "id": "windsurf", "context": "windsurf", "name": "Windsurf", "category": "editor", "logo": "windsurf",

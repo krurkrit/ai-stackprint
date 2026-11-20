@@ -21,6 +21,15 @@ public static class SettingsStore
     /// <summary>Keys older versions kept in settings.json that now live in state.json.</summary>
     private static readonly string[] _stateKeys = ["panelHeight", "updateCheckedUtc", "updateDismissed"];
 
+    /// <summary>
+    /// Keys an earlier 0.x build wrote that no longer exist (the flat font keys, now in "fonts"): dropped when loading, without an upgrade step.
+    /// Before 1.0 the format may change freely; from 1.0 a change of structure needs a new version and an upgrade step (see AGENTS.md).
+    /// </summary>
+    private static readonly string[] _obsoleteKeys =
+    [
+        "fontFamily", "fontSize", "bodyWeight", "emphasisWeight", "headingFontFamily", "headingWeight", "menuWeight", "logFontFamily", "logFontSize", "logFontWeight"
+    ];
+
     public static string File => Path.Combine(DataFolder.Root, "settings.json");
 
     /// <summary>Shown once when settings.json comes from a newer AI Stackprint: changes here are not saved, so going back to it loses nothing.</summary>
@@ -44,6 +53,11 @@ public static class SettingsStore
             return Defaults();
         }
 
+        foreach (var k in _obsoleteKeys)
+        {
+            mine.Remove(k);
+        }
+
         var legacy = new JsonObject();
         foreach (var k in _stateKeys)
         {
@@ -58,14 +72,36 @@ public static class SettingsStore
             StateStore.Adopt(legacy, Path.Combine(folder, StateStore.FileName));
         }
 
-        try { return Deserialize(JsonLayers.Merge(_defaults.Value, mine)); }
+        try { return Checked(Deserialize(JsonLayers.Merge(_defaults.Value, mine))); }
         catch (JsonException) { return Defaults(); }   // a value of the wrong type: the file stays as it is until a save
+    }
+
+    /// <summary>Font settings that cannot be used (a loop, an unknown parent, a bad value) are replaced by the defaults; the file stays as it is until a save.</summary>
+    private static Settings Checked(Settings s)
+    {
+        if (FontRuleSet.Validate(s.Fonts) != null)
+        {
+            s.Fonts = Defaults().Fonts;
+        }
+
+        return s;
     }
 
     public static void Save(Settings s, string? file = null)
     {
+        _format.Write(file ?? File, Changes(s));
+    }
+
+    /// <summary>The settings that differ from the defaults, as settings.json holds them (and the export): what is implied is left out.</summary>
+    internal static JsonObject Changes(Settings s)
+    {
         var all = (JsonObject)JsonSerializer.SerializeToNode(s, AppCatalog._opt)!;
-        _format.Write(file ?? File, JsonLayers.Diff(all, _defaults.Value));
+        if (all["fonts"] is JsonObject fonts)
+        {
+            FontRuleSet.Compact(fonts, _defaults.Value["fonts"] as JsonObject);
+        }
+
+        return JsonLayers.Diff(all, _defaults.Value);
     }
 
     /// <summary>Apps to scan: everything except the ones hidden in settings.</summary>

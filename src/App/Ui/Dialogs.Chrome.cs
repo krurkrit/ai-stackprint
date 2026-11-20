@@ -32,7 +32,7 @@ internal static partial class Dialogs
         w.ShowInTaskbar = false;
         w.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-        var close = IconBtn("dismiss", "Close", () => w.Close(false));
+        var close = IconBtn("dismiss", "Close", () => w.Close(false), danger: true);
         var header = new DockPanel { Background = Brushes.Transparent };
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);

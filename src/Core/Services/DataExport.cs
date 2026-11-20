@@ -27,7 +27,7 @@ public sealed record DataFiles(string Settings, string Models, string Apps, stri
 }
 
 /// <summary>
-/// One file with your settings, model changes, custom apps and project folders (<c>ai-stackprint-export.json</c>): only your changes, or every value.
+/// One file with your settings, custom apps, project folders and model changes (in that order) (<c>ai-stackprint-export.json</c>): only your changes, or every value.
 /// Never state, caches, logs or anything from the apps' own files; paths under your home folder are written as <c>~/…</c>.
 /// </summary>
 public static class DataExport
@@ -48,6 +48,20 @@ public static class DataExport
             o["settings"] = allValues ? JsonLayers.Merge(SettingsStore.DefaultJson(), mine) : mine;
         }
 
+        if (parts.HasFlag(DataParts.Apps))
+        {
+            o["apps"] = JsonSerializer.SerializeToNode(AppCatalog.Read(f.Apps).Defs.Where(d => d.Origin == AppOrigin.Custom).ToList(), AppCatalog._opt);
+        }
+
+        if (parts.HasFlag(DataParts.Projects))
+        {
+            o["projects"] = new JsonArray([.. ProjectStore.Load(f.Projects, f.Home).Select(p => (JsonNode)new JsonObject
+            {
+                ["path"] = ProjectStore.ToFile(p.Path, f.Home),
+                ["added"] = p.Added.ToUniversalTime().ToString("O"),
+            })]);
+        }
+
         if (parts.HasFlag(DataParts.Models))
         {
             var mine = ModelCatalog.ReadOverrides(f.Models) ?? [];
@@ -61,20 +75,6 @@ public static class DataExport
                 mine = all;
             }
             o["models"] = mine.DeepClone();
-        }
-
-        if (parts.HasFlag(DataParts.Apps))
-        {
-            o["apps"] = JsonSerializer.SerializeToNode(AppCatalog.Read(f.Apps).Defs.Where(d => d.Origin == AppOrigin.Custom).ToList(), AppCatalog._opt);
-        }
-
-        if (parts.HasFlag(DataParts.Projects))
-        {
-            o["projects"] = new JsonArray([.. ProjectStore.Load(f.Projects, f.Home).Select(p => (JsonNode)new JsonObject
-            {
-                ["path"] = ProjectStore.ToFile(p.Path, f.Home),
-                ["added"] = p.Added.ToUniversalTime().ToString("O"),
-            })]);
         }
 
         return o;
@@ -91,7 +91,6 @@ public static class DataExport
     /// <summary>Your settings that differ from the defaults (what settings.json holds).</summary>
     internal static JsonObject MySettings(string file)
     {
-        var all = (JsonObject)JsonSerializer.SerializeToNode(SettingsStore.Load(file), AppCatalog._opt)!;
-        return JsonLayers.Diff(all, SettingsStore.DefaultJson());
+        return SettingsStore.Changes(SettingsStore.Load(file));
     }
 }

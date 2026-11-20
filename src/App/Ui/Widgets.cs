@@ -17,7 +17,7 @@ internal static partial class W
     public const string Background = "Ap.Background", Text = "Ap.Text", Muted = "Ap.Muted", Surface = "Ap.Surface", SideKey = "Ap.Side", MainKey = "Ap.Main";
     public const string Subtle = "Ap.Hover", Selected = "Ap.Selected", BorderKey = "Ap.Divider";
     public const string Accent = "Ap.Accent", OnAccent = "Ap.OnAccent", Link = "Ap.Link";
-    public const string ErrorKey = "Ap.Error", ErrorFill = "Ap.ErrorFill", OnError = "Ap.OnError", WarningKey = "Ap.Warning", SuccessKey = "Ap.Success";
+    public const string ErrorKey = "Ap.Error", ErrorFill = "Ap.ErrorFill", ErrorHover = "Ap.ErrorHover", ErrorPressed = "Ap.ErrorPressed", OnError = "Ap.OnError", WarningKey = "Ap.Warning", SuccessKey = "Ap.Success";
     public const string ChartIn = "Ap.ChartIn", ChartOut = "Ap.ChartOut", ChartWrite = "Ap.ChartWrite", ChartRead = "Ap.ChartRead";
     public const string SuccessText = "Ap.SuccessText", SuccessFill = "Ap.SuccessFill", SelectionKey = "Ap.Selection", HighlightKey = "Ap.Highlight", HighlightRingKey = "Ap.HighlightRing", ScrimKey = "Ap.Scrim";
 
@@ -35,6 +35,12 @@ internal static partial class W
     public static FontWeight Heading => HeadingWeight ?? (Emphasis >= FontWeight.SemiBold ? FontWeight.Bold : FontWeight.SemiBold);
     public static FontWeight? HeadingWeight { get; set; }
     public static FontFamily? HeadingFont { get; set; }
+    /// <summary>Emphasis and Side menu may have their own family; a size of their own scales the text (their size over Body's: 1 when they follow it).</summary>
+    public static FontFamily? EmphasisFont { get; set; }
+    public static FontFamily? MenuFont { get; set; }
+    public static double EmphasisScale { get; set; } = 1;
+    public static double HeadingScale { get; set; } = 1;
+    public static double MenuScale { get; set; } = 1;
     public static FontWeight MenuWeight { get; set; } = FontWeight.Medium;
 
     /// <summary>Numbers only (digits and separators): aligned digits in the body font.</summary>
@@ -72,17 +78,18 @@ internal static partial class W
 
     /// <summary>Text at a 14-px-based size; bold = the Emphasis weight. It can be selected by dragging and copied, except inside a button or a clickable row (<see cref="CopyableText"/>).</summary>
     public static TextBlock Txt(string s, double size = TextSize.Body, bool bold = false, string key = Text) =>
-        new CopyableText { Text = s, FontSize = Size(size), FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.With(t => NumberStyle(t, s))
+        new CopyableText { Text = s, FontSize = Size(bold ? size * EmphasisScale : size), FontWeight = bold ? Emphasis : Body, TextWrapping = TextWrapping.Wrap }.With(t => { if (bold && EmphasisFont != null) { t.FontFamily = EmphasisFont; } NumberStyle(t, s); })
             .Themed(TextBlock.ForegroundProperty, key);
 
     /// <summary>Like <see cref="Txt"/> but the text can be selected and copied by dragging. Only for text that is not part of a click target.</summary>
     public static SelectableTextBlock Sel(string s, double size = TextSize.Body, bool bold = false, string key = Text) =>
-        new SelectableTextBlock { Text = s, FontSize = Size(size), FontWeight = bold ? Heading : Body, TextWrapping = TextWrapping.Wrap }
+        new SelectableTextBlock { Text = s, FontSize = Size(bold ? size * HeadingScale : size), FontWeight = bold ? Heading : Body, TextWrapping = TextWrapping.Wrap }
+            .With(t => { if (bold && HeadingFont != null) { t.FontFamily = HeadingFont; } })
             .Themed(TextBlock.ForegroundProperty, key);
 
     /// <summary>Card titles, names in headers, big numbers: Heading weight.</summary>
     public static TextBlock Title(string s, double size = TextSize.Subtitle) =>
-        new CopyableText { Text = s, FontSize = Size(size), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
+        new CopyableText { Text = s, FontSize = Size(size * HeadingScale), FontWeight = Heading, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }
             .With(t => { if (HeadingFont != null) { t.FontFamily = HeadingFont; } NumberStyle(t, s); });
 
     public static TextBlock Mono(string s, double size = TextSize.Small) => Txt(s, size).With(t => t.FontFamily = Theme.Mono);
@@ -109,13 +116,13 @@ internal static partial class W
     }
 
     public static Border Card(Control c) =>
-        new Border { CornerRadius = new CornerRadius(Radius.Card), Padding = new Thickness(Space.XXL), Child = c }
-            .Themed(Border.BackgroundProperty, Surface);
+        new Border { CornerRadius = new CornerRadius(Radius.Card), Padding = new Thickness(Space.XXL), BorderThickness = new Thickness(Stroke.Thin), Child = c }
+            .Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);   // the line of a text box
 
     /// <summary>The surface of a page that is only a table: the card color with a smaller corner (no icon header, so no concentric corner) and a little padding.</summary>
     public static Border TableSurface(Control table) =>
-        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.S, Space.L, Space.S, Space.S), Child = table }
-            .Themed(Border.BackgroundProperty, Surface);
+        new Border { CornerRadius = new CornerRadius(Radius.L), Padding = new Thickness(Space.S, Space.L, Space.S, Space.S), BorderThickness = new Thickness(Stroke.Thin), Child = table }
+            .Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
 
     /// <summary>Card with the standard header and <paramref name="body"/> below it.</summary>
     public static Border Section(string icon, string title, Control body, params Control[] actions)

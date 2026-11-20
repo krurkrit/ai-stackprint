@@ -44,4 +44,4 @@ Output goes to `Releases/` (ignored by git). Each platform must be built on that
 
 ## Not signed yet
 - Windows: SmartScreen warns "unknown publisher" (More info › Run anyway). Fix: a code-signing certificate or Azure Trusted Signing, passed to `vpk pack` with `--signParams` or `--azureTrustedSignFile`.
-- macOS: Gatekeeper blocks unsigned apps; users right-click › Open. Fix: an Apple Developer ID plus notarization (`vpk pack` signing options on macOS).
+- macOS: Gatekeeper blocks unsigned apps; users right-click › Open (macOS 15: System Settings › Privacy & Security › Open Anyway). Fix: an Apple Developer ID plus notarization (`vpk pack` signing options on macOS). Steps, the missing Intel build and a Homebrew cask template: `install-macos.md`.

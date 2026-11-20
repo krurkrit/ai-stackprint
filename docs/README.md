@@ -9,6 +9,10 @@ Read in this order for a task; each file is meant to be read alone.
 | `conventions.md` | you build or change a list, card, label or page name (column order, widths, sorting, wording) |
 | `design-system.md` | you need a size, spacing, radius, icon or component token |
 | `typography.md` | you write or change any text (helpers, weights, fonts, number style, overflow) |
+| `testing.md` | writing tests: coverage script and numbers, the seams that replace the home folder, network and OS, screenshots |
+| `install-macos.md` | how a Mac user installs the app today (installer, source, Homebrew plan) and what is missing for a smooth install |
+| `fonts-inventory.md` | which family, size and weight each place on screen uses (and what differs from the ladder) |
+| `font-color-comparison.md` | font and color per place, side by side with Fluent UI 2 and Material 3 |
 | `decisions.md` | before UI work: product and UI choices already agreed |
 | `architecture.md` | you need the detail of one area (file map, data folder, model data, performance, theming); search its headings, do not read it whole |
 | `adding-apps.md` | you edit `default/apps.json` (schema) |

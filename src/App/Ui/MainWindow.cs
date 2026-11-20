@@ -78,7 +78,7 @@ internal partial class MainWindow : Window
         Grid.SetColumnSpan(Toast.Host, 2); Grid.SetColumnSpan(_overlay, 2); Grid.SetRowSpan(Toast.Host, 2); Grid.SetRowSpan(_overlay, 2);
         root.Children.Add(Toast.Host); root.Children.Add(_overlay);
         Content = root;
-        _body.Content = DashboardView.Loading(_x, AddProject, out var status);
+        _body.Content = DashboardView.Loading(out var status);
         _status = status;   // the first scan: the dashboard's controls, each card with the loading icon
         Keys();
         Limits();
@@ -120,11 +120,17 @@ internal partial class MainWindow : Window
             HorizontalAlignment = HorizontalAlignment.Stretch,
             MinHeight = Sizes.NavItem,
             Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
             HorizontalContentAlignment = full ? HorizontalAlignment.Left : HorizontalAlignment.Center,
             Padding = new Thickness(full ? Space.L : 0, 0),
             FontWeight = MenuWeight,
-            FontSize = Size(TextSize.Body)
+            FontSize = Size(TextSize.Body * MenuScale)
         };
+        if (MenuFont != null)
+        {
+            b.FontFamily = MenuFont;
+        }
+
         if (active)
         {
             b.Themed(BackgroundProperty, Surface).Themed(ForegroundProperty, Accent);
@@ -232,15 +238,7 @@ internal partial class MainWindow : Window
 
         var foot = new StackPanel { Spacing = Space.M, Margin = new Thickness(0, Space.L, 0, 0) };
         foot.Children.Add(Go("settings", "Settings", "Settings"));
-        var rescan = Btn(_navOpen ? "Rescan" : "", Scan, true, "arrow_sync");
-        if (_scanning && _navOpen)
-        {
-            rescan.Content = Busy.Inline(true, "Scanning…", OnAccent);   // the button is accent colored: spinner and text must be the on-accent color
-        }
-
-        if (!_navOpen) { rescan.Content = _scanning ? Busy.Inline(true, "", OnAccent) : Icon("arrow_sync", IconSize.L); rescan.Padding = new Thickness(0); ToolTip.SetTip(rescan, _scanning ? "Scanning…" : "Rescan"); }
-        rescan.HorizontalAlignment = HorizontalAlignment.Stretch; rescan.HorizontalContentAlignment = HorizontalAlignment.Center;
-        foot.Children.Add(rescan);
+        UpdateRescan();   // the title bar's button
 
         var dock = new DockPanel();
         DockPanel.SetDock(foot, Dock.Bottom);

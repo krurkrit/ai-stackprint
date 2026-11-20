@@ -16,16 +16,13 @@ internal static partial class DashboardView
     internal static string Safety(int done, int total) => $"Safety check {done}/{total}";
 
     /// <summary>
-    /// The dashboard before the first scan is done: its title and buttons are the real ones and one loading block, with what the scan is doing, stands for the whole page
+    /// The dashboard before the first scan is done: its title is the real one and one loading block, with what the scan is doing, stands for the whole page
     /// (the cards would all say the same). It fades in; the finished dashboard (<see cref="Build"/>) replaces it and fades in too.
     /// <paramref name="status"/> sets what the block says the scan is doing ("Safety check 45/120").
     /// </summary>
-    public static Control Loading(Ctx x, Action addProject, out Action<string> status)
+    public static Control Loading(out Action<string> status)
     {
         var head = Head();
-        var btns = Row(Btn("Add project folder", addProject, false, "folder_add"), Btn("Rescan", x.Rescan, true, "arrow_sync"));
-        DockPanel.SetDock(btns, Dock.Right);
-        head.Children.Add(btns);
         head.Children.Add(H1("Dashboard"));
 
         var label = Txt(Finding, TextSize.Small, false, Muted).With(l => l.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center);

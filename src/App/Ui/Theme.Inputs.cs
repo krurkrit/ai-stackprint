@@ -8,6 +8,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 
 namespace AiStackprint.Ui;
 
@@ -19,6 +20,8 @@ namespace AiStackprint.Ui;
 internal static partial class Theme
 {
     private const double InputBorder = 1;   // Fluent input border width
+    private static Thickness _datePad;
+    private static bool _datePickerHooked;
     private const double MinInputGap = 5;   // smallest gap between the border and the text
 
     private static Styles? _inputStyles;   // the app's current input styles, replaced when the font changes
@@ -39,6 +42,7 @@ internal static partial class Theme
         // Fluent controls take their corners from these two resources: the same radii as our own controls (Fluent UI 2: medium 4, overlays 8)
         app.Resources["ControlCornerRadius"] = new CornerRadius(Radius.M);
         app.Resources["OverlayCornerRadius"] = new CornerRadius(Radius.L);
+        app.Resources["TextControlBorderThemeThicknessFocused"] = new Thickness(InputBorder);   // focused: the same line on every side (Fluent UI 2 thickens the bottom edge)
         var line = Math.Ceiling(LineHeight(fontSize));
         InputGap = Math.Max(MinInputGap + InputBorder, Math.Ceiling((32 - line) / 2));
         InputHeight = line + 2 * InputGap;
@@ -57,9 +61,39 @@ internal static partial class Theme
         // first line stays level with the box and the last line keeps the same gap below.
         styles.Add(Style<CheckBox>(new Thickness(Space.M, InputGap, 0, InputGap), VerticalAlignment.Top));
         styles.Add(Style<RadioButton>(new Thickness(Space.M, InputGap, 0, InputGap), VerticalAlignment.Top));
+        styles.Add(new Style(x => x.OfType<RadioButton>().Class(":checked").Template().OfType<Avalonia.Controls.Shapes.Ellipse>().Name("CheckGlyph"))
+        {
+            Setters = { new Setter(Layoutable.WidthProperty, Sizes.RadioDot), new Setter(Layoutable.HeightProperty, Sizes.RadioDot), new Setter(Visual.OpacityProperty, .9) }
+        });
         if (_inputStyles != null)
         {
             app.Styles.Remove(_inputStyles);
+        }
+
+        _datePad = new Thickness(Space.L, pad, Space.S, pad);
+        if (!_datePickerHooked)
+        {
+            // The date picker's own text box keeps a padding of its template that a style cannot change: set it when the template is made, so the date sits where a text box's text does
+            _datePickerHooked = true;
+            TemplatedControl.TemplateAppliedEvent.AddClassHandler<CalendarDatePicker>((_, e) =>
+            {
+                if (e.NameScope.Find<TextBox>("PART_TextBox") is { } box)
+                {
+                    box.Padding = _datePad;
+                }
+
+                // A larger calendar glyph (the template's own is small beside the text)
+                if (e.NameScope.Find<Button>("PART_Button") is { } button)
+                {
+                    button.Loaded += (_, _) =>
+                    {
+                        foreach (var glyph in button.GetVisualDescendants().OfType<FluentAvalonia.UI.Controls.FAFontIcon>())
+                        {
+                            glyph.FontSize = IconSize.M;
+                        }
+                    };
+                }
+            });
         }
 
         _inputStyles = styles;

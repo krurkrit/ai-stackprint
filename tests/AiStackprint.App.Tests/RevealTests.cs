@@ -34,15 +34,14 @@ public sealed class RevealTests
     }
 
     [AvaloniaFact]
-    public void The_dashboard_before_the_first_scan_has_its_buttons_and_one_loading_block_for_the_page()
+    public void The_dashboard_before_the_first_scan_has_its_title_and_one_loading_block_for_the_page()
     {
         var w = new Window { Width = 1200, Height = 900 };
-        var x = new Ctx(new AiStackprint.Models.AppState(), w, _ => { }, () => { });
-        w.Content = DashboardView.Loading(x, () => { }, out var status);
+        w.Content = DashboardView.Loading(out var status);
         w.Show();
         var t = Ui.Texts(w);
         Assert.Contains("Dashboard", t);
-        Assert.Contains("Rescan", t);
+        Assert.DoesNotContain("Rescan", t);   // the button is in the title bar
         Assert.Equal(1, t.Count(s => s == DashboardView.Finding));   // one message for the whole page, not one per card
         Assert.DoesNotContain("Skills by app", t);
 

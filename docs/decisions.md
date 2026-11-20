@@ -22,6 +22,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Dashboard and Apps
 - Every card header is the same: icon on a tinted square, then the title in the heading weight (`W.Section`). Stat tiles use it too.
 - Dashboard shows summary charts of plugin and skill counts by app and by author, and what plugins add (skills, commands, agents, hooks, MCP and LSP servers, each out of all plugins) with their top keywords; a bar or keyword opens the Plugins list searched for it (has:mcp, keyword:"x"). Don't add an "AI apps and orchestrators" list there; the Apps page already has it.
+- Rescan is one icon button in the title bar, before the theme switch (also F5 and Ctrl+K; a spinner shows while it runs and a toast says what it found). It is not in the left menu or on the Dashboard, and neither is "Add project folder" (that is in the left menu).
 - Dashboard top: "Apps by category" (2 x 2) on the left: only installed apps, the count per category (not "n of total": whether every known app is installed does not matter, only which kinds of AI apps the user has). On the right, Plugins and Skills on the first row, MCP servers (by level) and Health warnings on the second. No "Apps installed" tile.
 - The page and menu item are "Apps", not "AI apps": everything in the app is about AI, and the other menu items are one word.
 - Apps page has a Status filter and Group by Category, collapsible per category, like the Dashboard.

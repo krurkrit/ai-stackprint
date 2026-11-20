@@ -51,10 +51,10 @@ internal class ProjectView(Ctx x, Action<string> removeProject, Action<string> r
         head.Children.Add(actions);
         head.Children.Add(Row(IconTile("folder", Sizes.LogoXL), title));
 
-        var summary = new WrapPanel { Children = { Levels.InfoButton().With(b => b.Margin = new Avalonia.Thickness(0, 0, 4, 0)) } };
+        var summary = new WrapPanel { Children = { Levels.InfoButton().With(b => { b.Margin = new Avalonia.Thickness(0, 0, 4, 0); b.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center; }) } };
         foreach (var l in _order)
         {
-            summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => c.Margin = new Avalonia.Thickness(0, 0, 8, 0)));
+            summary.Children.Add(Chip($"{l} skills {skills.Count(s => s.Level == l)}", LevelKey(l)).With(c => { c.Margin = new Avalonia.Thickness(0, 0, 8, 0); c.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center; }));
         }
 
         var top = new List<Control> { head, summary, _context.Build(project), _checks.Build(project), _claude.Build(project), AiFoldersSection.Build(x, project, all), Configs(all), Title($"Skills · {skills.Count}", TextSize.Title).With(t => t.Margin = new Avalonia.Thickness(0, 8, 0, 0)) };

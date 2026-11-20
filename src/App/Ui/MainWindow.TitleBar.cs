@@ -17,7 +17,7 @@ internal partial class MainWindow
 {
     private const double MacButtons = 78;   // room for the macOS window buttons on the left
     private const double TitleBarHeight = 40;
-    private Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!;
+    private Button _backBtn = null!, _forwardBtn = null!, _maxBtn = null!, _rescanBtn = null!;
     private WindowState _beforeFullScreen = WindowState.Normal;
 
     private Border TitleBar()
@@ -60,6 +60,8 @@ internal partial class MainWindow
         var row = new Grid { Height = TitleBarHeight, ColumnDefinitions = new ColumnDefinitions("*,Auto,*") };   // the search box stays in the middle of the window
         Grid.SetColumn(search, 1);
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Margin = new Thickness(0, 0, Space.M, 0), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right };
+        _rescanBtn = TitleBtn("scan_text", "Rescan (F5)", Scan);
+        right.Children.Add(_rescanBtn);
         _themeHost.Content = ThemeSwitch();
         right.Children.Add(_themeHost);
         if (!mac)
@@ -69,7 +71,7 @@ internal partial class MainWindow
             right.Children.Add(new Border { Width = Stroke.Thin, Height = IconSize.M, Margin = new Thickness(Space.M, 0) }.Themed(Border.BackgroundProperty, BorderKey));   // theme | window buttons
             right.Children.Add(TitleBtn("subtract", "Minimize", () => WindowState = WindowState.Minimized));
             right.Children.Add(_maxBtn);
-            right.Children.Add(CloseHover(TitleBtn("dismiss", "Close", Close)));
+            right.Children.Add(DangerHover(TitleBtn("dismiss", "Close", Close)));
         }
 
         Grid.SetColumn(right, 2);
@@ -134,31 +136,11 @@ internal partial class MainWindow
     /// <summary>Title-bar icon button: muted icon, Rescan colors (accent fill, accent text) under the pointer.</summary>
     private static Button TitleBtn(string icon, string tip, Action a)
     {
-        var b = new Button { Content = Icon(icon, IconSize.S), Padding = new Thickness(Space.M), Background = Avalonia.Media.Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
+        var b = new Button { Content = Icon(icon, IconSize.S), Padding = new Thickness(Space.M), Background = Avalonia.Media.Brushes.Transparent, BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };   // no border: only the theme group has one
         b.Themed(ForegroundProperty, Muted);   // the icon inherits it, so the hover text color applies too
         HoverStyle(b);
         ToolTip.SetTip(b, tip);
         b.Click += (_, _) => a();
-        return b;
-    }
-
-    /// <summary>Close turns the danger-button red under the pointer, like the Windows close button.</summary>
-    private static Button CloseHover(Button b)
-    {
-        foreach (var v in new[] { Avalonia.Styling.ThemeVariant.Light, Avalonia.Styling.ThemeVariant.Dark })
-        {
-            if (Application.Current!.Resources.ThemeDictionaries.TryGetValue(v, out var td) && td is ResourceDictionary rd && rd.TryGetValue(ErrorFill, out var red) && rd.TryGetValue(OnError, out var onRed))
-            {
-                b.Resources.ThemeDictionaries[v] = new ResourceDictionary
-                {
-                    ["ButtonBackgroundPointerOver"] = red,
-                    ["ButtonBackgroundPressed"] = red,
-                    ["ButtonForegroundPointerOver"] = onRed,
-                    ["ButtonForegroundPressed"] = onRed
-                };
-            }
-        }
-
         return b;
     }
 
@@ -178,6 +160,18 @@ internal partial class MainWindow
         if (WindowState == WindowState.FullScreen) { WindowState = _beforeFullScreen; return; }
         _beforeFullScreen = WindowState == WindowState.Minimized ? WindowState.Normal : WindowState;
         WindowState = WindowState.FullScreen;
+    }
+
+    /// <summary>The Rescan button of the title bar: the spinner shows while a scan runs (a second click does nothing then).</summary>
+    private void UpdateRescan()
+    {
+        if (_rescanBtn == null)
+        {
+            return;   // the title bar is not built yet
+        }
+
+        _rescanBtn.Content = _scanning ? new Panel { Width = IconSize.S, Height = IconSize.S, Children = { Busy.Spinner(IconSize.S, Accent) } } : Icon("scan_text", IconSize.S);
+        ToolTip.SetTip(_rescanBtn, _scanning ? "Scanning…" : "Rescan (F5)");
     }
 
     private void UpdateMaxButton()

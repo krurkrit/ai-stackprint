@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using AiStackprint.Models;
+using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -101,20 +102,28 @@ internal static partial class Theme
     public static void Appearance(Application app, Settings s)
     {
         app.RequestedThemeVariant = s.Theme switch { "Light" => ThemeVariant.Light, "Dark" => ThemeVariant.Dark, _ => ThemeVariant.Default };
-        Font = Stack(string.IsNullOrWhiteSpace(s.FontFamily) ? "Inter" : s.FontFamily);
-        Mono = MonoStack(string.IsNullOrWhiteSpace(s.LogFontFamily) ? "JetBrains Mono" : s.LogFontFamily);
-        MonoSize = Math.Clamp(s.LogFontSize, 10, 18);
-        MonoWeight = (FontWeight)Weight(s.LogFontWeight, 400);
-        W.HeadingFont = string.IsNullOrWhiteSpace(s.HeadingFontFamily) ? null : Stack(s.HeadingFontFamily);
-        W.HeadingWeight = s.HeadingWeight is 300 or 400 or 500 or 600 or 700 ? (FontWeight)s.HeadingWeight : null;
-        W.MenuWeight = (FontWeight)Weight(s.MenuWeight, 500);
+        var f = new FontRuleSet(s.Fonts);
+        ResolvedFont body = f.Resolve(FontRoles.Body), head = f.Resolve(FontRoles.Heading), log = f.Resolve(FontRoles.Log);
+        Font = Stack(body.Family);
+        Mono = MonoStack(log.Family);
+        MonoSize = log.Size;
+        MonoWeight = (FontWeight)log.Weight;
+        ResolvedFont emphasis = f.Resolve(FontRoles.Emphasis), menu = f.Resolve(FontRoles.Menu);
+        W.HeadingFont = head.Family == body.Family ? null : Stack(head.Family);
+        W.EmphasisFont = emphasis.Family == body.Family ? null : Stack(emphasis.Family);
+        W.MenuFont = menu.Family == body.Family ? null : Stack(menu.Family);
+        W.EmphasisScale = emphasis.Size / body.Size;
+        W.HeadingScale = head.Size / body.Size;
+        W.MenuScale = menu.Size / body.Size;
+        W.HeadingWeight = (FontWeight)head.Weight;
+        W.MenuWeight = (FontWeight)menu.Weight;
         app.Resources["ContentControlThemeFontFamily"] = Font;
-        W.Scale = Math.Clamp(s.FontSize, 12, 18) / 14.0;
+        W.Scale = body.Size / 14.0;
         app.Resources["ControlContentThemeFontSize"] = W.Size(14);
         app.Resources["TabItemHeaderFontSize"] = W.Size(TextSize.Body);   // Fluent UI 2 tabs are body size (the control default is 28)
         Inputs(app, W.Size(14));
-        W.Body = (FontWeight)Weight(s.BodyWeight, 400);
-        W.Emphasis = (FontWeight)Weight(s.EmphasisWeight, 600);
+        W.Body = (FontWeight)body.Weight;
+        W.Emphasis = (FontWeight)emphasis.Weight;
         _controls?.CustomAccentColor = ParseHex(s.Light.Accent) ?? C(_light.Primary);   // its light fills are fixed when it loads
 
         app.Resources.ThemeDictionaries[ThemeVariant.Light] = Keys(_light, s.Light, _lightFluent);
@@ -132,8 +141,6 @@ internal static partial class Theme
         [new Avalonia.Media.BoxShadow { OffsetX = 0, OffsetY = 8, Blur = 16, Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x80 : (byte)0x24, 0, 0, 0) }]);
 
     private static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)(a.R + (b.R - a.R) * t), (byte)(a.G + (b.G - a.G) * t), (byte)(a.B + (b.B - a.B) * t));
-
-    private static int Weight(int w, int fallback) => w is 300 or 400 or 500 or 600 or 700 ? w : fallback;
 
     /// <summary>Parses #RRGGBB / #AARRGGBB; null when empty or invalid.</summary>
     public static Color? ParseHex(string? hex) => !string.IsNullOrWhiteSpace(hex) && Color.TryParse(hex.Trim(), out var c) ? c : null;
@@ -166,6 +173,8 @@ internal static partial class Theme
             [W.ErrorKey] = B(Status(p == _dark).Error),
             [W.ErrorFill] = B(C(Error)),
             [W.OnError] = B(Colors.White),
+            [W.ErrorHover] = B(Shade(C(Error), Colors.White, .15)),
+            [W.ErrorPressed] = B(Shade(C(Error), Colors.White, .28)),
             [W.WarningKey] = B(Status(p == _dark).Warning),
             [W.SuccessKey] = B(Status(p == _dark).Success),
             // Status outline (Snowy Owl report style): success border, tinted fill; dark theme keeps normal text for contrast
@@ -223,15 +232,15 @@ internal static partial class Theme
             d["ToggleSwitchStrokeOff" + s] = over ? d[W.SideKey] : d[W.BorderKey];
             d["ToggleSwitchKnobFillOff" + s] = d[W.Surface];
         }
-        // Check boxes and radio buttons: the input border color; every input takes the accent (Rescan button) color under the pointer
+        // Check boxes and radio buttons: an outline of their own; every input takes the accent (Rescan button) color under the pointer
         foreach (var s in new[] { "", "PointerOver", "Pressed" })
         {
-            var b = s == "" ? d[W.BorderKey] : d[W.Accent];
+            var b = s == "" ? B(A(fg, .55)) : d[W.Accent];   // a stronger line than the inputs': a small box or circle on a card must still be seen
             d["CheckBoxCheckBackgroundStrokeUnchecked" + s] = b;
             d["RadioButtonOuterEllipseStroke" + s] = b;
         }
         d["TextControlBorderBrushPointerOver"] = d[W.Accent];
-        d["TextControlBorderBrushFocused"] = d[W.Accent];   // Fluent UI 2: the focused input shows the brand color (with a thicker bottom edge)
+        d["TextControlBorderBrushFocused"] = d[W.Accent];   // Fluent UI 2: the focused input shows the brand color (the same thickness on every side)
         // The date picker looks like the other inputs: card background, divider-colored border, accent under the pointer
         d["CalendarDatePickerBackground"] = d[W.Surface];
         d["CalendarDatePickerBackgroundPointerOver"] = d[W.Surface];

@@ -39,7 +39,7 @@ public static partial class DataImport
             var mine = DataExport.MySettings(f.Settings);
             foreach (var (k, v) in settings.Where(s => !Consents.Contains(s.Key)))
             {
-                mine[k] = v?.DeepClone();
+                mine[k] = mine[k] is JsonObject m && v is JsonObject theirs ? JsonLayers.Merge(m, theirs) : v?.DeepClone();   // groups (fonts, colors) merge: what the import lacks stays
             }
 
             var all = JsonLayers.Merge(SettingsStore.DefaultJson(), mine);

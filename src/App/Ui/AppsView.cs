@@ -3,6 +3,7 @@
 
 using AiStackprint.Services;
 using Avalonia.Controls;
+using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
 
@@ -91,17 +92,17 @@ internal class AppsView(Ctx x)
         }
 
         var groupRow = new List<Control> { Check("Category", _byCat, v => { _byCat = v; Fill(); }), Check("Status", _byStatus, v => { _byStatus = v; Fill(); }) };
-        if (_byCat || _byStatus)
-        {
-            groupRow.Add(Btn("Expand all", () => { _collapsed.Clear(); Fill(); }, false, "chevron_down").With(b => b.MinHeight = Sizes.CompactControl));
-            groupRow.Add(Btn("Collapse all", () => { _collapsed.UnionWith(Keys(x.ShownApps)); Fill(); }, false, "chevron_right").With(b => b.MinHeight = Sizes.CompactControl));
-        }
         f.Children.Add(FilterRow("Group by", [.. groupRow]));
         _filters.Content = f;
 
         var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
         var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Status(), Cols.Count("Plugins"), Cols.Count("Skills"), Cols.Count("Commands"), Cols.Count("Agents"), Cols.Count("Servers"), Cols.Count("Hooks"), Cols.Count("Config files") };
-        _table.Content = Table.Scrollable(Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters."), Table.MinWidth(cols));
+        var table = Table.Scrollable(Table.Build(cols, Rows(apps, cols.Length), "No apps match. Clear the search or filters."), Table.MinWidth(cols));
+        // Expand all / Collapse all: icon buttons over the top right of the table, while it is grouped
+        var all = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = Space.XS, IsVisible = _byCat || _byStatus };
+        all.Children.Add(IconBtn("chevron_down", "Expand all", () => { _collapsed.Clear(); Fill(); }));
+        all.Children.Add(IconBtn("chevron_up", "Collapse all", () => { _collapsed.UnionWith(Keys(x.ShownApps)); Fill(); }));
+        _table.Content = new StackPanel { Spacing = Space.XS, Children = { all, table } };
     }
 
     private IEnumerable<TableRow> Rows(List<Models.AppInfo> apps, int cols)

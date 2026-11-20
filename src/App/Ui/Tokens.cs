@@ -69,6 +69,7 @@ internal static class Stroke
 internal static class Sizes
 {
     public const double Dot = 8;           // legend and status dots
+    public const double RadioDot = 8;      // the dot inside a selected radio button (the control default, 12, is large and bright in a 20 px ring)
     public const double Bar = 10;          // bar charts and progress bars
     public const double BarThin = 8;       // progress bars inside dense rows
     public const double Loader = 56;       // the big loading icon (DotsLoader) of a page that is still loading
@@ -99,6 +100,10 @@ internal static class Widths
     public const double DialogS = 380;
     public const double DialogM = 520;
     public const double DialogL = 640;
+    public const double FontParent = 128;  // font setting control: parent drop-down (with its chain icon)
+    public const double FontFamily = 156; // family drop-down
+    public const double FontSize = 68;     // size number
+    public const double FontWeight = 160;  // weight drop-down, "Normal (400)"
     public const double Field = 220;       // a drop-down or text box in a settings row
     public const double FieldM = 160;      // a drop-down in a filter row
     public const double FieldS = 120;      // a number box

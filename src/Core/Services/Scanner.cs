@@ -19,75 +19,78 @@ public static partial class Scanner
 
     public static ScanResult Collect(IEnumerable<AppDefinition> defs, IEnumerable<string> projects)
     {
-        var rows = new List<Item>();
-        var apps = new List<AppInfo>();
         var projectList = projects.ToList();
+        // One app at a time is independent of the others (it only reads files): the apps are scanned side by side, and put back in their order so the result does not depend on timing
+        var scanned = defs.AsParallel().AsOrdered().Select(d => CollectApp(d, projectList)).ToList();
+        return new ScanResult([.. scanned.SelectMany(s => s.Rows).DistinctBy(i => (i.Kind, i.Name, i.Source, i.Level, i.Path))], [.. scanned.Select(s => s.App)]);
+    }
 
-        foreach (var d in defs)
+    private static (AppInfo App, List<Item> Rows) CollectApp(AppDefinition d, List<string> projectList)
+    {
+        var rows = new List<Item>();
+        var folder = d.Detect.Select(PathUtil.Expand).FirstOrDefault(Directory.Exists);
+        var app = new AppInfo(d.Id, d.Name, d.Category, d.Logo, folder != null, folder);
+        if (folder != null)
         {
-            var folder = d.Detect.Select(PathUtil.Expand).FirstOrDefault(Directory.Exists);
-            apps.Add(new AppInfo(d.Id, d.Name, d.Category, d.Logo, folder != null, folder));
-            if (folder != null)
-            {
-                rows.Add(new Item("App", d.Name, d.Notes ?? "Config folder: " + folder, d.Name, "User", folder) { App = d.Id });
-            }
+            rows.Add(new Item("App", d.Name, d.Notes ?? "Config folder: " + folder, d.Name, "User", folder) { App = d.Id });
+        }
 
-            // Bundled roots first, so a skill found again by a broader root keeps its bundled flag after de-duplication
-            foreach (var r in d.Roots.Where(r => PathUtil.OsMatches(r.Os)).OrderByDescending(r => r.Bundled))
-            {
-                Tagged(rows, () => ReadRoot(PathUtil.Expand(r.Path), r, d.Name, rows), i => i with { App = d.Id, LevelLabel = r.Label, Bundled = r.Bundled });
-            }
+        // Bundled roots first, so a skill found again by a broader root keeps its bundled flag after de-duplication
+        foreach (var r in d.Roots.Where(r => PathUtil.OsMatches(r.Os)).OrderByDescending(r => r.Bundled))
+        {
+            Tagged(rows, () => ReadRoot(PathUtil.Expand(r.Path), r, d.Name, rows), i => i with { App = d.Id, LevelLabel = r.Label, Bundled = r.Bundled });
+        }
 
-            if (d.PluginManifest != null)
-            {
-                PluginReaders.Find(d.PluginFormat)?.Read(PathUtil.Expand(d.PluginManifest), new PluginContext(d, "User", null, null), rows);
-            }
+        if (d.PluginManifest != null)
+        {
+            PluginReaders.Find(d.PluginFormat)?.Read(PathUtil.Expand(d.PluginManifest), new PluginContext(d, "User", null, null), rows);
+        }
 
-            foreach (var src in d.Plugins.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
-            {
-                PluginReaders.Find(src.Format)?.Read(PathUtil.Expand(src.Path), new PluginContext(d, src.Level, null, src), rows);
-            }
+        foreach (var src in d.Plugins.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+        {
+            PluginReaders.Find(src.Format)?.Read(PathUtil.Expand(src.Path), new PluginContext(d, src.Level, null, src), rows);
+        }
 
-            foreach (var c in d.Configs.Where(c => !InProject(c.Level) && PathUtil.OsMatches(c.Os)))
-            {
-                AddConfig(rows, d, c, PathUtil.Expand(c.Path), null);
-            }
+        foreach (var c in d.Configs.Where(c => !InProject(c.Level) && PathUtil.OsMatches(c.Os)))
+        {
+            AddConfig(rows, d, c, PathUtil.Expand(c.Path), null);
+        }
 
-            foreach (var s in d.Parts.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
-            {
-                Tagged(rows, () => ReadParts(PathUtil.Expand(s.Path), s, d.Name, rows), i => i with { App = d.Id });
-            }
+        foreach (var s in d.Parts.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+        {
+            Tagged(rows, () => ReadParts(PathUtil.Expand(s.Path), s, d.Name, rows), i => i with { App = d.Id });
+        }
 
-            foreach (var p in projectList)
+        foreach (var p in projectList)
+        {
+            foreach (var r in d.ProjectRoots.Where(r => PathUtil.OsMatches(r.Os)))
             {
-                foreach (var r in d.ProjectRoots.Where(r => PathUtil.OsMatches(r.Os)))
+                foreach (var path in Candidates(p, r.Path, r.Nested))
                 {
-                    foreach (var path in Candidates(p, r.Path, r.Nested))
-                    {
-                        Tagged(rows, () => ReadRoot(path, r, d.Name, rows), i => i with { App = d.Id, Project = p, LevelLabel = r.Label });
-                    }
+                    Tagged(rows, () => ReadRoot(path, r, d.Name, rows), i => i with { App = d.Id, Project = p, LevelLabel = r.Label });
                 }
+            }
 
-                foreach (var src in d.Plugins.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
-                {
-                    PluginReaders.Find(src.Format)?.Read(Path.Combine(p, src.Path.Replace('/', Path.DirectorySeparatorChar)), new PluginContext(d, src.Level, p, src), rows);
-                }
+            foreach (var src in d.Plugins.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+            {
+                PluginReaders.Find(src.Format)?.Read(Path.Combine(p, src.Path.Replace('/', Path.DirectorySeparatorChar)), new PluginContext(d, src.Level, p, src), rows);
+            }
 
-                foreach (var c in d.Configs.Where(c => InProject(c.Level) && PathUtil.OsMatches(c.Os)))
+            foreach (var c in d.Configs.Where(c => InProject(c.Level) && PathUtil.OsMatches(c.Os)))
+            {
+                foreach (var path in Candidates(p, c.Path, c.Nested))
                 {
-                    foreach (var path in Candidates(p, c.Path, c.Nested))
-                    {
-                        AddConfig(rows, d, c, path, p);
-                    }
+                    AddConfig(rows, d, c, path, p);
                 }
+            }
 
-                foreach (var s in d.Parts.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
-                {
-                    Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with { App = d.Id, Project = p });
-                }
+            foreach (var s in d.Parts.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+            {
+                Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with { App = d.Id, Project = p });
             }
         }
-        return new ScanResult([.. rows.DistinctBy(i => (i.Kind, i.Name, i.Source, i.Level, i.Path))], apps);
+
+        return (app, rows);
     }
 
     /// <summary>project/rel, plus sub-folder/rel for every sub-folder up to <see cref="NestedDepth"/> when nested (monorepos).</summary>

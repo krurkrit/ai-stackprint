@@ -26,6 +26,10 @@ public sealed class ImportRefusedException(string message) : Exception(message);
 /// </summary>
 public static partial class DataImport
 {
+    /// <summary>A group of settings (fonts, colors) is the same when merging the imported part into it changes nothing; anything else when equal.</summary>
+    private static bool Same(JsonNode? mine, JsonNode? theirs) =>
+        mine is JsonObject m && theirs is JsonObject t ? JsonNode.DeepEquals(JsonLayers.Merge(m, t), m) : JsonNode.DeepEquals(mine, theirs);
+
     /// <summary>Settings that turn on network calls: always left as they are here.</summary>
     public static readonly string[] Consents = ["limitsEnabled", "checkUpdates", "benchmarksEnabled"];
 
@@ -61,7 +65,7 @@ public static partial class DataImport
                 {
                     notes.Add($"Settings: {k} is not imported (network calls stay as they are here; turn them on in Settings).");
                 }
-                else if (!JsonNode.DeepEquals(current[k], value))
+                else if (!Same(current[k], value))
                 {
                     changes.Add(new(DataParts.Settings, k, Show(current[k]), Show(value)));
                 }

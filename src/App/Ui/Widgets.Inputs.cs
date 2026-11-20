@@ -27,14 +27,43 @@ internal static partial class W
 
     /// <summary>Button for destructive actions (Snowy Owl error pair).</summary>
     public static Button DangerBtn(string text, Action a, string? icon = null) =>
-        Btn(text, a, false, icon).Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, ErrorFill).Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, OnError);
+        DangerHover(Btn(text, a, false, icon).Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, ErrorFill).Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, OnError), solid: true);
 
-    /// <summary>Small transparent icon-only button with a tooltip.</summary>
-    public static Button IconBtn(string icon, string tip, Action a, string key = Muted)
+    /// <summary>Small transparent icon-only button with a tooltip. A delete button (or one made with <paramref name="danger"/>, such as a clear or close button) turns the danger red under the pointer.</summary>
+    public static Button IconBtn(string icon, string tip, Action a, string key = Muted, bool danger = false)
     {
-        var b = new Button { Content = Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key), Padding = new Thickness(Space.M), Background = Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
+        danger |= icon == "delete";
+        // A danger button's icon takes the button's foreground, so the red hover can change it; the others color the icon itself
+        var glyph = danger ? Icon(icon, IconSize.S) : Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key);
+        var b = new Button { Content = glyph, Padding = new Thickness(Space.M), Background = Brushes.Transparent, BorderThickness = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
+        if (danger)
+        {
+            b.Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, key);
+            DangerHover(b);
+        }
+
         ToolTip.SetTip(b, tip);
         b.Click += (_, _) => a();
+        return b;
+    }
+
+    /// <summary>The red of the danger button (error fill, on-error icon) under the pointer and while pressed, like the Windows close button.</summary>
+    public static Button DangerHover(Button b, bool solid = false)
+    {
+        foreach (var v in new[] { Avalonia.Styling.ThemeVariant.Light, Avalonia.Styling.ThemeVariant.Dark })
+        {
+            if (Application.Current!.Resources.ThemeDictionaries.TryGetValue(v, out var td) && td is ResourceDictionary rd && rd.TryGetValue(ErrorFill, out var red) && rd.TryGetValue(OnError, out var onRed))
+            {
+                b.Resources.ThemeDictionaries[v] = new ResourceDictionary
+                {
+                    ["ButtonBackgroundPointerOver"] = solid && rd.TryGetValue(ErrorHover, out var h) ? h : red,
+                    ["ButtonBackgroundPressed"] = solid && rd.TryGetValue(ErrorPressed, out var pr) ? pr : red,
+                    ["ButtonForegroundPointerOver"] = onRed,
+                    ["ButtonForegroundPressed"] = onRed
+                };
+            }
+        }
+
         return b;
     }
 

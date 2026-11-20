@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fonts and colors by place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F6F7;--card:#FFFFFF;--tx:#1F2328;--mu:#59636E;--line:#D8DCE0;--accent:#1450A0;--onacc:#FFFFFF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181A;--card:#202225;--tx:#E8EAED;--mu:#A0A6AD;--line:#3A3D42;--accent:#74A8F4;--onacc:#141517}}
+:root[data-theme="dark"]{--bg:#17181A;--card:#202225;--tx:#E8EAED;--mu:#A0A6AD;--line:#3A3D42;--accent:#74A8F4;--onacc:#141517}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,"Segoe UI",sans-serif}
+header{padding:20px 16px 8px;max-width:1800px;margin:auto}
+h1{font-size:22px;margin:0 0 6px;font-weight:600}
+p.lead{margin:0 0 10px;color:var(--mu);max-width:1000px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.pri{background:var(--accent);color:var(--onacc);border-color:var(--accent)}
+.ib{padding:0 6px;min-width:26px;height:26px;line-height:1;font-size:13px}
+.wrap{max-width:1800px;margin:12px auto 40px;padding:0 16px;overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--line);border-radius:8px;width:max-content;min-width:100%}
+th,td{padding:10px 12px;vertical-align:top;border-bottom:1px solid var(--line);text-align:left}
+th{position:sticky;top:0;background:var(--card);z-index:1;font-weight:600;min-width:250px}
+th .h{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+th .t{flex:1 1 100%;font-weight:600}
+tr:last-child td{border-bottom:0}
+td.pg{color:var(--mu);width:110px;min-width:110px}td.pl{width:160px;min-width:160px;font-weight:500}
+th.fix{min-width:0}
+.stage{padding:12px;border-radius:6px;border:1px solid var(--line);min-height:52px;display:flex;align-items:center;overflow:hidden}
+.stage span{line-height:1.3}
+.spec{margin-top:6px;font:12px/1.4 "Fira Code",ui-monospace,monospace;color:var(--mu);word-break:break-word}
+.note{font-size:12px;color:var(--mu);font-weight:400;margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border-radius:999px;padding:3px 12px;font-size:13px}.chip.off{opacity:.5;text-decoration:line-through}.chip.on{border-color:var(--accent)}
+.wt{display:block;margin-top:6px;font-size:12px;color:var(--mu)}.wt input{width:64px;font:12px "Fira Code",monospace;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:2px 4px}
+.sw{display:inline-block;width:22px;height:22px;border-radius:4px;border:1px solid var(--line);vertical-align:middle;margin-right:6px}
+.fc h2{font-size:18px;margin:8px 0}.fr{display:flex;align-items:stretch;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-bottom:8px;overflow:hidden}.fr .ctl{display:flex;gap:6px;align-items:center;flex:0 0 auto;padding:8px 10px;border-right:1px solid var(--line)}.fr .ctl input{font:13px "Fira Code",ui-monospace,monospace;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 6px}.fr .smp{flex:1 1 320px;min-width:0;padding:8px 16px;overflow-wrap:anywhere;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.fr .lbl{font:12px "Fira Code",ui-monospace,monospace;margin-right:6px}
+.hint{font-size:12px;color:var(--mu)}
+th.col,td.col{width:250px}
+th.collapsed,td.collapsed{width:46px;min-width:46px;max-width:46px;padding:6px}
+td.collapsed>*{display:none}
+th.collapsed .h{flex-direction:column;align-items:center}
+th.collapsed .t{writing-mode:vertical-rl;flex:none;white-space:nowrap;max-height:230px;overflow:hidden;text-overflow:ellipsis}
+th.collapsed .hide-c{display:none}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx);padding:18px;width:min(640px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+dialog h2{margin:0 0 10px;font-size:18px}
+label.f{display:block;margin:8px 0 2px;font-weight:500}
+input[type=text],textarea{width:100%;font:13px "Fira Code",ui-monospace,monospace;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+textarea{min-height:52px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+table.cp{width:100%;min-width:0;margin-top:6px;border:0}
+table.cp th,table.cp td{padding:4px 6px;border:0;min-width:0;position:static}
+input[type=color]{width:56px;height:28px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.err{color:#C50F1F;font-size:12px;min-height:16px}
+</style></head><body>
+<header>
+<h1>Fonts and colors by place</h1>
+<p class="lead">Each sample uses that design's size, weight and color, drawn in its own font. <b>Apple HIG</b> is what Apple's Human Interface Guidelines recommend for a macOS app (SF shows only on a Mac or iPhone; elsewhere the system font). Fluent, Material and Apple values are from the published guidance as recalled, not checked in this session. <b>Other</b> columns keep the app's text, size and weight; add as many as you like with font URLs and your own colors. Use the column chips to show or hide a column, ◀ ▶ to move it, ✎ to edit and ✕ to remove an Other. Your layout and Other columns are kept in this browser.</p>
+<div class="bar"><button id="theme">Switch light / dark</button><button id="add" class="pri">+ Add Other</button><button id="colall">Hide all</button><button id="expall">Show all</button><button id="reset">Reset layout</button><span class="hint" id="state"></span></div>
+</header>
+<div class="wrap" style="margin-bottom:0"><div id="cols" class="chips"></div></div>
+<div class="wrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+<div class="wrap fc"><h2>Font compare</h2>
+<div class="bar" style="margin-bottom:10px"><label>Sentence <input type="text" id="fs" style="width:420px"></label><button id="fadd" class="pri">+ Add row</button><span class="hint">Edit the font, size and weight of a row, or move it up or down. A font that is not installed or loaded from the page needs a URL (CSS link or font file). Colors are the AI Stackprint colors.</span></div>
+<div id="fc"></div><datalist id="fams"></datalist></div>
+<div id="fonts"></div>
+
+<dialog id="vdlg"><h2 id="vtitle"></h2><div class="hint" id="vfonts"></div>
+<table class="cp"><thead><tr><th></th><th>Light</th><th>Dark</th></tr></thead><tbody id="vbody"></tbody></table>
+<div class="acts"><button type="button" id="vclose" class="pri">Close</button></div></dialog>
+
+<dialog id="dlg"><form method="dialog" id="frm">
+<h2 id="dtitle">Add Other</h2>
+<label class="f">Name</label><input type="text" id="f_name" placeholder="Other 3: My fonts">
+<div class="two"><div><label class="f">Normal font URL (one per line)</label><textarea id="f_su" placeholder="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700"></textarea><label class="f">Normal family name</label><input type="text" id="f_sf" placeholder="auto from URL"></div>
+<div><label class="f">Monospace font URL (one per line)</label><textarea id="f_mu" placeholder="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700"></textarea><label class="f">Monospace family name</label><input type="text" id="f_mf" placeholder="auto from URL"></div></div>
+<div class="hint">A URL is a CSS link (Google Fonts, Fontsource) or a font file (.woff2, .woff, .ttf, .otf). The family name is read from the URL; change it if the font does not show.</div>
+<table class="cp"><thead><tr><th></th><th>Light</th><th>Dark</th></tr></thead><tbody id="cpbody"></tbody></table>
+<div class="err" id="ferr"></div>
+<div class="acts"><button type="button" id="cancel">Cancel</button><button type="submit" class="pri" id="save">Save</button></div>
+</form></dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const SYS={"app": {"name": "AI Stackprint", "font": "Inter", "mono": "JetBrains Mono", "l": {"text": "#34383C", "muted": "#63666A", "accent": "#1450A0", "onacc": "#F8F9FA", "err": "#A52834", "onerr": "#FFFFFF", "link": "#1450A0", "bg": "#F8F9FA", "invfg": "#34383C", "invbg": "#F8F9FA"}, "d": {"text": "#F8F9FA", "muted": "#B9BABC", "accent": "#FD7E14", "onacc": "#141517", "err": "#F28B95", "onerr": "#FFFFFF", "link": "#FFB066", "bg": "#18191B", "invfg": "#F8F9FA", "invbg": "#18191B"}}, "fl": {"name": "Fluent UI 2", "font": "Segoe UI", "mono": "Cascadia Mono", "l": {"text": "#242424", "muted": "#616161", "accent": "#0F6CBD", "onacc": "#FFFFFF", "err": "#C50F1F", "onerr": "#FFFFFF", "link": "#0F6CBD", "bg": "#FFFFFF", "invfg": "#242424", "invbg": "#FFFFFF"}, "d": {"text": "#FFFFFF", "muted": "#ADADAD", "accent": "#115EA3", "onacc": "#FFFFFF", "err": "#C50F1F", "onerr": "#FFFFFF", "link": "#479EF5", "bg": "#292929", "invfg": "#FFFFFF", "invbg": "#292929"}}, "m3": {"name": "Material 3", "font": "Roboto", "mono": "Roboto Mono", "l": {"text": "#1D1B20", "muted": "#49454F", "accent": "#6750A4", "onacc": "#FFFFFF", "err": "#B3261E", "onerr": "#FFFFFF", "link": "#6750A4", "bg": "#FEF7FF", "invfg": "#F5EFF7", "invbg": "#322F35"}, "d": {"text": "#E6E0E9", "muted": "#CAC4D0", "accent": "#D0BCFF", "onacc": "#381E72", "err": "#F2B8B5", "onerr": "#601410", "link": "#D0BCFF", "bg": "#141218", "invfg": "#322F35", "invbg": "#E6E0E9"}}, "ap": {"name": "Apple HIG", "font": "SF Pro", "mono": "SF Mono", "l": {"text": "#262626", "muted": "#808080", "accent": "#007AFF", "onacc": "#FFFFFF", "err": "#FF3B30", "onerr": "#FFFFFF", "link": "#0068DA", "bg": "#ECECEC", "invfg": "#262626", "invbg": "#F5F5F5"}, "d": {"text": "#DFDFDF", "muted": "#9A9A9A", "accent": "#0A84FF", "onacc": "#FFFFFF", "err": "#FF453A", "onerr": "#FFFFFF", "link": "#419CFF", "bg": "#1E1E1E", "invfg": "#DFDFDF", "invbg": "#323232"}}};
+const ROWS=[{"page": "All", "place": "Page title", "note": "Fluent Title 3; M3 Headline S", "sample": "Dashboard", "s": {"app": {"size": 24, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 22, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 24, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 24, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Breadcrumb parent", "note": "", "sample": "Projects", "s": {"app": {"size": 24, "w": 600, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 22, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 24, "w": 600, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 24, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Card title", "note": "Fluent Subtitle 2; M3 Title M", "sample": "Recent changes", "s": {"app": {"size": 16, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 16, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 16, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Section title in a page", "note": "App 16 or 20; M3 Title L 22", "sample": "Skills \u00b7 42", "s": {"app": {"size": 20, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 17, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 20, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 22, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Body text", "note": "Body 1 / Body M", "sample": "Skills that apply in this project.", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Secondary text, hints, counts", "note": "Caption 1 / Body S", "sample": "Updated 40 s ago \u00b7 12 items", "s": {"app": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Big number on a tile", "note": "Fluent Title 1; M3 Display S", "sample": "1,284", "s": {"app": {"size": 32, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 26, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 32, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 36, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Chip, status pill", "note": "Fluent strong is 600", "sample": "Installed", "s": {"app": {"size": 12, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Primary button", "note": "App button weight is the Fluent control default", "sample": "Rescan", "s": {"app": {"size": 14, "w": 400, "fg": "onacc", "bg": "accent", "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "onacc", "bg": "accent", "mono": false, "note": ""}, "fl": {"size": 14, "w": 600, "fg": "onacc", "bg": "accent", "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "onacc", "bg": "accent", "mono": false, "note": ""}}}, {"page": "All", "place": "Danger button", "note": "", "sample": "Remove from list", "s": {"app": {"size": 14, "w": 400, "fg": "onerr", "bg": "err", "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "onerr", "bg": "err", "mono": false, "note": ""}, "fl": {"size": 14, "w": 600, "fg": "onerr", "bg": "err", "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "onerr", "bg": "err", "mono": false, "note": ""}}}, {"page": "All", "place": "Text box", "note": "M3 Body L", "sample": "Search apps", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 16, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Input placeholder", "note": "", "sample": "Search apps", "s": {"app": {"size": 14, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 16, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Tooltip", "note": "M3 uses an inverse surface", "sample": "Rescan (F5)", "s": {"app": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "invfg", "bg": "invbg", "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 12, "w": 400, "fg": "invfg", "bg": "invbg", "mono": false, "note": ""}}}, {"page": "All", "place": "Toast", "note": "", "sample": "AGENTS.md saved", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "invfg", "bg": "invbg", "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "invfg", "bg": "invbg", "mono": false, "note": ""}}}, {"page": "All", "place": "Dialog title", "note": "Fluent Title 3; M3 Headline S", "sample": "Edit model", "s": {"app": {"size": 20, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 24, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 24, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Dialog body", "note": "", "sample": "Changes are saved after you confirm.", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Tab", "note": "Fluent selected tab 600", "sample": "Overview", "s": {"app": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Side menu item", "note": "App menuWeight 500", "sample": "Dashboard", "s": {"app": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "All", "place": "Side menu section label", "note": "", "sample": "LIBRARY", "s": {"app": {"size": 10, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 600, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "Apps, Skills, Plugins, Models", "place": "Table header", "note": "", "sample": "Category", "s": {"app": {"size": 12, "w": 500, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "Apps, Skills, Plugins, Models", "place": "Table main value", "note": "App is 12 to 14", "sample": "Claude Code", "s": {"app": {"size": 12, "w": 500, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "Apps, Skills, Plugins, Models", "place": "Table other cell", "note": "", "sample": "Coding assistant", "s": {"app": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "Dashboard", "place": "Chart axis tick", "note": "Caption 2 / Label S", "sample": "11-18", "s": {"app": {"size": 10, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 10, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 10, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 11, "w": 500, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "Dashboard", "place": "Chart legend", "note": "", "sample": "Skills 24", "s": {"app": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 12, "w": 500, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "Logs, Config", "place": "Log, code, config editor", "note": "", "sample": "tool_use: read_file", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "ap": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}}}, {"page": "All", "place": "Path, command in a view", "note": "", "sample": "~/.claude/skills/review", "s": {"app": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}, "m3": {"size": 12, "w": 400, "fg": "text", "bg": null, "mono": true, "note": ""}}}, {"page": "Settings", "place": "Setting label", "note": "", "sample": "Font size", "s": {"app": {"size": 14, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 600, "fg": "text", "bg": null, "mono": false, "note": ""}, "m3": {"size": 16, "w": 400, "fg": "text", "bg": null, "mono": false, "note": ""}}}, {"page": "Settings", "place": "Setting hint", "note": "", "sample": "12 to 18 px; titles and labels scale with it", "s": {"app": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "ap": {"size": 11, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "fl": {"size": 12, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 400, "fg": "muted", "bg": null, "mono": false, "note": ""}}}, {"page": "Settings", "place": "Link", "note": "", "sample": "Get Inter at rsms.me/inter", "s": {"app": {"size": 14, "w": 400, "fg": "link", "bg": null, "mono": false, "note": ""}, "ap": {"size": 13, "w": 400, "fg": "link", "bg": null, "mono": false, "note": ""}, "fl": {"size": 14, "w": 400, "fg": "link", "bg": null, "mono": false, "note": ""}, "m3": {"size": 14, "w": 500, "fg": "link", "bg": null, "mono": false, "note": ""}}}];
+const AF={l:{text:'#34383C',muted:'#63666A',accent:'#1450A0',onacc:'#F8F9FA',bg:'#F8F9FA'},d:{text:'#F8F9FA',muted:'#B9BABC',accent:'#FD7E14',onacc:'#141517',bg:'#18191B'}};
+const CK=[['text','Text'],['muted','Secondary text'],['accent','Button background'],['onacc','Button text'],['bg','Surface background']];
+const KEY='fcc3';
+const DEF_OTHERS=[
+ {id:'o1',name:'Other 1: Google Sans Flex + Fira Code',su:'https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap',sf:'Google Sans Flex',mu:'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap',mf:'Fira Code',c:JSON.parse(JSON.stringify(AF))},
+ {id:'o2',name:'Other 2: Noto Sans + Iosevka',su:'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap',sf:'Noto Sans',mu:'https://cdn.jsdelivr.net/npm/@fontsource/iosevka@5/400.css\nhttps://cdn.jsdelivr.net/npm/@fontsource/iosevka@5/500.css\nhttps://cdn.jsdelivr.net/npm/@fontsource/iosevka@5/600.css\nhttps://cdn.jsdelivr.net/npm/@fontsource/iosevka@5/700.css',mf:'Iosevka',c:JSON.parse(JSON.stringify(AF))}];
+const BASE=['app','ap','fl','m3'];
+let S=load();S.hidden=S.hidden||{};S.wt=S.wt||{};if(S.fcv!==4){S.fc=defFC();S.fcv=4}S.fs=S.fs||'Quick brown fox jumps over the lazy dog';
+function defFC(){return[{f:'Inter',s:14,w:400,u:''},{f:'Google Sans Flex',s:14,w:400,u:'https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap'},{f:'Noto Sans',s:14,w:400,u:'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap'},{f:'SF Pro',s:14,w:400,u:''},{f:'Segoe UI',s:14,w:400,u:''},{f:'Roboto',s:14,w:400,u:'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'}]}
+function fresh(){return{others:JSON.parse(JSON.stringify(DEF_OTHERS)),order:[...BASE,'o1','o2'],collapsed:{},hidden:{},wt:{},fc:defFC(),fcv:4,fs:'Quick brown fox jumps over the lazy dog'}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.others&&s.order)return s}catch(_){}return fresh()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(_){}}
+const root=document.documentElement;
+function dark(){return root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
+const th=()=>dark()?'d':'l';
+function other(id){return S.others.find(o=>o.id===id)}
+function colName(id){return SYS[id]?SYS[id].name:(other(id)||{}).name||id}
+// colors
+function color(id,key,t){
+  const o=other(id);
+  if(o){const c=o.c[t];if(key in c)return c[key];if(key==='bg')return c.bg;return SYS.app[t][key]}
+  return SYS[id][t][key]}
+function hexes(id,key){const l=color(id,key,'l'),d=color(id,key,'d');return l.toLowerCase()===d.toLowerCase()?l.toUpperCase():l.toUpperCase()+' | '+d.toUpperCase()}
+function fam(id,mono){const o=other(id);return o?(mono?o.mf:o.sf):(mono?SYS[id].mono:SYS[id].font)}
+const STACK={'SF Pro':"-apple-system,'SF Pro Text','SF Pro',system-ui,sans-serif",'SF Mono':"ui-monospace,'SF Mono',Menlo,monospace",'Segoe UI':"'Segoe UI',system-ui,sans-serif",'Cascadia Mono':"'Cascadia Mono',Consolas,monospace"};
+function stack(name,mono){const n=String(name).replace(/["'\\;{}<>]/g,'');return STACK[name]||("'"+n+"'"+(mono?',monospace':',system-ui,sans-serif'))}
+// fonts
+function famFromUrl(u){u=(u||'').split('\n')[0].trim();if(!u)return'';let m=u.match(/[?&]family=([^:&;@]+)/);if(m)return decodeURIComponent(m[1].replace(/\+/g,' '));
+  m=u.match(/@fontsource(?:-variable)?\/([a-z0-9-]+)/i);if(m)return m[1].split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+  m=u.split('?')[0].split('/').pop().replace(/\.[a-z0-9]+$/i,'');return m.replace(/[-_]+/g,' ')}
+function loadFonts(){const box=document.getElementById('fonts');box.textContent='';
+  const items=[...S.others.map(o=>[o.su,o.sf]),...S.others.map(o=>[o.mu,o.mf]),...S.fc.map(r=>[r.u,r.f])];
+  items.forEach(([urls,f])=>{(urls||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(u=>{
+    if(!/^https?:\/\//i.test(u))return;
+    if(/[.](woff2?|ttf|otf)([?#]|$)/i.test(u)){const st=document.createElement('style');st.textContent='@font-face{font-family:"'+String(f).replace(/[^\w .-]/g,'')+'";src:url("'+encodeURI(u).replace(/["()]/g,'')+'");font-weight:100 900;font-display:swap}';box.appendChild(st)}
+    else{const l=document.createElement('link');l.rel='stylesheet';l.href=u;box.appendChild(l)}})})}
+// render
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function ib(txt,tip,fn,cls){const b=el('button','ib '+(cls||''),txt);b.title=tip;b.type='button';b.onclick=fn;return b}
+function move(id,d){const v=vis(),i=v.indexOf(id),n=v[i+d];if(!n)return;const x=S.order.indexOf(id),y=S.order.indexOf(n);[S.order[x],S.order[y]]=[S.order[y],S.order[x]];save();render()}
+const vis=()=>S.order.filter(id=>!S.hidden[id]);
+function hide(id,v){if(v&&vis().length<=1)return;S.hidden[id]=v;save();render()}
+function chips(){const box=$('cols');box.textContent='';S.order.forEach(id=>{const off=!!S.hidden[id],b=el('button','chip '+(off?'off':'on'),colName(id));b.type='button';b.title=off?'Show':'Hide';b.onclick=()=>hide(id,!off);box.append(b)})}
+function head(){const tr=el('tr');tr.append(el('th','fix','Page'),el('th','fix','Place'));
+  vis().forEach(id=>{const t=el('th','col'),h=el('div','h');h.append(el('div','t',colName(id)));
+    h.append(ib('◀','Move left',()=>move(id,-1)),ib('▶','Move right',()=>move(id,1)),ib('👁','Hide this column',()=>hide(id,true)));
+    if(!other(id))h.append(ib('🔍','View fonts and colors',()=>openView(id)));
+    if(other(id)){h.append(ib('✎','Edit',()=>openDlg(id)),ib('✕','Remove',()=>{if(confirm('Remove '+colName(id)+'?')){S.others=S.others.filter(o=>o.id!==id);S.order=S.order.filter(x=>x!==id);delete S.hidden[id];save();loadFonts();render()}}))}
+    t.append(h);tr.append(t)});
+  const hd=document.querySelector('#tbl thead');hd.textContent='';hd.append(tr)}
+function cellFor(id,sample,sp,baseId,ri){
+  const td=el('td','col'),mono=sp.mono,f=fam(id,mono),t=th(),wk=id+'|'+ri;
+  const span=el('span',null,sample);
+  let st=`font-family:${stack(f,mono)};font-size:${sp.size}px;color:${color(id,sp.fg,t)};`;
+  if(sp.bg)st+=`background:${color(id,sp.bg,t)};padding:6px 14px;border-radius:4px;display:inline-block;`;
+  span.style.cssText=st;
+  const stage=el('div','stage');stage.style.background=color(id,'bg',t);stage.append(span);
+  const spec=el('div','spec'),w=()=>S.wt[wk]||sp.w;
+  const upd=()=>{span.style.fontWeight=w();spec.textContent=`${f} ${sp.size} ${w()} / ${hexes(id,sp.fg)}`+(sp.bg?` on ${hexes(id,sp.bg)}`:'')};
+  upd();
+  const lab=el('label','wt','Weight '),inp=document.createElement('input');inp.type='number';inp.min=100;inp.max=900;inp.step=100;inp.placeholder=sp.w;inp.value=S.wt[wk]||'';inp.title='Font weight (100-900); empty = '+sp.w;
+  inp.oninput=()=>{const v=parseInt(inp.value,10);if(v>=100&&v<=900)S.wt[wk]=v;else delete S.wt[wk];save();upd()};
+  lab.append(inp);td.append(stage,spec,lab);return td}
+function render(){document.getElementById('state').textContent='Showing '+(dark()?'dark':'light')+' theme';chips();head();renderFC();
+  const tb=document.querySelector('#tbl tbody');tb.textContent='';
+  ROWS.forEach((r,ri)=>{const tr=el('tr');const pl=el('td','pl',r.place);if(r.note)pl.append(el('div','note',r.note));tr.append(el('td','pg',r.page),pl);
+    vis().forEach(id=>{const sid=other(id)?'app':id;tr.append(cellFor(id,r.sample,r.s[sid],sid,ri))});tb.append(tr)})}
+// font compare
+function fams(){const s=new Set(['Inter','Roboto','Roboto Mono','JetBrains Mono','Fira Code','Segoe UI','Cascadia Mono','Noto Sans','Iosevka','Google Sans Flex','SF Pro','SF Mono','Arial','Georgia','Consolas','Menlo']);S.others.forEach(o=>{s.add(o.sf);s.add(o.mf)});S.fc.forEach(r=>r.f&&s.add(r.f));return[...s]}
+function mvfc(i,d){const j=i+d;if(j<0||j>=S.fc.length)return;[S.fc[i],S.fc[j]]=[S.fc[j],S.fc[i]];save();renderFC()}
+function renderFC(){const box=$('fc');box.textContent='';$('fs').value=S.fs;const t=th(),dl=$('fams');dl.textContent='';fams().forEach(f=>{const o=document.createElement('option');o.value=f;dl.append(o)});
+  S.fc.forEach((r,i)=>{const row=el('div','fr'),ctl=el('div','ctl');
+    const fi=document.createElement('input');fi.type='text';fi.setAttribute('list','fams');fi.value=r.f;fi.placeholder='Font family';fi.style.width='150px';
+    const si=document.createElement('input');si.type='number';si.min=8;si.max=120;si.value=r.s;si.style.width='56px';si.title='Size (px)';
+    const wi=document.createElement('input');wi.type='number';wi.min=100;wi.max=900;wi.step=100;wi.value=r.w;wi.style.width='72px';wi.title='Weight';
+    const ui=document.createElement('input');ui.type='text';ui.value=r.u||'';ui.placeholder='Font URL (optional)';ui.style.width='200px';
+    const lbl=(x,e)=>{const l=el('label','hint',x+' ');l.append(e);return l};
+    ctl.append(lbl('Font',fi),lbl('Size',si),lbl('Weight',wi),ui,ib('▲','Move up',()=>mvfc(i,-1)),ib('▼','Move down',()=>mvfc(i,1)),ib('✕','Remove row',()=>{S.fc.splice(i,1);save();renderFC()}));
+    const smp=el('div','smp'),lb=el('span','lbl'),tx=el('span');smp.append(tx);smp.style.background=color('app','bg',t);lb.style.color=color('app','muted',t);tx.style.color=color('app','text',t);
+    const upd=()=>{const f=r.f||'system-ui';tx.textContent=S.fs;tx.style.fontFamily=stack(f,/mono|code|iosevka|consolas|menlo/i.test(f));tx.style.fontSize=r.s+'px';tx.style.fontWeight=r.w};upd();
+    fi.oninput=()=>{r.f=fi.value.trim();save();upd()};
+    si.oninput=()=>{const v=parseFloat(si.value);if(v>=8&&v<=120){r.s=v;save();upd()}};
+    wi.oninput=()=>{const v=parseInt(wi.value,10);if(v>=100&&v<=900){r.w=v;save();upd()}};
+    ui.onchange=()=>{r.u=ui.value.trim();if(r.u&&(!r.f||fi.value==='')){r.f=famFromUrl(r.u);fi.value=r.f}save();loadFonts();upd()};
+    row.append(ctl,smp);box.append(row)})}
+$('fs').oninput=()=>{S.fs=$('fs').value;save();document.querySelectorAll('.fr .smp span:last-child').forEach(s=>s.textContent=S.fs)};
+$('fadd').onclick=()=>{S.fc.push({f:'Inter',s:14,w:400,u:''});save();renderFC()};
+// dialog
+const dlg=document.getElementById('dlg');let editing=null,sfAuto=true,mfAuto=true;
+
+function buildColors(c){const b=$('cpbody');b.textContent='';CK.forEach(([k,lab])=>{const tr=el('tr');tr.append(el('td',null,lab));['l','d'].forEach(t=>{const td=el('td'),i=document.createElement('input');i.type='color';i.value=c[t][k];i.dataset.t=t;i.dataset.k=k;td.append(i);tr.append(td)});b.append(tr)})}
+function openDlg(id){editing=id||null;const o=id?other(id):null;$('dtitle').textContent=o?'Edit '+o.name:'Add Other';
+  $('f_name').value=o?o.name:'Other '+(S.others.length+1);$('f_su').value=o?o.su:'';$('f_sf').value=o?o.sf:'';$('f_mu').value=o?o.mu:'';$('f_mf').value=o?o.mf:'';
+  sfAuto=!o;mfAuto=!o;$('ferr').textContent='';buildColors(o?o.c:AF);dlg.showModal()}
+$('f_su').oninput=()=>{if(sfAuto||!$('f_sf').value)$('f_sf').value=famFromUrl($('f_su').value)};
+$('f_mu').oninput=()=>{if(mfAuto||!$('f_mf').value)$('f_mf').value=famFromUrl($('f_mu').value)};
+$('f_sf').oninput=()=>{sfAuto=false};$('f_mf').oninput=()=>{mfAuto=false};
+$('cancel').onclick=()=>dlg.close();
+$('frm').onsubmit=e=>{e.preventDefault();
+  const name=$('f_name').value.trim(),sf=$('f_sf').value.trim(),mf=$('f_mf').value.trim();
+  if(!name||!sf||!mf){$('ferr').textContent='Name and both font family names are required (a URL fills the family name).';return}
+  const c={l:{},d:{}};document.querySelectorAll('#cpbody input').forEach(i=>{c[i.dataset.t][i.dataset.k]=i.value});
+  const o={id:editing||'o'+Date.now().toString(36),name,su:$('f_su').value.trim(),sf,mu:$('f_mu').value.trim(),mf,c};
+  if(editing){S.others=S.others.map(x=>x.id===editing?o:x)}else{S.others.push(o);S.order.push(o.id)}
+  save();loadFonts();render();dlg.close()};
+const VK=[['text','Text'],['muted','Secondary text'],['accent','Button background'],['onacc','Button text'],['bg','Surface background'],['err','Error / danger'],['onerr','Text on error'],['link','Link'],['invfg','Tooltip / toast text'],['invbg','Tooltip / toast background']];
+function openView(id){const s=SYS[id];$('vtitle').textContent=s.name;$('vfonts').textContent='Normal: '+s.font+' · Monospace: '+s.mono;
+  const b=$('vbody');b.textContent='';VK.forEach(([k,lab])=>{const tr=el('tr');tr.append(el('td',null,lab));['l','d'].forEach(t=>{const td=el('td'),sw=el('span','sw');sw.style.background=s[t][k];td.append(sw,el('code',null,s[t][k].toUpperCase()));tr.append(td)});b.append(tr)});
+  $('vdlg').showModal()}
+$('vclose').onclick=()=>$('vdlg').close();
+$('add').onclick=()=>openDlg(null);
+$('colall').onclick=()=>{S.hidden={};S.order.slice(1).forEach(id=>S.hidden[id]=true);save();render()};
+$('expall').onclick=()=>{S.hidden={};save();render()};
+$('theme').onclick=()=>{root.dataset.theme=dark()?'light':'dark';render()};
+$('reset').onclick=()=>{if(confirm('Reset columns and Other fonts to the defaults?')){S=fresh();save();loadFonts();render()}};
+loadFonts();render();
+</script></body></html>

@@ -69,7 +69,7 @@ public sealed class PagesTests : IDisposable
         var (w, x) = Host(s);
         var pages = new (string Title, Func<Control> Build)[]
         {
-            ("Dashboard", () => DashboardView.Build(x, () => { })),
+            ("Dashboard", () => DashboardView.Build(x)),
             ("Apps", () => new AppsView(x).Build()),
             ("Claude Code", () => new AppDetailView(x).Build("claude-code")),
             ("Plugins", () => new LibraryView(x, "Plugin").Build()),
@@ -153,7 +153,7 @@ public sealed class PagesTests : IDisposable
         var s = State();
         s.Items = [.. Enumerable.Range(0, 12).Select(i => Skill("s" + i, "User", ["Agent"]) with { Author = "Author " + i })];
         var (w, x) = Host(s);
-        w.Content = DashboardView.Build(x, () => { });
+        w.Content = DashboardView.Build(x);
         Settle();
         var labels = w.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Text is { } n && (n.StartsWith("Author ", StringComparison.Ordinal) || n == "Other")).ToList();
         Assert.Contains(labels, l => l.Text == "Other");

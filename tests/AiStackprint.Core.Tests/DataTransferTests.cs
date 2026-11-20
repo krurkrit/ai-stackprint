@@ -39,7 +39,7 @@ public sealed class DataTransferTests : IDisposable
         var there = Files("there");
         var s = SettingsStore.Load(there.Settings);
         s.Theme = "Dark";
-        s.FontSize = 16;
+        s.SetSize(16);
         s.CheckUpdates = true;
         s.LimitsEnabled = ["claude-code"];
         SettingsStore.Save(s, there.Settings);
@@ -59,10 +59,11 @@ public sealed class DataTransferTests : IDisposable
         Assert.Equal(1, (int)e["version"]!);
         Assert.Equal("changes", (string)e["values"]!);
         Assert.Equal("Dark", (string)e["settings"]!["theme"]!);
-        Assert.Null(e["settings"]!["fontFamily"]);   // a default: not a change
+        Assert.Equal("""{"body":{"size":{"value":16}}}""", e["settings"]!["fonts"]!.ToJsonString());   // only the changed size; the defaults are not a change
         Assert.Equal("""{"claude-opus-5-5":{"price":{"input":5}},"my-model":{"provider":"custom","price":{"input":1,"output":2}}}""", e["models"]!.ToJsonString());
         Assert.Equal("custom.my-tool", (string)e["apps"]![0]!["id"]!);
         Assert.Equal("~/work/demo", (string)e["projects"]![0]!["path"]!);
+        Assert.Equal(["version", "exported", "values", "settings", "apps", "projects", "models"], e.Select(k => k.Key));   // the parts in the order of the Export dialog
         Assert.Null(Export(there, DataParts.Settings)["models"]);
     }
 
@@ -72,7 +73,7 @@ public sealed class DataTransferTests : IDisposable
         var (there, _) = Filled();
         var e = Export(there, DataParts.Settings | DataParts.Models, all: true);
         Assert.Equal("all", (string)e["values"]!);
-        Assert.Equal("Inter", (string)e["settings"]!["fontFamily"]!);
+        Assert.Equal("Inter", (string)e["settings"]!["fonts"]!["body"]!["family"]!["value"]!);
         Assert.Equal(1000000, (long)e["models"]!["claude-opus-5-5"]!["contextWindow"]!);
         Assert.Equal(5, (decimal)e["models"]!["claude-opus-5-5"]!["price"]!["input"]!);
     }
@@ -91,7 +92,7 @@ public sealed class DataTransferTests : IDisposable
         var backup = DataImport.Apply(plan, here, new Dictionary<string, string>(), _now, _models);
         Assert.NotNull(backup);
         var s = SettingsStore.Load(here.Settings);
-        Assert.Equal(("Dark", 16, false), (s.Theme, s.FontSize, s.CheckUpdates));
+        Assert.Equal(("Dark", 16d, false), (s.Theme, s.Font().Size, s.CheckUpdates));
         Assert.Empty(s.LimitsEnabled);
         Assert.Equal(Export(there)["models"]!.ToJsonString(), Export(here)["models"]!.ToJsonString());
         Assert.Equal("custom.my-tool", Assert.Single(AppCatalog.Read(here.Apps).Defs, d => d.Origin == AppOrigin.Custom).Id);
@@ -105,8 +106,8 @@ public sealed class DataTransferTests : IDisposable
         var (there, _) = Filled();
         var here = Files("here");
         var s = SettingsStore.Load(here.Settings);
-        s.FontSize = 13;
-        s.MenuWeight = 600;
+        s.SetSize(13);
+        s.SetWeight(600, FontRoles.Menu);
         SettingsStore.Save(s, here.Settings);
         var before = File.ReadAllText(here.Settings);
         ModelCatalog.Save(_models, here.Models, "claude-opus-5-5", new Dictionary<string, string?> { ["price.output"] = "30" });
@@ -114,7 +115,7 @@ public sealed class DataTransferTests : IDisposable
         var backup = DataImport.Apply(Plan(Export(there), here), here, new Dictionary<string, string>(), _now, _models)!;
         Assert.Equal(before, File.ReadAllText(Path.Combine(backup, "settings.json")));
         s = SettingsStore.Load(here.Settings);
-        Assert.Equal((16, 600), (s.FontSize, s.MenuWeight));   // the import's value wins; mine that it lacks stay
+        Assert.Equal((16d, 600), (s.Font().Size, s.Font(FontRoles.Menu).Weight));   // the import's value wins; mine that it lacks stay
         Assert.Equal("""{"price":{"input":5,"output":30}}""", ModelCatalog.ReadOverrides(here.Models)!["claude-opus-5-5"]!.ToJsonString());
     }
 
@@ -127,7 +128,7 @@ public sealed class DataTransferTests : IDisposable
         Assert.True(plan.AllValues);
         var moved = Directory.CreateDirectory(Path.Combine(_root, "found")).FullName;
         DataImport.Apply(plan, here, new Dictionary<string, string> { [Path.Combine(_root, "gone")] = moved }, _now, _models);
-        Assert.Equal(["theme", "fontSize"], JsonNode.Parse(File.ReadAllText(here.Settings))!.AsObject().Select(k => k.Key).Where(k => k != "version").Order().Reverse());
+        Assert.Equal(["theme", "fonts"], JsonNode.Parse(File.ReadAllText(here.Settings))!.AsObject().Select(k => k.Key).Where(k => k != "version").Order().Reverse());
         Assert.Equal("""{"price":{"input":5}}""", ModelCatalog.ReadOverrides(here.Models)!["claude-opus-5-5"]!.ToJsonString());
         Assert.Contains(moved, ProjectStore.Load(here.Projects, here.Home).Select(p => p.Path));
     }

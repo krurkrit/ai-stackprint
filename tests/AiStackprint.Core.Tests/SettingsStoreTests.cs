@@ -40,7 +40,9 @@ public sealed class SettingsStoreTests : IDisposable
         var names = typeof(Settings).GetProperties().Where(p => p.Name != nameof(Settings.Extra)).Select(p => char.ToLowerInvariant(p.Name[0]) + p.Name[1..]);
         Assert.DoesNotContain(names, n => !defaults.ContainsKey(n));
         var d = SettingsStore.Defaults();
-        Assert.Equal(("System", "Inter", 14d, 400, 600, 10, 1), (d.Theme, d.FontFamily, d.FontSize, d.BodyWeight, d.EmphasisWeight, d.FadeSeconds, d.LimitsRefreshMinutes));
+        Assert.Equal(("System", "Inter", 14d, 400, 600, 700, 500, 10, 1),
+            (d.Theme, d.Font().Family, d.Font().Size, d.Font().Weight, d.Font(FontRoles.Emphasis).Weight, d.Font(FontRoles.Heading).Weight, d.Font(FontRoles.Menu).Weight, d.FadeSeconds, d.LimitsRefreshMinutes));
+        Assert.Null(FontRuleSet.Validate(d.Fonts));
         Assert.Null(d.Extra);
     }
 
@@ -51,10 +53,10 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal("""{"version":1}""", Saved().ToJsonString());
 
         var st = SettingsStore.Defaults();
-        st.FontSize = 16;
+        st.SetSize(16);
         st.Dark.Accent = "#FF8800";
         SettingsStore.Save(st, File);
-        Assert.Equal("""{"version":1,"fontSize":16,"dark":{"accent":"#FF8800"}}""", Saved().ToJsonString());
+        Assert.Equal("""{"version":1,"fonts":{"body":{"size":{"value":16}}},"dark":{"accent":"#FF8800"}}""", Saved().ToJsonString());
     }
 
     [Fact]
@@ -62,7 +64,7 @@ public sealed class SettingsStoreTests : IDisposable
     {
         System.IO.File.WriteAllText(File, """{ "version": 1, "theme": "Dark" }""");
         var s = SettingsStore.Load(File);
-        Assert.Equal(("Dark", 14d, "JetBrains Mono"), (s.Theme, s.FontSize, s.LogFontFamily));
+        Assert.Equal(("Dark", 14d, "JetBrains Mono"), (s.Theme, s.Font().Size, s.Font(FontRoles.Log).Family));
     }
 
     [Fact]
@@ -88,7 +90,7 @@ public sealed class SettingsStoreTests : IDisposable
     {
         System.IO.File.WriteAllText(File, """{ "version": 1, "futureThing": { "a": 1 } }""");
         var s = SettingsStore.Load(File);
-        s.FontSize = 15;
+        s.SetSize(15);
         SettingsStore.Save(s, File);
         Assert.Equal("""{"a":1}""", Saved()["futureThing"]!.ToJsonString());
     }
@@ -96,11 +98,11 @@ public sealed class SettingsStoreTests : IDisposable
     [Fact]
     public void A_file_from_a_newer_version_is_read_but_never_written()
     {
-        var text = """{ "version": 99, "fontSize": 16 }""";
+        var text = """{ "version": 99, "fonts": { "body": { "size": { "value": 16 } } } }""";
         System.IO.File.WriteAllText(File, text);
         var s = SettingsStore.Load(File);
-        Assert.Equal(16, s.FontSize);
-        s.FontSize = 12;
+        Assert.Equal(16d, s.Font().Size);
+        s.SetSize(12);
         SettingsStore.Save(s, File);
         Assert.Equal(text, System.IO.File.ReadAllText(File));
     }
@@ -109,9 +111,9 @@ public sealed class SettingsStoreTests : IDisposable
     public void A_broken_file_gives_the_defaults_and_is_kept_in_backups()
     {
         System.IO.File.WriteAllText(File, "{ not json");
-        Assert.Equal(14, SettingsStore.Load(File).FontSize);
+        Assert.Equal(14d, SettingsStore.Load(File).Font().Size);
         Assert.Equal("{ not json", System.IO.File.ReadAllText(Path.Combine(_dir, "backups", "settings.broken.json")));
-        Assert.Equal(14, SettingsStore.Load(Path.Combine(_dir, "none.json")).FontSize);
+        Assert.Equal(14d, SettingsStore.Load(Path.Combine(_dir, "none.json")).Font().Size);
     }
 
     [Fact]

@@ -124,6 +124,7 @@ public static partial class Hooks
         {
             return ext == ".hook" || path.Contains(Path.Combine(".kiro", "hooks"), StringComparison.OrdinalIgnoreCase)
                 ? Kiro(doc.RootElement, path, from, home) is { } k ? [k] : []
+                : IsAntigravity(doc.RootElement) ? Antigravity(doc.RootElement, path, from, home)
                 : Parse(doc.RootElement, path, from, home, pluginRoot);
         }
     }

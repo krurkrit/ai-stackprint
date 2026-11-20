@@ -131,7 +131,7 @@ internal class SkillFilter
             res.Add(() =>
             {
                 var cells = new Control[cols];
-                cells[0] = Row(Txt(open ? "▾" : "▸", TextSize.Small, false, Muted), Title(key, TextSize.Body), Txt(count.ToString("N0"), TextSize.Small, false, Muted));
+                cells[0] = Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Title(key, TextSize.Body), Txt(count.ToString("N0"), TextSize.Small, false, Muted));
                 Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
                 for (var c = 1; c < cols; c++)
                 {

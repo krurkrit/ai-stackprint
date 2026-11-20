@@ -138,16 +138,8 @@ public class Settings
     public List<string> HiddenApps { get; set; } = [];
     public bool HideNotInstalled { get; set; }
     public string Theme { get; set; } = "";
-    public string FontFamily { get; set; } = "";
-    public double FontSize { get; set; }
-    public int BodyWeight { get; set; }
-    public int EmphasisWeight { get; set; }
-    public string LogFontFamily { get; set; } = "";
-    public double LogFontSize { get; set; }
-    public string HeadingFontFamily { get; set; } = "";
-    public int HeadingWeight { get; set; }
-    public int LogFontWeight { get; set; }
-    public int MenuWeight { get; set; }
+    /// <summary>Font settings by key (<see cref="Services.FontRoles"/>): family, size and weight of each, and how they link to each other. Work with them through <see cref="Services.FontRuleSet"/>.</summary>
+    public Dictionary<string, FontRule> Fonts { get; set; } = [];
     public bool LogLineNumbers { get; set; }
     public int FadeSeconds { get; set; }
     public int VirtualListRows { get; set; }

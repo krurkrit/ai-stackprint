@@ -60,7 +60,7 @@ internal partial class MainWindow
 
         _body.Content = _view switch
         {
-            "Dashboard" => DashboardView.Build(_x, AddProject),
+            "Dashboard" => DashboardView.Build(_x),
             "Apps" => _apps.Build(),
             "Settings" => _settings.Build(),
             "Plugin" => _plugins.Build(),
@@ -76,7 +76,7 @@ internal partial class MainWindow
             _ when _view.StartsWith("Logs:") => _logs.Build(_view[5..]),
             _ when _view.StartsWith("App:") => _detail.Build(_view[4..]),
             _ when _view.StartsWith("Project:") => _project.Build(_view[8..]),
-            _ => DashboardView.Build(_x, AddProject)
+            _ => DashboardView.Build(_x)
         };
         if (_firstShow)
         {
@@ -208,6 +208,11 @@ internal partial class MainWindow
         }
         _scanning = false; _scanned = true;
         Refresh();
+        if (!first)
+        {
+            Toast.Show($"Scanned: {ReadableLog.Plural(_s.Apps.Count(a => a.Installed), "app")}, {ReadableLog.Plural(_s.Items.Count(i => i.Kind == "Skill"), "skill")}, {ReadableLog.Plural(_s.Items.Count(i => i.Kind == "Plugin"), "plugin")}", "scan_text");
+        }
+
         RequestLimits();
         LoadProjectHealth(defs, projects);
         if (first && PerfRun)

@@ -31,7 +31,7 @@ internal static class DayBars
             {
                 if (bars[i].Parts[j] > 0)
                 {
-                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max), CornerRadius = new CornerRadius(Radius.XS) }.Themed(Border.BackgroundProperty, keys[j]));
+                    stack.Children.Add(new Border { Height = Math.Max(1, barHeight * bars[i].Parts[j] / max) }.Themed(Border.BackgroundProperty, keys[j]));
                 }
             }
 

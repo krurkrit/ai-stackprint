@@ -3,6 +3,7 @@
 
 using AiStackprint.Services;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 
@@ -62,7 +63,16 @@ internal static partial class Dialogs
             {
                 // A date is picked, not typed: no format to get wrong
                 var picker = new CalendarDatePicker { SelectedDateFormat = CalendarDatePickerFormat.Custom, CustomDateFormatString = "yyyy-MM-dd", PlaceholderText = Hint(f, data), Width = Widths.Field, HorizontalAlignment = HorizontalAlignment.Left, SelectedDate = ParseDate(current) };
-                input = picker;
+                // The picker has no clear button of its own: one sits after it, outside the field, while a date is set
+                var clear = IconBtn("dismiss", "Clear the date", () => picker.SelectedDate = null, danger: true);
+                // Joined to the field: same height and the input's border color, no gap
+                clear.MinHeight = Theme.InputHeight;
+                clear.BorderThickness = new Thickness(Stroke.Thin);
+                clear.Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey);
+                clear.Margin = new Thickness(-Space.XS, 0, 0, 0);
+                clear.IsVisible = picker.SelectedDate != null;
+                picker.PropertyChanged += (_, e) => { if (e.Property == CalendarDatePicker.SelectedDateProperty) { clear.IsVisible = picker.SelectedDate != null; } };
+                input = Row(picker, clear).With(r => r.HorizontalAlignment = HorizontalAlignment.Left);
                 get = () => picker.SelectedDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "";
                 set = v => picker.SelectedDate = ParseDate(v);
             }
@@ -76,7 +86,7 @@ internal static partial class Dialogs
 
             boxes[f] = get;
             var reset = row?.Changed.Contains(f) == true ? IconBtn("arrow_reset", $"Reset to the model data ({data ?? "unknown"})", () => set(data ?? "")) : null;
-            Add(Label(ModelCatalog.Label(f)), input, reset ?? (f == "retires" ? IconBtn("dismiss", "Clear the date", () => set("")) : null));
+            Add(Label(ModelCatalog.Label(f)), input, reset);
         }
 
         var error = Txt("", TextSize.Small, false, ErrorKey).With(t => t.IsVisible = false);
