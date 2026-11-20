@@ -1,0 +1,96 @@
+# Copyright (c) AI Stackprint contributors.
+# Licensed under the MIT License. See LICENSE in the project root for license information.
+
+# Code coverage: once a day, only when `main` has a new commit in the last 24 hours. Report only: it never fails on a low number.
+# The result is in the run summary; the full HTML report is the "coverage-report" artifact.
+name: Coverage
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # every day 03:00 UTC
+  workflow_dispatch:       # run by hand: always runs
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MinVer reads the tags
+
+      - name: New commits in the last 24 hours?
+        id: changed
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ -n "$(git log --since='24 hours ago' --oneline -1)" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No new commits in the last 24 hours: coverage not run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        if: steps.changed.outputs.run == 'true'
+        with:
+          global-json-file: global.json
+
+      - name: Report generator
+        if: steps.changed.outputs.run == 'true'
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Tests with coverage
+        if: steps.changed.outputs.run == 'true'
+        shell: pwsh
+        run: ./build/coverage.ps1 -Threshold 0
+
+      - name: Show the result
+        if: steps.changed.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          {
+            echo '## Code coverage'
+            echo '```'
+            cat artifacts/coverage/Summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Three services to try side by side. Each is independent: one failing or missing its secret does not stop the others.
+      # Secrets (Settings > Secrets and variables > Actions): CODECOV_TOKEN, CODACY_PROJECT_TOKEN. Coveralls needs none for a public repo.
+      - name: Codecov
+        if: steps.changed.outputs.run == 'true' && env.CODECOV_TOKEN != ''
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: artifacts/coverage/Cobertura.xml
+          fail_ci_if_error: false
+
+      - name: Coveralls
+        if: steps.changed.outputs.run == 'true'
+        continue-on-error: true
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: artifacts/coverage/Cobertura.xml
+          format: cobertura
+
+      - name: Codacy
+        if: steps.changed.outputs.run == 'true' && env.CODACY_PROJECT_TOKEN != ''
+        continue-on-error: true
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: artifacts/coverage/Cobertura.xml
+
+      - uses: actions/upload-artifact@v4
+        if: steps.changed.outputs.run == 'true' && always()
+        with:
+          name: coverage-report
+          path: artifacts/coverage
+          retention-days: 30
