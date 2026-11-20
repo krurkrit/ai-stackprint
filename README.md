@@ -2,7 +2,8 @@
 [![Coverage workflow](https://github.com/krurkrit/ai-stackprint/actions/workflows/coverage.yml/badge.svg)](https://github.com/krurkrit/ai-stackprint/actions/workflows/coverage.yml)
 [![Codecov](https://codecov.io/gh/krurkrit/ai-stackprint/graph/badge.svg)](https://codecov.io/gh/krurkrit/ai-stackprint)
 [![Coveralls](https://coveralls.io/repos/github/krurkrit/ai-stackprint/badge.svg?branch=main)](https://coveralls.io/github/krurkrit/ai-stackprint?branch=main)
-<!-- Codacy: add the grade and coverage badges from its project Settings > Badges (they carry a project id) -->
+[![Codacy Grade](https://app.codacy.com/project/badge/Grade/0ffdae29f57f4d53ac2de1699a68003e)](https://app.codacy.com/gh/krurkrit/ai-stackprint/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Coverage](https://app.codacy.com/project/badge/Coverage/0ffdae29f57f4d53ac2de1699a68003e)](https://app.codacy.com/gh/krurkrit/ai-stackprint/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
 Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project / User / System). Avalonia 12 + .NET 10, free (MIT, see `LICENSE`).
 
