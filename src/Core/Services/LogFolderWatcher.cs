@@ -29,7 +29,7 @@ public sealed class LogFolderWatcher : IDisposable
 
     /// <param name="roots">Folder, file pattern and whether sub-folders count (see <see cref="LogReader.Roots"/>).</param>
     /// <param name="newest">The file being written; polled as a backup.</param>
-    public LogFolderWatcher(IEnumerable<(string Dir, string Pattern, bool Recursive)> roots, string? newest, TimeSpan? poll = null)
+    public LogFolderWatcher(IEnumerable<(string Dir, string Pattern, bool Recursive)> roots, string? newest, TimeSpan? poll)
     {
         _newest = newest;
         _stamp = Stamp();
@@ -68,6 +68,11 @@ public sealed class LogFolderWatcher : IDisposable
         }
         var every = poll ?? TimeSpan.FromSeconds(10);
         _poll = new Timer(_ => Poll(), null, every, every);
+    }
+
+    public LogFolderWatcher(IEnumerable<(string Dir, string Pattern, bool Recursive)> roots, string? newest)
+        : this(roots, newest, null)
+    {
     }
 
     /// <summary>

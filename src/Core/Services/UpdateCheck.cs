@@ -57,7 +57,7 @@ public static class UpdateCheck
     public static Release? Newer(Release? latest, Version current) => latest != null && latest.Version > Normalize(current) ? latest : null;
 
     /// <summary>The latest release on GitHub. Throws <see cref="HttpRequestException"/> or <see cref="JsonException"/> when it cannot be read; null when there is none.</summary>
-    public static async Task<Release?> LatestAsync(CancellationToken ct = default)
+    public static async Task<Release?> LatestAsync(CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, $"https://{Host}/repos/{Repo}/releases/latest");
         req.Headers.UserAgent.ParseAdd("AiStackprint/" + Current);   // GitHub refuses requests without one
@@ -75,6 +75,8 @@ public static class UpdateCheck
 
         return Parse(await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false));
     }
+
+    public static Task<Release?> LatestAsync() => LatestAsync(default);
 
     private static Version Normalize(Version v) => new(v.Major, Math.Max(v.Minor, 0), Math.Max(v.Build, 0));
 

@@ -36,7 +36,7 @@ internal sealed class OpenCodeFileReader : IPluginReader
 
             foreach (var d in Directory.EnumerateDirectories(path).Where(d => !Path.GetFileName(d).StartsWith('.')))
             {
-                PluginManifests.Add(rows, ctx, d, manifests: _manifest);
+                PluginManifests.Add(rows, ctx, d, null, _manifest, null, false, null, null);
             }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }

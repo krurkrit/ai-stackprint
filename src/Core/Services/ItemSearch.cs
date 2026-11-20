@@ -17,10 +17,15 @@ public sealed class ItemSearch
 
     /// <param name="items">The items to search.</param>
     /// <param name="author">Who made each item (<see cref="ItemAuthor.For"/>); the item's own author when not given.</param>
-    public ItemSearch(IEnumerable<Item> items, Func<Item, string>? author = null)
+    public ItemSearch(IEnumerable<Item> items, Func<Item, string>? author)
     {
         author ??= i => i.Author ?? "";
         _entries = items.Select(i => new Entry(i, author(i))).ToList();
+    }
+
+    public ItemSearch(IEnumerable<Item> items)
+        : this(items, null)
+    {
     }
 
     public List<Item> Find(string? query) => Find(SearchQuery.Parse(query));

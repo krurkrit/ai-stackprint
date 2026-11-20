@@ -53,7 +53,7 @@ public static class SkillManager
         skill.Level == "System" ? "System-level skills are managed by an administrator." : null;
 
     /// <summary>Moves the skill (its folder, or the .md file for flat layouts) to BackupRoot/timestamp/. Returns the backup path.</summary>
-    public static string Remove(Item skill, string? backupRoot = null)
+    public static string Remove(Item skill, string? backupRoot)
     {
         if (CannotRemove(skill) is { } why)
         {
@@ -75,6 +75,8 @@ public static class SkillManager
 
         return dest;
     }
+
+    public static string Remove(Item skill) => Remove(skill, null);
 
     private static void MoveDir(string src, string dest)
     {

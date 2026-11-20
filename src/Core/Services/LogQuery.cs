@@ -29,7 +29,7 @@ public sealed partial class LogQuery
 
     /// <summary>The query, or null when it is empty. Throws ArgumentException for an invalid regular expression.</summary>
     /// <param name="steps">The conversation view: role: and tool: are filters. In the raw file they are searched as written.</param>
-    public static LogQuery? Parse(string? text, bool matchCase, bool regex, bool steps = false)
+    public static LogQuery? Parse(string? text, bool matchCase, bool regex, bool steps)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -76,6 +76,8 @@ public sealed partial class LogQuery
 
         return parts.Count == 0 && role == null && tool == null ? null : new LogQuery([.. parts], role, tool);
     }
+
+    public static LogQuery? Parse(string? text, bool matchCase, bool regex) => Parse(text, matchCase, regex, false);
 
     /// <summary>Every word, phrase or the pattern is in <paramref name="text"/>.</summary>
     public bool IsMatch(string text) => IsMatch(text.AsSpan());

@@ -18,7 +18,7 @@ public static partial class ModelRetirement
     /// <summary>A retirement this many days away or less is a warning; later ones are information.</summary>
     internal const int SoonDays = 90;
 
-    public static List<HealthIssue> ForHealth(IEnumerable<Item> items, DateOnly today, ModelTable? table = null)
+    public static List<HealthIssue> ForHealth(IEnumerable<Item> items, DateOnly today, ModelTable? table)
     {
         var res = new List<HealthIssue>();
         foreach (var i in items.Where(i => i.Kind == "Config" && Path.GetExtension(i.Path).ToLowerInvariant() is ".json" or ".jsonc" or ".toml" && File.Exists(i.Path)))
@@ -41,6 +41,8 @@ public static partial class ModelRetirement
         }
         return res;
     }
+
+    public static List<HealthIssue> ForHealth(IEnumerable<Item> items, DateOnly today) => ForHealth(items, today, null);
 
     internal static Finding Finding(string key, ModelInfo info, DateOnly day, DateOnly today)
     {

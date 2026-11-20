@@ -85,7 +85,7 @@ internal partial class LogsView
             await Dialogs.Message(x.Owner, "Delete logs", "No files selected.");
             return;
         }
-        var active = files.Where(f => LogTrash.IsActive(f)).ToList();
+        var active = files.Where(LogTrash.IsActive).ToList();
         var msg = $"Move {ReadableLog.Plural(files.Count, "file")} ({LogViewer.Size(files.Sum(f => f.Size))}) to the {(OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash")}? You can restore them from there.";
         if (files.Any(f => f.Format != null))
         {

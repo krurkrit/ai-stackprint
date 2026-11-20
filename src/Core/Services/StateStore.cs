@@ -16,7 +16,7 @@ public static class StateStore
 
     public static string File => Path.Combine(DataFolder.Root, FileName);
 
-    public static UiState Load(string? file = null)
+    public static UiState Load(string? file)
     {
         file ??= File;
         try
@@ -26,11 +26,15 @@ public static class StateStore
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { return new(); }
     }
 
-    public static void Save(UiState s, string? file = null)
+    public static UiState Load() => Load(null);
+
+    public static void Save(UiState s, string? file)
     {
         try { _format.Write(file ?? File, (JsonObject)JsonSerializer.SerializeToNode(s, AppCatalog._opt)!); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // remembered for this run only
     }
+
+    public static void Save(UiState s) => Save(s, null);
 
     /// <summary>Values an older version kept in settings.json: taken over where state.json has none of its own.</summary>
     internal static void Adopt(JsonObject legacy, string file)

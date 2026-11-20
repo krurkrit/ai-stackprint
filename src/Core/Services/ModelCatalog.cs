@@ -94,35 +94,53 @@ public static partial class ModelCatalog
     /// The model with a price for a logged name: the longest key it contains. Each name is looked up once per table (costs are asked for
     /// every usage event, and a log holds a handful of names).
     /// </summary>
-    public static ModelInfo? For(string model, ModelTable? table = null) => Lookup(model, table).Priced;
+    public static ModelInfo? For(string model, ModelTable? table) => Lookup(model, table).Priced;
+
+    public static ModelInfo? For(string model) => For(model, null);
 
     /// <summary>The model for a logged name, priced or not (context window, retirement).</summary>
-    public static ModelInfo? Info(string model, ModelTable? table = null) => Lookup(model, table).Any;
+    public static ModelInfo? Info(string model, ModelTable? table) => Lookup(model, table).Any;
 
-    /// <summary>The key that <see cref="For"/> used ("priced as …"), or null.</summary>
-    public static string? PricedAs(string model, ModelTable? table = null) => Lookup(model, table).PricedKey;
+    public static ModelInfo? Info(string model) => Info(model, null);
 
-    /// <summary>The key that <see cref="Info"/> used, or null.</summary>
-    public static string? InfoKey(string model, ModelTable? table = null) => Lookup(model, table).AnyKey;
+    /// <summary>The key that <see cref="For(string, ModelTable)"/> used ("priced as …"), or null.</summary>
+    public static string? PricedAs(string model, ModelTable? table) => Lookup(model, table).PricedKey;
+
+    public static string? PricedAs(string model) => PricedAs(model, null);
+
+    /// <summary>The key that <see cref="Info(string, ModelTable)"/> used, or null.</summary>
+    public static string? InfoKey(string model, ModelTable? table) => Lookup(model, table).AnyKey;
+
+    public static string? InfoKey(string model) => InfoKey(model, null);
 
     /// <summary>USD for a bucket: the app's own figure when it recorded one, else the estimate; null when neither.</summary>
-    public static decimal? Cost(UsageBucket b, ModelTable? table = null) =>
+    public static decimal? Cost(UsageBucket b, ModelTable? table) =>
         b.Cost ?? Estimate(b.Model, new(b.Input, b.Output, b.CacheRead, b.CacheWrite, b.CacheWrite1h, b.Tier, b.Fast, b.UsOnly, b.WebSearches), table);
 
+    public static decimal? Cost(UsageBucket b) => Cost(b, null);
+
     /// <summary>USD for one reply: the app's own figure, else the estimate with its tier.</summary>
-    public static decimal? Cost(UsageEvent e, ModelTable? table = null) =>
+    public static decimal? Cost(UsageEvent e, ModelTable? table) =>
         e.Cost ?? Estimate(e.Model, new(e.Input, e.Output, e.CacheRead, e.CacheWrite, e.CacheWrite1h, TierOf(e.Model, e.RequestInput, table), e.Fast, e.UsOnly, e.WebSearches), table);
 
+    public static decimal? Cost(UsageEvent e) => Cost(e, null);
+
     /// <summary>An estimate at the base price (short cache, no tier).</summary>
-    public static decimal? Cost(string model, long input, long output, long cacheRead, long cacheWrite, ModelTable? table = null) =>
+    public static decimal? Cost(string model, long input, long output, long cacheRead, long cacheWrite, ModelTable? table) =>
         Estimate(model, new(input, output, cacheRead, cacheWrite, 0, 0, false, false, 0), table);
 
+    public static decimal? Cost(string model, long input, long output, long cacheRead, long cacheWrite) => Cost(model, input, output, cacheRead, cacheWrite, null);
+
     /// <summary>The tier a request of <paramref name="requestInput"/> tokens is priced at: the largest <c>tokens</c> it is over, or 0 (base price).</summary>
-    public static long TierOf(string model, long requestInput, ModelTable? table = null) =>
+    public static long TierOf(string model, long requestInput, ModelTable? table) =>
         For(model, table)?.Above?.Where(t => requestInput > t.Tokens).Select(t => t.Tokens).DefaultIfEmpty(0).Max() ?? 0;
 
+    public static long TierOf(string model, long requestInput) => TierOf(model, requestInput, null);
+
     /// <summary>The web-search part of a cost (USD), or null when the model has no search price.</summary>
-    public static decimal? SearchCost(string model, long searches, ModelTable? table = null) => For(model, table)?.WebSearch is { } w ? searches * w : null;
+    public static decimal? SearchCost(string model, long searches, ModelTable? table) => For(model, table)?.WebSearch is { } w ? searches * w : null;
+
+    public static decimal? SearchCost(string model, long searches) => SearchCost(model, searches, null);
 
     private readonly record struct Use(long Input, long Output, long CacheRead, long CacheWrite, long CacheWrite1h, long Tier, bool Fast, bool UsOnly, long WebSearches);
 

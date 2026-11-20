@@ -144,9 +144,11 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     }
 
     /// <summary>Files in a skill or plugin folder (relative path, size), hidden folders skipped, at most <paramref name="max"/>.</summary>
-    public static List<(string Rel, long Size)> Files(string root, int max = 300) => [.. Entries(root, max).Select(f => (f.Rel, f.Size))];
+    public static List<(string Rel, long Size)> Files(string root, int max) => [.. Entries(root, max).Select(f => (f.Rel, f.Size))];
 
-    /// <summary>One file as <see cref="Entries"/> lists it: its name, size and last-write time.</summary>
+    public static List<(string Rel, long Size)> Files(string root) => Files(root, 300);
+
+    /// <summary>One file as <see cref="Entries(string, int)"/> lists it: its name, size and last-write time.</summary>
     public static (string Rel, long Size, long Ticks) Entry(string file)
     {
         var f = new FileInfo(file);
@@ -154,9 +156,9 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
     }
 
     /// <summary>
-    /// <see cref="Files"/> with each file's last-write time (UTC ticks), taken from the folder listing itself: a stamp for <see cref="ScanCache"/> without asking for each file again.
+    /// <see cref="Files(string, int)"/> with each file's last-write time (UTC ticks), taken from the folder listing itself: a stamp for <see cref="ScanCache"/> without asking for each file again.
     /// </summary>
-    public static List<(string Rel, long Size, long Ticks)> Entries(string root, int max = 300)
+    public static List<(string Rel, long Size, long Ticks)> Entries(string root, int max)
     {
         var res = new List<(string, long, long)>();
         if (!Directory.Exists(root))
@@ -187,4 +189,6 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
         }
         return [.. res.OrderBy(f => f.Item1.Count(c => c == Path.DirectorySeparatorChar)).ThenBy(f => f.Item1, StringComparer.OrdinalIgnoreCase)];
     }
+
+    public static List<(string Rel, long Size, long Ticks)> Entries(string root) => Entries(root, 300);
 }

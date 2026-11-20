@@ -40,7 +40,7 @@ public static class SettingsStore
     /// <summary>A new set of the default settings (default/settings.json).</summary>
     public static Settings Defaults() => Deserialize(_defaults.Value);
 
-    public static Settings Load(string? file = null)
+    public static Settings Load(string? file)
     {
         file ??= File;
         var folder = Path.GetDirectoryName(Path.GetFullPath(file))!;
@@ -76,6 +76,8 @@ public static class SettingsStore
         catch (JsonException) { return Defaults(); }   // a value of the wrong type: the file stays as it is until a save
     }
 
+    public static Settings Load() => Load(null);
+
     /// <summary>Font settings that cannot be used (a loop, an unknown parent, a bad value) are replaced by the defaults; the file stays as it is until a save.</summary>
     private static Settings Checked(Settings s)
     {
@@ -87,10 +89,12 @@ public static class SettingsStore
         return s;
     }
 
-    public static void Save(Settings s, string? file = null)
+    public static void Save(Settings s, string? file)
     {
         _format.Write(file ?? File, Changes(s));
     }
+
+    public static void Save(Settings s) => Save(s, null);
 
     /// <summary>The settings that differ from the defaults, as settings.json holds them (and the export): what is implied is left out.</summary>
     internal static JsonObject Changes(Settings s)

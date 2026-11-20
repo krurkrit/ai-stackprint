@@ -33,7 +33,7 @@ public static partial class DataImport
     /// <summary>Settings that turn on network calls: always left as they are here.</summary>
     public static readonly string[] Consents = ["limitsEnabled", "checkUpdates", "benchmarksEnabled"];
 
-    public static ImportPlan Plan(string json, DataFiles f, JsonObject? modelSource = null)
+    public static ImportPlan Plan(string json, DataFiles f, JsonObject? modelSource)
     {
         JsonObject data;
         try
@@ -133,6 +133,8 @@ public static partial class DataImport
         var all = data["values"] is JsonValue s && s.TryGetValue(out string? mode) && mode == "all";
         return new(data, all, changes, missing, notes);
     }
+
+    public static ImportPlan Plan(string json, DataFiles f) => Plan(json, f, null);
 
     private static JsonObject Used(JsonObject? theirs, JsonObject? yours) =>
         theirs != null && yours != null ? JsonLayers.Merge(theirs, yours) : (JsonObject?)(yours ?? theirs)?.DeepClone() ?? [];

@@ -31,7 +31,7 @@ public static partial class LogSummary
     private static readonly ConcurrentDictionary<(string, long, long), SessionCounts> _cache = new();
 
     /// <param name="since">Only files modified after this time; null = all.</param>
-    public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since, CancellationToken ct = default)
+    public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since, CancellationToken ct)
     {
         var files = all.Where(f => since == null || f.Modified >= since).ToList();
         int errors = 0, warnings = 0;
@@ -77,6 +77,8 @@ public static partial class LogSummary
             [.. sessions.SelectMany(t => t.Tools).GroupBy(t => t.Key).Select(g => (g.Key, g.Sum(t => t.Value))).OrderByDescending(t => t.Item2).Take(5)],
             [.. sessions.SelectMany(t => t.Models).Distinct().Order()]);
     }
+
+    public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since) => Compute(all, since, default);
 
     /// <summary>The totals of every session file, several files at once: counting is CPU-bound and the files are independent.</summary>
     private static List<SessionCounts> Sessions(List<LogFile> files, CancellationToken ct)

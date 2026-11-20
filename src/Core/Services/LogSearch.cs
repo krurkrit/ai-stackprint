@@ -25,7 +25,7 @@ public static class LogSearch
     /// Lines that match, with the first match in each line. Reads the file in blocks and tests each line in place:
     /// only a matching line becomes a string, so a large file costs a block of memory, not a copy of every line.
     /// </summary>
-    public static List<SearchHit> File(string path, LogQuery pattern, int max = DefaultMax, CancellationToken ct = default)
+    public static List<SearchHit> File(string path, LogQuery pattern, int max, CancellationToken ct)
     {
         var hits = new List<SearchHit>();
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -91,6 +91,10 @@ public static class LogSearch
         }
     }
 
+    public static List<SearchHit> File(string path, LogQuery pattern, int max) => File(path, pattern, max, default);
+
+    public static List<SearchHit> File(string path, LogQuery pattern) => File(path, pattern, DefaultMax, default);
+
     /// <summary>Up to 160 characters around the match.</summary>
     public static string Snippet(string line, int at, int len)
     {
@@ -104,7 +108,7 @@ public static class LogSearch
     }
 
     /// <summary>Lines [from, from+count) of a file (1-based), for showing the part of a large file around a match.</summary>
-    public static (string Text, long First) Window(string path, long around, int before = 2000, int after = 2000)
+    public static (string Text, long First) Window(string path, long around, int before, int after)
     {
         long first = Math.Max(1, around - before), n = 0;
         var sb = new StringBuilder();
@@ -127,6 +131,10 @@ public static class LogSearch
         }
         return (sb.ToString(), first);
     }
+
+    public static (string Text, long First) Window(string path, long around, int before) => Window(path, around, before, 2000);
+
+    public static (string Text, long First) Window(string path, long around) => Window(path, around, 2000, 2000);
 
     /// <summary>Number of lines before byte <paramref name="offset"/> (to know which file line the tail view starts at).</summary>
     public static long LinesBefore(string path, long offset)

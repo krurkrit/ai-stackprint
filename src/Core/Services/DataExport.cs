@@ -39,7 +39,7 @@ public static class DataExport
 
     /// <param name="allValues">Every value (settings with their defaults, models with the model data) instead of only your changes.</param>
     /// <param name="modelSource">The model data before your changes; null: the data in use.</param>
-    public static JsonObject Build(DataParts parts, bool allValues, DataFiles f, DateOnly today, JsonObject? modelSource = null)
+    public static JsonObject Build(DataParts parts, bool allValues, DataFiles f, DateOnly today, JsonObject? modelSource)
     {
         var o = new JsonObject
         {
@@ -84,6 +84,8 @@ public static class DataExport
 
         return o;
     }
+
+    public static JsonObject Build(DataParts parts, bool allValues, DataFiles f, DateOnly today) => Build(parts, allValues, f, today, null);
 
     /// <summary>Writes the export (indented) through a temp file.</summary>
     public static void Write(string path, JsonObject export)

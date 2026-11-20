@@ -14,14 +14,18 @@ public static class LogTrash
     /// <summary>Files changed within this time are probably still being written (an open session).</summary>
     public static readonly TimeSpan Active = TimeSpan.FromMinutes(1);
 
-    public static bool IsActive(LogFile f, DateTime? now = null) => (now ?? DateTime.Now) - f.Modified < Active;
+    public static bool IsActive(LogFile f, DateTime? now) => (now ?? DateTime.Now) - f.Modified < Active;
+
+    public static bool IsActive(LogFile f) => IsActive(f, null);
 
     /// <summary>Files older than <paramref name="days"/> days.</summary>
-    public static List<LogFile> OlderThan(IEnumerable<LogFile> files, int days, DateTime? now = null) =>
+    public static List<LogFile> OlderThan(IEnumerable<LogFile> files, int days, DateTime? now) =>
         [.. files.Where(f => (now ?? DateTime.Now) - f.Modified > TimeSpan.FromDays(days))];
 
+    public static List<LogFile> OlderThan(IEnumerable<LogFile> files, int days) => OlderThan(files, days, null);
+
     /// <summary>Moves each file to the bin. Refuses paths not in <paramref name="allowed"/>. Returns (moved, failed with reason).</summary>
-    public static (List<string> Moved, List<(string Path, string Reason)> Failed) Delete(IEnumerable<string> paths, IEnumerable<LogFile> allowed, string? trashRoot = null)
+    public static (List<string> Moved, List<(string Path, string Reason)> Failed) Delete(IEnumerable<string> paths, IEnumerable<LogFile> allowed, string? trashRoot)
     {
         var ok = allowed.Select(f => Path.GetFullPath(f.Path)).ToHashSet(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         var moved = new List<string>();
@@ -43,6 +47,8 @@ public static class LogTrash
         }
         return (moved, failed);
     }
+
+    public static (List<string> Moved, List<(string Path, string Reason)> Failed) Delete(IEnumerable<string> paths, IEnumerable<LogFile> allowed) => Delete(paths, allowed, null);
 
     private static void ToTrash(string path, string? trashRoot)
     {

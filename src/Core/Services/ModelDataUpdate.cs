@@ -36,10 +36,12 @@ public static class ModelDataUpdate
         DateOnly.TryParseExact(updated, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d)
             && nowUtc.Date - d.ToDateTime(TimeOnly.MinValue) > StaleAfter;
 
-    public static Task<ModelDataResult> RunAsync(string? etag, CancellationToken ct = default) => RunAsync(Http, ModelCatalog.CacheFile, etag, ct);
+    public static Task<ModelDataResult> RunAsync(string? etag, CancellationToken ct) => RunAsync(Http, ModelCatalog.CacheFile, etag, ct);
+
+    public static Task<ModelDataResult> RunAsync(string? etag) => RunAsync(etag, default);
 
     /// <summary>One request; never throws for network or data problems (they are the result's message).</summary>
-    public static async Task<ModelDataResult> RunAsync(HttpClient http, string cacheFile, string? etag, CancellationToken ct = default)
+    public static async Task<ModelDataResult> RunAsync(HttpClient http, string cacheFile, string? etag, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, Url);
         req.Headers.UserAgent.ParseAdd("AiStackprint/" + UpdateCheck.Current);   // GitHub refuses requests without one
@@ -101,6 +103,8 @@ public static class ModelDataUpdate
 
         return new(true, true, $"Model data from {updated} saved.", newTag);
     }
+
+    public static Task<ModelDataResult> RunAsync(HttpClient http, string cacheFile, string? etag) => RunAsync(http, cacheFile, etag, default);
 
     private static ModelDataResult Fail(string message) => new(false, false, message, null);
 

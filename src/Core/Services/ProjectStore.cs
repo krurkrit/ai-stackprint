@@ -28,7 +28,7 @@ public static class ProjectStore
         : null;
 
     /// <summary>The saved list, without duplicates or empty paths; empty when there is no file or it cannot be read.</summary>
-    public static List<SavedProject> Load(string? file = null, string? home = null)
+    public static List<SavedProject> Load(string? file, string? home)
     {
         file ??= File;
         home ??= PathUtil.Home;
@@ -59,8 +59,12 @@ public static class ProjectStore
         return list;
     }
 
+    public static List<SavedProject> Load(string? file) => Load(file, null);
+
+    public static List<SavedProject> Load() => Load(null, null);
+
     /// <summary>Writes the list (duplicates dropped); an error leaves the list remembered for this run only.</summary>
-    public static void Save(IEnumerable<SavedProject> projects, string? file = null, string? home = null)
+    public static void Save(IEnumerable<SavedProject> projects, string? file, string? home)
     {
         home ??= PathUtil.Home;
         var a = new JsonArray();
@@ -81,6 +85,10 @@ public static class ProjectStore
         try { _format.Write(file ?? File, new JsonObject { ["projects"] = a }); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
     }
+
+    public static void Save(IEnumerable<SavedProject> projects, string? file) => Save(projects, file, null);
+
+    public static void Save(IEnumerable<SavedProject> projects) => Save(projects, null, null);
 
     /// <summary>Two paths name the same folder (case is ignored on Windows and macOS; a trailing separator is ignored).</summary>
     public static bool Same(string a, string b) => string.Equals(Trim(a), Trim(b), Comparison);

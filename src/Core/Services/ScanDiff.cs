@@ -38,7 +38,7 @@ public static class ScanDiff
     }
 
     /// <summary>Compares <paramref name="items"/>, <paramref name="servers"/> and <paramref name="hooks"/> with the saved scan, then saves them as the new one.</summary>
-    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers = null, IEnumerable<Hook>? hooks = null)
+    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers, IEnumerable<Hook>? hooks)
     {
         var now = items.Where(i => i.Kind is "Skill" or "Plugin" or "Config" or "Command" or "Agent").Select(i => new Entry(i.Kind, i.Name, i.App, i.Path, Stamp(i), i.Kind is "Skill" or "Plugin" ? Fingerprint.Of(i) : null, i.Version))
             .Concat((servers ?? []).Select(s => new Entry(s.Kind + " server", s.Project == null ? s.Name : $"{s.Name} · {System.IO.Path.GetFileName(s.Project.TrimEnd(System.IO.Path.DirectorySeparatorChar, '/'))}", s.Apps.FirstOrDefault() ?? "", s.File, 0, s.Fingerprint)))
@@ -83,6 +83,10 @@ public static class ScanDiff
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         return new(changes, old?.Time.ToLocalTime());   // saved in UTC (older files hold local time with its offset: both read the same); shown in local time
     }
+
+    public static ScanChanges Update(IEnumerable<Item> items, string file, IEnumerable<McpServer>? servers) => Update(items, file, servers, null);
+
+    public static ScanChanges Update(IEnumerable<Item> items, string file) => Update(items, file, null, null);
 
     /// <summary>Null when nothing changed; otherwise what changed ("" when only the time did).</summary>
     private static string? Edit(Entry b, Entry e)

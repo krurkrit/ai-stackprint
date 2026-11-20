@@ -52,7 +52,7 @@ public static class Glob
     }
 
     /// <param name="anchored">Match from the start only, even without a / (.gitignore "/name").</param>
-    public static Regex ToRegex(string pattern, bool anchored = false)
+    public static Regex ToRegex(string pattern, bool anchored)
     {
         var p = pattern.Replace('\\', '/').TrimStart('/');
         if (p.StartsWith("./", StringComparison.Ordinal))
@@ -99,12 +99,14 @@ public static class Glob
         }
     }
 
+    public static Regex ToRegex(string pattern) => ToRegex(pattern, false);
+
     /// <summary>True when the comma at <paramref name="at"/> is inside braces.</summary>
     private static bool Open(string p, int at) => p[..at].Count(c => c == '{') > p[..at].Count(c => c == '}');
 
     /// <summary>True when any of <paramref name="patterns"/> matches one of <paramref name="files"/>.</summary>
     public static bool AnyMatch(IEnumerable<string> patterns, IReadOnlyList<string> files) =>
-        patterns.Select(p => ToRegex(p)).Any(r => files.Any(r.IsMatch));
+        patterns.Select(ToRegex).Any(r => files.Any(r.IsMatch));
 }
 
 /// <summary>The files of a project folder, for checks that need them. Read-only.</summary>
@@ -127,7 +129,7 @@ public static class ProjectFiles
     /// The list returned is shared: do not change it.
     /// </summary>
     /// <param name="complete">False when the project has more than <paramref name="max"/> files and the list stops there.</param>
-    public static List<string> List(string project, out bool complete, int max = 20_000)
+    public static List<string> List(string project, out bool complete, int max)
     {
         Lazy<(List<string> Files, bool Complete)> listing;
         lock (_recent)
@@ -149,6 +151,8 @@ public static class ProjectFiles
         (var files, complete) = listing.Value;
         return files;
     }
+
+    public static List<string> List(string project, out bool complete) => List(project, out complete, 20_000);
 
     /// <summary>Drops the kept lists: the next ask walks the folder again.</summary>
     public static void Forget() { lock (_recent) { _recent.Clear(); } }

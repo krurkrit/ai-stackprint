@@ -20,7 +20,7 @@ public record HealthIssue(string Area, string Subject, string App, Finding Findi
 public static class Health
 {
     /// <param name="claudeModel">The model Claude Code used last (its window sets the skill-list budget); null: the documented fallback.</param>
-    public static List<HealthIssue> Compute(IReadOnlyList<Item> items, string? claudeModel = null)
+    public static List<HealthIssue> Compute(IReadOnlyList<Item> items, string? claudeModel)
     {
         var res = new List<HealthIssue>();
         foreach (var s in items.Where(i => i.Kind == "Skill"))
@@ -80,6 +80,8 @@ public static class Health
 
         return res;
     }
+
+    public static List<HealthIssue> Compute(IReadOnlyList<Item> items) => Compute(items, null);
 
     private static int Rank(string level)
     {

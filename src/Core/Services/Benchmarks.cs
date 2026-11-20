@@ -30,7 +30,7 @@ public static class BenchmarkStore
     public static string CacheFile => Path.Combine(DataFolder.Cache, "benchmarks.json");
 
     /// <summary>The rows of the saved copy; empty when there is none or it is not readable.</summary>
-    public static List<Benchmark> Load(string? file = null)
+    public static List<Benchmark> Load(string? file)
     {
         try
         {
@@ -42,6 +42,8 @@ public static class BenchmarkStore
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or FormatException) { }
         return [];
     }
+
+    public static List<Benchmark> Load() => Load(null);
 
     public static void Save(IReadOnlyList<Benchmark> rows, string file)
     {

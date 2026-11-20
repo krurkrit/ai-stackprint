@@ -19,7 +19,7 @@ public static class CrashLog
     }
 
     /// <param name="folder">Where crash.log goes; the app data folder when null.</param>
-    public static void Write(string what, Exception? e, string? folder = null)
+    public static void Write(string what, Exception? e, string? folder)
     {
         folder ??= DataFolder.Logs;
         try
@@ -36,8 +36,10 @@ public static class CrashLog
         catch (Exception x) when (x is IOException or UnauthorizedAccessException) { }   // nowhere to write: nothing more to do while closing
     }
 
+    public static void Write(string what, Exception? e) => Write(what, e, null);
+
     /// <summary>True once after crash.log gained an entry the user has not been told about.</summary>
-    public static bool TakeNew(string? folder = null)
+    public static bool TakeNew(string? folder)
     {
         folder ??= DataFolder.Logs;
         string log = Path.Combine(folder, "crash.log"), seen = Path.Combine(folder, "crash.seen");
@@ -58,4 +60,6 @@ public static class CrashLog
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException) { return false; }
     }
+
+    public static bool TakeNew() => TakeNew(null);
 }

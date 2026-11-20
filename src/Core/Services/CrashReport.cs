@@ -16,7 +16,7 @@ public static partial class CrashReport
     internal const int MaxUrl = 7000;
 
     /// <summary>The newest entry in crash.log (heading line and stack trace); null when there is none.</summary>
-    public static string? LastEntry(string? folder = null)
+    public static string? LastEntry(string? folder)
     {
         var path = Path.Combine(folder ?? DataFolder.Logs, "crash.log");
         try
@@ -32,6 +32,8 @@ public static partial class CrashReport
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return null; }
     }
+
+    public static string? LastEntry() => LastEntry(null);
 
     /// <summary>Replaces the home folder with ~ and the user name with &lt;user&gt;, so paths in the stack trace do not name the person.</summary>
     public static string Redact(string text, string home, string user)
@@ -70,8 +72,10 @@ public static partial class CrashReport
     }
 
     /// <summary>The link for the newest crash on this machine, redacted; null when crash.log has no entry.</summary>
-    public static string? ForLastCrash(string? folder = null) =>
+    public static string? ForLastCrash(string? folder) =>
         LastEntry(folder) is { } e ? IssueUrl(Redact(e, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Environment.UserName)) : null;
+
+    public static string? ForLastCrash() => ForLastCrash(null);
 
     // CrashLog.Write starts each entry with "yyyy-MM-dd HH:mm:ss +07:00 · " (older versions: without the offset)
     [GeneratedRegex(@"(?m)^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}( [+-]\d{2}:\d{2})? · ")]

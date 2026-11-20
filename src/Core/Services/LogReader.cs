@@ -14,7 +14,7 @@ public static class LogReader
 
     /// <summary>Log files for an app, newest first, capped at <see cref="MaxFiles"/>.</summary>
     /// <param name="usage">Also the usage-only sources (the Usage card); the Logs page leaves them out.</param>
-    public static List<LogFile> Find(AppDefinition d, IEnumerable<string> projects, bool usage = false)
+    public static List<LogFile> Find(AppDefinition d, IEnumerable<string> projects, bool usage)
     {
         var found = new List<LogFile>();
         foreach (var s in (usage ? d.Logs.Concat(d.Usage) : d.Logs).Where(s => PathUtil.OsMatches(s.Os)))
@@ -33,6 +33,8 @@ public static class LogReader
         }
         return [.. found.DistinctBy(f => f.Path).OrderByDescending(f => f.Modified).Take(MaxFiles)];
     }
+
+    public static List<LogFile> Find(AppDefinition d, IEnumerable<string> projects) => Find(d, projects, false);
 
     /// <summary>Folders to watch for an app's logs: (folder, file pattern, include sub-folders). A source that is one file watches its folder for that name.</summary>
     public static List<(string Dir, string Pattern, bool Recursive)> Roots(AppDefinition d, IEnumerable<string> projects)
@@ -66,7 +68,7 @@ public static class LogReader
         return [.. roots.Distinct()];
     }
 
-    /// <summary>Current size and time of one listed file (same rules as <see cref="Find"/>, so a SQLite -wal counts); null when it is gone.</summary>
+    /// <summary>Current size and time of one listed file (same rules as <see cref="Find(AppDefinition, IEnumerable{string}, bool)"/>, so a SQLite -wal counts); null when it is gone.</summary>
     public static LogFile? Restat(LogFile f)
     {
         var found = new List<LogFile>();
@@ -124,7 +126,7 @@ public static class LogReader
     }
 
     /// <summary>Last <paramref name="maxBytes"/> of a file as text, starting at a whole line. Truncated = earlier content was skipped.</summary>
-    public static (string Text, bool Truncated) Tail(string path, int maxBytes = 256 * 1024)
+    public static (string Text, bool Truncated) Tail(string path, int maxBytes)
     {
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         var start = Math.Max(0, fs.Length - maxBytes);
@@ -144,6 +146,8 @@ public static class LogReader
         }   // drop the partial first line
         return (Encoding.UTF8.GetString(buf, from, n - from), start > 0);
     }
+
+    public static (string Text, bool Truncated) Tail(string path) => Tail(path, 256 * 1024);
 
     /// <summary>Lines of a file, one at a time, from the last <paramref name="maxBytes"/> (starting at a whole line). Nothing is held in memory but the current line.</summary>
     public static IEnumerable<string> Lines(string path, long maxBytes)

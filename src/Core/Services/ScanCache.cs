@@ -42,7 +42,7 @@ public static class ScanCache
     private sealed record Entry(string P, long S, long T, string[]? R, string? H);
 
     /// <summary>Reads the saved cache once per run; later calls do nothing.</summary>
-    public static void Load(string? file = null)
+    public static void Load(string? file)
     {
         lock (_gate)
         {
@@ -73,8 +73,10 @@ public static class ScanCache
         }
     }
 
+    public static void Load() => Load(null);
+
     /// <summary>Writes the cache: per path only its newest stamp, and only files that still exist. Nothing when no file was read since the last save.</summary>
-    public static void Save(string? file = null)
+    public static void Save(string? file)
     {
         if (!_dirty)
         {
@@ -94,6 +96,8 @@ public static class ScanCache
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // only a slower next start
     }
+
+    public static void Save() => Save(null);
 
     /// <summary>Forgets everything (tests).</summary>
     internal static void Clear()

@@ -10,7 +10,7 @@ namespace AiStackprint.Services;
 
 /// <summary>
 /// SHA-256 fingerprints of what a skill, plugin or MCP server is made of, to tell when it changed between two scans. Only the hash is kept (in last-scan.json),
-/// never the content. Folders: at most 300 files, hidden folders skipped (<see cref="SkillDoc.Files"/>). Files up to 256 KB are hashed by content, up to 4 MB per folder; larger files count by size only. A file is hashed again only when its size or time changed.
+/// never the content. Folders: at most 300 files, hidden folders skipped (<see cref="SkillDoc.Files(string, int)"/>). Files up to 256 KB are hashed by content, up to 4 MB per folder; larger files count by size only. A file is hashed again only when its size or time changed.
 /// </summary>
 public static class Fingerprint
 {

@@ -65,11 +65,11 @@ public class LogQueryTests
         {
             var longLine = new string('x', 200_000) + " needle far";   // longer than one block
             File.WriteAllText(path, "first\r\nneedle here\r\n" + longLine + "\nno\nlast needle");   // no break after the last line
-            var hits = LogSearch.File(path, LogSearch.Pattern("needle", false, false), ct: TestContext.Current.CancellationToken);
+            var hits = LogSearch.File(path, LogSearch.Pattern("needle", false, false), LogSearch.MaxHits, TestContext.Current.CancellationToken);
             Assert.Equal([2L, 3L, 5L], hits.Select(h => h.Line));
             Assert.Equal(("needle here", 0, 6), (hits[0].Text, hits[0].Column, hits[0].Length));   // no \r
             Assert.Equal(200_001, hits[1].Column);
-            Assert.Equal(2, LogSearch.File(path, LogSearch.Pattern("needle", false, false), max: 2, ct: TestContext.Current.CancellationToken).Count);
+            Assert.Equal(2, LogSearch.File(path, LogSearch.Pattern("needle", false, false), 2, TestContext.Current.CancellationToken).Count);
         }
         finally { File.Delete(path); }
     }

@@ -139,7 +139,7 @@ internal sealed class FolderPluginReader : IPluginReader
             {
                 if (added.Add(m2.Name ?? Path.GetFileName(d)))   // an older cached copy of the same plugin: skipped
                 {
-                    PluginManifests.Add(rows, ctx, d, manifests: manifests, read: m2);
+                    PluginManifests.Add(rows, ctx, d, null, manifests, null, false, null, m2);
                 }
             }
         }
@@ -172,7 +172,7 @@ internal sealed class VsCodeExtensionReader : IPluginReader
                 .Select(d => (Dir: d, Id: Id(Path.GetFileName(d)), Version: VersionOf(Path.GetFileName(d))));
             foreach (var g in dirs.GroupBy(d => d.Id, StringComparer.OrdinalIgnoreCase))
             {
-                PluginManifests.Add(rows, ctx, g.OrderByDescending(d => d.Version).First().Dir, manifests: _manifest);
+                PluginManifests.Add(rows, ctx, g.OrderByDescending(d => d.Version).First().Dir, null, _manifest, null, false, null, null);
             }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }

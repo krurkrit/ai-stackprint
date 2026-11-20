@@ -10,7 +10,7 @@ using AiStackprint.Models;
 
 namespace AiStackprint.Services;
 
-/// <summary>What <see cref="AppCatalog.Read"/> found.</summary>
+/// <summary>What <see cref="AppCatalog.Read(string)"/> found.</summary>
 /// <param name="Defs">Built-in apps, then your custom ones.</param>
 /// <param name="Shadowed">Your apps for a tool that is now built in: not used (the built-in wins), offered for removal.</param>
 public sealed record Catalog(List<AppDefinition> Defs, List<AppDefinition> Shadowed);
@@ -56,9 +56,11 @@ public static class AppCatalog
         return o["apps"].Deserialize<List<AppDefinition>>(_opt) ?? [];
     }
 
-    public static List<AppDefinition> Load(string? file = null) => Read(file).Defs;
+    public static List<AppDefinition> Load(string? file) => Read(file).Defs;
 
-    public static Catalog Read(string? file = null)
+    public static List<AppDefinition> Load() => Load(null);
+
+    public static Catalog Read(string? file)
     {
         var builtIn = BuiltIn();
         var defs = new List<AppDefinition>(builtIn);
@@ -78,12 +80,14 @@ public static class AppCatalog
         return new(defs, shadowed);
     }
 
+    public static Catalog Read() => Read(null);
+
     /// <summary>Why <paramref name="def"/> cannot be added (a built-in app has its id or name), or null.</summary>
     public static string? Refuse(AppDefinition def) =>
         BuiltInFor(def, BuiltIn()) is { } b ? $"{b.Name} is already supported: it is built in. Use its page, or Settings › Apps to show it again if it is hidden." : null;
 
     /// <summary>Adds or replaces a custom app (the id gets <see cref="CustomPrefix"/>); returns why it was refused, or null.</summary>
-    public static string? SaveUser(AppDefinition def, string? file = null)
+    public static string? SaveUser(AppDefinition def, string? file)
     {
         if (!def.Id.StartsWith(CustomPrefix, StringComparison.Ordinal))
         {
@@ -103,8 +107,10 @@ public static class AppCatalog
         return null;
     }
 
+    public static string? SaveUser(AppDefinition def) => SaveUser(def, null);
+
     /// <summary>Deletes your entry with this id from apps.json (a custom app, or one a built-in app replaced).</summary>
-    public static void RemoveUser(string id, string? file = null)
+    public static void RemoveUser(string id, string? file)
     {
         file ??= UserFile;
         var all = ReadUser(file);
@@ -113,6 +119,8 @@ public static class AppCatalog
             Write(all, file);
         }
     }
+
+    public static void RemoveUser(string id) => RemoveUser(id, null);
 
     /// <summary>The built-in app with the same id (with or without <see cref="CustomPrefix"/>) or the same name.</summary>
     private static AppDefinition? BuiltInFor(AppDefinition def, List<AppDefinition> builtIn)

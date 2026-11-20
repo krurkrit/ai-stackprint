@@ -31,11 +31,11 @@ public sealed class LogToolsTests : IDisposable
     public void Search_finds_matches_with_line_numbers_case_and_regex()
     {
         var f = Log("a.log", "ok\nERROR one\nfine\nerror two\n");
-        var hits = LogSearch.File(f.Path, LogSearch.Pattern("error", false, false), ct: TestContext.Current.CancellationToken);
+        var hits = LogSearch.File(f.Path, LogSearch.Pattern("error", false, false), LogSearch.MaxHits, TestContext.Current.CancellationToken);
         Assert.Equal([2, 4], hits.Select(h => h.Line));
         Assert.Equal(0, hits[0].Column);
-        Assert.Single(LogSearch.File(f.Path, LogSearch.Pattern("error", true, false), ct: TestContext.Current.CancellationToken));
-        Assert.Equal(2, LogSearch.File(f.Path, LogSearch.Pattern(@"(one|two)$", false, true), ct: TestContext.Current.CancellationToken).Count);
+        Assert.Single(LogSearch.File(f.Path, LogSearch.Pattern("error", true, false), LogSearch.MaxHits, TestContext.Current.CancellationToken));
+        Assert.Equal(2, LogSearch.File(f.Path, LogSearch.Pattern(@"(one|two)$", false, true), LogSearch.MaxHits, TestContext.Current.CancellationToken).Count);
         Assert.ThrowsAny<ArgumentException>(() => LogSearch.Pattern("(", false, true));
     }
 

@@ -26,7 +26,9 @@ public static partial class ModelCatalog
     public static string? Save(string key, IReadOnlyDictionary<string, string?> values) => Save(SourceModels(), OverridesFile, key, values);
 
     /// <summary>Removes your value for one field, or (no field) all your changes to the model; a model you added is removed.</summary>
-    public static string? Reset(string key, string? field = null) => Reset(OverridesFile, key, field);
+    public static string? Reset(string key, string? field) => Reset(OverridesFile, key, field);
+
+    public static string? Reset(string key) => Reset(key, null);
 
     /// <summary>A short name for a field path, as the page shows it.</summary>
     public static string Label(string field) => field switch

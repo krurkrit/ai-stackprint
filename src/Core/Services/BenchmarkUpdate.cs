@@ -25,10 +25,12 @@ public static class BenchmarkUpdate
 
     public static bool Due(DateTime? lastUtc, DateTime nowUtc) => UpdateCheck.Due(lastUtc, nowUtc);
 
-    public static Task<BenchmarkResult> RunAsync(string key, CancellationToken ct = default) => RunAsync(Http, key, BenchmarkStore.CacheFile, ct);
+    public static Task<BenchmarkResult> RunAsync(string key, CancellationToken ct) => RunAsync(Http, key, BenchmarkStore.CacheFile, ct);
+
+    public static Task<BenchmarkResult> RunAsync(string key) => RunAsync(key, default);
 
     /// <summary>All pages of the free language-model list; never throws for network or data problems (they are the result's message).</summary>
-    public static async Task<BenchmarkResult> RunAsync(HttpClient http, string key, string cacheFile, CancellationToken ct = default)
+    public static async Task<BenchmarkResult> RunAsync(HttpClient http, string key, string cacheFile, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -74,6 +76,8 @@ public static class BenchmarkUpdate
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return new(false, "Could not save the benchmarks: " + e.Message, 0); }
         return new(true, $"{rows.Count:N0} models saved.", rows.Count);
     }
+
+    public static Task<BenchmarkResult> RunAsync(HttpClient http, string key, string cacheFile) => RunAsync(http, key, cacheFile, default);
 
     private static string Failure(HttpStatusCode code) => code switch
     {

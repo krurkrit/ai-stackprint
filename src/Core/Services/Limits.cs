@@ -79,7 +79,7 @@ public sealed class LimitsService(Func<Settings> settings)
     }
 
     /// <summary>Starts a refresh when one is due (or <paramref name="force"/>d, still at most once a minute). Returns at once; listen to <see cref="Updated"/>.</summary>
-    public void Request(AppDefinition d, IReadOnlyList<string> projects, bool force = false)
+    public void Request(AppDefinition d, IReadOnlyList<string> projects, bool force)
     {
         if (LimitProviders.Find(d.Limits) is not { } p)
         {
@@ -106,6 +106,8 @@ public sealed class LimitsService(Func<Settings> settings)
         Updated?.Invoke(d.Id);
         _ = Task.Run(() => Refresh(p, d, [.. projects], e));
     }
+
+    public void Request(AppDefinition d, IReadOnlyList<string> projects) => Request(d, projects, false);
 
     private async Task Refresh(ILimitProvider p, AppDefinition d, List<string> projects, Entry e)
     {

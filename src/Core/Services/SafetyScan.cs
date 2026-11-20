@@ -37,7 +37,7 @@ public static partial class SafetyScan
     /// Findings for the skills and plugins in <paramref name="items"/>, as issues of the Safety area; each folder is read once.
     /// <paramref name="progress"/> gets (done, total) as the items are checked.
     /// </summary>
-    public static List<HealthIssue> Check(IEnumerable<Item> items, string home, Action<int, int>? progress = null)
+    public static List<HealthIssue> Check(IEnumerable<Item> items, string home, Action<int, int>? progress)
     {
         var res = new List<HealthIssue>();
         var byRoot = new Dictionary<string, List<Finding>>(StringComparer.OrdinalIgnoreCase);
@@ -57,6 +57,8 @@ public static partial class SafetyScan
 
         return res;
     }
+
+    public static List<HealthIssue> Check(IEnumerable<Item> items, string home) => Check(items, home, null);
 
     /// <summary>What to read for an item: a skill folder (its SKILL.md's folder), a single skill file, or an agent plugin's folder (those that add skills, commands, agents, hooks or servers; not editor extensions).</summary>
     internal static (string? Root, bool Single) Target(Item i)

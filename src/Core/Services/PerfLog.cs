@@ -29,7 +29,7 @@ public static class PerfLog
     /// The process now: CPU time used so far, managed heap and working set in MB. <paramref name="live"/>: collect first, so the heap is what is still held
     /// (a page that keeps memory after it closes shows here), not garbage waiting for the next collection.
     /// </summary>
-    public static (TimeSpan Cpu, double HeapMb, double WorkingSetMb) Sample(bool live = false)
+    public static (TimeSpan Cpu, double HeapMb, double WorkingSetMb) Sample(bool live)
     {
 #pragma warning disable S1215 // a measuring run only (--perf): the collection is what makes the number the memory still held
         var heap = GC.GetTotalMemory(live);
@@ -38,7 +38,9 @@ public static class PerfLog
         return (p.TotalProcessorTime, heap / 1048576.0, p.WorkingSet64 / 1048576.0);
     }
 
-    public static void Append(IEnumerable<PerfRow> rows, string? file = null)
+    public static (TimeSpan Cpu, double HeapMb, double WorkingSetMb) Sample() => Sample(false);
+
+    public static void Append(IEnumerable<PerfRow> rows, string? file)
     {
         var path = file ?? File;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -57,8 +59,10 @@ public static class PerfLog
         System.IO.File.AppendAllText(path, sb.ToString());
     }
 
+    public static void Append(IEnumerable<PerfRow> rows) => Append(rows, null);
+
     /// <summary>Every row in the log; lines that do not parse are skipped.</summary>
-    public static List<PerfRow> Read(string? file = null)
+    public static List<PerfRow> Read(string? file)
     {
         var path = file ?? File;
         if (!System.IO.File.Exists(path))
@@ -79,6 +83,8 @@ public static class PerfLog
 
         return res;
     }
+
+    public static List<PerfRow> Read() => Read(null);
 
     /// <summary>
     /// The newest run (rows with the newest time stamp's run, written together) next to the run before it, page by page:

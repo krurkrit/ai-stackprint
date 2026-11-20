@@ -50,11 +50,15 @@ public static partial class ContextBudget
 
     private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
 
-    public static ContextFile Measure(string path, LoadWhen load, string? via = null, string? note = null)
+    public static ContextFile Measure(string path, LoadWhen load, string? via, string? note)
     {
         var text = ReadText(path);
         return new ContextFile(path, load, Encoding.UTF8.GetByteCount(text), text.Length, via, note);
     }
+
+    public static ContextFile Measure(string path, LoadWhen load, string? via) => Measure(path, load, via, null);
+
+    public static ContextFile Measure(string path, LoadWhen load) => Measure(path, load, null, null);
 
     public static string ReadText(string path)
     {
@@ -112,7 +116,7 @@ public static partial class ContextBudget
     }
 
     /// <summary>Files named one of <paramref name="names"/> in sub-folders below <paramref name="start"/> (not start itself), skipping hidden and build folders.</summary>
-    public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names, int depth = 3)
+    public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names, int depth)
     {
         if (depth == 0)
         {
@@ -145,6 +149,8 @@ public static partial class ContextBudget
             }
         }
     }
+
+    public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names) => Below(start, names, 3);
 
     /// <summary>Markdown files under a folder (any depth), sorted.</summary>
     public static List<string> FilesIn(string dir, string pattern) =>
@@ -190,7 +196,7 @@ public static partial class ContextBudget
     /// Adds the files <paramref name="file"/> imports (recursively, up to <paramref name="maxHops"/>) as <see cref="LoadWhen.Imported"/>,
     /// with findings for missing files, cycles, too deep chains and imports from outside <paramref name="project"/>.
     /// </summary>
-    public static void AddImports(string file, string home, string? project, int maxHops, List<ContextFile> files, List<Finding> findings, HashSet<string> seen, int hop = 1)
+    public static void AddImports(string file, string home, string? project, int maxHops, List<ContextFile> files, List<Finding> findings, HashSet<string> seen, int hop)
     {
         foreach (var imp in Imports(ReadText(file)))
         {
@@ -218,4 +224,6 @@ public static partial class ContextBudget
             AddImports(target, home, project, maxHops, files, findings, seen, hop + 1);
         }
     }
+
+    public static void AddImports(string file, string home, string? project, int maxHops, List<ContextFile> files, List<Finding> findings, HashSet<string> seen) => AddImports(file, home, project, maxHops, files, findings, seen, 1);
 }

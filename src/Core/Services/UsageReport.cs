@@ -33,7 +33,7 @@ public record AppUsage(AppDefinition App, UsageResult Result)
 public static class UsageReport
 {
     /// <param name="since">Only usage from this day on; DateTime.MinValue = all.</param>
-    public static List<AppUsage> Compute(IEnumerable<AppDefinition> defs, IReadOnlyList<string> projects, DateTime since, CancellationToken ct = default)
+    public static List<AppUsage> Compute(IEnumerable<AppDefinition> defs, IReadOnlyList<string> projects, DateTime since, CancellationToken ct)
     {
         var res = new List<AppUsage>();
         foreach (var d in defs.Where(UsageStats.Supports))
@@ -48,4 +48,6 @@ public static class UsageReport
 
         return [.. res.OrderByDescending(a => a.Tokens)];
     }
+
+    public static List<AppUsage> Compute(IEnumerable<AppDefinition> defs, IReadOnlyList<string> projects, DateTime since) => Compute(defs, projects, since, default);
 }

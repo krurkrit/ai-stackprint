@@ -15,7 +15,7 @@ public static partial class DataImport
     /// Writes <paramref name="plan"/>: each file it changes is copied to <c>backups/import-&lt;time&gt;/</c> first. <paramref name="moved"/> gives a new folder for a
     /// missing project (one not in it is skipped). Returns the backup folder, or null when nothing was written.
     /// </summary>
-    public static string? Apply(ImportPlan plan, DataFiles f, IReadOnlyDictionary<string, string> moved, DateTime now, JsonObject? modelSource = null)
+    public static string? Apply(ImportPlan plan, DataFiles f, IReadOnlyDictionary<string, string> moved, DateTime now, JsonObject? modelSource)
     {
         var parts = plan.Changes.Select(c => c.Part).Aggregate(DataParts.None, (a, b) => a | b) | (moved.Count > 0 ? DataParts.Projects : DataParts.None);
         if (parts == DataParts.None)
@@ -100,4 +100,6 @@ public static partial class DataImport
 
         return backup;
     }
+
+    public static string? Apply(ImportPlan plan, DataFiles f, IReadOnlyDictionary<string, string> moved, DateTime now) => Apply(plan, f, moved, now, null);
 }

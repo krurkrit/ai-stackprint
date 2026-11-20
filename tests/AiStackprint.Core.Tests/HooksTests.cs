@@ -125,10 +125,10 @@ public sealed class HooksTests : IDisposable
     {
         var file = Path.Combine(_tmp, "last-scan.json");
         var settings = Write("home/.claude/settings.json", """{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "echo one" } ] } ] } }""");
-        ScanDiff.Update([], file, hooks: Hooks.Read([Config(settings, "Settings", "User")], Home));
+        ScanDiff.Update([], file, null, Hooks.Read([Config(settings, "Settings", "User")], Home));
         File.WriteAllText(settings, """{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "echo two" } ] } ], "Start": [ { "command": "x" } ] } }""");
 
-        var changes = ScanDiff.Update([], file, hooks: Hooks.Read([Config(settings, "Settings", "User")], Home)).Changes;
+        var changes = ScanDiff.Update([], file, null, Hooks.Read([Config(settings, "Settings", "User")], Home)).Changes;
 
         Assert.Contains(changes, c => (c.What, c.Kind, c.Name, c.Detail) == ("Edited", "Hook", "Stop", "command changed"));
         Assert.Contains(changes, c => (c.What, c.Kind, c.Name) == ("Added", "Hook", "Start"));

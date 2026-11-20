@@ -42,12 +42,12 @@ public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bo
 /// <summary>Usage per app from session logs. Buckets per file are cached by path + size + time, so re-opening is instant and the cache stays small.</summary>
 public static partial class UsageStats
 {
-    /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live"/>).</summary>
+    /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/>).</summary>
     private sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
 
     private static readonly ConcurrentDictionary<(string, long, long, string), Parsed> _cache = new();
 
-    /// <summary>The file's usage, read only when it is new or changed; <see cref="Compute"/> and <see cref="Live"/> share it, so a page reads each log once.</summary>
+    /// <summary>The file's usage, read only when it is new or changed; <see cref="Compute(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/> and <see cref="Live(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/> share it, so a page reads each log once.</summary>
     private static Parsed Read(LogFile f, ILogParser parser)
     {
         if (_cache.Count > 2000)
@@ -68,7 +68,7 @@ public static partial class UsageStats
     public static bool Supports(AppDefinition d) => d.Logs.Concat(d.Usage).Any(l => LogParsers.Find(l.Format) != null);
 
     /// <param name="since">Only usage from this day on; DateTime.MinValue = all.</param>
-    public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct = default)
+    public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since, CancellationToken ct)
     {
         var first = DateOnly.FromDateTime(since);
         var all = new List<UsageBucket>();
@@ -108,8 +108,10 @@ public static partial class UsageStats
         return new(all, sessions, withParser, capped);
     }
 
+    public static UsageResult Compute(IReadOnlyList<LogFile> files, DateTime since) => Compute(files, since, default);
+
     /// <summary>Use in the last 5 hours and 7 days (exact, from event times), the current 5-hour block, and the latest limit readings.</summary>
-    public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct = default)
+    public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now, CancellationToken ct)
     {
         var withParser = files.Where(f => LogParsers.Find(f.Format) != null).ToList();
         var events = new List<UsageEvent>();
@@ -156,11 +158,13 @@ public static partial class UsageStats
             Sum(events.Where(e => e.Time >= now.AddHours(-5))), Sum(events), blockStart, block);
     }
 
+    public static UsageLive Live(IReadOnlyList<LogFile> files, DateTime now) => Live(files, now, default);
+
     /// <summary>
     /// The model the app used last: the last <c>"model"</c> value in the end of its newest log, else (no such value there) the model with the most
     /// replies on the last day of that log. Null when no log names one. Reads only the end of a file first: the newest log is often large and in use.
     /// </summary>
-    public static string? LastModel(IReadOnlyList<LogFile> files, CancellationToken ct = default)
+    public static string? LastModel(IReadOnlyList<LogFile> files, CancellationToken ct)
     {
         foreach (var f in files.Where(f => LogParsers.Find(f.Format) != null).OrderByDescending(f => f.Modified).Take(5))
         {
@@ -183,6 +187,8 @@ public static partial class UsageStats
         }
         return null;
     }
+
+    public static string? LastModel(IReadOnlyList<LogFile> files) => LastModel(files, default);
 
     private const int TailBytes = 256 * 1024;
 
@@ -222,9 +228,11 @@ public static partial class UsageStats
     }
 
     /// <summary>Per day, model and project, split by price tier (from <paramref name="table"/>'s thresholds), fast mode and US-only processing.</summary>
-    public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events, ModelTable? table = null) =>
+    public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events, ModelTable? table) =>
         [.. events.GroupBy(e => (Day: DateOnly.FromDateTime(e.Time), e.Model, e.Project, Tier: ModelCatalog.TierOf(e.Model, e.RequestInput, table), e.Fast, e.UsOnly))
             .Select(g => new UsageBucket(g.Key.Day, g.Key.Model, g.Key.Project, g.Sum(e => e.Input), g.Sum(e => e.Output), g.Sum(e => e.CacheRead), g.Sum(e => e.CacheWrite),
                 g.Sum(e => e.Reasoning), g.Count(), g.Count(e => e.SubAgent), g.All(e => e.Cost != null) ? g.Sum(e => e.Cost!.Value) : null,
                 g.Sum(e => e.CacheWrite1h), g.Key.Tier, g.Key.Fast, g.Key.UsOnly, g.Sum(e => e.WebSearches)))];
+
+    public static List<UsageBucket> Bucket(IEnumerable<UsageEvent> events) => Bucket(events, null);
 }

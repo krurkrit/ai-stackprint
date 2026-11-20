@@ -25,7 +25,7 @@ public static class ConfigEditor
 
     public static bool CanEdit(string path) => File.Exists(path) && new FileInfo(path).Length <= MaxEditBytes;
 
-    /// <summary>File text plus the stamp to pass back to <see cref="Save"/>.</summary>
+    /// <summary>File text plus the stamp to pass back to <see cref="Save(string, string, Stamp, string)"/>.</summary>
     public static (string Text, Stamp Stamp) Read(string path)
     {
         var stamp = StampOf(path);
@@ -55,7 +55,7 @@ public static class ConfigEditor
     }
 
     /// <summary>Validates, checks the file is unchanged since <paramref name="opened"/>, copies the original to BackupRoot/timestamp/, then writes. Returns the backup path.</summary>
-    public static string Save(string path, string text, Stamp opened, string? backupRoot = null)
+    public static string Save(string path, string text, Stamp opened, string? backupRoot)
     {
         if (Validate(path, text) is { } error)
         {
@@ -73,6 +73,8 @@ public static class ConfigEditor
         File.WriteAllText(path, text, new UTF8Encoding(HasBom(path)));   // keep the original's BOM choice
         return backup;
     }
+
+    public static string Save(string path, string text, Stamp opened) => Save(path, text, opened, null);
 
     /// <summary>Writes a new file (and its folder); refuses when it exists. Returns nothing to back up.</summary>
     public static void Create(string path, string text)

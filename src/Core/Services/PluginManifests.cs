@@ -33,11 +33,13 @@ public static partial class PluginManifests
     };
 
     /// <summary>The first manifest of <paramref name="manifests"/> found in <paramref name="folder"/>, or null.</summary>
-    public static string? Find(string folder, IReadOnlyList<string>? manifests = null) =>
+    public static string? Find(string folder, IReadOnlyList<string>? manifests) =>
         (manifests is { Count: > 0 } ? manifests : Known).Select(m => Path.Combine(folder, m.Replace('/', Path.DirectorySeparatorChar))).FirstOrDefault(File.Exists);
 
+    public static string? Find(string folder) => Find(folder, null);
+
     /// <summary>The plugin in <paramref name="folder"/>: its manifest when it has one, and what it adds (<see cref="PluginParts"/>) either way.</summary>
-    public static PluginManifest Read(string folder, IReadOnlyList<string>? manifests = null)
+    public static PluginManifest Read(string folder, IReadOnlyList<string>? manifests)
     {
         var file = folder == "" ? null : Find(folder, manifests);
         try
@@ -55,6 +57,8 @@ public static partial class PluginManifests
             return new("", null, [], PluginParts.Find(folder, null));
         }
     }
+
+    public static PluginManifest Read(string folder) => Read(folder, null);
 
     private static PluginManifest Json(string folder, string file)
     {
@@ -126,8 +130,8 @@ public static partial class PluginManifests
     /// </summary>
     /// <param name="id">The app's own id for it (name@marketplace); otherwise the manifest's name, then the folder's.</param>
     /// <param name="read">Its manifest when the caller has read it already.</param>
-    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id = null, IReadOnlyList<string>? manifests = null,
-        string? scope = null, bool bundled = false, string? version = null, PluginManifest? read = null)
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id, IReadOnlyList<string>? manifests,
+        string? scope, bool bundled, string? version, PluginManifest? read)
     {
         var m = read ?? Read(folder, manifests ?? ctx.Source?.Manifests);
         var name = id ?? m.Name ?? Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar));
@@ -163,6 +167,18 @@ public static partial class PluginManifests
         PluginContents.Add(rows, folder, m, new(ctx.App, ctx.Level, ctx.Project, name));
         return item;
     }
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id, IReadOnlyList<string>? manifests, string? scope, bool bundled, string? version) => Add(rows, ctx, folder, id, manifests, scope, bundled, version, null);
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id, IReadOnlyList<string>? manifests, string? scope, bool bundled) => Add(rows, ctx, folder, id, manifests, scope, bundled, null, null);
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id, IReadOnlyList<string>? manifests, string? scope) => Add(rows, ctx, folder, id, manifests, scope, false, null, null);
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id, IReadOnlyList<string>? manifests) => Add(rows, ctx, folder, id, manifests, null, false, null, null);
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder, string? id) => Add(rows, ctx, folder, id, null, null, false, null, null);
+
+    public static Item Add(List<Item> rows, PluginContext ctx, string folder) => Add(rows, ctx, folder, null, null, null, false, null, null);
 
     [GeneratedRegex(@"^([A-Za-z_][\w-]*):\s*(\S.*)$")]
     private static partial Regex YamlLine();

@@ -93,7 +93,7 @@ public sealed partial class FontRuleSet(Dictionary<string, FontRule> rules)
     }
 
     /// <summary>The nearest allowed weight; on a tie it goes the way of <paramref name="direction"/> (the sign of an offset; 0 goes up).</summary>
-    public int FitWeight(string key, double value, int direction = 0)
+    public int FitWeight(string key, double value, int direction)
     {
         var all = Weights(key);
         var best = all[0];
@@ -109,6 +109,8 @@ public sealed partial class FontRuleSet(Dictionary<string, FontRule> rules)
 
         return best;
     }
+
+    public int FitWeight(string key, double value) => FitWeight(key, value, 0);
 
     /// <summary>Family, size and weight of this setting; every part fitted to its own limits. Follows parents; a loop is cut where it comes back.</summary>
     public ResolvedFont Resolve(string key) => ResolveCore(key, []);
