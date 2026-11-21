@@ -10,20 +10,20 @@ namespace AiStackprint.Core.Tests;
 /// <summary>The graph beside the conversation: where each sub-agent branches off, runs and rejoins, and which lane it is drawn in.</summary>
 public sealed class SessionGraphTests
 {
-    private static LogEntry Main(string text = "m") => new("assistant", text, null, false);
+    private static LogEntry Step(string text = "m") => new("assistant", text, null, false);
 
     private static LogEntry Sub(string? agent) => new("tool", "s", null, true, Agent: agent);
 
     [Fact]
     public void A_session_without_sub_agents_has_no_graph()
     {
-        Assert.Null(SessionGraph.Layout([Main(), Main()]));
+        Assert.Null(SessionGraph.Layout([Step(), Step()]));
     }
 
     [Fact]
     public void An_agent_branches_off_the_step_before_and_rejoins_at_the_step_after()
     {
-        var g = SessionGraph.Layout([Main(), Main(), Sub("a"), Sub("a"), Sub("a"), Main(), Main()])!;
+        var g = SessionGraph.Layout([Step(), Step(), Sub("a"), Sub("a"), Sub("a"), Step(), Step()])!;
         Assert.Equal(2, g.Lanes);
         Assert.Equal([new Branch(1, 1)], g.Rows[1].Forks);
         Assert.Equal([new Branch(1, 1)], g.Rows[5].Joins);
@@ -38,9 +38,9 @@ public sealed class SessionGraphTests
     public void Agents_running_together_get_lanes_side_by_side_and_a_lane_is_used_again_after_it_rejoins()
     {
         var g = SessionGraph.Layout([
-            Main(), Sub("a"), Sub("a"), Main(),                    // agent 1 alone
-            Main(), Sub("b"), Sub("c"), Sub("b"), Sub("c"), Main(), // agents 2 and 3 at the same time
-            Main()])!;
+            Step(), Sub("a"), Sub("a"), Step(),                    // agent 1 alone
+            Step(), Sub("b"), Sub("c"), Sub("b"), Sub("c"), Step(), // agents 2 and 3 at the same time
+            Step()])!;
         Assert.Equal(3, g.Lanes);
         Assert.Equal(1, g.Rows[1].Owner.Lane);
         Assert.Equal(1, g.Rows[5].Owner.Lane);   // agent 2 reuses lane 1
@@ -52,7 +52,7 @@ public sealed class SessionGraphTests
     [Fact]
     public void Steps_without_agent_ids_make_one_agent_per_unbroken_run()
     {
-        var g = SessionGraph.Layout([Main(), Sub(null), Sub(null), Main(), Sub(null), Main()])!;
+        var g = SessionGraph.Layout([Step(), Sub(null), Sub(null), Step(), Sub(null), Step()])!;
         Assert.Equal(["Main", "Agent 1", "Agent 2"], g.Agents);
         Assert.Equal(1, g.Lanes - 1);
     }
@@ -60,7 +60,7 @@ public sealed class SessionGraphTests
     [Fact]
     public void An_agent_still_running_at_the_end_has_no_join_and_one_with_an_id_shows_it()
     {
-        var g = SessionGraph.Layout([Main(), Sub("abcdef123456")])!;
+        var g = SessionGraph.Layout([Step(), Sub("abcdef123456")])!;
         Assert.Empty(g.Rows.SelectMany(r => r.Joins));
         Assert.Equal("Agent 1 · abcdef1", g.Agents[1]);
     }

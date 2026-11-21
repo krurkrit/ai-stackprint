@@ -65,7 +65,7 @@ internal sealed class AgentGraphCell : Control
 
         var owner = _row.Owner;
         var fill = owner.Agent > 0 ? Brush(AgentKey(owner.Agent)) : Brush(_kind == "user" ? W.Accent : _kind == "assistant" ? W.Text : W.Muted);
-        var r = _kind == "user" && owner.Agent == 0 ? Sizes.GraphNode + 1 : Sizes.GraphNode;
+        var r = owner.Agent == 0 && _kind == "user" ? Sizes.GraphNode + 1 : _kind is "tool" or "result" ? Sizes.GraphNode - 1 : Sizes.GraphNode;   // you: larger; tool calls and results: smaller
         context.DrawEllipse(fill, new Pen(Brush(W.Surface), Stroke.Medium), new Point(X(owner.Lane), y), r, r);
     }
 

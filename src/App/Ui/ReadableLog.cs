@@ -58,6 +58,12 @@ internal partial class ReadableLog
             _list.Children.Add(AgentGraph.Build(timeline));
         }
 
+        if (_graph != null)
+        {
+            _list.Margin = new Thickness(Space.XL, Space.XL, 0, Space.XL);   // the graph column runs to the right edge
+            _list.Children.Add(AgentLegend(_graph));
+        }
+
         if (s.Entries.Count > cap)
         {
             _list.Children.Add(Txt($"Showing the last {cap:N0} of {s.Entries.Count:N0} {(lines ? "lines" : "steps")}.", TextSize.Caption, false, Muted));
