@@ -6,7 +6,7 @@ namespace AiStackprint.Services;
 /// <summary>WCAG 2 contrast for colors given as 0xAARRGGBB. Translucent colors are blended over the background first.</summary>
 public static class Contrast
 {
-    /// <summary>Snowy Owl's minimum (stricter than WCAG AAA 7:1).</summary>
+    /// <summary>The app's minimum (stricter than WCAG AAA 7:1).</summary>
     public static readonly double Minimum = 7.1;
 
     public static double Ratio(uint fg, uint bg)

@@ -11,9 +11,12 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
+/// <summary>What the summary can do about sub-agents outside the part shown: load the stretch around the newest earlier one, or go back to the end of the session.</summary>
+internal sealed record AgentsNav(Action? Earlier, Action? Back);
+
 internal partial class ReadableLog
 {
-    private static WrapPanel Summary(Session s)
+    private static WrapPanel Summary(Session s, AgentsNav? nav)
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
@@ -29,9 +32,40 @@ internal partial class ReadableLog
             Add(Plural(s.Entries.Count(e => e.SubAgent), "sub-agent step"));
         }
 
+        if (s.AgentsBefore > 0)
+        {
+            Control chip = nav?.Earlier is { } earlier
+                ? Btn(Plural(s.AgentsBefore, "sub-agent") + " earlier: show", earlier, false, "link_arrow").With(b => b.Margin = new Thickness(0, 0, Space.M, Space.M))
+                : LogChip(Plural(s.AgentsBefore, "sub-agent") + " earlier");
+            ToolTip.SetTip(chip, "Their files are in the session's subagents folder; their steps come before the part of this long session that is shown. Show loads the part of the file around the newest of them.");
+            w.Children.Add(chip);
+        }
+
+        if (nav?.Back is { } back)
+        {
+            w.Children.Add(Btn("Back to the end", back, false, "arrow_reset").With(b => b.Margin = new Thickness(0, 0, Space.M, Space.M)));
+        }
+
         if (s.InputTokens + s.OutputTokens > 0)
         {
             Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
+        }
+
+        if (SessionExport.TouchedFiles(s.Entries) is { Count: > 0 } files)
+        {
+            var chip = LogChip(Plural(files.Count, "file") + " changed");
+            ToolTip.SetTip(chip, string.Join("\n", files.Take(20)) + (files.Count > 20 ? $"\n… and {files.Count - 20} more" : ""));
+            w.Children.Add(chip);
+        }
+
+        if (s.Entries.Where(e => e.Usage != null).Select(e => ModelCatalog.Cost(e.Usage!)).Where(c => c != null).Sum() is > 0 and var total)
+        {
+            Add("≈ " + StepMoney(total) + " estimated");
+        }
+
+        if (s.Entries.Count(e => e.IsError) is > 0 and var failed)
+        {
+            w.Children.Add(Chip(Plural(failed, "failed result"), ErrorKey).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.M)));
         }
 
         if (PeakContext(s) is { } peak)
@@ -86,10 +120,11 @@ internal partial class ReadableLog
 
     private static Control Step(LogEntry e) => e.Role switch
     {
+        _ when LineLogs.IsLevel(e.Role) => LogLine(e),
         "user" => Message("person", "You", e, Selected, mine: true),
         "assistant" => Message("bot", "Assistant", e, Surface),
         "tool" => ToolCall(e),
-        "result" => Folded("Result" + (e.Tool != null ? $" · {e.Tool}" : ""), e.Text, e.Lang),
+        "result" => ResultCard(e),
         "thinking" => Folded("Thinking", e.Text, null, markdown: true),
         _ => Folded("Context", e.Text, null, markdown: true)
     };
@@ -126,3 +161,4 @@ internal partial class ReadableLog
             .Themed(Border.BackgroundProperty, bg);
     }
 }
+

@@ -21,7 +21,7 @@ internal partial class ModelsView
         if (!BenchmarksSection.Ready(x))
         {
             return Section("data_pie", "Benchmarks", Hint("Compare these models on intelligence, professional skills, speed and cost per task with scores from Artificial Analysis. Turn it on and save a free API key in Settings › Benchmarks.",
-                Btn("Open Settings", () => x.Go("Settings"), false, "settings")));
+                Btn("Open Settings", () => x.Go("Settings:Benchmarks"), false, "settings")));
         }
 
         var rows = BenchmarkStore.Load();

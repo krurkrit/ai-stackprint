@@ -48,8 +48,12 @@ internal partial class MainWindow
             Orientation = Orientation.Horizontal,
             Spacing = Space.XXS,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(mac ? MacButtons : Space.L, 0, 0, 0),   // macOS draws its window buttons on the left
-            Children = { menu, Title("AI Stackprint", TextSize.Small).With(t => t.Margin = new Thickness(Space.S, 0, Space.L, 0)), _backBtn, _forwardBtn }
+            Margin = new Thickness(mac ? MacButtons - Space.M : 0, 0, 0, 0),   // macOS draws its window buttons on the left (the bar's own padding is the rest)
+            Children = { menu, Txt("AI Stackprint", TextSize.Body).With(t =>
+            {
+                t.VerticalAlignment = VerticalAlignment.Center;
+                t.Margin = new Thickness(Space.S, 0, Space.L, 0);
+            }), _backBtn, _forwardBtn }
         };
         var search = Btn("Search · Ctrl+K", _palette.Open, false, "search").With(b =>
         {
@@ -57,6 +61,8 @@ internal partial class MainWindow
             b.Height = Sizes.CompactControl;
             b.Padding = new Thickness(Space.L, 0);
             b.Width = Widths.TitleSearch;
+            b.FontSize = Size(TextSize.Body);
+            b.FontWeight = Body;
             b.VerticalAlignment = VerticalAlignment.Center;   // shorter than the bar, like an input in it
             b.HorizontalContentAlignment = HorizontalAlignment.Left;
             b.Themed(BackgroundProperty, SideKey);
@@ -72,7 +78,6 @@ internal partial class MainWindow
         {
             Orientation = Orientation.Horizontal,
             Spacing = Space.XXS,
-            Margin = new Thickness(0, 0, Space.M, 0),
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Right
         };
@@ -103,8 +108,10 @@ internal partial class MainWindow
         {
             Height = TitleBarHeight,
             Child = row,
-            Background = Avalonia.Media.Brushes.Transparent
-        }.Themed(Border.BackgroundProperty, MainKey);
+            Padding = new Thickness(Space.M, 0),   // 8 px left and right
+            Background = Avalonia.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0, 0, 0, Stroke.Thin)
+        }.Themed(Border.BackgroundProperty, TopKey).Themed(Border.BorderBrushProperty, BorderKey);   // a line between the top bar and the sidebar
         // Drag and double-click handled here, not through Avalonia's title-bar role: with that role Windows took some button clicks as drags.
         // Buttons handle their own presses, so this only sees presses on the empty bar.
         bar.PointerPressed += (_, e) =>

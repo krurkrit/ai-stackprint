@@ -9,11 +9,25 @@ namespace AiStackprint.Services;
 /// One step of a session. Role: user | assistant | tool | result | thinking | system.
 /// Lang: file extension for syntax highlighting (".sh", ".json", ".cs"…); Detail: a tool call's full input.
 /// </summary>
-public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null);
+public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null)
+{
+    /// <summary>The line of the file this step comes from, counted from the first line the parser was given (1-based); 0 = unknown. Set while a parser reads <see cref="LogParsers.Json"/>.</summary>
+    public long Line { get; init; } = LogParsers.CurrentLine;
+
+    /// <summary>The tokens (and so the cost) of the reply this step starts, once per reply; null when the log has none (not every format records them).</summary>
+    public UsageEvent? Usage { get; init; }
+
+    /// <summary>The app marked this step as failed (a tool result with <c>is_error</c>); only formats that say so set it.</summary>
+    public bool Error { get; init; }
+
+    /// <summary>A failed tool result, or a line of a text log at the error level.</summary>
+    public bool IsError => Error || Role == "error";
+}
 
 /// <param name="PeakContext">The largest request of the main conversation (input + cache read + cache write): how full its context got; 0 = unknown.</param>
 /// <param name="ContextWindow">The window the log states (Codex <c>model_context_window</c>); 0 = take it from the model data.</param>
-public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End, long PeakContext = 0, long ContextWindow = 0);
+/// <param name="AgentsBefore">Sub-agent files whose steps all come before the part of the session that was read (the session was cut to its end): they are not shown.</param>
+public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End, long PeakContext = 0, long ContextWindow = 0, int AgentsBefore = 0);
 
 /// <summary>A session's counts for the Logs summary: prompts (user steps), tool calls, sub-agent steps, tokens, calls per tool, models.</summary>
 public sealed record SessionCounts(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, HashSet<string> Models)
@@ -47,6 +61,10 @@ public interface ILogParser
 
 public static class LogParsers
 {
+    /// <summary>The number of the line <see cref="Json"/> is handing out (per thread: a parse runs on one thread); 0 outside a parse.</summary>
+    [ThreadStatic]
+    internal static long CurrentLine;
+
     private static readonly ILogParser[] _all = [new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage()];
     public static ILogParser? Find(string? format) => format == null ? null : _all.FirstOrDefault(p => p.Format == format);
 
@@ -58,8 +76,10 @@ public static class LogParsers
     internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, params string[] needs)
     {
         var keys = needs.Select(System.Text.Encoding.UTF8.GetBytes).ToArray();
+        long n = 0;
         foreach (var l in lines)
         {
+            n++;
             if (l.Span.IndexOfAnyExcept(" \t\r"u8) < 0 || (keys.Length > 0 && !Any(l.Span, keys)))
             {
                 continue;
@@ -70,7 +90,9 @@ public static class LogParsers
             catch (JsonException) { continue; }
             using (d)
             {
+                CurrentLine = n;   // steps made while this line is handled get its number (new LogEntry reads it)
                 yield return d.RootElement;
+                CurrentLine = 0;
             }
         }
     }
@@ -149,6 +171,11 @@ public static class LogParsers
             }
             catch (JsonException) { return new("tool", Cut(input.GetString()!, 300), time, sub, name, ".txt", input.GetString()); }
         }
+        if (EditDiff(name, input) is { } diff)
+        {
+            return new("tool", Summary(input), time, sub, name, ".diff", diff);   // an edit shows what changed
+        }
+
         var shell = _shells.Contains(name.ToLowerInvariant());
         var cmd = input.Get("command");
         var detail = shell && cmd.ValueKind != JsonValueKind.Undefined
@@ -156,6 +183,32 @@ public static class LogParsers
             : input.ValueKind == JsonValueKind.Undefined ? "" : JsonSerializer.Serialize(input, _pretty);
         return new("tool", Summary(input), time, sub, name, shell ? ".sh" : ".json", detail);
     }
+
+    /// <summary>Claude's Edit, MultiEdit and Write calls as a diff (old lines with -, new lines with +); null for any other call.</summary>
+    private static string? EditDiff(string name, JsonElement input)
+    {
+        var path = input.Str("file_path");
+        if (path == "")
+        {
+            return null;
+        }
+
+        static string Change(string oldText, string newText) =>
+            Lines("-", oldText) + Lines("+", newText);
+
+        var body = name switch
+        {
+            "Edit" => "@@\n" + Change(input.Str("old_string"), input.Str("new_string")),
+            "Write" => "@@ new content\n" + Change("", input.Str("content")),
+            "MultiEdit" when input.Get("edits") is { ValueKind: JsonValueKind.Array } edits =>
+                string.Concat(edits.EnumerateArray().Select(x => "@@\n" + Change(x.Str("old_string"), x.Str("new_string")))),
+            _ => null
+        };
+        return body == null ? null : $"--- {path}\n+++ {path}\n" + Cut(body, 20000);
+    }
+
+    private static string Lines(string mark, string text) =>
+        text == "" ? "" : string.Concat(text.TrimEnd('\n').Split('\n').Select(l => mark + l.TrimEnd('\r') + "\n"));
 
     private static readonly JsonSerializerOptions _pretty = new()
     {

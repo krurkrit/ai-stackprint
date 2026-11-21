@@ -53,6 +53,12 @@ internal partial class LogViewer
         _jumps.Clear();
         _at = -1;
         _count = null;
+        if (AllFiles && !string.IsNullOrEmpty(_query.Text))
+        {
+            await SearchAllAsync();
+            return;
+        }
+
         var p = Pattern();
         if (p == null || _file == null)
         {
@@ -147,15 +153,28 @@ internal partial class LogViewer
         return LogSearch.Snippet(line, first.Start, first.Length);
     }
 
+    /// <summary>The x on the results: hides them (a search still running is stopped); the words stay in the box.</summary>
+    private void CloseResults()
+    {
+        _search?.Cancel();
+        _hits.Clear();
+        _jumps.Clear();
+        _at = -1;
+        _count = null;
+        _results.Content = null;
+    }
+
     /// <summary>The results header: how many, then "3 of 120" once Enter or a click has gone to one.</summary>
     private TextBlock Count(string total) => _count = Txt(total, TextSize.Caption, true).With(t => t.Tag = total);
 
-    private static Border Panel(Control head, IEnumerable<Control>? rows = null)
+    private Border Panel(Control head, IEnumerable<Control>? rows = null)
     {
+        var close = IconBtn("dismiss", "Close the results (the search words stay; change them or an option to search again)", CloseResults);
+        DockPanel.SetDock(close, Dock.Right);
         var sp = new StackPanel
         {
             Spacing = Space.XXS,
-            Children = { head.With(h => h.Margin = new Thickness(Space.XS, 0, 0, Space.S)) }
+            Children = { new DockPanel { Margin = new Thickness(Space.XS, 0, 0, Space.S), Children = { close, head } } }
         };
         if (rows != null)
         {

@@ -4,6 +4,7 @@
 using AiStackprint.Ui;
 
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -61,7 +62,7 @@ public sealed class MainWindowTests : IDisposable
         foreach (var (label, title) in new[]
         {
             ("Apps", "Apps"), ("Plugins", "Plugins"), ("Skills", "Skills"), ("Commands & Agents", "Commands & Agents"), ("Servers", "Servers"), ("Hooks", "Hooks"),
-            ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health"), ("Settings", "Settings"), ("Dashboard", "Dashboard"),
+            ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health"), ("Settings", "Appearance"), ("Back to app", "Health"), ("Dashboard", "Dashboard"),
         })
         {
             Ui.Click(Nav(w, label));
@@ -136,8 +137,8 @@ public sealed class MainWindowTests : IDisposable
 
         Ui.Click(Nav(w, "Logs"));
         Settle(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Contains("session.jsonl"));
-        Ui.ClickText(w, "session.jsonl");
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session.jsonl", StringComparison.Ordinal));
         Settle(w);
         Assert.Contains("Hi there", Ui.Texts(w));
         Press(w, "Raw", "Readable", "Aa", ".*", "Follow newest");
@@ -157,13 +158,37 @@ public sealed class MainWindowTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void The_view_switch_has_Raw_Conversation_and_Compact_and_each_shows_the_session()
+    {
+        var w = Open();
+        Ui.Click(Nav(w, "Logs"));
+        Settle(w);
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session.jsonl", StringComparison.Ordinal));
+        Settle(w);
+        ToggleButton Mode(string name) => w.GetVisualDescendants().OfType<ToggleButton>().First(b => b.Content as string == name);
+        Assert.Contains("Hi there", Ui.Texts(w));   // Conversation (cards) is the default
+        Mode("Compact").IsChecked = true;
+        Settle(w);
+        Assert.Contains("Hi there", Ui.Texts(w));   // one line per step
+        Assert.True(Mode("Compact").IsChecked);
+        Mode("Raw").IsChecked = true;
+        Settle(w);
+        Assert.DoesNotContain("Hi there", Ui.Texts(w));   // the file as written is code, not text blocks
+        Mode("Conversation").IsChecked = true;
+        Settle(w);
+        Assert.Contains("Hi there", Ui.Texts(w));
+        w.Close();
+    }
+
+    [AvaloniaFact]
     public void A_long_session_shows_steps_sub_agents_results_and_answers_a_search()
     {
         var w = Open();
         Ui.Click(Nav(w, "Logs"));
         Settle(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Contains("session2.jsonl"));
-        Ui.ClickText(w, "session2.jsonl");
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session2.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session2.jsonl", StringComparison.Ordinal));
         Settle(w);
         Assert.Contains("All done.", Ui.Texts(w));
         Assert.Contains(Ui.Texts(w), t => t.StartsWith("Sub-agents", StringComparison.Ordinal) || t == "Sub-agents");

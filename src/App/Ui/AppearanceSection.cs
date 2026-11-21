@@ -148,7 +148,7 @@ internal static class AppearanceSection
         var colors = new StackPanel
         {
             Spacing = Space.M,
-            Children = { Title("Colors", TextSize.Body), Txt("Empty = Snowy Owl default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", TextSize.Caption, false, Muted),
+            Children = { Title("Colors", TextSize.Body), Txt("Empty = default (shown grayed). Type #RRGGBB, or click the swatch to pick; opacity is separate.", TextSize.Caption, false, Muted),
             ColorSettings.Build(st, Change) }
         };
         return Section("text_font", "Appearance", new StackPanel

@@ -22,7 +22,7 @@
   "logLineNumbers": false,           // logs only; the config editor always shows them
   "fadeSeconds": 10,                 // new log lines stay highlighted this long; 0 = off
   "virtualListRows": 40,             // a list with more rows than this builds only the rows on screen (less memory and time); 0 = every list does
-  "light": {},                       // color overrides (accent, hover, selection, levels) as hex; empty: Snowy Owl
+  "light": {},                       // color overrides (accent, hover, selection, levels) as hex; empty: the app default
   "dark": {},
 
   // Network (each is off until you turn it on)

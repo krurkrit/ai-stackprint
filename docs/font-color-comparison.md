@@ -20,7 +20,7 @@ Format: `family size weight / color`. Colors are `light | dark` where they diffe
 | Side menu background | `#DEE2E6` \| `#2E3035` | bg2 `#FAFAFA` \| `#1F1F1F` | surface container `#F3EDF7` \| `#211F26` |
 | Border / divider | text at 16% \| 24% (`#D9DADC` \| `#4E4F51`) | stroke2 `#E0E0E0` \| `#525252`; stroke1 `#D1D1D1` \| `#666666` | outline-variant `#CAC4D0` \| `#49454F`; outline `#79747E` \| `#938F99` |
 | Error | `#A52834` \| text `#F28B95` | danger fg `#B10E1C` \| `#DC626D` | error `#B3261E` \| `#F2B8B5` |
-| Success | `#12633D` \| `#5FCB94` | success fg `#107C10` \| `#54B054` | no role (custom) |
+| Success | `#0F7B0F` \| `#6CCB5F` | success fg `#107C10` \| `#54B054` | no role (custom) |
 | Warning | `#8A3F00` \| `#FFC107` | warning fg `#BC4B09` \| `#FDCFB4` | no role (custom) |
 
 ## By place
@@ -52,7 +52,7 @@ Format: `family size weight / color`. Colors are `light | dark` where they diffe
 | Apps, Skills, Plugins, Models | Row hover / selected | `#34383C` at 8% \| `#F8F9FA` at 10%; selected accent at 12% \| 14% | bg1 hover `#F5F5F5`; selected `#EBEBEB` | state layer on-surface 8%; selected secondary-container `#E8DEF8` |
 | Dashboard | Chart axis ticks | Inter 10 400 / muted | Segoe UI 10 (Caption 2) 400 / fg3 | Roboto 11 (Label S) 500 / on-surface-variant |
 | Dashboard | Chart legend | Inter 12 400 / muted | Segoe UI 12 400 / fg2 | Roboto 12 (Label M) 500 / on-surface-variant |
-| Dashboard | Chart series | accent, `#D1590E` \| `#74A8F4`, `#12633D` \| `#5FCB94`, `#7A8087` \| `#9AA0A6` | categorical palette (brand, then 8 hues) | primary, secondary `#625B71`, tertiary `#7D5260`, outline |
+| Dashboard | Chart series | accent, `#D1590E` \| `#74A8F4`, `#0F7B0F` \| `#6CCB5F`, `#7A8087` \| `#9AA0A6` | categorical palette (brand, then 8 hues) | primary, secondary `#625B71`, tertiary `#7D5260`, outline |
 | Logs, Config | Logs, code, config editor | JetBrains Mono 14 400 / text; syntax colors from TextMate | Cascadia Mono 14 400 / fg1 | Roboto Mono 14 400 / on-surface |
 | All | Paths, commands in views | JetBrains Mono 12 400 (names 500) / text or muted | Cascadia Mono 12 400 / fg1 | Roboto Mono 12 400 / on-surface |
 | Settings | Setting label and hint | Inter 14 400 / text; hint 12 muted | Segoe UI 14 400 (label 600) / fg1; hint 12 fg3 | Roboto 16 (Body L) 400 / on-surface; supporting 14 on-surface-variant |

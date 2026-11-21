@@ -15,6 +15,8 @@ internal class CodexSessionParser : ILogParser
         var list = new List<LogEntry>();
         var models = new HashSet<string>();
         long inTok = 0, outTok = 0, peak = 0, window = 0;
+        var model = "";
+        var firstSince = 0;   // the steps since the last token count are the reply it counts
         foreach (var e in LogParsers.Json(lines))
         {
             var p = e.Get("payload");
@@ -23,15 +25,32 @@ internal class CodexSessionParser : ILogParser
             {
                 case "turn_context" when p.Str("model") != "":
                     models.Add(p.Str("model"));
+                    model = p.Str("model");
                     break;
                 case "event_msg" when p.Str("type") == "token_count":
                     var info = p.Get("info");
                     var total = info.Get("total_token_usage");   // cumulative: keep the latest
+                    var grew = total.ValueKind == JsonValueKind.Object && (total.Num("input_tokens") != inTok || total.Num("output_tokens") != outTok);   // the same count is written again: not a new reply
                     if (total.ValueKind == JsonValueKind.Object)
                     {
                         inTok = total.Num("input_tokens");
                         outTok = total.Num("output_tokens");
                     }
+
+                    if (grew && info.Get("last_token_usage") is { ValueKind: JsonValueKind.Object } last && time is { } at)
+                    {
+                        var at1 = list.FindIndex(firstSince, x => x.Role is "assistant" or "thinking" or "tool");
+                        if (at1 >= 0)
+                        {
+                            long cached = last.Num("cached_input_tokens");
+                            list[at1] = list[at1] with
+                            {
+                                Usage = new(at, model == "" ? "codex" : model, "", Math.Max(0, last.Num("input_tokens") - cached), last.Num("output_tokens"), cached, 0, last.Num("reasoning_output_tokens"), false)
+                            };
+                        }
+                    }
+
+                    firstSince = list.Count;
                     peak = Math.Max(peak, info.Get("last_token_usage").Num("input_tokens"));   // one reply's input, cached part included
                     window = info.Num("model_context_window") is > 0 and var w ? w : window;
                     break;

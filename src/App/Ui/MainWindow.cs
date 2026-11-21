@@ -35,6 +35,7 @@ internal partial class MainWindow : Window
     private readonly LogsView _logs;
     private string _view = "Dashboard";
     private bool _navOpen = true, _wasLogs, _scanning, _scanned;
+    private readonly Border _frame = null!;
 
     public MainWindow()
     {
@@ -85,13 +86,14 @@ internal partial class MainWindow : Window
             Width = OpenWidth,
             ClipToBounds = true,
             Padding = new Thickness(Space.L, Space.L),
+            BorderThickness = new Thickness(0, 0, Stroke.Thin, 0),   // a line between the side menu and the page
             Transitions = [new DoubleTransition
             {
                 Property = WidthProperty,
                 Duration = TimeSpan.FromMilliseconds(160),
                 Easing = new CubicEaseOut()
             }]
-        }.Themed(Border.BackgroundProperty, SideKey);
+        }.Themed(Border.BackgroundProperty, SideKey).Themed(Border.BorderBrushProperty, BorderKey);
         var main = new DockPanel();
         main.Children.Add(_body);
         var root = new Grid
@@ -121,7 +123,20 @@ internal partial class MainWindow : Window
         Grid.SetRowSpan(_overlay, 2);
         root.Children.Add(Toast.Host);
         root.Children.Add(_overlay);
-        Content = root;
+        _frame = new Border
+        {
+            BorderThickness = new Thickness(Stroke.Thin),
+            Child = root
+        }.Themed(Border.BorderBrushProperty, BorderKey);   // a square 1 px line around the whole window
+        Content = _frame;
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == WindowStateProperty || e.Property == OffScreenMarginProperty)
+            {
+                FitFrame();
+            }
+        };
+        FitFrame();
         _body.Content = DashboardView.Loading(out var status);
         _status = status;   // the first scan: the dashboard's controls, each card with the loading icon
         Keys();
@@ -136,6 +151,9 @@ internal partial class MainWindow : Window
             Scan();
         };
     }
+
+    /// <summary>The line stays inside the screen when the window is maximized (Windows draws a maximized window a few pixels beyond the screen edge).</summary>
+    private void FitFrame() => _frame.Margin = WindowState == WindowState.Maximized ? OffScreenMargin : new Thickness(0);
 
     private void CopyMenu(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
     {

@@ -26,8 +26,9 @@ internal static partial class Theme
             [W.Surface] = B(C(p.Surface)),
             [W.SideKey] = B(C(p.Side)),
             [W.MainKey] = B(C(p.Main)),
+            [W.TopKey] = B(C(p.Top)),
             [W.Muted] = B(A(fg, p.MutedAlpha)),
-            [W.BorderKey] = B(A(fg, p.DividerAlpha)),
+            [W.BorderKey] = B(p.Border == null ? A(fg, p.DividerAlpha) : C(p.Border)),   // dark: a solid line
             [W.Subtle] = B(hover),
             [W.Selected] = B(A(primary, p.SelectedAlpha)),
             [W.Accent] = B(primary),
@@ -42,9 +43,8 @@ internal static partial class Theme
             [W.ErrorPressed] = B(Shade(C(Error), Colors.White, .28)),
             [W.WarningKey] = B(Status(p == _dark).Warning),
             [W.SuccessKey] = B(Status(p == _dark).Success),
-            // Status outline (Snowy Owl report style): success border, tinted fill; dark theme keeps normal text for contrast
-            [W.SuccessText] = B(p == _dark ? fg : C(Success)),
-            [W.SuccessFill] = B(A(Status(p == _dark).Success, .12)),
+            // The "Installed" status: plain green text, no pill (dark theme #6CCB5F, light theme the darker green)
+            [W.SuccessText] = B(Status(p == _dark).Success),
             // Chart series: four hues that differ in both themes (accent, then orange or light blue, green, gray)
             [W.ChartIn] = B(primary),   // first series follows the accent
             [W.ChartOut] = B(Series(p == _dark)[1]),
@@ -115,14 +115,23 @@ internal static partial class Theme
         d["CalendarDatePickerBorderBrushPressed"] = d[W.Accent];
         d["ComboBoxBorderBrushPointerOver"] = d[W.Accent];
         d["ComboBoxBorderBrushPressed"] = d[W.Accent];
-        // Fluent accent buttons default to white text; Snowy Owl pairs each accent with its own text color.
+        // Fluent accent buttons default to white text; each accent here has its own text color.
         foreach (var k in new[] { "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed" })
         {
             d[k] = B(onPrimary);
         }
-        // Accent hover and pressed: darker or lighter, away from the text color, so the text never loses contrast (Fluent's own hover could drop below 4.5:1)
-        d["AccentButtonBackgroundPointerOver"] = B(Shade(primary, onPrimary, .15));
-        d["AccentButtonBackgroundPressed"] = B(Shade(primary, onPrimary, .28));
+        // The accent button and the checked check box are always the color a side menu item shows under the pointer (the accent, a little away from the text color: the text never loses contrast)
+        var fill = B(Shade(primary, onPrimary, .15));
+        var pressed = B(Shade(primary, onPrimary, .28));
+        d["AccentButtonBackground"] = fill;
+        d["AccentButtonBackgroundPointerOver"] = fill;
+        d["AccentButtonBackgroundPressed"] = pressed;
+        foreach (var (s, brush) in new[] { ("", fill), ("PointerOver", fill), ("Pressed", pressed) })
+        {
+            d["CheckBoxCheckBackgroundFillChecked" + s] = brush;
+            d["CheckBoxCheckBackgroundStrokeChecked" + s] = brush;
+            d["CheckBoxCheckGlyphForegroundChecked" + s] = B(onPrimary);   // the check mark has the accent button's text color
+        }
         return d;
     }
 
@@ -152,12 +161,12 @@ internal static partial class Theme
 
     /// <summary>Status colors for text, icons and bars on a theme (each at least 4.5:1 on the card and main backgrounds).</summary>
     public static (Color Error, Color Warning, Color Success, Color Background, Color Main) Status(bool dark) => dark
-        ? (C(ErrorDark), C(Warning), C(SuccessDark), C(DarkBlack), C(DarkMain))
+        ? (C(ErrorDark), C(Warning), C(SuccessDark), C(DarkCard), C(DarkMain))
         : (C(Error), C(OrangeLight), C(Success), C(White), C(LightMain));
 
     /// <summary>Chart series after the accent: [0] is the default accent, then output, cache write, cache read. Dark output is blue because the dark accent is orange.</summary>
     public static Color[] Series(bool dark) => dark
-        ? [C(OrangeAccent), C(BlueDark), C("#5FCB94"), C("#9AA0A6")]
+        ? [C(OrangeAccent), C(BlueDark), C("#6CCB5F"), C("#9AA0A6")]
         : [C(BlueLight), C("#D1590E"), C(Success), C("#7A8087")];
 
     /// <summary>Accent fill for hover/pressed: the accent moved away from its text color.</summary>

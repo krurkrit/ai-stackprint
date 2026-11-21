@@ -37,20 +37,32 @@ internal partial class LogViewer
         var id = ++_loadId;
         var readable = ShowReadable;
         _view.Content = Busy.Loading("Reading the log…");
-        var r = await Task.Run(() => ReadFile(f, readable), CancellationToken.None);
+        var around = _agentsFrom;
+        var r = await Task.Run(() => ReadFile(f, readable, around), CancellationToken.None);
         if (id != _loadId || _file != f)
         {
             return;   // another file was opened, or the page was left, while this one was read
         }
 
         _readSize = r.Bytes;
-        _status.Text = r.Problem ?? (r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "");
+        _linesOk = !r.Cut;
+        ReadMarks();   // a file cut to its end: the steps' line numbers do not count from its first line
+        var window = around != null && r.Parsed != null && !r.Cut;   // ReadAround returns a whole-file read; a null from it falls back to the cut end
+        _status.Text = r.Problem ?? (r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : window ? "Showing the part of the session around sub-agents" : "");
         if (r.Problem != null)
         {
             _raw = "";
             _readable = null;
         }
-        else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd); }
+        else if (r.Parsed != null)
+        {
+            _agentsWindow = window;
+            _readable = new ReadableLog(r.Parsed, toEnd && !window, Compact && !IsLines, _marks, NavFor(r.Parsed));
+            if (window && r.Parsed.Entries.FirstOrDefault(e => e.SubAgent) is { } first)
+            {
+                _readable.Reveal(first);
+            }
+        }
         else
         {
             _raw = r.Raw;
@@ -62,21 +74,28 @@ internal partial class LogViewer
             Reveal.Fade(shown);
         }
 
+        GoToPending();
+        ShowRememberedPlace();
         if (_query.Text is { Length: > 0 })
         {
             Search();
         }
     }
 
-    private static FileRead ReadFile(LogFile f, bool readable)
+    private static FileRead ReadFile(LogFile f, bool readable, DateTime? around)
     {
         try
         {
             var size = new FileInfo(f.Path).Length;
             var truncated = size > (readable ? ReadableBytes : RawBytes);
+            if (readable && around is { } before && SessionAgents.ReadAround(f, before, ReadableLog.MaxSteps) is { } window)
+            {
+                return new FileRead(window, "", 1, size, false, null);   // read whole: the steps have the file's own line numbers
+            }
+
             if (readable)
             {
-                return new FileRead(LogParsers.Find(f.Format)!.Parse(LogReader.Utf8Lines(f.Path, ReadableBytes)), "", 1, size, truncated, null);
+                return new FileRead(LineLogs.Is(f.Format) ? LineLogs.Parse(LogReader.Utf8Lines(f.Path, ReadableBytes)) : SessionAgents.Read(f, ReadableBytes), "", 1, size, truncated, null);
             }
 
             var text = LogReader.Tail(f.Path, RawBytes).Text;

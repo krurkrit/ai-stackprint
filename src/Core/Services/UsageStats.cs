@@ -1,8 +1,6 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections.Concurrent;
-
 using AiStackprint.Models;
 
 namespace AiStackprint.Services;
@@ -43,20 +41,15 @@ public record UsageResult(List<UsageBucket> Buckets, int Sessions, int Files, bo
 public static partial class UsageStats
 {
     /// <summary>One file read once: its buckets per day, and its events of the last 8 days (for <see cref="Live(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/>).</summary>
-    private sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
+    internal sealed record Parsed(List<UsageBucket> Buckets, List<UsageEvent> Recent);
 
-    private static readonly ConcurrentDictionary<(string, long, long, string), Parsed> _cache = new();
+    private static readonly FileMemo<Parsed> _parsed = new("usage-files");
 
     /// <summary>The file's usage, read only when it is new or changed; <see cref="Compute(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/> and <see cref="Live(IReadOnlyList{LogFile}, DateTime, CancellationToken)"/> share it, so a page reads each log once.</summary>
     private static Parsed Read(LogFile f, ILogParser parser)
     {
-        if (_cache.Count > 2000)
-        {
-            _cache.Clear();
-        }
-
         var table = ModelCatalog.Load();   // its tier thresholds split the buckets: changed thresholds read the logs again
-        return _cache.GetOrAdd((f.Path, f.Size, f.Modified.Ticks, table.TierKey), _ =>
+        return _parsed.GetOrAdd(f, table.TierKey + "|" + LogSummary.Build + "|" + f.Format, () =>
         {
             var recent = DateTime.Now.AddDays(-8);
             var events = parser.UsageFile(f.Path).ToList();
@@ -105,6 +98,7 @@ public static partial class UsageStats
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // vanished or locked
         }
+        _parsed.Flush();
         return new(all, sessions, withParser, capped);
     }
 
@@ -131,6 +125,7 @@ public static partial class UsageStats
             try { limits.AddRange(LogParsers.Find(f.Format)!.Limits(LogReader.Utf8Lines(f.Path, 2 << 20))); }   // readings are near the end of a file
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
         }
+        _parsed.Flush();
         events.Sort((a, b) => a.Time.CompareTo(b.Time));
 
         DateTime? blockStart = null;

@@ -15,9 +15,7 @@ internal partial class LogsView
 {
     private void FillTable(AppDefinition def)
     {
-        var q = SearchQuery.Parse(_fileQuery);
-        var match = _files.Where(f => q.InText($"{Path.GetFileName(f.Path)} {f.Label} {Path.GetDirectoryName(f.Path)}")).ToList();
-        var shown = match.Take(Math.Max(_rows, match.FindIndex(f => f.Path == _file?.Path) + 1)).ToList();   // newest first; the open file is always listed
+        var shown = _files.Take(Math.Max(_rows, _files.FindIndex(f => f.Path == _file?.Path) + 1)).ToList();   // newest first; the open file is always listed
         var rows = shown.Select(f =>
         {
             var check = new CheckBox { IsChecked = _checked.Contains(f.Path) };
@@ -34,14 +32,14 @@ internal partial class LogsView
             };
             return new TableRow(
             [
-                check, Table.NameDesc(Path.GetFileName(f.Path), f.Label + "  ·  " + Path.GetDirectoryName(f.Path), marks: q),   // type on the second line: the name needs the width
-                Txt(LogViewer.Size(f.Size), TextSize.Small), Txt(f.Modified.ToString("yyyy-MM-dd HH:mm"), TextSize.Small),
+                check, Table.NameDesc(f.Modified.ToString("yyyy-MM-dd HH:mm"), f.Label + " · " + Path.GetFileName(f.Path)),   // people know when, not the file name
+                Txt(LogViewer.Size(f.Size), TextSize.Small),
                 IconBtn("delete", "Move to Recycle Bin / Trash", () => Delete([f]))
             ], () => Open(def, f), f.Path == _file?.Path);
         });
-        var table = Table.Build([new Col("", "32"), new Col("File", "*"), new Col("Size", "76", true), new Col("Modified", "130"), new Col("", "40")], rows,
-            q.IsEmpty || _files.Count == 0 ? "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : "") : "No files match the filter.");
-        var rest = match.Count - shown.Count;
+        var table = Table.Build([new Col("", "32"), new Col("Updated", "*"), new Col("Size", "76", true), new Col("", "40")], rows,
+            "No log files found." + (def.Logs.Any(l => l.Level == "Project") && x.S.Projects.Count == 0 ? " This app logs per project: add a project folder." : ""));
+        var rest = _files.Count - shown.Count;
         _table.Content = rest == 0 ? table : new StackPanel
         {
             Spacing = Space.M,
@@ -87,7 +85,7 @@ internal partial class LogsView
         }
         var active = files.Where(LogTrash.IsActive).ToList();
         var msg = $"Move {ReadableLog.Plural(files.Count, "file")} ({LogViewer.Size(files.Sum(f => f.Size))}) to the {(OperatingSystem.IsWindows() ? "Recycle Bin" : "Trash")}? You can restore them from there.";
-        if (files.Any(f => f.Format != null))
+        if (files.Any(f => LogParsers.Find(f.Format) != null))
         {
             msg += "\nSession logs also disappear from the app's resume/history list.";
         }

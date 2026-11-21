@@ -9,7 +9,7 @@ Cross-platform inventory of AI apps, orchestrators, plugins and skills (Project 
 
 Download the installer for Windows, Linux or macOS from [Releases](https://github.com/krurkrit/ai-stackprint/releases) (on a Mac see [docs/install-macos.md](docs/install-macos.md): the installer is not notarized yet, Gatekeeper needs one extra step), or run from source with `dotnet run --project src/App` (needs the .NET 10 SDK). See `AGENTS.md` for contributor rules and `docs/` for architecture and adding apps.
 
-Colors follow the Snowy Owl design system. The UI font is Inter when installed (falls back to Noto Sans, then the system font): install it from https://rsms.me/inter/.
+The UI font is Inter when installed (falls back to Noto Sans, then the system font): install it from https://rsms.me/inter/.
 
 ## Third-party assets
 - Installer and update packages: [Velopack](https://github.com/velopack/velopack) (MIT)

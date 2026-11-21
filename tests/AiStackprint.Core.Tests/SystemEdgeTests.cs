@@ -110,7 +110,7 @@ public sealed class SystemEdgeTests : IDisposable
         }
         finally
         {
-            PathUtil.UseHome(null);
+            PathUtil.UseHome(TestHome.Root);
         }
 
         Assert.NotEqual(_tmp, PathUtil.Home);

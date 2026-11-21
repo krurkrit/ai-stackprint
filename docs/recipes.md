@@ -50,7 +50,7 @@ Step lists for the common changes, so an agent does them without exploring. Each
 
 ## Add or change a colour, size or font
 
-Colours: `Theme.cs` only (Snowy Owl tokens, light and dark palettes, user overrides); views use `W` resource keys through `W.Themed`. Sizes: `Tokens.cs` and `design-system.md`. Fonts and weights: `typography.md`. `DesignTokenTests` fails on a literal size.
+Colours: `Theme.cs` only (color tokens, light and dark palettes, user overrides); views use `W` resource keys through `W.Themed`. Sizes: `Tokens.cs` and `design-system.md`. Fonts and weights: `typography.md`. `DesignTokenTests` fails on a literal size.
 
 ## Model data
 

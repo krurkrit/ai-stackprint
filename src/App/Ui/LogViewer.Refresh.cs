@@ -23,7 +23,7 @@ internal partial class LogViewer
         var newLines = 0;
         try
         {
-            if (_window && !Follow)
+            if ((_window && !Follow) || _agentsWindow)
             {
                 Render(false);
                 return;
@@ -34,7 +34,8 @@ internal partial class LogViewer
             _status.Text = truncated ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "";
             if (readable)
             {
-                _readable = new ReadableLog(LogParsers.Find(f.Format)!.Parse(LogReader.Utf8Lines(f.Path, ReadableBytes)), toEnd);   // streamed, no copy of the text
+                var session = SessionAgents.Read(f, ReadableBytes);
+                _readable = new ReadableLog(session, toEnd, Compact && !IsLines, _marks, NavFor(session));   // streamed, no copy of the text; with the sub-agents' own files
             }
             else
             {
@@ -135,7 +136,7 @@ internal partial class LogViewer
             _view.Content = _readable?.Root;
             return;
         }
-        _code ??= new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true };
+        _code ??= new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true, ScrollPastEnd = true };
         var text = _raw;
         if (_only.IsChecked == true && Pattern() is { } p)
         {

@@ -112,18 +112,13 @@ internal static partial class W
 
     public static Control LevelDot(string level) => level == "Local" ? Ring(LevelKey(level)) : Dot(LevelKey(level));
 
-    /// <summary>Success status as an outlined pill (Snowy Owl report style). Readable in both themes.</summary>
+    /// <summary>Success status as green text: no pill, no border.</summary>
     public static Control Status(string s) =>
-        new Border
+        Txt(s, TextSize.Caption, true, SuccessText).With(t =>
         {
-            CornerRadius = new CornerRadius(Radius.Pill),
-            BorderThickness = new Thickness(Stroke.Thin),
-            Padding = new Thickness(Space.M, Space.Hair),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Center,
-            Child = Txt(s, TextSize.Caption, true, SuccessText)
-        }
-            .Themed(Border.BorderBrushProperty, SuccessKey).Themed(Border.BackgroundProperty, SuccessFill);
+            t.HorizontalAlignment = HorizontalAlignment.Left;
+            t.VerticalAlignment = VerticalAlignment.Center;
+        });
 
     public static TextBlock DotText(string s, string key) => WithDot(Dot(key), s, TextSize.Small).With(t => t.VerticalAlignment = VerticalAlignment.Center);
 

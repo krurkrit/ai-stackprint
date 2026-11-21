@@ -8,6 +8,8 @@ namespace AiStackprint.Ui;
 
 internal partial class MainWindow
 {
+    private static readonly TimeSpan _settle = TimeSpan.FromSeconds(1);
+
     private void Scan() => Fire.Forget(ScanAsync());
 
     private async Task ScanAsync()
@@ -87,6 +89,11 @@ internal partial class MainWindow
         if (!first)
         {
             Toast.Show($"Scanned: {ReadableLog.Plural(_s.Apps.Count(a => a.Installed), "app")}, {ReadableLog.Plural(_s.Items.Count(i => i.Kind == "Skill"), "skill")}, {ReadableLog.Plural(_s.Items.Count(i => i.Kind == "Plugin"), "plugin")}", "scan_text");
+        }
+
+        if (first && !PerfRun)
+        {
+            await Task.Delay(_settle);   // the dashboard's first animation (the donut unfolds) runs on a quiet CPU: the project checks start after it
         }
 
         RequestLimits();

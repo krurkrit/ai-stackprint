@@ -41,7 +41,6 @@ internal static class CreditsSection
         "Framework" => "puzzle_piece",
         "Editor" => "code",
         "Icons" => "sparkle",
-        "Design" => "edit",
         "Data" => "data_pie",
         "Fonts" => "text_font",
         _ => "wrench"

@@ -19,12 +19,21 @@ internal partial class ReadableLog
     private readonly Dictionary<LogEntry, Control> _controls = [];
     private readonly Dictionary<LogEntry, Panel> _holders = [];   // each step's slot: the fading highlight is laid over it
     private readonly ScrollViewer _scroll = new();
-    public Control Root => _scroll;
+    private readonly Grid _root = new() { ColumnDefinitions = new ColumnDefinitions("*") };
+    public Control Root => _root;
+
     public List<LogEntry> Steps { get; }
 
-    /// <summary>Steps built when a file opens; earlier ones are built when asked for ("Show earlier steps", a search hit), so a long session opens fast.</summary>
-    internal const int FirstSteps = 60;
-    private const int MoreSteps = 100;
+    /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
+    public Session Session { get; }
+
+    /// <summary>
+    /// Steps built when a file opens: cards are heavy (about 8 ms each), so 20; one-line rows are light, so 60. Earlier ones are built as you scroll up
+    /// (and by "Show earlier steps" or a search hit), so a long session opens fast.
+    /// </summary>
+    internal const int FirstCards = 20, FirstLines = 60;
+    private int More => _compact || _lines ? FirstLines : FirstCards;
+    private const double NearTop = 600;   // scrolling up this close to the top builds the next earlier steps
 
     private readonly StackPanel _list = new()
     {
@@ -32,31 +41,74 @@ internal partial class ReadableLog
         Margin = new Thickness(Space.XL)
     };
     private int _built;           // steps built, counted from the end of Steps
+    private readonly bool _compact;
+    private readonly StepContext? _marks;
+    private readonly SessionGraph? _graph;   // the graph column beside the steps: sub-agent branches, or just the main line (null for text logs)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
 
-    public ReadableLog(Session s, bool toEnd)
+    /// <summary>A conversation as cards.</summary>
+    public ReadableLog(Session s, bool toEnd) : this(s, toEnd, false)
     {
-        Steps = [.. s.Entries.TakeLast(MaxSteps)];
-        _list.Children.Add(Summary(s));
+    }
+
+    /// <param name="compact">One line per step (a click opens its card in a popup) instead of cards.</param>
+    public ReadableLog(Session s, bool toEnd, bool compact) : this(s, toEnd, compact, null)
+    {
+    }
+
+    /// <param name="marks">The file's bookmarks (stars and notes on steps); null: none (a file shown cut to its end has no reliable lines).</param>
+    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks, AgentsNav? agents = null)
+    {
+        Session = s;
+        _marks = marks;
+        _compact = compact;
+        var lines = IsLines(s);
+        _lines = lines;
+        var cap = lines ? MaxLines : MaxSteps;
+        Steps = [.. s.Entries.TakeLast(cap)];
+        _graph = lines ? null : SessionGraph.Layout(Steps) ?? (Steps.Count > 0 ? SessionGraph.Single(Steps.Count) : null);
+        if (lines || compact || _graph != null)
+        {
+            _list.Spacing = 0;   // the rows carry their own spacing (a graph's lines run unbroken from row to row)
+        }
+
+        _list.Children.Add(lines ? LinesSummary(s) : Summary(s, agents));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
         {
             _list.Children.Add(AgentGraph.Build(timeline));
         }
 
-        if (s.Entries.Count > MaxSteps)
+        if (_graph != null)
         {
-            _list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", TextSize.Caption, false, Muted));
+            _list.Margin = new Thickness(Space.XL, Space.XL, 0, Space.XL);   // the graph column runs to the right edge
+            if (_graph.Agents.Length > 1)
+            {
+                _list.Children.Add(AgentLegend(_graph));
+            }
+        }
+
+        if (s.Entries.Count > cap)
+        {
+            _list.Children.Add(Txt($"Showing the last {cap:N0} of {s.Entries.Count:N0} {(lines ? "lines" : "steps")}.", TextSize.Caption, false, Muted));
         }
 
         _headerCount = _list.Children.Count;
-        BuildEarlier(FirstSteps);
+        BuildEarlier(More);
         if (Steps.Count == 0)
         {
             _list.Children.Add(Txt("No readable steps in this file.", TextSize.Body, false, Muted));
         }
 
         _scroll.Content = _list;
+        _root.Children.Add(_scroll);
+        _scroll.ScrollChanged += (_, e) =>
+        {
+            if (e.OffsetDelta.Y < 0 && _scroll.Offset.Y < NearTop && _earlier != null)
+            {
+                BuildEarlierKeepingPlace();
+            }
+        };
         if (toEnd)
         {
             Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
@@ -79,27 +131,49 @@ internal partial class ReadableLog
         for (var i = from; i < to; i++)
         {
             var e = Steps[i];
-            if (e.SubAgent && wasSub != true)
+            if (e.SubAgent && wasSub != true && _graph == null)   // with the graph, the lines run on and the agent is named on hover
             {
                 _list.Children.Insert(at++, Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
             }
 
             wasSub = e.SubAgent;
-            var step = Step(e);
+            var step = _lines ? LogLine(e) : _compact ? CompactRow(e, _marks) : Step(e);   // compact: one line per step, its card opens in a popup
             _controls[e] = step;
-            if (e.SubAgent)
+            if (!_lines && !_compact)
             {
-                step = new Border
+                if (e.Usage != null)
                 {
-                    BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
-                    Padding = new Thickness(Space.L, 0, 0, 0),
-                    Margin = new Thickness(Space.XXXL, 0, 0, 0),
-                    Child = step
+                    step = WithUsage(step, e.Usage);
                 }
-                    .Themed(Border.BorderBrushProperty, Accent);
+
+                if (e.SubAgent)
+                {
+                    step = new Border
+                    {
+                        BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
+                        Padding = new Thickness(Space.L, 0, 0, 0),
+                        Margin = new Thickness(Space.XXXL, 0, 0, 0),
+                        Child = step
+                    }
+                        .Themed(Border.BorderBrushProperty, Accent);
+                }
             }
 
-            var holder = new Panel { Children = { step } };
+            var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
+            if (_lines)
+            {
+                holder.IsVisible = !_hidden.Contains(e.Role);
+            }
+            else if (!_compact)
+            {
+                AddCopy(holder, e, _marks);
+            }
+
+            if (_graph != null && _hiddenAgents.Contains(_graph.Rows[i].Owner.Agent) && _showStep.TryGetValue(e, out var show))
+            {
+                show(false);   // an agent hidden by its chip stays hidden in steps built later
+            }
+
             _holders[e] = holder;
             _list.Children.Insert(at++, holder);
         }
@@ -107,10 +181,48 @@ internal partial class ReadableLog
         _built += to - from;
         if (from > 0)
         {
-            _earlier = Btn($"Show {Math.Min(MoreSteps, from)} earlier steps ({from} not shown)", () => BuildEarlier(MoreSteps));
+            _earlier = Btn($"Show {Math.Min(More, from)} earlier steps ({from} not shown)", () => BuildEarlier(More));
             _earlier.HorizontalAlignment = HorizontalAlignment.Center;
             _list.Children.Insert(_headerCount, _earlier);
         }
+    }
+
+    /// <summary>Builds the next earlier steps above the view without moving what is on screen (the content grows upward, so the offset grows with it).</summary>
+    private void BuildEarlierKeepingPlace()
+    {
+        var before = _scroll.Extent.Height;
+        var offset = _scroll.Offset.Y;
+        BuildEarlier(More);
+        _scroll.UpdateLayout();
+        _scroll.Offset = new Vector(_scroll.Offset.X, offset + _scroll.Extent.Height - before);
+    }
+
+    /// <summary>The step in the middle of the view (the last one when the view is at its end); null when none is built.</summary>
+    public LogEntry? StepAtCenter() => StepAt(.5);
+
+    /// <summary>The first step in view (the last one built that starts at or above the top of the view); null when none is built.</summary>
+    public LogEntry? StepAtTop() => StepAt(0);
+
+    private LogEntry? StepAt(double fraction)
+    {
+        var middle = _scroll.Offset.Y + _scroll.Viewport.Height * fraction;
+        LogEntry? found = null;
+        foreach (var e in Steps)
+        {
+            if (!_holders.TryGetValue(e, out var holder) || holder.TranslatePoint(default, _list) is not { } at)
+            {
+                continue;
+            }
+
+            if (at.Y > middle)
+            {
+                break;
+            }
+
+            found = e;
+        }
+
+        return found;
     }
 
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>

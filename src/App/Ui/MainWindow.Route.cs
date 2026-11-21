@@ -92,9 +92,14 @@ internal partial class MainWindow
 
     private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
 
-    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Part (commands and agents), Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings. Kept in the back/forward history.</summary>
+    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Part (commands and agents), Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings (opens Settings:&lt;page&gt;), About. Kept in the back/forward history.</summary>
     private void Go(string view)
     {
+        if (view == "Settings")
+        {
+            view = "Settings:" + _lastSetting;   // the menu's Settings button opens the subpage seen last
+        }
+
         if (view != _view)
         {
             _back.Push(_view);
@@ -105,7 +110,20 @@ internal partial class MainWindow
 
     private void Show(string view)
     {
-        var rescan = _view == "Settings" && view != "Settings" && _x.SettingsChanged;
+        var rescan = InSettings(_view) && !InSettings(view) && _x.SettingsChanged;
+        if (InSettings(view))
+        {
+            if (!InSettings(_view))
+            {
+                _beforeSettings = _view;   // where Back to app returns to
+            }
+
+            if (view.StartsWith("Settings:"))
+            {
+                _lastSetting = view[9..];
+            }
+        }
+
         _view = view;
         if (rescan)
         {
@@ -159,6 +177,12 @@ internal partial class MainWindow
 
     private void RefreshNav()
     {
+        if (InSettings(_view))
+        {
+            RefreshSettingsNav();
+            return;
+        }
+
         var nav = new StackPanel { Spacing = Space.XXS };
         nav.Children.Add(Go("board", "Dashboard", "Dashboard"));
         nav.Children.Add(Go("apps", "Apps", "Apps"));

@@ -156,6 +156,17 @@ public class Settings
 }
 
 /// <summary>What the app remembers on this machine (state.json): not a preference, never exported.</summary>
+/// <summary>A step of a log file you starred or wrote a note on (the file and the step's line in it).</summary>
+public class Bookmark
+{
+    public string File { get; set; } = "";
+    public long Line { get; set; }
+    public bool Starred { get; set; }
+    public string? Note { get; set; }
+    public string Preview { get; set; } = "";   // the step's text on one line, to find it in the list
+    public DateTime Saved { get; set; }
+}
+
 public class UiState
 {
     public double PanelHeight { get; set; } = 340;      // bottom detail panel on the Skills, Plugins and project pages
@@ -168,10 +179,11 @@ public class UiState
     public DateTime? BenchmarkCheckedUtc { get; set; }  // last benchmark download, whatever its result
     public string? BenchmarkResult { get; set; }        // what it found, as shown in Settings
     public List<string> ComparedModels { get; set; } = [];   // models in the Compare tab's slots of the Models page, in slot order
+    public List<Bookmark> Bookmarks { get; set; } = [];     // steps starred or noted in the log viewer: machine-only, never exported
     public string ModelsTab { get; set; } = "Catalog";      // the tab the Models page was left on: Catalog or Compare
 }
 
-/// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>
+/// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = the app default.</summary>
 public class ThemeColors
 {
     public string? Accent { get; set; }
