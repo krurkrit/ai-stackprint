@@ -22,7 +22,7 @@ internal partial class ReadableLog
     internal static Control CompactRow(LogEntry e) => CompactRow(e, null);
 
     /// <param name="marks">The file's bookmarks: a marked step shows a bookmark icon, and its popup has the bookmark and note controls.</param>
-    internal static Control CompactRow(LogEntry e, BookmarkSource? marks)
+    internal static Control CompactRow(LogEntry e, StepContext? marks)
     {
         var (icon, who, key) = e.Role switch
         {
@@ -54,7 +54,7 @@ internal partial class ReadableLog
         grid.Children.Add(name);
         grid.Children.Add(text);
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
-        if (marks != null && e.Line > 0)
+        if (marks is { CanMark: true } && e.Line > 0)
         {
             var flag = Icon("bookmark_filled", IconSize.S).Themed(TextElement.ForegroundProperty, Accent);
             flag.IsVisible = marks.Get(e) != null;
@@ -111,22 +111,29 @@ internal partial class ReadableLog
     /// <summary>The step's full card in a popup under its row; tool input and output are open.</summary>
     internal static void ShowDetail(Control anchor, LogEntry e) => ShowDetail(anchor, e, null);
 
-    internal static void ShowDetail(Control anchor, LogEntry e, BookmarkSource? marks) =>
-        new Flyout
+    internal static void ShowDetail(Control anchor, LogEntry e, StepContext? marks)
+    {
+        Flyout? flyout = null;
+        flyout = new Flyout
         {
             Placement = Avalonia.Controls.PlacementMode.BottomEdgeAlignedLeft,
             Content = new ScrollViewer
             {
                 Width = Widths.DialogL,
                 MaxHeight = Heights.ViewerL,
-                Content = DetailContent(anchor, e, marks)
+                Content = DetailContent(anchor, e, marks, () => flyout!.Hide())
             }
-        }.ShowAt(anchor);
+        };
+        flyout.ShowAt(anchor);
+    }
 
     /// <summary>What the popup holds: a Copy button, the step's card (tool input and output opened) and its tokens and cost.</summary>
     internal static Control DetailContent(Control anchor, LogEntry e) => DetailContent(anchor, e, null);
 
-    internal static Control DetailContent(Control anchor, LogEntry e, BookmarkSource? marks)
+    internal static Control DetailContent(Control anchor, LogEntry e, StepContext? marks) => DetailContent(anchor, e, marks, () => { });
+
+    /// <param name="close">Closes the popup (a link leaves the page).</param>
+    internal static Control DetailContent(Control anchor, LogEntry e, StepContext? marks, Action close)
     {
         var body = Step(e);
         if (body is Expander x)
@@ -153,9 +160,24 @@ internal partial class ReadableLog
             Margin = new Thickness(Space.M),
             Children = { copy, body }
         };
-        if (marks != null && e.Line > 0)
+        if (marks is { CanMark: true } && e.Line > 0)
         {
             content.Children.Insert(0, BookmarkBar(e, marks));
+        }
+
+        if (marks?.Links(e) is { Count: > 0 } links)
+        {
+            var bar = new WrapPanel();
+            foreach (var (label, go) in links)
+            {
+                bar.Children.Add(Btn(label, () =>
+                {
+                    close();
+                    go();
+                }, false, "link_arrow").With(b => b.Margin = new Thickness(0, 0, Space.S, Space.S)));
+            }
+
+            content.Children.Insert(0, bar);   // where this step leads: its model, skill, server, file
         }
 
         return content;

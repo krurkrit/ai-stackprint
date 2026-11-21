@@ -15,7 +15,7 @@ namespace AiStackprint.Ui;
 /// <summary>A step's Copy button (shows while the pointer is over the step): the step as Markdown on the clipboard.</summary>
 internal partial class ReadableLog
 {
-    private static void AddCopy(Panel holder, LogEntry e, BookmarkSource? marks)
+    private static void AddCopy(Panel holder, LogEntry e, StepContext? marks)
     {
         var copy = IconBtn("copy", "Copy this step as Markdown", () =>
         {
@@ -31,7 +31,7 @@ internal partial class ReadableLog
         holder.PointerEntered += (_, _) => copy.Opacity = 1;
         holder.PointerExited += (_, _) => copy.Opacity = 0;
         holder.Children.Add(copy);
-        if (marks != null && e.Line > 0)
+        if (marks is { CanMark: true } && e.Line > 0)
         {
             var mark = IconBtn(marks.Get(e)?.Starred == true ? "bookmark_filled" : "bookmark", "Bookmark this step", () => { });
             mark.Click += (_, _) =>

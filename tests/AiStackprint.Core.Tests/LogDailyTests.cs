@@ -31,7 +31,7 @@ public sealed class LogDailyTests : IDisposable
     {
         var a = Session("a.jsonl", Reply("2026-11-10", "1", 100, 50), Reply("2026-11-10", "2", 200, 70), Reply("2026-11-11", "3", 10, 5));
         var b = Session("b.jsonl", Reply("2026-11-11", "4", 20, 10));
-        var days = LogSummary.Daily([a, b], null, default);
+        var days = LogSummary.Daily([a, b], null, TestContext.Current.CancellationToken);
         Assert.Equal([new DateOnly(2026, 11, 11), new DateOnly(2026, 11, 10)], days.Select(d => d.Date));
         Assert.Equal((2, 30 + 2000, 15L), (days[0].Sessions, days[0].Input, days[0].Output));   // the request counts its cached part
         Assert.Equal((1, 300 + 2000, 120L), (days[1].Sessions, days[1].Input, days[1].Output));
@@ -45,7 +45,7 @@ public sealed class LogDailyTests : IDisposable
         var stats = LogSummary.Compute([a], new DateTime(2026, 11, 11, 0, 0, 0, DateTimeKind.Local).AddYears(-1));
         Assert.Equal(2, stats.Daily.Count);
         Assert.Equal(stats.Daily.Sum(d => d.Cost), stats.Cost);
-        var since = LogSummary.Daily([a], new DateTime(2026, 11, 11, 0, 0, 0, DateTimeKind.Local), default);
+        var since = LogSummary.Daily([a], new DateTime(2026, 11, 11, 0, 0, 0, DateTimeKind.Local), TestContext.Current.CancellationToken);
         Assert.Equal([new DateOnly(2026, 11, 11)], since.Select(d => d.Date));
     }
 }

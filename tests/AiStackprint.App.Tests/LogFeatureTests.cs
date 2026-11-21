@@ -186,7 +186,7 @@ public sealed class LogFeatureTests
         using var home = new FakeHome();   // state.json goes to the made-up home
         var session = WithAgents();
         var state = new UiState();
-        var marks = new BookmarkSource(state, Path.Combine(home.Root, "a.jsonl"));
+        var marks = new StepContext(state, Path.Combine(home.Root, "a.jsonl"), true, _ => null);
         var w = Ui.Show(new ReadableLog(session, false, true, marks).Root);
         var first = session.Entries[0];
         Assert.Empty(state.Bookmarks);
@@ -260,5 +260,27 @@ public sealed class LogFeatureTests
 
         var few = new ReadableLog(WithAgents(), false, true);
         Assert.Empty(few.Root.GetVisualDescendants().OfType<SessionMinimap>());   // a short session has none
+    }
+
+    [AvaloniaFact]
+    public void The_popup_links_a_step_to_its_model_and_file_and_a_click_goes_there()
+    {
+        var edit = new LogEntry("tool", "src/A.cs", null, false, "Edit", ".diff", "--- src/A.cs\n+++ src/A.cs\n@@\n-1\n+2\n")
+        {
+            Usage = new(DateTime.Now, "claude-opus-5-5", "", 10, 5, 0, 0, 0, false)
+        };
+        var went = new List<string>();
+        var context = new StepContext(new UiState(), "a.jsonl", false, r => ($"{r.Kind} · {r.Value}", () => went.Add(r.Kind + ":" + r.Value)));
+        var host = new Window { Width = 700, Height = 500, Content = ReadableLog.DetailContent(new Border(), edit, context) };
+        host.Show();
+        Dispatcher.UIThread.RunJobs();
+        Assert.DoesNotContain(host.GetVisualDescendants().OfType<ToggleButton>(), b => b.Content as string == "Bookmark");   // a file shown cut to its end: no Bookmark control, but the links stay
+        var buttons = host.GetVisualDescendants().OfType<Button>().ToList();
+        var model = buttons.First(b => Ui.Texts(b).Contains("model · claude-opus-5-5"));
+        var file = buttons.First(b => Ui.Texts(b).Contains("file · src/A.cs"));
+        Ui.Click(model);
+        Ui.Click(file);
+        Assert.Equal(["model:claude-opus-5-5", "file:src/A.cs"], went);
+        host.Close();
     }
 }

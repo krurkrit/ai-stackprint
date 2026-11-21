@@ -41,7 +41,7 @@ internal partial class ReadableLog
     };
     private int _built;           // steps built, counted from the end of Steps
     private readonly bool _compact;
-    private readonly BookmarkSource? _marks;
+    private readonly StepContext? _marks;
     private readonly SessionGraph? _graph;   // sub-agent branches beside the steps (null when the session has none)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
@@ -57,7 +57,7 @@ internal partial class ReadableLog
     }
 
     /// <param name="marks">The file's bookmarks (stars and notes on steps); null: none (a file shown cut to its end has no reliable lines).</param>
-    internal ReadableLog(Session s, bool toEnd, bool compact, BookmarkSource? marks)
+    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks)
     {
         Session = s;
         _marks = marks;

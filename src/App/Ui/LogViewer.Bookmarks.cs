@@ -1,6 +1,8 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using AiStackprint.Services;
+
 using Avalonia;
 using Avalonia.Controls;
 
@@ -11,9 +13,19 @@ namespace AiStackprint.Ui;
 /// <summary>The Bookmarks button: the steps of this file you starred or wrote a note on; a click goes to the step.</summary>
 internal partial class LogViewer
 {
-    private BookmarkSource? _marks;   // null while the file is shown cut to its end: a step's line is then not the file's line
+    private StepContext? _marks;   // what the steps of the open file can do: bookmarks (not while the file is shown cut to its end) and links
 
-    private void ReadMarks() => _marks = _linesOk && _file != null ? new BookmarkSource(_x.S.State, _file.Path) : null;
+    private void ReadMarks() => _marks = _file == null ? null : new StepContext(_x.S.State, _file.Path, _linesOk, Link);
+
+    /// <summary>Where a thing a step points at is shown in the app: a model on the Models page, a skill on the Skills page, a server on the Servers page; a file opens in its program.</summary>
+    private (string Label, Action Go)? Link(StepRef r) => r.Kind switch
+    {
+        "model" => ($"Model · {r.Value}", () => _x.Go("Models:" + (ModelCatalog.PricedAs(r.Value) ?? r.Value))),
+        "skill" => ($"Skill · {r.Value}", () => _x.Browse("Skill", null, r.Value)),
+        "mcp" => ($"Server · {r.Value}", () => _x.Go("Mcp")),
+        "file" when Path.IsPathRooted(r.Value) && File.Exists(r.Value) => ($"File · {Path.GetFileName(r.Value)}", () => PathUtil.OpenFile(r.Value)),
+        _ => null
+    };
 
     /// <summary>The toolbar button; null when no session is shown as steps.</summary>
     private Button? BookmarksButton()
@@ -33,7 +45,7 @@ internal partial class LogViewer
         var list = new StackPanel { Spacing = Space.XXS, Margin = new Thickness(Space.M), Width = Widths.Popup };
         var marks = _marks?.All() ?? [];
         var flyout = new Flyout { Content = new ScrollViewer { MaxHeight = Heights.Viewer, Content = list } };
-        if (_marks == null)
+        if (_marks is not { CanMark: true })
         {
             list.Children.Add(Txt("This file is shown cut to its end, so its steps cannot be kept by line. Open a shorter file.", TextSize.Small, false, Muted));
         }

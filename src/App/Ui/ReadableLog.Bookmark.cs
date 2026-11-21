@@ -11,7 +11,7 @@ namespace AiStackprint.Ui;
 /// <summary>The bookmark controls at the top of a step's popup: a Bookmark toggle and a note. They are kept in state.json, on this machine only.</summary>
 internal partial class ReadableLog
 {
-    private static Control BookmarkBar(LogEntry e, BookmarkSource marks)
+    private static Control BookmarkBar(LogEntry e, StepContext marks)
     {
         var now = marks.Get(e);
         var star = new ToggleButton
