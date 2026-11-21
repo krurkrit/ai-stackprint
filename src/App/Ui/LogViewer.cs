@@ -45,6 +45,9 @@ internal partial class LogViewer
     private bool _window;                  // raw view shows a window around a search hit instead of the tail
     private CancellationTokenSource? _search;
     public bool Readable { get; set; } = true;
+
+    /// <summary>With Readable on: one line per step (a click opens its card) instead of cards.</summary>
+    public bool Compact { get; set; }
     public bool Follow { get; set; }
 
     public LogViewer(Ctx ctx)
@@ -99,7 +102,6 @@ internal partial class LogViewer
 
     private bool CanRead => _file != null && (LogParsers.Find(_file.Format) != null || LineLogs.Is(_file.Format));
     private bool IsLines => LineLogs.Is(_file?.Format);
-    private string ReadableName => IsLines ? "Lines" : "Conversation";
     private bool ShowReadable => Readable && CanRead;
 
     public Control Build(LogFile? f, Action rebuild)
@@ -118,13 +120,7 @@ internal partial class LogViewer
             return Card(Txt("Select a log file.", TextSize.Body, false, Muted));
         }
 
-        var mode = CanRead ? Btn(ShowReadable ? "Raw" : ReadableName, () =>
-        {
-            RememberPlace();
-            Readable = !Readable;
-            rebuild();
-        }, false, ShowReadable ? "code" : IsLines ? "document_text" : "chat_multiple")
-            .With(b => ToolTip.SetTip(b, ShowReadable ? "Show the file as written" : IsLines ? "Show one row per log line, with level colors" : "Show the session as a conversation")) : null;
+        var mode = CanRead ? ModeSwitch(rebuild) : null;
         // Search, the view switch, then the file buttons. Follow is a switch on the Files card. F5 reloads (no Reload button: the folder is watched).
         var tools = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Left };
         foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable && IsLines ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error line (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode, ExportButton(),

@@ -69,6 +69,7 @@ internal static class Stroke
 internal static class Sizes
 {
     internal const double Dot = 8;           // legend and status dots
+    internal const double GraphNodeY = 16;   // where a card's dot sits: level with its first line
     internal const double GraphNode = 4;     // radius of a step's dot in the sub-agent graph
     internal const double RadioDot = 8;      // the dot inside a selected radio button (the control default, 12, is large and bright in a 20 px ring)
     internal const double Bar = 10;          // bar charts and progress bars

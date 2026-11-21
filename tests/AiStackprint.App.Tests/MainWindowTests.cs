@@ -4,6 +4,7 @@
 using AiStackprint.Ui;
 
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -153,6 +154,30 @@ public sealed class MainWindowTests : IDisposable
 
         Palette(w, "demo");
         Press(w, "By file", "By app");
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void The_view_switch_has_Raw_Conversation_and_Compact_and_each_shows_the_session()
+    {
+        var w = Open();
+        Ui.Click(Nav(w, "Logs"));
+        Settle(w);
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session.jsonl", StringComparison.Ordinal));
+        Settle(w);
+        ToggleButton Mode(string name) => w.GetVisualDescendants().OfType<ToggleButton>().First(b => b.Content as string == name);
+        Assert.Contains("Hi there", Ui.Texts(w));   // Conversation (cards) is the default
+        Mode("Compact").IsChecked = true;
+        Settle(w);
+        Assert.Contains("Hi there", Ui.Texts(w));   // one line per step
+        Assert.True(Mode("Compact").IsChecked);
+        Mode("Raw").IsChecked = true;
+        Settle(w);
+        Assert.DoesNotContain("Hi there", Ui.Texts(w));   // the file as written is code, not text blocks
+        Mode("Conversation").IsChecked = true;
+        Settle(w);
+        Assert.Contains("Hi there", Ui.Texts(w));
         w.Close();
     }
 

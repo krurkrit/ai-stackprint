@@ -24,6 +24,7 @@ public sealed class StepUsageTests
         var log = new ReadableLog(session, false);
         var w = Ui.Show(log.Root);
         var texts = Ui.Texts(w);
+        Assert.Contains(texts, t => t.StartsWith("claude-opus-5-5 · ", StringComparison.Ordinal) && t.Contains(" in (", StringComparison.Ordinal) && t.Contains(" cached) · ", StringComparison.Ordinal) && t.Contains(" out", StringComparison.Ordinal));
         if (ModelCatalog.Cost(session.Entries[1].Usage!) is { } cost)
         {
             Assert.Contains(texts, t => t.Contains(ReadableLog.StepMoney(cost), StringComparison.Ordinal));
@@ -31,5 +32,13 @@ public sealed class StepUsageTests
         }
 
         w.Close();
+
+        var compact = Ui.Show(new ReadableLog(session, false, true).Root);   // the compact line shows the cost; the popup the tokens
+        if (ModelCatalog.Cost(session.Entries[1].Usage!) is { } c)
+        {
+            Assert.Contains(Ui.Texts(compact), t => t.Contains(ReadableLog.StepMoney(c), StringComparison.Ordinal));
+        }
+
+        compact.Close();
     }
 }

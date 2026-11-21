@@ -35,19 +35,30 @@ internal partial class ReadableLog
         Margin = new Thickness(Space.XL)
     };
     private int _built;           // steps built, counted from the end of Steps
+    private readonly bool _compact;
     private readonly SessionGraph? _graph;   // sub-agent branches beside the steps (null when the session has none)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
 
-    public ReadableLog(Session s, bool toEnd)
+    /// <summary>A conversation as cards.</summary>
+    public ReadableLog(Session s, bool toEnd) : this(s, toEnd, false)
+    {
+    }
+
+    /// <param name="compact">One line per step (a click opens its card in a popup) instead of cards.</param>
+    public ReadableLog(Session s, bool toEnd, bool compact)
     {
         Session = s;
+        _compact = compact;
         var lines = IsLines(s);
         _lines = lines;
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
         _graph = lines ? null : SessionGraph.Layout(Steps);
-        _list.Spacing = 0;   // one line per step: the rows carry their own spacing (a graph's lines run unbroken from row to row)
+        if (lines || compact || _graph != null)
+        {
+            _list.Spacing = 0;   // the rows carry their own spacing (a graph's lines run unbroken from row to row)
+        }
 
         _list.Children.Add(lines ? LinesSummary(s) : Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
@@ -102,13 +113,36 @@ internal partial class ReadableLog
             }
 
             wasSub = e.SubAgent;
-            var step = _lines ? LogLine(e) : CompactRow(e);   // a conversation is one line per step; its card opens in a popup
+            var step = _lines ? LogLine(e) : _compact ? CompactRow(e) : Step(e);   // compact: one line per step, its card opens in a popup
             _controls[e] = step;
+            if (!_lines && !_compact)
+            {
+                if (e.Usage != null)
+                {
+                    step = WithUsage(step, e.Usage);
+                }
+
+                if (e.SubAgent)
+                {
+                    step = new Border
+                    {
+                        BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
+                        Padding = new Thickness(Space.L, 0, 0, 0),
+                        Margin = new Thickness(Space.XXXL, 0, 0, 0),
+                        Child = step
+                    }
+                        .Themed(Border.BorderBrushProperty, Accent);
+                }
+            }
 
             var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
             if (_lines)
             {
                 holder.IsVisible = !_hidden.Contains(e.Role);
+            }
+            else if (!_compact)
+            {
+                AddCopy(holder, e);
             }
 
             _holders[e] = holder;

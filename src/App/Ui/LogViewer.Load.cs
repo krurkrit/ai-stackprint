@@ -51,7 +51,7 @@ internal partial class LogViewer
             _raw = "";
             _readable = null;
         }
-        else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd); }
+        else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd, Compact && !IsLines); }
         else
         {
             _raw = r.Raw;

@@ -77,6 +77,7 @@ internal partial class LogsView
         _viewer = new LogViewer(x)
         {
             Readable = _viewer.Readable,
+            Compact = _viewer.Compact,
             Follow = _viewer.Follow
         };
         Wire(_viewer);

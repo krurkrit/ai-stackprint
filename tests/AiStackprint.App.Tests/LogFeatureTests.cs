@@ -20,7 +20,7 @@ public sealed class LogFeatureTests
     private static IEnumerable<ReadOnlyMemory<byte>> Lines(params string[] lines) => lines.Select(l => (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(l));
 
     [AvaloniaFact]
-    public void A_session_that_edited_files_says_how_many_and_shows_one_line_per_step()
+    public void A_session_that_edited_files_says_how_many_and_a_card_has_a_Copy_button()
     {
         var session = new ClaudeSessionParser().Parse(Lines(
             """{"type":"user","timestamp":"2026-11-11T04:59:00Z","message":{"role":"user","content":"fix it"}}""",
@@ -28,11 +28,23 @@ public sealed class LogFeatureTests
         var log = new ReadableLog(session, false);
         var w = Ui.Show(log.Root);
         Assert.Contains("1 file changed", Ui.Texts(w));
+        var copies = w.GetVisualDescendants().OfType<Button>().Where(b => ToolTip.GetTip(b) as string == "Copy this step as Markdown").ToList();
+        Assert.Equal(session.Entries.Count, copies.Count);
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void Compact_shows_one_line_per_step()
+    {
+        var session = new ClaudeSessionParser().Parse(Lines(
+            """{"type":"user","timestamp":"2026-11-11T04:59:00Z","message":{"role":"user","content":"fix it"}}""",
+            """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","message":{"id":"m1","model":"m","content":[{"type":"text","text":"done"}]}}"""));
+        var w = Ui.Show(new ReadableLog(session, false, true).Root);
         var texts = Ui.Texts(w);
         Assert.Equal(1, texts.Count(t => t == "You"));   // one line per step: who, then its text
         Assert.Contains("fix it", texts);
         Assert.Contains("done", texts);
-        Assert.Equal(session.Entries.Count, w.GetVisualDescendants().OfType<Border>().Count(r => r.Cursor != null && r.MinHeight == Heights.LogRow));   // each line opens its card in a popup
+        Assert.Equal(session.Entries.Count, w.GetVisualDescendants().OfType<Border>().Count(r => r.Cursor != null && r.MinHeight > Heights.LogRow - 1 && r.MinHeight < Heights.LogRow + 1));   // each line opens its card in a popup
         w.Close();
     }
 
@@ -76,7 +88,7 @@ public sealed class LogFeatureTests
     public void Sub_agents_branch_in_a_graph_beside_the_steps()
     {
         var session = WithAgents();
-        var log = new ReadableLog(session, false);
+        var log = new ReadableLog(session, false, true);
         var w = Ui.Show(log.Root);
         w.Height = 1500;
         Dispatcher.UIThread.RunJobs();
@@ -96,9 +108,9 @@ public sealed class LogFeatureTests
     {
         var session = new ClaudeSessionParser().Parse(Lines(
             """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":5},"content":[{"type":"text","text":"Some **bold** text"},{"type":"tool_use","id":"a","name":"Edit","input":{"file_path":"src/A.cs","old_string":"1","new_string":"2"}}]}}"""));
-        var log = new ReadableLog(session, false);
+        var log = new ReadableLog(session, false, true);
         var w = Ui.Show(log.Root);
-        var rows = w.GetVisualDescendants().OfType<Border>().Where(r => r.Cursor != null && r.MinHeight == Heights.LogRow).ToList();
+        var rows = w.GetVisualDescendants().OfType<Border>().Where(r => r.Cursor != null && r.MinHeight > Heights.LogRow - 1 && r.MinHeight < Heights.LogRow + 1).ToList();
         Assert.Equal(2, rows.Count);
         foreach (var row in rows)
         {
