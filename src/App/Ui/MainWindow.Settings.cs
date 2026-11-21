@@ -16,7 +16,6 @@ internal partial class MainWindow
 
     private void RefreshSettingsNav()
     {
-        _activeBtn = null;
         var nav = new StackPanel { Spacing = Space.XXS };
         nav.Children.Add(NavBtn("arrow_left", "Back to app", () => Go(_beforeSettings)));
         nav.Children.Add(Section("SETTINGS"));
@@ -31,6 +30,6 @@ internal partial class MainWindow
         DockPanel.SetDock(foot, Dock.Bottom);
         dock.Children.Add(foot);
         dock.Children.Add(new ScrollViewer { Content = nav });
-        _side.Child = WithIndicator(dock, "settings");
+        _side.Child = dock;
     }
 }
