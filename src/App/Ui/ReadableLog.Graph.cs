@@ -5,6 +5,7 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 
 using static AiStackprint.Ui.W;
 
@@ -23,6 +24,14 @@ internal partial class ReadableLog
             RowDefinitions = new RowDefinitions(_compact ? "Auto" : $"Auto,{Space.M}")   // cards carry the space below them, so the lines run on
         };
         row.Children.Add(step);
+        _showStep[e] = on =>
+        {
+            step.IsVisible = on;   // the graph column stays, so the lines run on over the hidden steps
+            if (!_compact)
+            {
+                row.RowDefinitions[1].Height = new GridLength(on ? Space.M : 0);
+            }
+        };
         var tip = graph.Rows[index].Owner.Agent is > 0 and var agent ? graph.Agents[agent] : null;
         var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.Role, tip, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY);
         // The graph is a column of its own: the side menu's background and a line on its left, unbroken from the first step to the last
@@ -37,14 +46,45 @@ internal partial class ReadableLog
         return row;
     }
 
-    /// <summary>The agents above the steps: Main and each sub-agent with the color of its branch.</summary>
-    private static WrapPanel AgentLegend(SessionGraph graph)
+    private readonly Dictionary<LogEntry, Action<bool>> _showStep = [];
+    private readonly HashSet<int> _hiddenAgents = [];   // agents (0 = main) the legend chips turned off
+
+    /// <summary>The agents above the steps: a chip for Main and each sub-agent in the color of its branch; click one to hide or show its steps.</summary>
+    private WrapPanel AgentLegend(SessionGraph graph)
     {
         var legend = new WrapPanel { Margin = new Thickness(0, 0, 0, Space.M) };
         for (var i = 0; i < graph.Agents.Length; i++)
         {
+            var agent = i;
             var key = i == 0 ? Muted : CategoryKey(Theme.Categories[(i - 1) % Theme.Categories.Length]);
-            legend.Children.Add(Chip(graph.Agents[i], key).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.S)));
+            var chip = new ToggleButton
+            {
+                Content = WithDot(Dot(key), graph.Agents[i], TextSize.Caption, true),
+                IsChecked = true,
+                Padding = new Thickness(Space.L, Space.XS),
+                Margin = new Thickness(0, 0, Space.M, Space.S)
+            };
+            ToolTip.SetTip(chip, "Show or hide this agent's steps");
+            chip.IsCheckedChanged += (_, _) =>
+            {
+                if (chip.IsChecked == true)
+                {
+                    _hiddenAgents.Remove(agent);
+                }
+                else
+                {
+                    _hiddenAgents.Add(agent);
+                }
+
+                for (var n = 0; n < Steps.Count; n++)
+                {
+                    if (_showStep.TryGetValue(Steps[n], out var show))
+                    {
+                        show(!_hiddenAgents.Contains(graph.Rows[n].Owner.Agent));
+                    }
+                }
+            };
+            legend.Children.Add(chip);
         }
 
         return legend;

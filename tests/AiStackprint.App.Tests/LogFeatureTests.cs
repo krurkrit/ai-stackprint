@@ -139,4 +139,21 @@ public sealed class LogFeatureTests
 #pragma warning restore CS0618
         detail.Close();
     }
+
+    [AvaloniaFact]
+    public void An_agent_chip_hides_and_shows_the_steps_of_that_agent()
+    {
+        var w = Ui.Show(new ReadableLog(WithAgents(), false, true).Root);
+        bool Shown(string text) => w.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == text && t.IsEffectivelyVisible);
+        var chip = w.GetVisualDescendants().OfType<ToggleButton>().First(b => Ui.Texts(b).Any(t => t.StartsWith("Agent 2", StringComparison.Ordinal)));
+        Assert.True(Shown("Agent 2: npm test"));
+        chip.IsChecked = false;
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(Shown("Agent 2: npm test"));
+        Assert.True(Shown("Agent 3: read auth.ts"));   // the others stay
+        chip.IsChecked = true;
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(Shown("Agent 2: npm test"));
+        w.Close();
+    }
 }

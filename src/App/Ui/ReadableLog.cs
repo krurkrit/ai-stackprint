@@ -145,6 +145,11 @@ internal partial class ReadableLog
                 AddCopy(holder, e);
             }
 
+            if (_graph != null && _hiddenAgents.Contains(_graph.Rows[i].Owner.Agent) && _showStep.TryGetValue(e, out var show))
+            {
+                show(false);   // an agent hidden by its chip stays hidden in steps built later
+            }
+
             _holders[e] = holder;
             _list.Children.Insert(at++, holder);
         }
