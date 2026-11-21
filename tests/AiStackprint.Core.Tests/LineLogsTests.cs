@@ -102,4 +102,28 @@ public sealed class LineLogsTests
             "2026-01-01 10:00:03 [whatever] d");
         Assert.Equal(["error", "warn", "trace", "log"], s.Entries.Select(e => e.Role));
     }
+
+    [Fact]
+    public void Orca_trace_spans_give_a_time_a_level_from_their_exit_and_a_summary()
+    {
+        var s = Parse(
+            """{"type":"effect-span","name":"git.exec","traceId":"t","spanId":"s","kind":"internal","startTimeUnixNano":"1789486915457000000","endTimeUnixNano":"1789486915636000000","durationMs":179,"attributes":{"kind":"git","git.subcommand":"worktree"},"events":[],"exit":{"_tag":"Success"}}""",
+            """{"type":"effect-span","name":"crash.breadcrumb","startTimeUnixNano":"1789486916401000000","durationMs":0,"attributes":{"breadcrumb.name":"main_process_lifecycle_started"},"exit":{"_tag":"Success"}}""",
+            """{"type":"effect-span","name":"git.exec","startTimeUnixNano":"1789486917000000000","durationMs":166,"attributes":{"git.subcommand":"remote"},"exit":{"_tag":"Failure","cause":"Error: Command failed: git remote get-url upstream"}}""");
+        Assert.Equal(["info", "debug", "error"], s.Entries.Select(e => e.Role));
+        Assert.Equal("git.exec · git worktree · 179 ms", s.Entries[0].Text);
+        Assert.Equal("crash.breadcrumb · main_process_lifecycle_started", s.Entries[1].Text);
+        Assert.StartsWith("git.exec · git remote · 166 ms\nError: Command failed", s.Entries[2].Text, StringComparison.Ordinal);
+        Assert.Equal(2026, s.Entries[0].Time!.Value.Year);
+    }
+
+    [Fact]
+    public void Orca_daemon_events_give_the_event_and_a_few_of_its_fields()
+    {
+        var s = Parse(
+            """{"src":"daemon","ts":"2026-09-15T15:42:14.106Z","pid":4580,"event":"startup","protocolVersion":36}""",
+            """{"src":"daemon","ts":"2026-09-15T15:42:15.000Z","pid":4580,"event":"client-error","code":7}""");
+        Assert.Equal(["info", "error"], s.Entries.Select(e => e.Role));
+        Assert.Equal("startup pid=4580 protocolVersion=36", s.Entries[0].Text);
+    }
 }

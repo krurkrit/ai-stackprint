@@ -33,7 +33,7 @@ public static partial class LineLogs
 
     private delegate Parsed? LineParser(string line);
 
-    private static readonly LineParser[] _parsers = [Bracketed, Logfmt, JsonLine, Glog];
+    private static readonly LineParser[] _parsers = [Bracketed, Logfmt, JsonLine, Glog, Span, EventJson];
 
     /// <summary>Reads the lines of a text log into steps.</summary>
     public static Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
@@ -174,6 +174,74 @@ public static partial class LineLogs
         catch (JsonException)
         {
             return null;   // cut off or not JSON
+        }
+    }
+
+    // {"type":"effect-span","name":"git.exec","startTimeUnixNano":"1789486915457000000","durationMs":179,"attributes":{...},"exit":{"_tag":"Success"}}   (Orca's trace)
+    private static Parsed? Span(string line)
+    {
+        if (line.Length < 2 || line[0] != '{' || !line.Contains("\"effect-span\"", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var d = JsonDocument.Parse(line);
+            var r = d.RootElement;
+            if (r.ValueKind != JsonValueKind.Object || !r.TryGetProperty("name", out var name) || name.ValueKind != JsonValueKind.String
+                || !r.TryGetProperty("startTimeUnixNano", out var start) || !long.TryParse(start.ToString(), out var nanos))
+            {
+                return null;
+            }
+
+            var attributes = r.TryGetProperty("attributes", out var a) && a.ValueKind == JsonValueKind.Object ? a : default;
+            var what = attributes.ValueKind == JsonValueKind.Object && attributes.TryGetProperty("breadcrumb.name", out var crumb) ? crumb.GetString()
+                : attributes.ValueKind == JsonValueKind.Object && attributes.TryGetProperty("git.subcommand", out var sub) ? "git " + sub.GetString() : null;
+            var failed = r.TryGetProperty("exit", out var exit) && exit.TryGetProperty("_tag", out var tag) && tag.GetString() == "Failure";
+            var ms = r.TryGetProperty("durationMs", out var dur) && dur.ValueKind == JsonValueKind.Number ? dur.GetDouble() : 0;
+            var text = name.GetString() + (what != null ? " · " + what : "") + (ms >= 1 ? $" · {ms:0} ms" : "");
+            if (failed && exit.TryGetProperty("cause", out var cause) && cause.ValueKind == JsonValueKind.String)
+            {
+                text += '\n' + cause.GetString();
+            }
+
+            var level = failed ? "error" : name.GetString()!.Contains("breadcrumb", StringComparison.Ordinal) ? "debug" : "info";
+            return new Parsed(DateTimeOffset.FromUnixTimeMilliseconds(nanos / 1_000_000).LocalDateTime, level, text, line);
+        }
+        catch (JsonException)
+        {
+            return null;   // cut off or not JSON
+        }
+    }
+
+    // {"src":"daemon","ts":"2026-09-15T15:42:14.106Z","pid":4580,"event":"startup","protocolVersion":36}   (Orca's daemon log)
+    private static Parsed? EventJson(string line)
+    {
+        if (line.Length < 2 || line[0] != '{' || !line.Contains("\"event\"", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var d = JsonDocument.Parse(line);
+            var r = d.RootElement;
+            if (r.ValueKind != JsonValueKind.Object || !r.TryGetProperty("ts", out var ts) || ts.ValueKind != JsonValueKind.String
+                || !r.TryGetProperty("event", out var ev) || ev.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            var extra = r.EnumerateObject().Where(p => p.Name is not ("ts" or "event" or "src") && p.Value.ValueKind is JsonValueKind.String or JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False)
+                .Take(4).Select(p => $"{p.Name}={p.Value}");
+            var name = ev.GetString() ?? "";
+            var level = name.Contains("error", StringComparison.OrdinalIgnoreCase) || name.Contains("fail", StringComparison.OrdinalIgnoreCase) ? "error" : "info";
+            return new Parsed(ParseTime(ts.GetString() ?? ""), level, (name + " " + string.Join(" ", extra)).TrimEnd(), line);
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

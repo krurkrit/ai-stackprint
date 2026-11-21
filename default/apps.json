@@ -668,9 +668,9 @@
         {"path": ".orca/skills", "level": "Project", "layout": "flat-md"}
       ],
       "logs": [
-        {"path": "%APPDATA%/orca/logs", "label": "Logs", "os": "windows"},
-        {"path": "~/Library/Application Support/orca/logs", "label": "Logs", "os": "macos"},
-        {"path": "~/.config/orca/logs", "label": "Logs", "os": "linux"}
+        {"path": "%APPDATA%/orca/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/orca/logs", "label": "Logs", "os": "macos", "format": "text-log"},
+        {"path": "~/.config/orca/logs", "label": "Logs", "os": "linux", "format": "text-log"}
       ],
       "notes": "Orchestrator. Per-repo skills are Markdown files in .orca/skills. Detect paths are best-effort; edit apps.json if yours differ. Log paths on macOS and Linux are best-effort."
     },
