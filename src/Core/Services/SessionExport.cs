@@ -48,7 +48,7 @@ public static class SessionExport
                 sb.Append("#### Tool · ").Append(e.Tool ?? "tool").Append(time).Append("\n\n").Append(Fence(e.Detail ?? e.Text, Lang(e.Lang))).Append('\n');
                 break;
             case "result":
-                sb.Append("#### Result").Append(e.Tool != null ? " · " + e.Tool : "").Append("\n\n").Append(Fence(e.Text, Lang(e.Lang))).Append('\n');
+                sb.Append("#### Result").Append(e.Tool != null ? " · " + e.Tool : "").Append(e.Error ? " · failed" : "").Append("\n\n").Append(Fence(e.Text, Lang(e.Lang))).Append('\n');
                 break;
             case "thinking":
                 sb.Append("> **Thinking**\n>\n").Append(string.Join('\n', e.Text.TrimEnd().Split('\n').Select(l => "> " + l))).Append('\n');

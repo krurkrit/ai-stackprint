@@ -19,7 +19,12 @@ internal partial class ReadableLog
     private readonly Dictionary<LogEntry, Control> _controls = [];
     private readonly Dictionary<LogEntry, Panel> _holders = [];   // each step's slot: the fading highlight is laid over it
     private readonly ScrollViewer _scroll = new();
-    public Control Root => _scroll;
+    private readonly Grid _root = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+    private SessionMinimap? _map;
+    public Control Root => _root;
+
+    /// <summary>Sessions with fewer steps than this have no minimap: the whole of them is in view anyway.</summary>
+    internal const int MinimapFrom = 25;
     public List<LogEntry> Steps { get; }
 
     /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
@@ -92,6 +97,12 @@ internal partial class ReadableLog
         }
 
         _scroll.Content = _list;
+        _root.Children.Add(_scroll);
+        if (Steps.Count >= MinimapFrom)
+        {
+            AddMinimap();
+        }
+
         if (toEnd)
         {
             Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
@@ -162,6 +173,7 @@ internal partial class ReadableLog
         }
 
         _built += to - from;
+        _map?.InvalidateVisual();   // the box of what is in view moves when earlier steps are built
         if (from > 0)
         {
             _earlier = Btn($"Show {Math.Min(MoreSteps, from)} earlier steps ({from} not shown)", () => BuildEarlier(MoreSteps));

@@ -5,7 +5,7 @@ using AiStackprint.Services;
 
 namespace AiStackprint.Ui;
 
-/// <summary>Lines view of a text log: go to the next or previous error line (F8 / Shift+F8 or the buttons).</summary>
+/// <summary>Lines or Conversation or Compact: go to the next or previous error (a failed tool result, or an error line of a text log) (F8 / Shift+F8 or the buttons).</summary>
 internal partial class LogViewer
 {
     private LogEntry? _errorAt;   // the error the last jump went to
@@ -13,7 +13,7 @@ internal partial class LogViewer
     /// <summary>Scrolls to the next (1) or previous (-1) error after the first line in view; false when the view has no errors in that direction.</summary>
     public bool NextError(int step)
     {
-        if (_readable is not { } log || !ShowReadable || !IsLines)
+        if (_readable is not { } log || !ShowReadable)
         {
             return false;
         }
@@ -28,17 +28,17 @@ internal partial class LogViewer
 
         for (var i = from + step; i >= 0 && i < steps.Count; i += step)
         {
-            if (steps[i].Role == "error")
+            if (steps[i].IsError)
             {
                 _errorAt = steps[i];
                 log.Reveal(steps[i]);
-                var errors = steps.Where(e => e.Role == "error").ToList();
+                var errors = steps.Where(e => e.IsError).ToList();
                 _status.Text = $"Error {errors.IndexOf(steps[i]) + 1:N0} of {errors.Count:N0}";
                 return true;
             }
         }
 
-        _status.Text = steps.Any(e => e.Role == "error") ? (step > 0 ? "No more errors below" : "No more errors above") : "No errors in this file";
+        _status.Text = steps.Any(e => e.IsError) ? (step > 0 ? "No more errors below" : "No more errors above") : "No errors in this file";
         return false;
     }
 }

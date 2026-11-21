@@ -123,7 +123,7 @@ internal partial class LogViewer
         var mode = CanRead ? ModeSwitch(rebuild) : null;
         // Search, the view switch, then the file buttons. Follow is a switch on the Files card. F5 reloads (no Reload button: the folder is watched).
         var tools = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Left };
-        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable && IsLines ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error line (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode, ExportButton(), BookmarksButton(),
+        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode, ExportButton(), BookmarksButton(),
                      IconBtn("open", "Open file", () => PathUtil.OpenFile(f.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(f.Path)) })
         {
             if (c != null)

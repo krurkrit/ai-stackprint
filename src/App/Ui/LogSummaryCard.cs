@@ -128,6 +128,11 @@ internal class LogSummaryCard
                 Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
             }
 
+            if (s.Cost > 0)
+            {
+                Add("≈ " + ReadableLog.StepMoney(s.Cost) + " estimated");
+            }
+
             if (s.Models.Count > 0)
             {
                 Add(string.Join(", ", s.Models));
@@ -143,6 +148,11 @@ internal class LogSummaryCard
             sp.Children.Add(Txt("Top tools: " + string.Join(" · ", s.TopTools.Select(t => $"{t.Tool} {t.Count:N0}")), TextSize.Small, false, Muted));
         }
 
+        if (s.Daily.Count > 0)
+        {
+            sp.Children.Add(PerDay(s.Daily));
+        }
+
         if (s.Largest.Count > 0)
         {
             sp.Children.Add(Txt("Largest: " + string.Join(" · ", s.Largest.Select(f => $"{Path.GetFileName(f.Path)} {LogViewer.Size(f.Size)}")), TextSize.Small, false, Muted));
@@ -154,5 +164,53 @@ internal class LogSummaryCard
         }
 
         return sp;
+    }
+
+    private const int DaysShown = 14;
+
+    /// <summary>Tokens and estimated cost per day (newest first): the sessions that had a reply that day, the request and reply tokens, and the cost at the models' list prices.</summary>
+    private static Control PerDay(List<DayTotal> days)
+    {
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions($"{Widths.LabelS},{Widths.LabelS},*,{Widths.LabelS}"),
+            Margin = new Thickness(0, Space.S, 0, 0)
+        };
+        void Cell(int row, int col, string text, bool head = false, bool right = false)
+        {
+            var t = Txt(text, TextSize.Small, head, head ? Muted : Text);
+            if (right)
+            {
+                t.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+            }
+
+            Grid.SetRow(t, row);
+            Grid.SetColumn(t, col);
+            grid.Children.Add(t);
+        }
+
+        var shown = days.Take(DaysShown).ToList();
+        grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        Cell(0, 0, "Day", true);
+        Cell(0, 1, "Sessions", true);
+        Cell(0, 2, "Tokens in / out", true);
+        Cell(0, 3, "Est. cost", true, true);
+        for (var i = 0; i < shown.Count; i++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            var d = shown[i];
+            Cell(i + 1, 0, d.Date.ToString("yyyy-MM-dd"));
+            Cell(i + 1, 1, d.Sessions.ToString("N0"));
+            Cell(i + 1, 2, $"{UsageCard.Fmt(d.Input)} / {UsageCard.Fmt(d.Output)}");
+            Cell(i + 1, 3, d.Cost > 0 ? ReadableLog.StepMoney(d.Cost) : "–", false, true);
+        }
+
+        var panel = new StackPanel { Spacing = Space.XS, Children = { grid } };
+        if (days.Count > shown.Count)
+        {
+            panel.Children.Add(Txt($"… and {days.Count - shown.Count:N0} earlier days", TextSize.Caption, false, Muted));
+        }
+
+        return panel;
     }
 }

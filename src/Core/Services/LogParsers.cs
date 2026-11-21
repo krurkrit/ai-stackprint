@@ -16,6 +16,12 @@ public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, 
 
     /// <summary>The tokens (and so the cost) of the reply this step starts, once per reply; null when the log has none (not every format records them).</summary>
     public UsageEvent? Usage { get; init; }
+
+    /// <summary>The app marked this step as failed (a tool result with <c>is_error</c>); only formats that say so set it.</summary>
+    public bool Error { get; init; }
+
+    /// <summary>A failed tool result, or a line of a text log at the error level.</summary>
+    public bool IsError => Error || Role == "error";
 }
 
 /// <param name="PeakContext">The largest request of the main conversation (input + cache read + cache write): how full its context got; 0 = unknown.</param>

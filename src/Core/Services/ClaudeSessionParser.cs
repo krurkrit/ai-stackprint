@@ -89,7 +89,7 @@ internal class ClaudeSessionParser : ILogParser
                     case "tool_result":
                         var text = LogParsers.Cut(LogParsers.Text(b.Get("content")), 20000);
                         calls.TryGetValue(b.Str("tool_use_id"), out var call);
-                        list.Add(new("result", text, time, sub, call.Tool, LogParsers.Detect(text, call.Tool == "Read" ? call.File : null)));
+                        list.Add(new LogEntry("result", text, time, sub, call.Tool, LogParsers.Detect(text, call.Tool == "Read" ? call.File : null)) { Error = b.Get("is_error").ValueKind == JsonValueKind.True });
                         break;
                 }
             }

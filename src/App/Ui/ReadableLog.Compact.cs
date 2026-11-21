@@ -29,6 +29,7 @@ internal partial class ReadableLog
             "user" => ("person", "You", Accent),
             "assistant" => ("bot", "Assistant", Text),
             "tool" => ("wrench", e.Tool ?? "Tool", Muted),
+            "result" when e.Error => ("warning", "Failed" + (e.Tool != null ? " · " + e.Tool : ""), ErrorKey),
             "result" => ("document_text", "Result" + (e.Tool != null ? " · " + e.Tool : ""), Muted),
             "thinking" => ("brain_circuit", "Thinking", Muted),
             _ => ("info", "Context", Muted)
@@ -42,7 +43,7 @@ internal partial class ReadableLog
         var time = Txt(e.Time?.ToString("HH:mm:ss") ?? "", TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
         var name = Row(Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key), L(who, true, key).With(t => t.TextTrimming = TextTrimming.CharacterEllipsis));
         var line = OneLine(e);
-        var text = Txt(line, TextSize.Body, false, e.Role is "user" or "assistant" ? Text : Muted).With(t =>
+        var text = Txt(line, TextSize.Body, false, e.IsError ? ErrorKey : e.Role is "user" or "assistant" ? Text : Muted).With(t =>
         {
             t.TextTrimming = TextTrimming.CharacterEllipsis;
             t.VerticalAlignment = VerticalAlignment.Center;

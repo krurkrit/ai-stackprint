@@ -83,4 +83,15 @@ public sealed class SessionExportTests
         Assert.Equal("assistant", usage.Role);
         Assert.Equal(("gpt-5", 200L, 50L, 800L, 10L), (usage.Usage!.Model, usage.Usage.Input, usage.Usage.Output, usage.Usage.CacheRead, usage.Usage.Reasoning));
     }
+
+    [Fact]
+    public void A_tool_result_the_app_marked_as_an_error_is_an_error_step()
+    {
+        var s = new ClaudeSessionParser().Parse(Lines(
+            "{\"type\":\"assistant\",\"timestamp\":\"2026-11-11T05:00:00Z\",\"message\":{\"id\":\"m1\",\"model\":\"m\",\"content\":[{\"type\":\"tool_use\",\"id\":\"a\",\"name\":\"Bash\",\"input\":{\"command\":\"false\"}}]}}",
+            "{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:00:01Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"boom\",\"is_error\":true}]}}",
+            "{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:00:02Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"fine\"}]}}"));
+        Assert.Equal([false, true, false], s.Entries.Select(e => e.IsError));
+        Assert.Contains(" · failed", SessionExport.Markdown(s.Entries[1]), StringComparison.Ordinal);
+    }
 }

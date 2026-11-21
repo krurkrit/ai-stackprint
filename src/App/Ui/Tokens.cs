@@ -99,6 +99,7 @@ internal static class Sizes
 /// <summary>Widths of dialogs and side panels.</summary>
 internal static class Widths
 {
+    internal const double Minimap = 16;      // the session minimap strip
     internal const double LogTime = 64;      // time column of a conversation line
     internal const double LogWho = 130;      // who column of a conversation line
     internal const double GraphLane = 18;    // one lane of the sub-agent graph

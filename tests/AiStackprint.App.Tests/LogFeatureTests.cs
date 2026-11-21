@@ -211,4 +211,54 @@ public sealed class LogFeatureTests
         host.Close();
         w.Close();
     }
+
+    [AvaloniaFact]
+    public void A_failed_tool_result_is_marked_in_both_views_and_counted_in_the_header()
+    {
+        var session = new ClaudeSessionParser().Parse(Lines(
+            "{\"type\":\"assistant\",\"timestamp\":\"2026-11-11T05:00:00Z\",\"message\":{\"id\":\"m1\",\"model\":\"m\",\"content\":[{\"type\":\"tool_use\",\"id\":\"a\",\"name\":\"Bash\",\"input\":{\"command\":\"false\"}}]}}",
+            "{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:00:01Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"boom\",\"is_error\":true}]}}"));
+        foreach (var compact in new[] { false, true })
+        {
+            var w = Ui.Show(new ReadableLog(session, false, compact).Root);
+            var texts = Ui.Texts(w);
+            Assert.Contains("1 failed result", texts);
+            Assert.Contains(texts, t => t.StartsWith("Failed · Bash", StringComparison.Ordinal));
+            w.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void A_long_session_has_a_minimap_with_its_errors_and_a_click_goes_there()
+    {
+        var steps = new List<string>();
+        for (var i = 1; i <= 60; i++)
+        {
+            steps.Add(i % 10 == 0 ? Line(i % 60, "user", "prompt " + i) : Line(i % 60, "assistant", "step " + i));
+        }
+
+        steps.Add("{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:01:00Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"boom\",\"is_error\":true}]}}");
+        var session = new ClaudeSessionParser().Parse(Lines([.. steps]));
+        var log = new ReadableLog(session, false, true);
+        var w = new Window { Width = 900, Height = 600, Content = log.Root };
+        w.Show();
+        Dispatcher.UIThread.RunJobs();
+        var map = w.GetVisualDescendants().OfType<SessionMinimap>().Single();
+        Assert.True(map.Bounds.Height > 100);
+        var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Extent.Height > s.Viewport.Height);
+        Assert.Equal(0, scroll.Offset.Y);
+        map.RaiseEvent(new Avalonia.Input.PointerPressedEventArgs(map, new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true), w, new Avalonia.Point(5, map.Bounds.Height * .9),
+            0, new Avalonia.Input.PointerPointProperties(Avalonia.Input.RawInputModifiers.LeftMouseButton, Avalonia.Input.PointerUpdateKind.LeftButtonPressed), Avalonia.Input.KeyModifiers.None)
+        { RoutedEvent = Avalonia.Input.InputElement.PointerPressedEvent });
+        Dispatcher.UIThread.RunJobs();
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(scroll.Offset.Y > 0);   // a click near the bottom went there
+#pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
+        w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-minimap.png"));
+#pragma warning restore CS0618
+        w.Close();
+
+        var few = new ReadableLog(WithAgents(), false, true);
+        Assert.Empty(few.Root.GetVisualDescendants().OfType<SessionMinimap>());   // a short session has none
+    }
 }

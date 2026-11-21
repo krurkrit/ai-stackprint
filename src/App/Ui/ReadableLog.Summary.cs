@@ -46,6 +46,11 @@ internal partial class ReadableLog
             Add("≈ " + StepMoney(total) + " estimated");
         }
 
+        if (s.Entries.Count(e => e.IsError) is > 0 and var failed)
+        {
+            w.Children.Add(Chip(Plural(failed, "failed result"), ErrorKey).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.M)));
+        }
+
         if (PeakContext(s) is { } peak)
         {
             Add(peak);
@@ -102,7 +107,7 @@ internal partial class ReadableLog
         "user" => Message("person", "You", e, Selected, mine: true),
         "assistant" => Message("bot", "Assistant", e, Surface),
         "tool" => ToolCall(e),
-        "result" => Folded("Result" + (e.Tool != null ? $" · {e.Tool}" : ""), e.Text, e.Lang),
+        "result" => ResultCard(e),
         "thinking" => Folded("Thinking", e.Text, null, markdown: true),
         _ => Folded("Context", e.Text, null, markdown: true)
     };
@@ -139,3 +144,4 @@ internal partial class ReadableLog
             .Themed(Border.BackgroundProperty, bg);
     }
 }
+
