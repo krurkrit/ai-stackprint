@@ -159,28 +159,6 @@ public sealed class LogFeatureTests
     }
 
     [AvaloniaFact]
-    public void Compare_shows_the_figures_and_the_steps_of_two_sessions_side_by_side()
-    {
-        var one = WithAgents();
-        var two = new ClaudeSessionParser().Parse(Lines(
-            Line(1, "user", "Fix the login redirect loop"), Line(2, "assistant", "Let me look at the middleware first."),
-            Line(3, "assistant", "Agent 1: grep redirect", "a1"), Line(4, "assistant", "Agent 1: read middleware", "a1"),
-            Line(5, "assistant", "Fixed the cookie name; running tests."), Line(6, "user", "Thanks")));
-        var w = new Window { Width = 1100, Height = 900, Content = new Border { Padding = new Avalonia.Thickness(16), Child = Dialogs.CompareBody("Today 14:02 · fix-login", one, "Yesterday 10:40 · fix-login", two) } };
-        w.Show();
-        Dispatcher.UIThread.RunJobs();
-        var texts = Ui.Texts(w);
-        Assert.Contains("Steps", texts);
-        Assert.Contains("13", texts);   // the first session has 13 steps
-        Assert.Contains("6", texts);
-        Assert.Contains(texts, t => t.StartsWith("Agent 1", StringComparison.Ordinal) && t.Contains("Agent 1: grep redirect", StringComparison.Ordinal));   // a sub-agent is one block
-#pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
-        w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-compare.png"));
-#pragma warning restore CS0618
-        w.Close();
-    }
-
-    [AvaloniaFact]
     public void A_bookmarked_step_shows_a_mark_on_its_line_and_the_popup_has_the_controls()
     {
         using var home = new FakeHome();   // state.json goes to the made-up home

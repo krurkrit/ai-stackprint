@@ -106,8 +106,6 @@ internal static class Widths
     internal const double DialogS = 380;
     internal const double DialogM = 520;
     internal const double DialogL = 640;
-    internal const double DialogXL = 1100;   // the Compare sessions dialog
-    internal const double DialogMargin = 120; // room left around a wide dialog
     internal const double FontParent = 128;  // font setting control: parent drop-down (with its chain icon)
     internal const double FontFamily = 156; // family drop-down
     internal const double FontSize = 68;     // size number

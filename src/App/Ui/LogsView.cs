@@ -120,8 +120,6 @@ internal partial class LogsView(Ctx x)
             right.Children.Add(loading ? Section("data_pie", "Summary", Busy.Loading("Reading log folders…")) : _summary.Build(_files));
             // Follow first, then one Delete menu (four buttons did not fit on a line); each choice still asks before anything moves to the Recycle Bin
             var del = Btn("Delete…", () => { }, false, "delete");
-            var compare = Btn("Compare", Compare, false, "chat_multiple");
-            ToolTip.SetTip(compare, "Tick two session files in the list, then compare them side by side");
             var menu = new MenuFlyout();
             void Choice(string text, Func<List<LogFile>> files)
             {
@@ -167,7 +165,7 @@ internal partial class LogsView(Ctx x)
                     MaxHeight = Heights.List,
                     Content = _table.Free()
                 } }
-            }, follow, compare, del));
+            }, follow, del));
             if (loading)
             {
                 _table.Content = Busy.Loading("Reading log folders…");
