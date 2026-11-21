@@ -18,9 +18,11 @@ internal sealed class AgentGraphCell : Control
     private readonly GraphRow _row;
     private readonly string _kind;
     private readonly int _lanes;
+    private readonly double _nodeY;   // where the step's dot sits: the middle of its line
 
-    public AgentGraphCell(GraphRow row, int lanes, string kind, string? tip)
+    public AgentGraphCell(GraphRow row, int lanes, string kind, string? tip, double nodeY)
     {
+        _nodeY = nodeY;
         _row = row;
         _lanes = lanes;
         _kind = kind;
@@ -45,7 +47,7 @@ internal sealed class AgentGraphCell : Control
     public override void Render(DrawingContext context)
     {
         var h = Bounds.Height;
-        var y = Sizes.GraphNodeY;
+        var y = _nodeY;
         var main = new Pen(Brush(W.Muted), Stroke.Medium);
         context.DrawLine(main, new Point(X(0), 0), new Point(X(0), h));
         foreach (var b in _row.Open)

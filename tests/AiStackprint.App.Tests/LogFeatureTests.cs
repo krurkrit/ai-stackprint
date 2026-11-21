@@ -20,7 +20,7 @@ public sealed class LogFeatureTests
     private static IEnumerable<ReadOnlyMemory<byte>> Lines(params string[] lines) => lines.Select(l => (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(l));
 
     [AvaloniaFact]
-    public void A_session_that_edited_files_says_how_many_and_each_step_has_a_Copy_button()
+    public void A_session_that_edited_files_says_how_many_and_shows_one_line_per_step()
     {
         var session = new ClaudeSessionParser().Parse(Lines(
             """{"type":"user","timestamp":"2026-11-11T04:59:00Z","message":{"role":"user","content":"fix it"}}""",
@@ -28,8 +28,11 @@ public sealed class LogFeatureTests
         var log = new ReadableLog(session, false);
         var w = Ui.Show(log.Root);
         Assert.Contains("1 file changed", Ui.Texts(w));
-        var copies = w.GetVisualDescendants().OfType<Button>().Where(b => ToolTip.GetTip(b) as string == "Copy this step as Markdown").ToList();
-        Assert.Equal(session.Entries.Count, copies.Count);
+        var texts = Ui.Texts(w);
+        Assert.Equal(1, texts.Count(t => t == "You"));   // one line per step: who, then its text
+        Assert.Contains("fix it", texts);
+        Assert.Contains("done", texts);
+        Assert.Equal(session.Entries.Count, w.GetVisualDescendants().OfType<Border>().Count(r => r.Cursor != null && r.MinHeight == Heights.LogRow));   // each line opens its card in a popup
         w.Close();
     }
 
@@ -86,5 +89,42 @@ public sealed class LogFeatureTests
         w.CaptureRenderedFrame()?.Save(png);
 #pragma warning restore CS0618
         w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_click_on_a_line_opens_the_full_step_in_a_popup()
+    {
+        var session = new ClaudeSessionParser().Parse(Lines(
+            """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":5},"content":[{"type":"text","text":"Some **bold** text"},{"type":"tool_use","id":"a","name":"Edit","input":{"file_path":"src/A.cs","old_string":"1","new_string":"2"}}]}}"""));
+        var log = new ReadableLog(session, false);
+        var w = Ui.Show(log.Root);
+        var rows = w.GetVisualDescendants().OfType<Border>().Where(r => r.Cursor != null && r.MinHeight == Heights.LogRow).ToList();
+        Assert.Equal(2, rows.Count);
+        foreach (var row in rows)
+        {
+            var click = new Avalonia.Input.PointerReleasedEventArgs(row, new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true), w, new Avalonia.Point(5, 5),
+                0, new Avalonia.Input.PointerPointProperties(Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PointerUpdateKind.LeftButtonReleased), Avalonia.Input.KeyModifiers.None, Avalonia.Input.MouseButton.Left)
+            {
+                RoutedEvent = Avalonia.Input.InputElement.PointerReleasedEvent
+            };
+            row.RaiseEvent(click);
+        }
+
+        Dispatcher.UIThread.RunJobs();
+        w.Close();
+
+        var detail = new Window
+        {
+            Width = 680,
+            Height = 420,
+            Content = new Border { Child = new StackPanel { Children = { ReadableLog.DetailContent(new Border(), session.Entries[0]), ReadableLog.DetailContent(new Border(), session.Entries[1]) } } }
+        };
+        detail.Show();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains(Ui.Texts(detail), t => t.Contains("bold", StringComparison.Ordinal));   // the Markdown is rendered
+#pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
+        detail.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-step-popup.png"));
+#pragma warning restore CS0618
+        detail.Close();
     }
 }

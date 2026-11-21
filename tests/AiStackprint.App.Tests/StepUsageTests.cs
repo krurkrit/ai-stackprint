@@ -13,7 +13,7 @@ namespace AiStackprint.App.Tests;
 public sealed class StepUsageTests
 {
     [AvaloniaFact]
-    public void A_reply_shows_its_model_tokens_and_cost_and_the_header_the_total()
+    public void A_reply_shows_its_cost_on_its_line_and_the_header_the_total()
     {
         var lines = new[]
         {
@@ -24,7 +24,6 @@ public sealed class StepUsageTests
         var log = new ReadableLog(session, false);
         var w = Ui.Show(log.Root);
         var texts = Ui.Texts(w);
-        Assert.Contains(texts, t => t.StartsWith("claude-opus-5-5 · ", StringComparison.Ordinal) && t.Contains(" in (", StringComparison.Ordinal) && t.Contains(" cached) · ", StringComparison.Ordinal) && t.Contains(" out", StringComparison.Ordinal));
         if (ModelCatalog.Cost(session.Entries[1].Usage!) is { } cost)
         {
             Assert.Contains(texts, t => t.Contains(ReadableLog.StepMoney(cost), StringComparison.Ordinal));

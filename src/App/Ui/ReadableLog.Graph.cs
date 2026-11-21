@@ -13,18 +13,17 @@ namespace AiStackprint.Ui;
 /// <summary>A conversation with sub-agents: each step has its row of the branch graph on its right.</summary>
 internal partial class ReadableLog
 {
-    /// <summary>The step and its graph cell. The cell also covers the space below the step, so the lines do not break between steps.</summary>
+    /// <summary>The step and its graph cell. Rows have no space between them, so the lines do not break between steps.</summary>
     private Panel GraphRow(Control step, int index, LogEntry e)
     {
         var graph = _graph!;
         var row = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions($"*,{Space.XL},Auto"),   // the step, a gutter, the graph column
-            RowDefinitions = new RowDefinitions($"Auto,{Space.M}")
+            ColumnDefinitions = new ColumnDefinitions($"*,{Space.S},Auto")   // the step, a gutter, the graph column
         };
         row.Children.Add(step);
         var tip = graph.Rows[index].Owner.Agent is > 0 and var agent ? graph.Agents[agent] : null;
-        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.Role, tip);
+        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.Role, tip, Heights.LogRow / 2);
         // The graph is a column of its own: the side menu's background and a line on its left, unbroken from the first step to the last
         var column = new Border
         {
@@ -32,7 +31,6 @@ internal partial class ReadableLog
             BorderThickness = new Thickness(Stroke.Thin, 0, 0, 0)
         }.Themed(Border.BackgroundProperty, SideKey).Themed(Border.BorderBrushProperty, BorderKey);
         Grid.SetColumn(column, 2);
-        Grid.SetRowSpan(column, 2);
         row.Children.Add(column);
         return row;
     }

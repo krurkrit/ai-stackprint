@@ -70,7 +70,6 @@ internal static class Sizes
 {
     internal const double Dot = 8;           // legend and status dots
     internal const double GraphNode = 4;     // radius of a step's dot in the sub-agent graph
-    internal const double GraphNodeY = 16;   // where a step's dot sits: level with the first line of its card
     internal const double RadioDot = 8;      // the dot inside a selected radio button (the control default, 12, is large and bright in a 20 px ring)
     internal const double Bar = 10;          // bar charts and progress bars
     internal const double BarThin = 8;       // progress bars inside dense rows
@@ -99,6 +98,8 @@ internal static class Sizes
 /// <summary>Widths of dialogs and side panels.</summary>
 internal static class Widths
 {
+    internal const double LogTime = 64;      // time column of a conversation line
+    internal const double LogWho = 130;      // who column of a conversation line
     internal const double GraphLane = 18;    // one lane of the sub-agent graph
     internal const double DialogS = 380;
     internal const double DialogM = 520;
@@ -134,6 +135,7 @@ internal static class Widths
 /// <summary>Heights of scrolling viewers (code, text, lists).</summary>
 internal static class Heights
 {
+    internal const double LogRow = 30;       // one line of a conversation (and where the graph's dot sits)
     internal const double List = 260;        // a short list inside a card
     internal const double ViewerS = 320;     // command output, small editors
     internal const double Viewer = 420;      // code and text viewers inside a card

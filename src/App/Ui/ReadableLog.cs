@@ -47,10 +47,7 @@ internal partial class ReadableLog
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
         _graph = lines ? null : SessionGraph.Layout(Steps);
-        if (lines || _graph != null)
-        {
-            _list.Spacing = 0;   // a graph's lines must run unbroken from one row to the next: the rows carry their own spacing
-        }
+        _list.Spacing = 0;   // one line per step: the rows carry their own spacing (a graph's lines run unbroken from row to row)
 
         _list.Children.Add(lines ? LinesSummary(s) : Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
@@ -105,31 +102,11 @@ internal partial class ReadableLog
             }
 
             wasSub = e.SubAgent;
-            var step = Step(e);
+            var step = _lines ? LogLine(e) : CompactRow(e);   // a conversation is one line per step; its card opens in a popup
             _controls[e] = step;
-            if (e.Usage != null)
-            {
-                step = WithUsage(step, e.Usage);
-            }
-
-            if (e.SubAgent)
-            {
-                step = new Border
-                {
-                    BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
-                    Padding = new Thickness(Space.L, 0, 0, 0),
-                    Margin = new Thickness(Space.XXXL, 0, 0, 0),
-                    Child = step
-                }
-                    .Themed(Border.BorderBrushProperty, Accent);
-            }
 
             var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
-            if (!_lines)
-            {
-                AddCopy(holder, e);
-            }
-            else
+            if (_lines)
             {
                 holder.IsVisible = !_hidden.Contains(e.Role);
             }
