@@ -19,7 +19,7 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal partial class ReadableLog
 {
-    private static Control CompactRow(LogEntry e)
+    internal static Control CompactRow(LogEntry e)
     {
         var (icon, who, key) = e.Role switch
         {
