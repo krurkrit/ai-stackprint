@@ -56,13 +56,18 @@ public sealed class SettingsFlowsTests : IDisposable
         }, 20000);
     }
 
-    private static Window OpenSettings()
+    private static Window OpenSettings(params string[] pages)
     {
         var w = new MainWindow { Height = 3200 };
         w.Show();
         Settle(w);
         Ui.Click(w.GetVisualDescendants().OfType<Button>().First(b => b.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Settings")));
         Settle(w);
+        foreach (var page in pages)
+        {
+            Press(w, page);   // the side menu lists the subpages while Settings is open
+        }
+
         return w;
     }
 
@@ -84,7 +89,7 @@ public sealed class SettingsFlowsTests : IDisposable
         UpdateCheck.Http = new HttpClient(release);
         ModelDataUpdate.Http = new HttpClient(gone);
         BenchmarkUpdate.Http = new HttpClient(refuse);
-        var w = OpenSettings();
+        var w = OpenSettings("Updates");
 
         Toggle(w, "Check GitHub for updates and model data once a day").IsChecked = true;
         Settle(w);
@@ -96,6 +101,7 @@ public sealed class SettingsFlowsTests : IDisposable
         Assert.True(gone.Calls >= 1);
         Assert.Contains(Ui.Texts(w), t => t.Contains("503", StringComparison.Ordinal));
 
+        Press(w, "Benchmarks");
         Toggle(w, "Download benchmark scores once a day").IsChecked = true;
         Settle(w);
         var key = w.GetVisualDescendants().OfType<TextBox>().First(t => t.IsEffectivelyVisible && t.PasswordChar != default);
@@ -119,11 +125,30 @@ public sealed class SettingsFlowsTests : IDisposable
             Dispatcher.UIThread.RunJobs();
         }
 
-        Toggle(w, "Hide apps that are not installed").IsChecked = true;
-        Settle(w);
         Press(w, "Reset level colors");
         Press(w, "Reset to defaults");
         Assert.Contains("Appearance", Ui.Texts(w));
+        Press(w, "Apps");
+        Toggle(w, "Hide apps that are not installed").IsChecked = true;
+        Settle(w);
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void Settings_lists_its_subpages_in_the_side_menu_and_Back_to_app_returns()
+    {
+        var w = OpenSettings();
+        var seen = Ui.Texts(w);
+        foreach (var name in new[] { "Back to app", "Appearance", "Apps", "Usage limits", "Updates", "Benchmarks", "Export and import", "About" })
+        {
+            Assert.Contains(name, seen);
+        }
+
+        Press(w, "About");
+        Assert.Contains(Ui.Texts(w), t => t.Contains("MIT License", StringComparison.Ordinal));
+        Press(w, "Back to app");
+        Assert.Contains("Health", Ui.Texts(w));
+        Assert.DoesNotContain("Back to app", Ui.Texts(w));
         w.Close();
     }
 }

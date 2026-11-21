@@ -34,7 +34,7 @@ internal static partial class W
         return b;
     }
 
-    /// <summary>Button for destructive actions (Snowy Owl error pair).</summary>
+    /// <summary>Button for destructive actions (error colors).</summary>
     public static Button DangerBtn(string text, Action a, string? icon = null) =>
         DangerHover(Btn(text, a, false, icon).Themed(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, ErrorFill).Themed(Avalonia.Controls.Primitives.TemplatedControl.ForegroundProperty, OnError), solid: true);
 

@@ -12,19 +12,19 @@ using Avalonia.Themes.Fluent;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// Snowy Owl design tokens (snowy-owl/docs/TOKENS.md) mapped to resource keys used by <see cref="W"/>,
+/// Design tokens mapped to resource keys used by <see cref="W"/>,
 /// plus the Fluent palette so built-in controls match. The only place colors are defined;
 /// Appearance settings may override accent, hover and selection per theme.
 /// </summary>
 internal static partial class Theme
 {
-    // Snowy Owl color tokens
-    private const string White = "#F8F9FA", Black = "#34383C", DarkBlack = "#18191B";
+    // Color tokens
+    private const string White = "#F8F9FA", Black = "#34383C", DarkCard = "#262626";
     private const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
-    private const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#12633D";
-    // Status colors used as text, icons and bars must read on each theme's background: light warning is the Snowy Owl brown,
+    private const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#0F7B0F";
+    // Status colors used as text, icons and bars must read on each theme's background: light warning is a brown,
     // dark error and success are lighter tints. Fills behind white text (danger buttons, Close hover) keep Error.
-    private const string ErrorDark = "#F28B95", SuccessDark = "#5FCB94";
+    private const string ErrorDark = "#F28B95", SuccessDark = "#6CCB5F";
 
     /// <summary>Swatches offered in Appearance › Colors.</summary>
     public static readonly (string Name, string Hex)[] Swatches =
@@ -40,18 +40,18 @@ internal static partial class Theme
     public static double MonoSize { get; private set; } = 12.5;
     public static FontWeight MonoWeight { get; private set; } = FontWeight.Normal;
 
-    // Areas: sidebar, main area, and cards/lists/bottom panel/text boxes (Surface = Bg)
-    private const string LightSide = "#DEE2E6", LightMain = "#E9ECEF", DarkSide = "#2E3035", DarkMain = "#24262A";
+    // Areas: top bar, sidebar, main area, and cards/lists/bottom panel/text boxes (Surface = Bg)
+    private const string LightSide = "#DEE2E6", LightMain = "#E9ECEF", DarkSide = "#1C1C1C", DarkMain = "#181818", DarkTop = "#202020", DarkBorder = "#343434";
 
     /// <summary>Default level colors (System, Local, Project, User) for the dashboard bars.</summary>
     public static readonly string[] LightLevels = ["#7048E8", "#D6336C", "#2F9E44", "#1098AD"], DarkLevels = ["#9775FA", "#F06595", "#51CF66", "#3BC9DB"];
     public static readonly string[] LevelNames = ["System", "Local", "Project", "User"];
 
     private sealed record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
-        double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main);
+        double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main, string Top, string? Border = null);
 
-    private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain);   // selection 25%: text keeps >= 7.1:1
-    private static readonly Palette _dark = new(DarkBlack, White, DarkBlack, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain);
+    private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain, LightMain);   // selection 25%: text keeps >= 7.1:1
+    private static readonly Palette _dark = new(DarkCard, White, DarkCard, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain, DarkTop, DarkBorder);
 
     // Made with each theme: a palette belongs to one application (headless tests start one per test)
     private static ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);

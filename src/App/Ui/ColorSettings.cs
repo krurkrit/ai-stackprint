@@ -12,7 +12,7 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-/// <summary>Appearance › Colors: accent, hover and selection for Light and Dark. Hex box + Snowy Owl swatches, reset, contrast hint.</summary>
+/// <summary>Appearance › Colors: accent, hover and selection for Light and Dark. Hex box + swatches, reset, contrast hint.</summary>
 internal static class ColorSettings
 {
     private const double SwatchesWidth = 240;   // eight swatches per row
@@ -86,7 +86,7 @@ internal static class ColorSettings
         var current = Theme.ParseHex(value) ?? fallback;
         var box = new TextBox
         {
-            Text = value == null ? "" : Rgb(current),
+            Text = Rgb(current),   // the default shows as real text too, so it can be selected and copied
             PlaceholderText = Rgb(fallback),
             Width = Widths.FieldS,
             FontFamily = Theme.Mono
@@ -109,15 +109,28 @@ internal static class ColorSettings
             var rgb = t == "" ? null : Theme.ParseHex(t.StartsWith('#') ? t : "#" + t);
             if (t != "" && rgb == null)
             {
-                box.Text = value == null ? "" : Rgb(current);
+                box.Text = Rgb(current);
                 return;
             }   // invalid hex: put the old value back
             var pct = (int)Math.Clamp(opacity.Value ?? defaultPct, 0, 100);
             if (rgb == null && pct == defaultPct)
             {
-                if (value != null) { set(null); }
+                if (value != null)
+                {
+                    set(null);
+                }
+                else
+                {
+                    box.Text = Rgb(current);
+                }
+
                 return;
             }
+
+            if (value == null && rgb is { } same && Rgb(same) == Rgb(fallback) && pct == defaultPct)
+            {
+                return;
+            }   // the default shown as text, unchanged: nothing to save
             var c = rgb ?? fallback;
             var next = Hex(Color.FromArgb((byte)Math.Round(pct * 2.55), c.R, c.G, c.B));
             if (next != value)
@@ -177,7 +190,7 @@ internal static class ColorSettings
         }
             .Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey);
         ToolTip.SetTip(preview, "Pick a color");
-        var reset = IconBtn("arrow_reset", "Reset to Snowy Owl default", () => set(null));
+        var reset = IconBtn("arrow_reset", "Reset to default", () => set(null));
         reset.IsEnabled = value != null;
 
         var sp = new StackPanel
@@ -195,7 +208,7 @@ internal static class ColorSettings
 
     private static string Rgb(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 
-    /// <summary>Contrast against what the color is used with; a hint below Snowy Owl's 7.1:1, never a block.</summary>
+    /// <summary>Contrast against what the color is used with; a hint below the 7.1:1 minimum, never a block.</summary>
     private static string? Note(Color c, bool dark, int which)
     {
         var d = Theme.Defaults(dark);
@@ -205,6 +218,6 @@ internal static class ColorSettings
             2 => ContrastRatio(d.Text, Color.FromUInt32(Services.Contrast.Blend(c.ToUInt32(), d.Background.ToUInt32()))),   // text on top of the selection
             _ => 99
         };
-        return ratio < Services.Contrast.Minimum ? $"Contrast {ratio:0.0}:1 — below Snowy Owl's 7.1:1" : null;
+        return ratio < Services.Contrast.Minimum ? $"Contrast {ratio:0.0}:1 — below the 7.1:1 minimum" : null;
     }
 }

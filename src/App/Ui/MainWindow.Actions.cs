@@ -61,7 +61,7 @@ internal partial class MainWindow
         {
             "Dashboard" => DashboardView.Build(_x),
             "Apps" => _apps.Build(),
-            "Settings" => _settings.Build(),
+            _ when InSettings(_view) => _settings.Build(SettingsPage()),
             "Plugin" => _plugins.Build(),
             "Skill" => _skills.Build(),
             "Part" => _parts.Build(),

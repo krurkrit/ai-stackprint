@@ -171,7 +171,7 @@ public class UiState
     public string ModelsTab { get; set; } = "Catalog";      // the tab the Models page was left on: Catalog or Compare
 }
 
-/// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = Snowy Owl default.</summary>
+/// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = the app default.</summary>
 public class ThemeColors
 {
     public string? Accent { get; set; }

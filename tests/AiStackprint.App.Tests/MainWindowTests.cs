@@ -61,7 +61,7 @@ public sealed class MainWindowTests : IDisposable
         foreach (var (label, title) in new[]
         {
             ("Apps", "Apps"), ("Plugins", "Plugins"), ("Skills", "Skills"), ("Commands & Agents", "Commands & Agents"), ("Servers", "Servers"), ("Hooks", "Hooks"),
-            ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health"), ("Settings", "Settings"), ("Dashboard", "Dashboard"),
+            ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health"), ("Settings", "Appearance"), ("Back to app", "Health"), ("Dashboard", "Dashboard"),
         })
         {
             Ui.Click(Nav(w, label));
@@ -136,8 +136,8 @@ public sealed class MainWindowTests : IDisposable
 
         Ui.Click(Nav(w, "Logs"));
         Settle(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Contains("session.jsonl"));
-        Ui.ClickText(w, "session.jsonl");
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session.jsonl", StringComparison.Ordinal));
         Settle(w);
         Assert.Contains("Hi there", Ui.Texts(w));
         Press(w, "Raw", "Readable", "Aa", ".*", "Follow newest");
@@ -162,8 +162,8 @@ public sealed class MainWindowTests : IDisposable
         var w = Open();
         Ui.Click(Nav(w, "Logs"));
         Settle(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Contains("session2.jsonl"));
-        Ui.ClickText(w, "session2.jsonl");
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.EndsWith("· session2.jsonl", StringComparison.Ordinal)));
+        Ui.ClickText(w, t => t.EndsWith("· session2.jsonl", StringComparison.Ordinal));
         Settle(w);
         Assert.Contains("All done.", Ui.Texts(w));
         Assert.Contains(Ui.Texts(w), t => t.StartsWith("Sub-agents", StringComparison.Ordinal) || t == "Sub-agents");

@@ -51,6 +51,11 @@ internal partial class MainWindow
                 ToggleFullScreen();
                 e.Handled = true;
             }
+            else if (e.Key == Key.F8 && _view.StartsWith("Logs"))
+            {
+                _logs.NextError(e.KeyModifiers == KeyModifiers.Shift ? -1 : 1);
+                e.Handled = true;
+            }
             else if (e.Key == Key.F5)
             {
                 if (_view.StartsWith("Logs"))

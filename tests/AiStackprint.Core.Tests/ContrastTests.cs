@@ -9,13 +9,13 @@ namespace AiStackprint.Core.Tests;
 
 public class ContrastTests
 {
-    // Values from snowy-owl/docs/ACCESSIBILITY.md
+    // Reference contrast values
     [Theory]
     [InlineData(0xFF34383Cu, 0xFFF8F9FAu, 11.21)]
     [InlineData(0xFF1450A0u, 0xFFF8F9FAu, 7.42)]
     [InlineData(0xFFF8F9FAu, 0xFF18191Bu, 16.69)]
     [InlineData(0xFF18191Bu, 0xFF74A8F4u, 7.25)]
-    public void Matches_snowy_owl_report(uint fg, uint bg, double expected) =>
+    public void Matches_the_reference_values(uint fg, uint bg, double expected) =>
         Assert.Equal(expected, Math.Round(Contrast.Ratio(fg, bg), 2), 2);
 
     [Fact]
