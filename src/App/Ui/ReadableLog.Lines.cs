@@ -5,7 +5,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 
 using static AiStackprint.Ui.W;
@@ -71,17 +70,9 @@ internal partial class ReadableLog
         foreach (var level in s.Entries.GroupBy(e => e.Role).OrderBy(g => Array.IndexOf(["error", "warn", "info", "debug", "trace", "log"], g.Key)))
         {
             var role = level.Key;
-            var chip = new ToggleButton
+            var chip = new FilterChip(L($"{char.ToUpperInvariant(role[0])}{role[1..]} {level.Count():N0}", true), $"Show or hide the {role} lines", on =>
             {
-                Content = $"{char.ToUpperInvariant(role[0])}{role[1..]} {level.Count():N0}",
-                IsChecked = true,
-                Padding = new Thickness(Space.L, Space.XS),
-                Margin = new Thickness(0, 0, Space.M, Space.M)
-            };
-            ToolTip.SetTip(chip, $"Show or hide the {role} lines");
-            chip.IsCheckedChanged += (_, _) =>
-            {
-                if (chip.IsChecked == true)
+                if (on)
                 {
                     _hidden.Remove(role);
                 }
@@ -94,7 +85,7 @@ internal partial class ReadableLog
                 {
                     holder.IsVisible = !_hidden.Contains(e.Role);
                 }
-            };
+            });
             w.Children.Add(chip);
         }
 

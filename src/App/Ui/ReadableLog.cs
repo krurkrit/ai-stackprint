@@ -36,6 +36,7 @@ internal partial class ReadableLog
     };
     private int _built;           // steps built, counted from the end of Steps
     private readonly bool _compact;
+    private readonly BookmarkSource? _marks;
     private readonly SessionGraph? _graph;   // sub-agent branches beside the steps (null when the session has none)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
@@ -46,9 +47,15 @@ internal partial class ReadableLog
     }
 
     /// <param name="compact">One line per step (a click opens its card in a popup) instead of cards.</param>
-    public ReadableLog(Session s, bool toEnd, bool compact)
+    public ReadableLog(Session s, bool toEnd, bool compact) : this(s, toEnd, compact, null)
+    {
+    }
+
+    /// <param name="marks">The file's bookmarks (stars and notes on steps); null: none (a file shown cut to its end has no reliable lines).</param>
+    internal ReadableLog(Session s, bool toEnd, bool compact, BookmarkSource? marks)
     {
         Session = s;
+        _marks = marks;
         _compact = compact;
         var lines = IsLines(s);
         _lines = lines;
@@ -113,7 +120,7 @@ internal partial class ReadableLog
             }
 
             wasSub = e.SubAgent;
-            var step = _lines ? LogLine(e) : _compact ? CompactRow(e) : Step(e);   // compact: one line per step, its card opens in a popup
+            var step = _lines ? LogLine(e) : _compact ? CompactRow(e, _marks) : Step(e);   // compact: one line per step, its card opens in a popup
             _controls[e] = step;
             if (!_lines && !_compact)
             {
@@ -142,7 +149,7 @@ internal partial class ReadableLog
             }
             else if (!_compact)
             {
-                AddCopy(holder, e);
+                AddCopy(holder, e, _marks);
             }
 
             if (_graph != null && _hiddenAgents.Contains(_graph.Rows[i].Owner.Agent) && _showStep.TryGetValue(e, out var show))

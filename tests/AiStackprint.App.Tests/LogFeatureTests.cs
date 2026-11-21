@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Text;
+using AiStackprint.Models;
 using AiStackprint.Services;
 using AiStackprint.Ui;
 using Avalonia.Controls;
@@ -58,14 +59,14 @@ public sealed class LogFeatureTests
         var log = new ReadableLog(session, false);
         var w = Ui.Show(log.Root);
         bool Shown(string text) => w.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == text && t.IsEffectivelyVisible);
-        var chip = w.GetVisualDescendants().OfType<ToggleButton>().First(b => b.Content as string == "Error 1");
-        Assert.Contains(w.GetVisualDescendants().OfType<ToggleButton>(), b => b.Content as string == "Info 2");
+        var chip = w.GetVisualDescendants().OfType<FilterChip>().First(b => Ui.Texts(b).Contains("Error 1"));
+        Assert.Contains(w.GetVisualDescendants().OfType<FilterChip>(), b => Ui.Texts(b).Contains("Info 2"));
         Assert.True(Shown("it broke"));
-        chip.IsChecked = false;
+        chip.On = false;
         Dispatcher.UIThread.RunJobs();
         Assert.False(Shown("it broke"));
         Assert.True(Shown("started ok"));
-        chip.IsChecked = true;
+        chip.On = true;
         Dispatcher.UIThread.RunJobs();
         Assert.True(Shown("it broke"));
         w.Close();
@@ -145,13 +146,13 @@ public sealed class LogFeatureTests
     {
         var w = Ui.Show(new ReadableLog(WithAgents(), false, true).Root);
         bool Shown(string text) => w.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == text && t.IsEffectivelyVisible);
-        var chip = w.GetVisualDescendants().OfType<ToggleButton>().First(b => Ui.Texts(b).Any(t => t.StartsWith("Agent 2", StringComparison.Ordinal)));
+        var chip = w.GetVisualDescendants().OfType<FilterChip>().First(b => Ui.Texts(b).Any(t => t.StartsWith("Agent 2", StringComparison.Ordinal)));
         Assert.True(Shown("Agent 2: npm test"));
-        chip.IsChecked = false;
+        chip.On = false;
         Dispatcher.UIThread.RunJobs();
         Assert.False(Shown("Agent 2: npm test"));
         Assert.True(Shown("Agent 3: read auth.ts"));   // the others stay
-        chip.IsChecked = true;
+        chip.On = true;
         Dispatcher.UIThread.RunJobs();
         Assert.True(Shown("Agent 2: npm test"));
         w.Close();
@@ -176,6 +177,38 @@ public sealed class LogFeatureTests
 #pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
         w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-compare.png"));
 #pragma warning restore CS0618
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_bookmarked_step_shows_a_mark_on_its_line_and_the_popup_has_the_controls()
+    {
+        using var home = new FakeHome();   // state.json goes to the made-up home
+        var session = WithAgents();
+        var state = new UiState();
+        var marks = new BookmarkSource(state, Path.Combine(home.Root, "a.jsonl"));
+        var w = Ui.Show(new ReadableLog(session, false, true, marks).Root);
+        var first = session.Entries[0];
+        Assert.Empty(state.Bookmarks);
+        marks.Set(first, true, "check this");
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(first.Line, Assert.Single(state.Bookmarks).Line);
+        Assert.True(File.Exists(StateStore.File));   // kept on this machine
+        Assert.Equal("check this", marks.Get(first)!.Note);
+#pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
+        w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-bookmark.png"));
+#pragma warning restore CS0618
+
+        var bar = ReadableLog.DetailContent(new Border(), first, marks);   // the popup: a Bookmark toggle and the note
+        var host = new Window { Width = 700, Height = 300, Content = bar };
+        host.Show();
+        Dispatcher.UIThread.RunJobs();
+        var star = host.GetVisualDescendants().OfType<ToggleButton>().First(b => b.Content as string == "Bookmark");
+        Assert.True(star.IsChecked);
+        star.IsChecked = false;   // un-star; the note stays
+        Assert.False(marks.Get(first)!.Starred);
+        Assert.Equal("check this", marks.Get(first)!.Note);
+        host.Close();
         w.Close();
     }
 }

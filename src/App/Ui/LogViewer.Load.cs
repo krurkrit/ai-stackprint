@@ -44,14 +44,15 @@ internal partial class LogViewer
         }
 
         _readSize = r.Bytes;
-        _linesOk = !r.Cut;   // a file cut to its end: the steps' line numbers do not count from its first line
+        _linesOk = !r.Cut;
+        ReadMarks();   // a file cut to its end: the steps' line numbers do not count from its first line
         _status.Text = r.Problem ?? (r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "");
         if (r.Problem != null)
         {
             _raw = "";
             _readable = null;
         }
-        else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd, Compact && !IsLines); }
+        else if (r.Parsed != null) { _readable = new ReadableLog(r.Parsed, toEnd, Compact && !IsLines, _marks); }
         else
         {
             _raw = r.Raw;

@@ -5,7 +5,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 
 using static AiStackprint.Ui.W;
 
@@ -57,17 +56,9 @@ internal partial class ReadableLog
         {
             var agent = i;
             var key = i == 0 ? Muted : CategoryKey(Theme.Categories[(i - 1) % Theme.Categories.Length]);
-            var chip = new ToggleButton
+            var chip = new FilterChip(WithDot(Dot(key), graph.Agents[i], TextSize.Caption, true), "Show or hide this agent's steps", on =>
             {
-                Content = WithDot(Dot(key), graph.Agents[i], TextSize.Caption, true),
-                IsChecked = true,
-                Padding = new Thickness(Space.L, Space.XS),
-                Margin = new Thickness(0, 0, Space.M, Space.S)
-            };
-            ToolTip.SetTip(chip, "Show or hide this agent's steps");
-            chip.IsCheckedChanged += (_, _) =>
-            {
-                if (chip.IsChecked == true)
+                if (on)
                 {
                     _hiddenAgents.Remove(agent);
                 }
@@ -83,7 +74,7 @@ internal partial class ReadableLog
                         show(!_hiddenAgents.Contains(graph.Rows[n].Owner.Agent));
                     }
                 }
-            };
+            });
             legend.Children.Add(chip);
         }
 

@@ -19,7 +19,10 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal partial class ReadableLog
 {
-    internal static Control CompactRow(LogEntry e)
+    internal static Control CompactRow(LogEntry e) => CompactRow(e, null);
+
+    /// <param name="marks">The file's bookmarks: a marked step shows a bookmark icon, and its popup has the bookmark and note controls.</param>
+    internal static Control CompactRow(LogEntry e, BookmarkSource? marks)
     {
         var (icon, who, key) = e.Role switch
         {
@@ -49,12 +52,32 @@ internal partial class ReadableLog
         grid.Children.Add(time);
         grid.Children.Add(name);
         grid.Children.Add(text);
+        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
+        if (marks != null && e.Line > 0)
+        {
+            var flag = Icon("bookmark_filled", IconSize.S).Themed(TextElement.ForegroundProperty, Accent);
+            flag.IsVisible = marks.Get(e) != null;
+            if (marks.Get(e)?.Note is { } note)
+            {
+                ToolTip.SetTip(flag, note);
+            }
+
+            marks.Watch(e, () =>
+            {
+                var b = marks.Get(e);
+                flag.IsVisible = b != null;
+                ToolTip.SetTip(flag, b?.Note);
+            });
+            right.Children.Add(flag);
+        }
+
         if (e.Usage != null && ModelCatalog.Cost(e.Usage) is { } cost)
         {
-            var money = Txt(StepMoney(cost), TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-            Grid.SetColumn(money, 3);
-            grid.Children.Add(money);
+            right.Children.Add(Txt(StepMoney(cost), TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
         }
+
+        Grid.SetColumn(right, 3);
+        grid.Children.Add(right);
 
         var row = new Border
         {
@@ -71,21 +94,23 @@ internal partial class ReadableLog
         {
             if (a.InitialPressMouseButton == Avalonia.Input.MouseButton.Left)
             {
-                ShowDetail(row, e);
+                ShowDetail(row, e, marks);
             }
         };
         return row;
     }
 
     /// <summary>The step's text on one line: the first lines joined, extra white space gone.</summary>
-    private static string OneLine(LogEntry e)
+    internal static string OneLine(LogEntry e)
     {
         var text = e.Role == "tool" ? e.Text : TextDecode.Strip(e.Text);
         return string.Join(' ', text.Split(['\r', '\n', '\t', ' '], StringSplitOptions.RemoveEmptyEntries).Take(60));
     }
 
     /// <summary>The step's full card in a popup under its row; tool input and output are open.</summary>
-    internal static void ShowDetail(Control anchor, LogEntry e) =>
+    internal static void ShowDetail(Control anchor, LogEntry e) => ShowDetail(anchor, e, null);
+
+    internal static void ShowDetail(Control anchor, LogEntry e, BookmarkSource? marks) =>
         new Flyout
         {
             Placement = Avalonia.Controls.PlacementMode.BottomEdgeAlignedLeft,
@@ -93,12 +118,14 @@ internal partial class ReadableLog
             {
                 Width = Widths.DialogL,
                 MaxHeight = Heights.ViewerL,
-                Content = DetailContent(anchor, e)
+                Content = DetailContent(anchor, e, marks)
             }
         }.ShowAt(anchor);
 
     /// <summary>What the popup holds: a Copy button, the step's card (tool input and output opened) and its tokens and cost.</summary>
-    internal static Control DetailContent(Control anchor, LogEntry e)
+    internal static Control DetailContent(Control anchor, LogEntry e) => DetailContent(anchor, e, null);
+
+    internal static Control DetailContent(Control anchor, LogEntry e, BookmarkSource? marks)
     {
         var body = Step(e);
         if (body is Expander x)
@@ -119,11 +146,17 @@ internal partial class ReadableLog
             }
         });
         copy.HorizontalAlignment = HorizontalAlignment.Right;
-        return new StackPanel
+        var content = new StackPanel
         {
             Spacing = Space.S,
             Margin = new Thickness(Space.M),
             Children = { copy, body }
         };
+        if (marks != null && e.Line > 0)
+        {
+            content.Children.Insert(0, BookmarkBar(e, marks));
+        }
+
+        return content;
     }
 }
