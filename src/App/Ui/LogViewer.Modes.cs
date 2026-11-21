@@ -7,7 +7,7 @@ using Avalonia.Controls.Primitives;
 
 namespace AiStackprint.Ui;
 
-/// <summary>The view switch: Raw (the file as written), Conversation (cards) and Compact (one line per step); a text log has Raw and Lines.</summary>
+/// <summary>The view switch: Conversation (cards), Compact (one line per step) and Raw (the file as written), in that order; a text log has Lines and Raw.</summary>
 internal partial class LogViewer
 {
     private bool IsCompact => ShowReadable && Compact && !IsLines;
@@ -40,7 +40,6 @@ internal partial class LogViewer
             group.Children.Add(b);
         }
 
-        Add("Raw", "Show the file as written", !ShowReadable, () => Readable = false);
         if (IsLines)
         {
             Add("Lines", "Show one row per log line, with level colors", ShowReadable, () => Readable = true);
@@ -58,6 +57,7 @@ internal partial class LogViewer
                 Compact = true;
             });
         }
+        Add("Raw", "Show the file as written", !ShowReadable, () => Readable = false);
 
         return group;
     }
