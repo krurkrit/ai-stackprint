@@ -29,6 +29,13 @@ internal partial class ReadableLog
             Add(Plural(s.Entries.Count(e => e.SubAgent), "sub-agent step"));
         }
 
+        if (s.AgentsBefore > 0)
+        {
+            var chip = LogChip(Plural(s.AgentsBefore, "sub-agent") + " earlier");
+            ToolTip.SetTip(chip, "Their files are in the session's subagents folder; their steps come before the part of this long session that is shown (the last 8 MB).");
+            w.Children.Add(chip);
+        }
+
         if (s.InputTokens + s.OutputTokens > 0)
         {
             Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");

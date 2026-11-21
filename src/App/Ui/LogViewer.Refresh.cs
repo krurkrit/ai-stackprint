@@ -34,7 +34,7 @@ internal partial class LogViewer
             _status.Text = truncated ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "";
             if (readable)
             {
-                _readable = new ReadableLog(LogParsers.Find(f.Format)!.Parse(LogReader.Utf8Lines(f.Path, ReadableBytes)), toEnd, Compact && !IsLines, _marks);   // streamed, no copy of the text
+                _readable = new ReadableLog(SessionAgents.Read(f, ReadableBytes), toEnd, Compact && !IsLines, _marks);   // streamed, no copy of the text; with the sub-agents' own files
             }
             else
             {

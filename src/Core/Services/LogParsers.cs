@@ -26,7 +26,8 @@ public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, 
 
 /// <param name="PeakContext">The largest request of the main conversation (input + cache read + cache write): how full its context got; 0 = unknown.</param>
 /// <param name="ContextWindow">The window the log states (Codex <c>model_context_window</c>); 0 = take it from the model data.</param>
-public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End, long PeakContext = 0, long ContextWindow = 0);
+/// <param name="AgentsBefore">Sub-agent files whose steps all come before the part of the session that was read (the session was cut to its end): they are not shown.</param>
+public record Session(List<LogEntry> Entries, HashSet<string> Models, long InputTokens, long OutputTokens, DateTime? Start, DateTime? End, long PeakContext = 0, long ContextWindow = 0, int AgentsBefore = 0);
 
 /// <summary>A session's counts for the Logs summary: prompts (user steps), tool calls, sub-agent steps, tokens, calls per tool, models.</summary>
 public sealed record SessionCounts(int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens, Dictionary<string, int> Tools, HashSet<string> Models)
