@@ -35,6 +35,7 @@ internal partial class ReadableLog
         Margin = new Thickness(Space.XL)
     };
     private int _built;           // steps built, counted from the end of Steps
+    private readonly SessionGraph? _graph;   // sub-agent branches beside the steps (null when the session has none)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
 
@@ -45,9 +46,10 @@ internal partial class ReadableLog
         _lines = lines;
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
-        if (lines)
+        _graph = lines ? null : SessionGraph.Layout(Steps);
+        if (lines || _graph != null)
         {
-            _list.Spacing = 0;
+            _list.Spacing = 0;   // a graph's lines must run unbroken from one row to the next: the rows carry their own spacing
         }
 
         _list.Children.Add(lines ? LinesSummary(s) : Summary(s));
@@ -91,7 +93,7 @@ internal partial class ReadableLog
         for (var i = from; i < to; i++)
         {
             var e = Steps[i];
-            if (e.SubAgent && wasSub != true)
+            if (e.SubAgent && wasSub != true && _graph == null)   // with the graph, the lines run on and the agent is named on hover
             {
                 _list.Children.Insert(at++, Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
             }
@@ -116,7 +118,7 @@ internal partial class ReadableLog
                     .Themed(Border.BorderBrushProperty, Accent);
             }
 
-            var holder = new Panel { Children = { step } };
+            var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
             if (!_lines)
             {
                 AddCopy(holder, e);

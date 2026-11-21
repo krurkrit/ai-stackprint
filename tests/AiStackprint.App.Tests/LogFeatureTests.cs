@@ -6,6 +6,7 @@ using AiStackprint.Services;
 using AiStackprint.Ui;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -52,6 +53,38 @@ public sealed class LogFeatureTests
         chip.IsChecked = true;
         Dispatcher.UIThread.RunJobs();
         Assert.True(Shown("it broke"));
+        w.Close();
+    }
+
+    private static string Line(int n, string who, string text, string? agent = null) =>
+        who == "user"
+            ? "{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:00:" + n.ToString("00") + "Z\",\"message\":{\"role\":\"user\",\"content\":\"" + text + "\"}}"
+            : "{\"type\":\"assistant\",\"timestamp\":\"2026-11-11T05:00:" + n.ToString("00") + "Z\"" + (agent == null ? "" : ",\"isSidechain\":true,\"agentId\":\"" + agent + "\"")
+              + ",\"message\":{\"id\":\"m" + n + "\",\"model\":\"m\",\"content\":[{\"type\":\"text\",\"text\":\"" + text + "\"}]}}";
+
+    private static Session WithAgents() => new ClaudeSessionParser().Parse(Lines(
+        Line(1, "user", "Fix the login redirect loop"), Line(2, "assistant", "I will explore with an agent first."),
+        Line(3, "assistant", "Agent 1: grep redirect", "a1"), Line(4, "assistant", "Agent 1: read middleware", "a1"), Line(5, "assistant", "Agent 1: found the old cookie", "a1"),
+        Line(6, "assistant", "Run the tests and a review in parallel."),
+        Line(7, "assistant", "Agent 2: npm test", "b2"), Line(8, "assistant", "Agent 3: read auth.ts", "c3"), Line(9, "assistant", "Agent 2: 2 tests failed", "b2"), Line(10, "assistant", "Agent 3: looks fine", "c3"), Line(11, "assistant", "Agent 2: edit the test", "b2"),
+        Line(12, "assistant", "Both agents are back: tests pass."), Line(13, "user", "Thanks, ship it")));
+
+    [AvaloniaFact]
+    public void Sub_agents_branch_in_a_graph_beside_the_steps()
+    {
+        var session = WithAgents();
+        var log = new ReadableLog(session, false);
+        var w = Ui.Show(log.Root);
+        w.Height = 1500;
+        Dispatcher.UIThread.RunJobs();
+        var cells = w.GetVisualDescendants().OfType<AgentGraphCell>().ToList();
+        Assert.Equal(session.Entries.Count, cells.Count);   // one graph cell per step
+        Assert.Equal(8, cells.Count(c => ToolTip.GetTip(c) is string));   // the sub-agents' steps name their agent on hover
+        Assert.Contains(cells, c => ToolTip.GetTip(c) as string == "Agent 3 · c3");
+        var png = Path.Combine(Path.GetTempPath(), "stackprint-agent-graph.png");
+#pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
+        w.CaptureRenderedFrame()?.Save(png);
+#pragma warning restore CS0618
         w.Close();
     }
 }
