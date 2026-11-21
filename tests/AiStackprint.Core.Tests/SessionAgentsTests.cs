@@ -59,6 +59,23 @@ public sealed class SessionAgentsTests : IDisposable
     }
 
     [Fact]
+    public void The_part_around_an_earlier_agent_has_its_branch_and_the_files_own_line_numbers()
+    {
+        File.WriteAllLines(Path.Combine(_dir, "s1", "subagents", "agent-a1.jsonl"), [Msg("assistant", 11, "older", "a1")]);
+        File.WriteAllLines(Path.Combine(_dir, "s1", "subagents", "agent-a2.jsonl"), [Msg("assistant", 31, "newer", "a2"), Msg("assistant", 32, "newer b", "a2")]);
+        var lines = Enumerable.Range(0, 60).Select(i => Msg(i % 2 == 0 ? "user" : "assistant", i, "m" + i)).ToArray();
+        var f = Main(lines);
+        var window = SessionAgents.ReadAround(f, new DateTime(2026, 11, 11, 5, 0, 50, DateTimeKind.Utc).ToLocalTime(), 400)!;
+        Assert.Contains(window.Entries, e => e.SubAgent && e.Text == "newer");
+        Assert.DoesNotContain(window.Entries, e => e.Text == "older");   // the older agent is the next step back
+        Assert.Equal(1, window.AgentsBefore);
+        Assert.Equal(32, window.Entries.First(e => !e.SubAgent && e.Text == "m31").Line);   // the file's own line number
+        Assert.True(window.Entries.Count < 60);
+        Assert.Equal(2, SessionGraph.Layout(window.Entries)!.Lanes);
+        Assert.Null(SessionAgents.ReadAround(f, new DateTime(2026, 11, 11, 5, 0, 5, DateTimeKind.Utc).ToLocalTime(), 400));   // no agent started before this
+    }
+
+    [Fact]
     public void An_agent_from_before_the_part_that_was_read_is_counted_not_shown()
     {
         File.WriteAllLines(Path.Combine(_dir, "s1", "subagents", "agent-a1.jsonl"), [Msg("assistant", 1, "early", "a1")]);

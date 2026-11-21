@@ -23,8 +23,57 @@ public static class SessionAgents
         return f.Format == "claude-session" ? Merge(main, f.Path, new FileInfo(f.Path).Length > maxBytes) : main;
     }
 
+    /// <summary>
+    /// A long session is read cut to its end, so agents that ran earlier are not in it. This reads the whole file and returns the stretch around the newest agent
+    /// that started before <paramref name="before"/> (and the agents running at the same time), a few main steps either side, with the same branches.
+    /// Null when no agent started before that time. Its steps keep their real file lines; tokens are left out (they would be the whole session's).
+    /// </summary>
+    public static Session? ReadAround(LogFile f, DateTime before, int maxSteps)
+    {
+        var dir = Path.Combine(Path.GetDirectoryName(f.Path) ?? "", Path.GetFileNameWithoutExtension(f.Path), "subagents");
+        if (f.Format != "claude-session" || !Directory.Exists(dir))
+        {
+            return null;
+        }
+
+        var parser = LogParsers.Find("claude-session")!;
+        var agents = new List<(string File, DateTime First, DateTime Last)>();
+        foreach (var file in Directory.EnumerateFiles(dir, "agent-*.jsonl").Order(StringComparer.Ordinal).Take(MaxAgents))
+        {
+            var times = parser.Parse(LogReader.Utf8Lines(file, AgentBytes)).Entries.Where(e => e.Time != null).Select(e => e.Time!.Value).ToList();
+            if (times.Count > 0)
+            {
+                agents.Add((file, times.Min(), times.Max()));
+            }
+        }
+
+        var target = agents.Where(a => a.First < before).OrderByDescending(a => a.First).FirstOrDefault();
+        if (target.File == null)
+        {
+            return null;
+        }
+
+        var cluster = agents.Where(a => a.First <= target.Last && a.Last >= target.First).ToList();
+        DateTime from = cluster.Min(a => a.First), to = cluster.Max(a => a.Last);
+        var main = parser.Parse(LogReader.Utf8Lines(f.Path, new FileInfo(f.Path).Length));
+        var first = main.Entries.FindIndex(e => e.Time >= from);
+        var last = main.Entries.FindLastIndex(e => e.Time <= to);
+        first = first < 0 ? main.Entries.Count - 1 : first;
+        last = Math.Max(first, last);
+        var lo = Math.Max(0, first - ContextSteps);
+        var hi = Math.Min(main.Entries.Count - 1, last + ContextSteps);
+        var part = main.Entries.Skip(lo).Take(hi - lo + 1).ToList();
+        var shown = new Session(part, main.Models, 0, 0, part.FirstOrDefault(e => e.Time != null)?.Time, part.LastOrDefault(e => e.Time != null)?.Time);
+        var merged = Merge(shown, f.Path, false, [.. cluster.Select(a => a.File)]);
+        var entries = merged.Entries.Count > maxSteps ? merged.Entries.Take(maxSteps).ToList() : merged.Entries;   // the start stays: the fork is there
+        return merged with { Entries = entries, InputTokens = 0, OutputTokens = 0, AgentsBefore = agents.Count(a => a.Last < from) };
+    }
+
+    private const int ContextSteps = 12;   // main steps shown before the first and after the last step of the agents
+
     /// <param name="cut">The session was read cut to its end: the agents' steps from before its first step are left out.</param>
-    internal static Session Merge(Session main, string path, bool cut)
+    /// <param name="only">Read only these agent files; null: all.</param>
+    internal static Session Merge(Session main, string path, bool cut, HashSet<string>? only = null)
     {
         var dir = Path.Combine(Path.GetDirectoryName(path) ?? "", Path.GetFileNameWithoutExtension(path), "subagents");
         if (!Directory.Exists(dir))
@@ -40,7 +89,7 @@ public static class SessionAgents
         long input = main.InputTokens, output = main.OutputTokens;
         try
         {
-            foreach (var file in Directory.EnumerateFiles(dir, "agent-*.jsonl").Order(StringComparer.Ordinal).Take(MaxAgents))
+            foreach (var file in Directory.EnumerateFiles(dir, "agent-*.jsonl").Order(StringComparer.Ordinal).Take(MaxAgents).Where(p => only == null || only.Contains(p)))
             {
                 var id = Path.GetFileNameWithoutExtension(file)["agent-".Length..];
                 var s = parser.Parse(LogReader.Utf8Lines(file, AgentBytes));

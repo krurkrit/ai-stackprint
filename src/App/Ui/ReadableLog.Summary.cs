@@ -11,9 +11,12 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
+/// <summary>What the summary can do about sub-agents outside the part shown: load the stretch around the newest earlier one, or go back to the end of the session.</summary>
+internal sealed record AgentsNav(Action? Earlier, Action? Back);
+
 internal partial class ReadableLog
 {
-    private static WrapPanel Summary(Session s)
+    private static WrapPanel Summary(Session s, AgentsNav? nav)
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
@@ -31,9 +34,16 @@ internal partial class ReadableLog
 
         if (s.AgentsBefore > 0)
         {
-            var chip = LogChip(Plural(s.AgentsBefore, "sub-agent") + " earlier");
-            ToolTip.SetTip(chip, "Their files are in the session's subagents folder; their steps come before the part of this long session that is shown (the last 8 MB).");
+            Control chip = nav?.Earlier is { } earlier
+                ? Btn(Plural(s.AgentsBefore, "sub-agent") + " earlier: show", earlier, false, "link_arrow").With(b => b.Margin = new Thickness(0, 0, Space.M, Space.M))
+                : LogChip(Plural(s.AgentsBefore, "sub-agent") + " earlier");
+            ToolTip.SetTip(chip, "Their files are in the session's subagents folder; their steps come before the part of this long session that is shown. Show loads the part of the file around the newest of them.");
             w.Children.Add(chip);
+        }
+
+        if (nav?.Back is { } back)
+        {
+            w.Children.Add(Btn("Back to the end", back, false, "arrow_reset").With(b => b.Margin = new Thickness(0, 0, Space.M, Space.M)));
         }
 
         if (s.InputTokens + s.OutputTokens > 0)

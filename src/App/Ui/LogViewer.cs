@@ -111,6 +111,8 @@ internal partial class LogViewer
             _code?.Dispose();
             _code = null;
             _window = false;
+            _agentsFrom = null;
+            _agentsWindow = false;
             _hits.Clear();
         }
         _file = f;

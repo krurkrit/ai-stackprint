@@ -58,7 +58,7 @@ internal partial class ReadableLog
     }
 
     /// <param name="marks">The file's bookmarks (stars and notes on steps); null: none (a file shown cut to its end has no reliable lines).</param>
-    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks)
+    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks, AgentsNav? agents = null)
     {
         Session = s;
         _marks = marks;
@@ -73,7 +73,7 @@ internal partial class ReadableLog
             _list.Spacing = 0;   // the rows carry their own spacing (a graph's lines run unbroken from row to row)
         }
 
-        _list.Children.Add(lines ? LinesSummary(s) : Summary(s));
+        _list.Children.Add(lines ? LinesSummary(s) : Summary(s, agents));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
         {
             _list.Children.Add(AgentGraph.Build(timeline));
