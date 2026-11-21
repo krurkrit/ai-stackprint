@@ -27,9 +27,13 @@ internal partial class ReadableLog
     /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
     public Session Session { get; }
 
-    /// <summary>Steps built when a file opens; earlier ones are built when asked for ("Show earlier steps", a search hit), so a long session opens fast.</summary>
-    internal const int FirstSteps = 60;
-    private const int MoreSteps = 100;
+    /// <summary>
+    /// Steps built when a file opens: cards are heavy (about 8 ms each), so 20; one-line rows are light, so 60. Earlier ones are built as you scroll up
+    /// (and by "Show earlier steps" or a search hit), so a long session opens fast.
+    /// </summary>
+    internal const int FirstCards = 20, FirstLines = 60;
+    private int More => _compact || _lines ? FirstLines : FirstCards;
+    private const double NearTop = 600;   // scrolling up this close to the top builds the next earlier steps
 
     private readonly StackPanel _list = new()
     {
@@ -90,7 +94,7 @@ internal partial class ReadableLog
         }
 
         _headerCount = _list.Children.Count;
-        BuildEarlier(FirstSteps);
+        BuildEarlier(More);
         if (Steps.Count == 0)
         {
             _list.Children.Add(Txt("No readable steps in this file.", TextSize.Body, false, Muted));
@@ -98,6 +102,13 @@ internal partial class ReadableLog
 
         _scroll.Content = _list;
         _root.Children.Add(_scroll);
+        _scroll.ScrollChanged += (_, e) =>
+        {
+            if (e.OffsetDelta.Y < 0 && _scroll.Offset.Y < NearTop && _earlier != null)
+            {
+                BuildEarlierKeepingPlace();
+            }
+        };
         if (toEnd)
         {
             Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
@@ -170,10 +181,20 @@ internal partial class ReadableLog
         _built += to - from;
         if (from > 0)
         {
-            _earlier = Btn($"Show {Math.Min(MoreSteps, from)} earlier steps ({from} not shown)", () => BuildEarlier(MoreSteps));
+            _earlier = Btn($"Show {Math.Min(More, from)} earlier steps ({from} not shown)", () => BuildEarlier(More));
             _earlier.HorizontalAlignment = HorizontalAlignment.Center;
             _list.Children.Insert(_headerCount, _earlier);
         }
+    }
+
+    /// <summary>Builds the next earlier steps above the view without moving what is on screen (the content grows upward, so the offset grows with it).</summary>
+    private void BuildEarlierKeepingPlace()
+    {
+        var before = _scroll.Extent.Height;
+        var offset = _scroll.Offset.Y;
+        BuildEarlier(More);
+        _scroll.UpdateLayout();
+        _scroll.Offset = new Vector(_scroll.Offset.X, offset + _scroll.Extent.Height - before);
     }
 
     /// <summary>The step in the middle of the view (the last one when the view is at its end); null when none is built.</summary>

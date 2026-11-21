@@ -207,6 +207,25 @@ public sealed class LogFeatureTests
     }
 
     [AvaloniaFact]
+    public void A_long_session_builds_only_the_last_cards_and_more_as_you_scroll_up_without_moving_the_view()
+    {
+        var steps = Enumerable.Range(1, 120).Select(i => Line(i % 60, i % 2 == 0 ? "user" : "assistant", "step " + i));
+        var log = new ReadableLog(new ClaudeSessionParser().Parse(Lines([.. steps])), true, false);
+        var w = Ui.Show(log.Root);
+        Dispatcher.UIThread.RunJobs();
+        Dispatcher.UIThread.RunJobs();
+        var cells = () => w.GetVisualDescendants().OfType<AgentGraphCell>().Count();
+        Assert.Equal(ReadableLog.FirstCards, cells());   // 120 steps, only the last 20 are built
+        var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Extent.Height > s.Viewport.Height);
+        var first = log.Steps[log.Steps.Count - ReadableLog.FirstCards];   // the first step built
+        scroll.Offset = new Avalonia.Vector(0, 0);   // scrolled up to the top
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(cells() > ReadableLog.FirstCards);   // the next earlier steps were built
+        Assert.InRange(log.Steps.IndexOf(log.StepAtTop()!), log.Steps.IndexOf(first) - 1, log.Steps.IndexOf(first));   // and what was at the top is still at the top of the view (give or take the gap between cards)
+        w.Close();
+    }
+
+    [AvaloniaFact]
     public void A_session_without_agents_has_the_main_line_with_a_dot_per_step_and_no_legend()
     {
         var steps = new List<string> { Line(1, "user", "prompt"), Line(2, "assistant", "step") };
