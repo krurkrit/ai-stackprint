@@ -9,13 +9,10 @@ using AiStackprint.Models;
 namespace AiStackprint.Services;
 
 /// <summary>Totals for one app's logs over a period. Session fields stay 0 for apps without a session parser.</summary>
-/// <summary>The sessions of one day: how many had a reply that day, the tokens of their requests and replies, and the estimated cost.</summary>
-public record DayTotal(DateOnly Date, int Sessions, long Input, long Output, decimal Cost);
-
 public record LogStats(int Files, long Bytes, DateTime? Newest, DateTime? Oldest, List<LogFile> Largest,
     int Errors, int Warnings, bool TextCapped,
     int Sessions, int Prompts, int ToolCalls, int SubAgentSteps, long InputTokens, long OutputTokens,
-    List<(string Tool, int Count)> TopTools, List<string> Models, decimal Cost, List<DayTotal> Daily);
+    List<(string Tool, int Count)> TopTools, List<string> Models);
 
 /// <summary>Builds <see cref="LogStats"/>. Per-file session totals (not the parsed text) are cached by path + size + time, so re-opening is instant and the cache stays tiny.</summary>
 public static partial class LogSummary
@@ -46,7 +43,6 @@ public static partial class LogSummary
         }
 
         var sessions = Sessions(files, ct);
-        var daily = Daily(files, since, ct);
         foreach (var f in files.Where(f => LogParsers.Find(f.Format) == null).OrderByDescending(f => f.Modified))
         {
             ct.ThrowIfCancellationRequested();
@@ -79,44 +75,10 @@ public static partial class LogSummary
             sessions.Count, sessions.Sum(t => t.Prompts), sessions.Sum(t => t.ToolCalls), sessions.Sum(t => t.SubAgentSteps),
             sessions.Sum(t => t.InputTokens), sessions.Sum(t => t.OutputTokens),
             [.. sessions.SelectMany(t => t.Tools).GroupBy(t => t.Key).Select(g => (g.Key, g.Sum(t => t.Value))).OrderByDescending(t => t.Item2).Take(5)],
-            [.. sessions.SelectMany(t => t.Models).Distinct().Order()], daily.Sum(d => d.Cost), daily);
+            [.. sessions.SelectMany(t => t.Models).Distinct().Order()]);
     }
 
     public static LogStats Compute(IReadOnlyList<LogFile> all, DateTime? since) => Compute(all, since, default);
-
-    private sealed record DayBucket(DateOnly Date, long Input, long Output, decimal Cost);
-
-    private static readonly ConcurrentDictionary<(string, long, long), List<DayBucket>> _days = new();
-
-    /// <summary>Tokens and estimated cost per day, from the replies the session logs record (the same events and prices as the Usage page), newest day first.</summary>
-    internal static List<DayTotal> Daily(List<LogFile> files, DateTime? since, CancellationToken ct)
-    {
-        if (_days.Count > 2000)
-        {
-            _days.Clear();
-        }
-
-        var parsed = files.Select(f => (File: f, Parser: LogParsers.Find(f.Format))).Where(p => p.Parser is { WholeFile: false }).ToList();
-        var buckets = new List<DayBucket>?[parsed.Count];
-        Parallel.For(0, parsed.Count, new ParallelOptions
-        {
-            CancellationToken = ct,
-            MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4)
-        }, i =>
-        {
-            var (f, parser) = parsed[i];
-            try
-            {
-                buckets[i] = _days.GetOrAdd((f.Path, f.Size, f.Modified.Ticks), _ => [.. parser!.UsageFile(f.Path).GroupBy(e => DateOnly.FromDateTime(e.Time))
-                    .Select(g => new DayBucket(g.Key, g.Sum(e => e.RequestInput), g.Sum(e => e.Output), g.Sum(e => ModelCatalog.Cost(e) ?? 0)))]);
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }   // skip files that vanished or are locked
-        });
-        var from = since == null ? (DateOnly?)null : DateOnly.FromDateTime(since.Value);
-        return [.. buckets.Where(b => b != null).SelectMany(b => b!).Where(b => from == null || b.Date >= from)
-            .GroupBy(b => b.Date).OrderByDescending(g => g.Key)
-            .Select(g => new DayTotal(g.Key, g.Count(), g.Sum(b => b.Input), g.Sum(b => b.Output), g.Sum(b => b.Cost)))];
-    }
 
     /// <summary>The totals of every session file, several files at once: counting is CPU-bound and the files are independent.</summary>
     private static List<SessionCounts> Sessions(List<LogFile> files, CancellationToken ct)

@@ -158,22 +158,6 @@ public sealed class MainWindowTests : IDisposable
     }
 
     [AvaloniaFact]
-    public void The_Logs_summary_lists_tokens_and_cost_per_day()
-    {
-        var w = Open();
-        Ui.Click(Nav(w, "Logs"));
-        Settle(w);
-        Press(w, "All");   // the made-up session is from a fixed day: not always within the last 7 days
-        Settle(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Contains("Est. cost"));
-        var texts = Ui.Texts(w);
-        Assert.Contains("Day", texts);
-        Assert.Contains("Tokens in / out", texts);
-        Assert.Contains("2026-11-18", texts);   // the day of the made-up session's reply
-        w.Close();
-    }
-
-    [AvaloniaFact]
     public void The_view_switch_has_Raw_Conversation_and_Compact_and_each_shows_the_session()
     {
         var w = Open();
