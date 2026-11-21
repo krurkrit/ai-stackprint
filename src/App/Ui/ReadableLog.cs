@@ -37,16 +37,23 @@ internal partial class ReadableLog
 
     public ReadableLog(Session s, bool toEnd)
     {
-        Steps = [.. s.Entries.TakeLast(MaxSteps)];
-        _list.Children.Add(Summary(s));
+        var lines = IsLines(s);
+        var cap = lines ? MaxLines : MaxSteps;
+        Steps = [.. s.Entries.TakeLast(cap)];
+        if (lines)
+        {
+            _list.Spacing = 0;
+        }
+
+        _list.Children.Add(lines ? LinesSummary(s) : Summary(s));
         if (AgentTimelines.Build(s.Entries) is { } timeline)
         {
             _list.Children.Add(AgentGraph.Build(timeline));
         }
 
-        if (s.Entries.Count > MaxSteps)
+        if (s.Entries.Count > cap)
         {
-            _list.Children.Add(Txt($"Showing the last {MaxSteps} of {s.Entries.Count} steps.", TextSize.Caption, false, Muted));
+            _list.Children.Add(Txt($"Showing the last {cap:N0} of {s.Entries.Count:N0} {(lines ? "lines" : "steps")}.", TextSize.Caption, false, Muted));
         }
 
         _headerCount = _list.Children.Count;
@@ -87,6 +94,11 @@ internal partial class ReadableLog
             wasSub = e.SubAgent;
             var step = Step(e);
             _controls[e] = step;
+            if (e.Usage != null)
+            {
+                step = WithUsage(step, e.Usage);
+            }
+
             if (e.SubAgent)
             {
                 step = new Border
@@ -111,6 +123,34 @@ internal partial class ReadableLog
             _earlier.HorizontalAlignment = HorizontalAlignment.Center;
             _list.Children.Insert(_headerCount, _earlier);
         }
+    }
+
+    /// <summary>The step in the middle of the view (the last one when the view is at its end); null when none is built.</summary>
+    public LogEntry? StepAtCenter() => StepAt(.5);
+
+    /// <summary>The first step in view (the last one built that starts at or above the top of the view); null when none is built.</summary>
+    public LogEntry? StepAtTop() => StepAt(0);
+
+    private LogEntry? StepAt(double fraction)
+    {
+        var middle = _scroll.Offset.Y + _scroll.Viewport.Height * fraction;
+        LogEntry? found = null;
+        foreach (var e in Steps)
+        {
+            if (!_holders.TryGetValue(e, out var holder) || holder.TranslatePoint(default, _list) is not { } at)
+            {
+                continue;
+            }
+
+            if (at.Y > middle)
+            {
+                break;
+            }
+
+            found = e;
+        }
+
+        return found;
     }
 
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>

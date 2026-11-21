@@ -85,7 +85,7 @@
         {"format": "opencode-config", "path": "opencode.json", "level": "Project", "label": "npm"}
       ],
       "logs": [
-        {"path": "~/.local/share/opencode/log", "label": "Logs"}
+        {"path": "~/.local/share/opencode/log", "label": "Logs", "format": "text-log"}
       ],
       "usage": [
         {"path": "~/.local/share/opencode/opencode.db", "label": "Sessions", "format": "opencode-db"}
@@ -146,9 +146,9 @@
         {"format": "vscode", "path": "~/.cursor/extensions", "label": "Extensions"}
       ],
       "logs": [
-        {"path": "%APPDATA%/Cursor/logs", "label": "Logs", "depth": 4, "os": "windows"},
-        {"path": "~/Library/Application Support/Cursor/logs", "label": "Logs", "depth": 4, "os": "macos"},
-        {"path": "~/.config/Cursor/logs", "label": "Logs", "depth": 4, "os": "linux"}
+        {"path": "%APPDATA%/Cursor/logs", "label": "Logs", "depth": 4, "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Cursor/logs", "label": "Logs", "depth": 4, "os": "macos", "format": "text-log"},
+        {"path": "~/.config/Cursor/logs", "label": "Logs", "depth": 4, "os": "linux", "format": "text-log"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Plugin (~/.cursor/plugins) and extension paths are best-effort. Command folders (.cursor/commands, ~/.cursor/commands) are best-effort."
     },
@@ -232,9 +232,9 @@
         {"format": "vscode", "path": "~/.windsurf/extensions", "label": "Extensions"}
       ],
       "logs": [
-        {"path": "%APPDATA%/Windsurf/logs", "label": "Logs", "depth": 4, "os": "windows"},
-        {"path": "~/Library/Application Support/Windsurf/logs", "label": "Logs", "depth": 4, "os": "macos"},
-        {"path": "~/.config/Windsurf/logs", "label": "Logs", "depth": 4, "os": "linux"}
+        {"path": "%APPDATA%/Windsurf/logs", "label": "Logs", "depth": 4, "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Windsurf/logs", "label": "Logs", "depth": 4, "os": "macos", "format": "text-log"},
+        {"path": "~/.config/Windsurf/logs", "label": "Logs", "depth": 4, "os": "linux", "format": "text-log"}
       ],
       "notes": "Skill paths are best-effort (from the skills CLI agent table); edit apps.json if yours differ. Config file paths are best-effort. Log paths are best-effort. Extension path is best-effort. The global workflows folder is best-effort."
     },
@@ -270,7 +270,7 @@
         {"format": "folders", "path": "~/.copilot/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]}
       ],
       "logs": [
-        {"path": "~/.copilot/logs", "label": "Logs"}
+        {"path": "~/.copilot/logs", "label": "Logs", "format": "text-log"}
       ],
       "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents. Config file paths are best-effort. Plugin paths (installed-plugins/marketplace/name) are best-effort."
     },
@@ -307,11 +307,11 @@
         {"format": "goose", "path": "%APPDATA%/Block/goose/config/config.yaml", "os": "windows", "label": "Extensions"}
       ],
       "logs": [
-        {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "linux"},
-        {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "macos"},
-        {"path": "%APPDATA%/Block/goose/data/logs", "label": "Logs", "depth": 3, "os": "windows"},
-        {"path": "%APPDATA%/Goose/logs", "label": "Desktop", "os": "windows"},
-        {"path": "~/Library/Logs/Goose", "label": "Desktop", "os": "macos"}
+        {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "linux", "format": "text-log"},
+        {"path": "~/.local/state/goose/logs", "label": "Logs", "depth": 3, "os": "macos", "format": "text-log"},
+        {"path": "%APPDATA%/Block/goose/data/logs", "label": "Logs", "depth": 3, "os": "windows", "format": "text-log"},
+        {"path": "%APPDATA%/Goose/logs", "label": "Desktop", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Logs/Goose", "label": "Desktop", "os": "macos", "format": "text-log"}
       ],
       "notes": "Skill and detect paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Log paths on macOS and Linux are best-effort."
     },
@@ -555,9 +555,9 @@
         {"format": "vscode", "path": "~/.kiro/extensions", "label": "Extensions"}
       ],
       "logs": [
-        {"path": "%APPDATA%/Kiro/logs", "label": "Logs", "depth": 4, "os": "windows"},
-        {"path": "~/Library/Application Support/Kiro/logs", "label": "Logs", "depth": 4, "os": "macos"},
-        {"path": "~/.config/Kiro/logs", "label": "Logs", "depth": 4, "os": "linux"}
+        {"path": "%APPDATA%/Kiro/logs", "label": "Logs", "depth": 4, "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Kiro/logs", "label": "Logs", "depth": 4, "os": "macos", "format": "text-log"},
+        {"path": "~/.config/Kiro/logs", "label": "Logs", "depth": 4, "os": "linux", "format": "text-log"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ. Config file paths are best-effort. Hook files are read best effort: their format changed in Kiro 1.0."
     },
@@ -575,9 +575,9 @@
         {"format": "vscode", "path": "~/.antigravity/extensions", "label": "Extensions"}
       ],
       "logs": [
-        {"path": "%APPDATA%/Antigravity/logs", "label": "Logs", "depth": 4, "os": "windows"},
-        {"path": "~/Library/Application Support/Antigravity/logs", "label": "Logs", "depth": 4, "os": "macos"},
-        {"path": "~/.config/Antigravity/logs", "label": "Logs", "depth": 4, "os": "linux"}
+        {"path": "%APPDATA%/Antigravity/logs", "label": "Logs", "depth": 4, "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Antigravity/logs", "label": "Logs", "depth": 4, "os": "macos", "format": "text-log"},
+        {"path": "~/.config/Antigravity/logs", "label": "Logs", "depth": 4, "os": "linux", "format": "text-log"}
       ],
       "notes": "Skill paths are best-effort and have changed between versions; edit apps.json if yours differ. Log and extension paths are best-effort."
     },
@@ -641,7 +641,7 @@
         {"path": "%LOCALAPPDATA%/warp/Warp/config/settings.toml", "level": "User", "kind": "settings"}
       ],
       "logs": [
-        {"path": "%LOCALAPPDATA%/warp/Warp/data/logs", "label": "Logs"}
+        {"path": "%LOCALAPPDATA%/warp/Warp/data/logs", "label": "Logs", "format": "text-log"}
       ],
       "notes": "Uses the shared .agents/skills folders (listed under Shared agents). Detect, settings and log paths are verified on Windows only; the ~/.warp path on macOS and Linux is best-effort."
     },
@@ -686,8 +686,8 @@
         {"format": "folders", "path": "~/Library/Application Support/Claude/Claude Extensions", "os": "macos", "depth": 1, "manifests": ["manifest.json"], "label": "Extensions"}
       ],
       "logs": [
-        {"path": "%APPDATA%/Claude/logs", "label": "Logs", "os": "windows"},
-        {"path": "~/Library/Logs/Claude", "label": "Logs", "os": "macos"}
+        {"path": "%APPDATA%/Claude/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Logs/Claude", "label": "Logs", "os": "macos", "format": "text-log"}
       ],
       "notes": "No skills folder. Detect and config file paths are best-effort. Extensions (MCP bundles) path is best-effort."
     },

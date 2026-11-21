@@ -43,11 +43,14 @@ internal static class Ui
         root.GetVisualDescendants().OfType<Button>().First(b => b.Content as string == text);
 
     /// <summary>A real mouse click on the first text with this content (a row, a tab): the frame is drawn first, since a click is tested against it.</summary>
-    public static void ClickText(Window w, string text, int index = 0)
+    public static void ClickText(Window w, string text, int index = 0) => ClickText(w, t => t == text, index);
+
+    /// <summary>Like <see cref="ClickText(Window, string, int)"/> for the first text a test accepts (a log file's row shows its file name after the type: "Sessions · name.jsonl").</summary>
+    public static void ClickText(Window w, Func<string, bool> match, int index = 0)
     {
         Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Dispatcher.UIThread.RunJobs();
-        var cell = w.GetVisualDescendants().OfType<TextBlock>().Where(t => Text(t) == text).ElementAt(index);
+        var cell = w.GetVisualDescendants().OfType<TextBlock>().Where(t => match(Text(t))).ElementAt(index);
         var at = cell.TranslatePoint(new Point(2, 2), w)!.Value;
         Avalonia.Headless.HeadlessWindowExtensions.MouseDown(w, at, Avalonia.Input.MouseButton.Left);
         Avalonia.Headless.HeadlessWindowExtensions.MouseUp(w, at, Avalonia.Input.MouseButton.Left);

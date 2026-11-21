@@ -53,6 +53,12 @@ internal partial class LogViewer
         _jumps.Clear();
         _at = -1;
         _count = null;
+        if (AllFiles && !string.IsNullOrEmpty(_query.Text))
+        {
+            await SearchAllAsync();
+            return;
+        }
+
         var p = Pattern();
         if (p == null || _file == null)
         {

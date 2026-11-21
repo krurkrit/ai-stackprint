@@ -34,6 +34,11 @@ internal partial class ReadableLog
             Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
         }
 
+        if (s.Entries.Where(e => e.Usage != null).Select(e => ModelCatalog.Cost(e.Usage!)).Where(c => c != null).Sum() is > 0 and var total)
+        {
+            Add("≈ " + StepMoney(total) + " estimated");
+        }
+
         if (PeakContext(s) is { } peak)
         {
             Add(peak);
@@ -86,6 +91,7 @@ internal partial class ReadableLog
 
     private static Control Step(LogEntry e) => e.Role switch
     {
+        _ when LineLogs.IsLevel(e.Role) => LogLine(e),
         "user" => Message("person", "You", e, Selected, mine: true),
         "assistant" => Message("bot", "Assistant", e, Surface),
         "tool" => ToolCall(e),

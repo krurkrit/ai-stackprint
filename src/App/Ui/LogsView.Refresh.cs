@@ -79,6 +79,7 @@ internal partial class LogsView
             Readable = _viewer.Readable,
             Follow = _viewer.Follow
         };
+        Wire(_viewer);
         _summary = new LogSummaryCard { Days = _summary.Days };
         _table.Content = null;
         _table = new ContentControl();

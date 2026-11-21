@@ -28,19 +28,34 @@ internal partial class LogsView(Ctx x)
     private ContentControl _table = new();
     private LogFolderWatcher? _watcher;
     private string? _watching;   // app whose folders are watched
-    private string _fileQuery = "";   // filters the Files list: words in the file name, type or folder
 
     private IEnumerable<AppDefinition> Apps => x.S.Defs.Where(d => d.Logs.Count > 0 && x.ShownApps.Any(a => a.Id == d.Id));
 
+    /// <summary>The viewer asks the page for the file list and to open another file.</summary>
+    private void Wire(LogViewer v)
+    {
+        v.Files = () => _files;
+        v.OpenFile = f =>
+        {
+            if (_app != null && x.S.Def(_app) is { } def)
+            {
+                Open(def, f);
+            }
+        };
+    }
+
+    /// <summary>F8 / Shift+F8 on the Logs page: the next or previous error line of a text log.</summary>
+    public bool NextError(int step) => _viewer.NextError(step);
+
     public Control Build(string? appId)
     {
+        Wire(_viewer);
         var keep = appId == null || appId == _app ? _scroll?.Offset : null;   // the same app built again (view switch, follow, delete): stay where the user was
         if (appId != null && appId != _app)
         {
             _app = appId;
             _file = null;
             _checked.Clear();
-            _fileQuery = "";
             _rows = RowsStep;
         }
         _app ??= Apps.FirstOrDefault(d => x.Info(d.Id)?.Installed == true)?.Id ?? Apps.FirstOrDefault()?.Id;
@@ -142,21 +157,10 @@ internal partial class LogsView(Ctx x)
 
                 x.Go("Logs:" + _app);
             };
-            var search = SearchBox("Filter files by name, type or folder").With(b =>
-            {
-                b.Text = _fileQuery;
-                ToolTip.SetTip(b, "Words match separately, in any order; \"quotes\" match a phrase.");
-            })
-                .OnPause(q =>
-                {
-                    _fileQuery = q;
-                    _rows = RowsStep;
-                    FillTable(def);
-                });
             right.Children.Add(Section("document_text", "Files", new StackPanel
             {
                 Spacing = Space.L,
-                Children = { search, new ScrollViewer
+                Children = { new ScrollViewer
                 {
                     MaxHeight = Heights.List,
                     Content = _table.Free()

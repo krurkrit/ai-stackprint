@@ -53,12 +53,13 @@ internal partial class LogViewer
         ToolTip.SetTip(_case, "Match case");
         ToolTip.SetTip(_regex, "Regular expression");
         ToolTip.SetTip(_only, "Show only matching lines (Raw)");
-        foreach (var t in new[] { _case, _regex, _only })
+        ToolTip.SetTip(_all, "On: search every log file of this app, newest first (results are lines of the files, shown in Raw).\nOff: search only the open file.");
+        foreach (var t in new[] { _case, _regex, _only, _all })
         {
             t.VerticalContentAlignment = VerticalAlignment.Center;
         }
 
-        ToolTip.SetTip(_query, "Words match separately, in any order, on one line (Raw) or in one step (Conversation); \"quotes\" match a phrase.\nConversation: role:user, role:assistant, tool:bash keep only those steps.\nEnter: next match · Shift+Enter: previous");
+        ToolTip.SetTip(_query, "Words match separately, in any order, on one line (Raw) or in one step (Conversation); \"quotes\" match a phrase.\nConversation: role:user, role:assistant, tool:bash keep only those steps. Lines: role:error, role:warn keep only those levels.\nEnter: next match · Shift+Enter: previous");
         _wait.Tick += (_, _) =>
         {
             _wait.Stop();
@@ -69,6 +70,7 @@ internal partial class LogViewer
             _wait.Stop();
             _wait.Start();
         };
+        _all.IsCheckedChanged += (_, _) => Search();
         _case.IsCheckedChanged += (_, _) => Search();
         _regex.IsCheckedChanged += (_, _) => Search();
         _only.IsCheckedChanged += (_, _) => Render(false);
@@ -95,11 +97,14 @@ internal partial class LogViewer
             });
     }
 
-    private bool CanRead => _file != null && LogParsers.Find(_file.Format) != null;
+    private bool CanRead => _file != null && (LogParsers.Find(_file.Format) != null || LineLogs.Is(_file.Format));
+    private bool IsLines => LineLogs.Is(_file?.Format);
+    private string ReadableName => IsLines ? "Lines" : "Conversation";
     private bool ShowReadable => Readable && CanRead;
 
     public Control Build(LogFile? f, Action rebuild)
     {
+        _rebuild = rebuild;
         if (f?.Path != _file?.Path)
         {
             _code?.Dispose();
@@ -113,15 +118,16 @@ internal partial class LogViewer
             return Card(Txt("Select a log file.", TextSize.Body, false, Muted));
         }
 
-        var mode = CanRead ? Btn(ShowReadable ? "Raw" : "Conversation", () =>
+        var mode = CanRead ? Btn(ShowReadable ? "Raw" : ReadableName, () =>
         {
+            RememberPlace();
             Readable = !Readable;
             rebuild();
-        }, false, ShowReadable ? "code" : "chat_multiple")
-            .With(b => ToolTip.SetTip(b, ShowReadable ? "Show the file as written" : "Show the session as a conversation")) : null;
+        }, false, ShowReadable ? "code" : IsLines ? "document_text" : "chat_multiple")
+            .With(b => ToolTip.SetTip(b, ShowReadable ? "Show the file as written" : IsLines ? "Show one row per log line, with level colors" : "Show the session as a conversation")) : null;
         // Search, the view switch, then the file buttons. Follow is a switch on the Files card. F5 reloads (no Reload button: the folder is watched).
         var tools = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Left };
-        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), ShowReadable ? null : _only.Free(), mode,
+        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable && IsLines ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error line (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode,
                      IconBtn("open", "Open file", () => PathUtil.OpenFile(f.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(f.Path)) })
         {
             if (c != null)

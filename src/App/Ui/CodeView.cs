@@ -218,7 +218,44 @@ internal sealed class CodeView : Border, IDisposable
     public string Text { get => _editor.Text; set => _editor.Text = value; }
     public bool ReadOnly { get => _editor.IsReadOnly; set => _editor.IsReadOnly = value; }
     public event EventHandler? Changed { add => _editor.TextChanged += value; remove => _editor.TextChanged -= value; }
-    public void ScrollToEnd() => _editor.ScrollToEnd();
+
+    /// <summary>The log viewer lets the last line scroll up to the middle of the view (empty space below it), so the newest line is never hugging the bottom edge.</summary>
+    public bool ScrollPastEnd
+    {
+        get => _editor.Options.AllowScrollBelowDocument;
+        init => _editor.Options.AllowScrollBelowDocument = value;
+    }
+
+    /// <summary>The 1-based line in the middle of the view; 0 when nothing is shown.</summary>
+    public int CenterLine()
+    {
+        var tv = _editor.TextArea.TextView;
+        if (_editor.Document == null || !tv.VisualLinesValid)
+        {
+            return 0;
+        }
+
+        var middle = tv.GetDocumentLineByVisualTop(tv.ScrollOffset.Y + tv.Bounds.Height / 2);
+        return middle?.LineNumber ?? 0;
+    }
+
+    /// <summary>Scrolls to the last line with text; with <see cref="ScrollPastEnd"/> it ends up in the middle of the view.</summary>
+    public void ScrollToEnd()
+    {
+        var doc = _editor.Document;
+        if (doc == null || doc.LineCount == 0)
+        {
+            return;
+        }
+
+        var last = doc.LineCount;
+        while (last > 1 && doc.GetLineByNumber(last).Length == 0)
+        {
+            last--;   // the empty line after the final newline
+        }
+
+        _editor.ScrollTo(last, 0);
+    }
 
     /// <summary>Scrolls to a 1-based line and selects <paramref name="length"/> characters from <paramref name="column"/> (0-based).</summary>
     public void Reveal(int line, int column, int length)

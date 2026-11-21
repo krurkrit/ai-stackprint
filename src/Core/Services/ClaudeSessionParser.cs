@@ -19,6 +19,7 @@ internal class ClaudeSessionParser : ILogParser
         var calls = new Dictionary<string, (string Tool, string? File)>();   // tool_use id -> name, file type it touched
         var start = 0;
         var agent = "";
+        UsageEvent? pending = null;   // the reply's usage, put on the first step the reply makes
         void Tag()
         {
             if (agent != "") { for (var k = start; k < list.Count; k++) { list[k] = list[k] with { Agent = agent }; } }
@@ -47,9 +48,11 @@ internal class ClaudeSessionParser : ILogParser
                 models.Add(m);
             }
 
+            var before = list.Count;
             if (msg.Str("id") is not { Length: > 0 } mid || seen.Add(mid + ":" + e.Str("requestId")))
             {
                 var u = msg.Get("usage");
+                pending ??= type == "assistant" ? Reply(e, msg) : null;
                 inTok += u.Num("input_tokens");
                 outTok += u.Num("output_tokens");
                 if (!sub)
@@ -61,6 +64,7 @@ internal class ClaudeSessionParser : ILogParser
             if (content.ValueKind == JsonValueKind.String)
             {
                 list.Add(new(type, content.GetString()!, time, sub));
+                Attach();
                 continue;
             }
             if (content.ValueKind != JsonValueKind.Array)
@@ -87,6 +91,16 @@ internal class ClaudeSessionParser : ILogParser
                         calls.TryGetValue(b.Str("tool_use_id"), out var call);
                         list.Add(new("result", text, time, sub, call.Tool, LogParsers.Detect(text, call.Tool == "Read" ? call.File : null)));
                         break;
+                }
+            }
+
+            Attach();
+            void Attach()
+            {
+                if (pending != null && list.Count > before)
+                {
+                    list[before] = list[before] with { Usage = pending };
+                    pending = null;
                 }
             }
         }
@@ -160,6 +174,25 @@ internal class ClaudeSessionParser : ILogParser
         return new(prompts, calls, subSteps, inTok, outTok, tools, models);
     }
 
+    /// <summary>The usage of one reply line (what changes the price: 1-hour cache writes, fast mode, US-only processing, web searches; missing = standard, global, short cache, none); null without a time, usage or model.</summary>
+    private static UsageEvent? Reply(JsonElement e, JsonElement msg)
+    {
+        var u = msg.Get("usage");
+        var model = msg.Str("model");
+        if (u.ValueKind != JsonValueKind.Object || e.Time() is not { } time || model is "" or "<synthetic>")
+        {
+            return null;
+        }
+
+        var write = u.Num("cache_creation_input_tokens");
+        return new(time, model, LogParsers.ProjectName(e.Str("cwd")), u.Num("input_tokens"), u.Num("output_tokens"),
+            u.Num("cache_read_input_tokens"), write, 0, e.Get("isSidechain").ValueKind == JsonValueKind.True,
+            CacheWrite1h: Math.Min(write, u.Get("cache_creation").Num("ephemeral_1h_input_tokens")),
+            Fast: u.Str("speed") == "fast",
+            UsOnly: string.Equals(u.Str("inference_geo"), "us", StringComparison.OrdinalIgnoreCase),
+            WebSearches: (int)u.Get("server_tool_use").Num("web_search_requests"));
+    }
+
     public IEnumerable<UsageEvent> Usage(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
         var seen = new HashSet<string>();
@@ -171,8 +204,7 @@ internal class ClaudeSessionParser : ILogParser
             }
 
             var msg = e.Get("message");
-            var u = msg.Get("usage");
-            if (u.ValueKind != JsonValueKind.Object || e.Time() is not { } time)
+            if (Reply(e, msg) is not { } reply)
             {
                 continue;
             }
@@ -182,20 +214,7 @@ internal class ClaudeSessionParser : ILogParser
                 continue;   // streamed reply: count once
             }
 
-            var model = msg.Str("model");
-            if (model is "" or "<synthetic>")
-            {
-                continue;
-            }
-
-            // What changes the price: 1-hour cache writes, fast mode, US-only processing, web searches (missing = standard, global, short cache, none)
-            var write = u.Num("cache_creation_input_tokens");
-            yield return new(time, model, LogParsers.ProjectName(e.Str("cwd")), u.Num("input_tokens"), u.Num("output_tokens"),
-                u.Num("cache_read_input_tokens"), write, 0, e.Get("isSidechain").ValueKind == JsonValueKind.True,
-                CacheWrite1h: Math.Min(write, u.Get("cache_creation").Num("ephemeral_1h_input_tokens")),
-                Fast: u.Str("speed") == "fast",
-                UsOnly: string.Equals(u.Str("inference_geo"), "us", StringComparison.OrdinalIgnoreCase),
-                WebSearches: (int)u.Get("server_tool_use").Num("web_search_requests"));
+            yield return reply;
         }
     }
 }

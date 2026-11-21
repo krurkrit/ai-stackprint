@@ -107,6 +107,7 @@ internal static class Widths
     internal const double Field = 220;       // a drop-down or text box in a settings row
     internal const double FieldM = 160;      // a drop-down in a filter row
     internal const double FieldS = 120;      // a number box
+    internal const double LogLevel = 52;     // level column of a text-log row (ERROR, WARN)
     internal const double LabelXS = 80;      // label column of a filter row
     internal const double LabelS = 100;      // label column of a key-value list
     internal const double Label = 160;       // label column of a settings form

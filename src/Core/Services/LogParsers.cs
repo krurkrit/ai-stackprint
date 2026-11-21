@@ -9,7 +9,14 @@ namespace AiStackprint.Services;
 /// One step of a session. Role: user | assistant | tool | result | thinking | system.
 /// Lang: file extension for syntax highlighting (".sh", ".json", ".cs"…); Detail: a tool call's full input.
 /// </summary>
-public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null);
+public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null)
+{
+    /// <summary>The line of the file this step comes from, counted from the first line the parser was given (1-based); 0 = unknown. Set while a parser reads <see cref="LogParsers.Json"/>.</summary>
+    public long Line { get; init; } = LogParsers.CurrentLine;
+
+    /// <summary>The tokens (and so the cost) of the reply this step starts, once per reply; null when the log has none (not every format records them).</summary>
+    public UsageEvent? Usage { get; init; }
+}
 
 /// <param name="PeakContext">The largest request of the main conversation (input + cache read + cache write): how full its context got; 0 = unknown.</param>
 /// <param name="ContextWindow">The window the log states (Codex <c>model_context_window</c>); 0 = take it from the model data.</param>
@@ -47,6 +54,10 @@ public interface ILogParser
 
 public static class LogParsers
 {
+    /// <summary>The number of the line <see cref="Json"/> is handing out (per thread: a parse runs on one thread); 0 outside a parse.</summary>
+    [ThreadStatic]
+    internal static long CurrentLine;
+
     private static readonly ILogParser[] _all = [new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage()];
     public static ILogParser? Find(string? format) => format == null ? null : _all.FirstOrDefault(p => p.Format == format);
 
@@ -58,8 +69,10 @@ public static class LogParsers
     internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, params string[] needs)
     {
         var keys = needs.Select(System.Text.Encoding.UTF8.GetBytes).ToArray();
+        long n = 0;
         foreach (var l in lines)
         {
+            n++;
             if (l.Span.IndexOfAnyExcept(" \t\r"u8) < 0 || (keys.Length > 0 && !Any(l.Span, keys)))
             {
                 continue;
@@ -70,7 +83,9 @@ public static class LogParsers
             catch (JsonException) { continue; }
             using (d)
             {
+                CurrentLine = n;   // steps made while this line is handled get its number (new LogEntry reads it)
                 yield return d.RootElement;
+                CurrentLine = 0;
             }
         }
     }
