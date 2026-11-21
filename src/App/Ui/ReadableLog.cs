@@ -22,6 +22,9 @@ internal partial class ReadableLog
     public Control Root => _scroll;
     public List<LogEntry> Steps { get; }
 
+    /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
+    public Session Session { get; }
+
     /// <summary>Steps built when a file opens; earlier ones are built when asked for ("Show earlier steps", a search hit), so a long session opens fast.</summary>
     internal const int FirstSteps = 60;
     private const int MoreSteps = 100;
@@ -37,7 +40,9 @@ internal partial class ReadableLog
 
     public ReadableLog(Session s, bool toEnd)
     {
+        Session = s;
         var lines = IsLines(s);
+        _lines = lines;
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
         if (lines)
@@ -112,6 +117,15 @@ internal partial class ReadableLog
             }
 
             var holder = new Panel { Children = { step } };
+            if (!_lines)
+            {
+                AddCopy(holder, e);
+            }
+            else
+            {
+                holder.IsVisible = !_hidden.Contains(e.Role);
+            }
+
             _holders[e] = holder;
             _list.Children.Insert(at++, holder);
         }

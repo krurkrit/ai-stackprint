@@ -164,6 +164,11 @@ public static class LogParsers
             }
             catch (JsonException) { return new("tool", Cut(input.GetString()!, 300), time, sub, name, ".txt", input.GetString()); }
         }
+        if (EditDiff(name, input) is { } diff)
+        {
+            return new("tool", Summary(input), time, sub, name, ".diff", diff);   // an edit shows what changed
+        }
+
         var shell = _shells.Contains(name.ToLowerInvariant());
         var cmd = input.Get("command");
         var detail = shell && cmd.ValueKind != JsonValueKind.Undefined
@@ -171,6 +176,32 @@ public static class LogParsers
             : input.ValueKind == JsonValueKind.Undefined ? "" : JsonSerializer.Serialize(input, _pretty);
         return new("tool", Summary(input), time, sub, name, shell ? ".sh" : ".json", detail);
     }
+
+    /// <summary>Claude's Edit, MultiEdit and Write calls as a diff (old lines with -, new lines with +); null for any other call.</summary>
+    private static string? EditDiff(string name, JsonElement input)
+    {
+        var path = input.Str("file_path");
+        if (path == "")
+        {
+            return null;
+        }
+
+        static string Change(string oldText, string newText) =>
+            Lines("-", oldText) + Lines("+", newText);
+
+        var body = name switch
+        {
+            "Edit" => "@@\n" + Change(input.Str("old_string"), input.Str("new_string")),
+            "Write" => "@@ new content\n" + Change("", input.Str("content")),
+            "MultiEdit" when input.Get("edits") is { ValueKind: JsonValueKind.Array } edits =>
+                string.Concat(edits.EnumerateArray().Select(x => "@@\n" + Change(x.Str("old_string"), x.Str("new_string")))),
+            _ => null
+        };
+        return body == null ? null : $"--- {path}\n+++ {path}\n" + Cut(body, 20000);
+    }
+
+    private static string Lines(string mark, string text) =>
+        text == "" ? "" : string.Concat(text.TrimEnd('\n').Split('\n').Select(l => mark + l.TrimEnd('\r') + "\n"));
 
     private static readonly JsonSerializerOptions _pretty = new()
     {

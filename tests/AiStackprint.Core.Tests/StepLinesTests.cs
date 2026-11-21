@@ -54,7 +54,7 @@ public sealed class StepLinesTests
         Assert.Null(s.Entries[2].Usage);   // a prompt has none
     }
 
-    private sealed class StepLinesLog
+    private static class StepLinesLog
     {
         public static Session Parse() => LineLogs.Parse(Lines(
             "2026-08-26 11:22:27 [info] Starting app {",

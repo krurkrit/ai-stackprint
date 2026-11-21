@@ -5,6 +5,7 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 
 using static AiStackprint.Ui.W;
@@ -58,16 +59,45 @@ internal partial class ReadableLog
         return row;
     }
 
-    /// <summary>Header of a text log: lines, errors, warnings and the time span.</summary>
-    private static WrapPanel LinesSummary(Session s)
+    private readonly bool _lines;
+    private readonly HashSet<string> _hidden = [];   // levels the chips turned off
+
+    /// <summary>Header of a text log: lines and the time span, and a chip per level (with its count) that shows or hides those lines.</summary>
+    private WrapPanel LinesSummary(Session s)
     {
         var w = new WrapPanel();
         void Add(string t) => w.Children.Add(LogChip(t));
         Add(Plural(s.Entries.Count, "line"));
-        var errors = s.Entries.Count(e => e.Role == "error");
-        var warnings = s.Entries.Count(e => e.Role == "warn");
-        Add(Plural(errors, "error"));
-        Add(Plural(warnings, "warning"));
+        foreach (var level in s.Entries.GroupBy(e => e.Role).OrderBy(g => Array.IndexOf(["error", "warn", "info", "debug", "trace", "log"], g.Key)))
+        {
+            var role = level.Key;
+            var chip = new ToggleButton
+            {
+                Content = $"{char.ToUpperInvariant(role[0])}{role[1..]} {level.Count():N0}",
+                IsChecked = true,
+                Padding = new Thickness(Space.L, Space.XS),
+                Margin = new Thickness(0, 0, Space.M, Space.M)
+            };
+            ToolTip.SetTip(chip, $"Show or hide the {role} lines");
+            chip.IsCheckedChanged += (_, _) =>
+            {
+                if (chip.IsChecked == true)
+                {
+                    _hidden.Remove(role);
+                }
+                else
+                {
+                    _hidden.Add(role);
+                }
+
+                foreach (var (e, holder) in _holders)
+                {
+                    holder.IsVisible = !_hidden.Contains(e.Role);
+                }
+            };
+            w.Children.Add(chip);
+        }
+
         if (s.Start is { } a && s.End is { } b)
         {
             Add($"{a:yyyy-MM-dd HH:mm} – {b:yyyy-MM-dd HH:mm}");

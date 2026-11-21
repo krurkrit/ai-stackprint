@@ -127,7 +127,7 @@ internal partial class LogViewer
             .With(b => ToolTip.SetTip(b, ShowReadable ? "Show the file as written" : IsLines ? "Show one row per log line, with level colors" : "Show the session as a conversation")) : null;
         // Search, the view switch, then the file buttons. Follow is a switch on the Files card. F5 reloads (no Reload button: the folder is watched).
         var tools = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Left };
-        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable && IsLines ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error line (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode,
+        foreach (var c in new Control?[] { _query.Free(), _case.Free(), _regex.Free(), Several ? _all.Free() : null, ShowReadable && IsLines ? Btn("Next error", () => NextError(1), false, "warning").With(b => ToolTip.SetTip(b, "Go to the next error line (F8; Shift+F8: the previous one)")) : null, ShowReadable ? null : _only.Free(), mode, ExportButton(),
                      IconBtn("open", "Open file", () => PathUtil.OpenFile(f.Path)), IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(f.Path)) })
         {
             if (c != null)

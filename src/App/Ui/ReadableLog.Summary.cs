@@ -34,6 +34,13 @@ internal partial class ReadableLog
             Add($"{s.InputTokens:N0} in · {s.OutputTokens:N0} out tokens");
         }
 
+        if (SessionExport.TouchedFiles(s.Entries) is { Count: > 0 } files)
+        {
+            var chip = LogChip(Plural(files.Count, "file") + " changed");
+            ToolTip.SetTip(chip, string.Join("\n", files.Take(20)) + (files.Count > 20 ? $"\n… and {files.Count - 20} more" : ""));
+            w.Children.Add(chip);
+        }
+
         if (s.Entries.Where(e => e.Usage != null).Select(e => ModelCatalog.Cost(e.Usage!)).Where(c => c != null).Sum() is > 0 and var total)
         {
             Add("≈ " + StepMoney(total) + " estimated");

@@ -146,7 +146,7 @@ public sealed class LogsViewTests : IDisposable
         Assert.Contains("ERROR", seen);
         Assert.Contains("INFO", seen);
         Assert.Contains("3 lines", seen);
-        Assert.Contains("2 errors", seen);
+        Assert.Contains("Error 2", seen);   // the level chip with its count
         Assert.Contains(seen, t => t.Contains("at trace 0", StringComparison.Ordinal));   // the line under the message belongs to it
         Assert.Contains("Raw", Ui.ButtonTexts(w));   // the switch back to the file as written
         Assert.True(view.NextError(1));   // F8: the first error, then the second, then none
