@@ -149,11 +149,9 @@ public sealed class LogsViewTests : IDisposable
         Assert.Contains("Error 2", seen);   // the level chip with its count
         Assert.Contains(seen, t => t.Contains("at trace 0", StringComparison.Ordinal));   // the line under the message belongs to it
         Assert.Contains("Raw", Ui.ButtonTexts(w));   // the switch back to the file as written
-        Assert.True(view.NextError(1));   // F8: the first error, then the second, then none
-        Assert.Contains("Error 1 of 2", Ui.Texts(w));
-        Assert.True(view.NextError(1));
-        Assert.Contains("Error 2 of 2", Ui.Texts(w));
-        Assert.False(view.NextError(1));
-        Assert.True(view.NextError(-1));
+        var popup = view.MarksList();   // the Bookmarks button's list: the errors first
+        var listed = Ui.Texts(popup);
+        Assert.Contains("Errors (2)", listed);
+        Assert.Equal(2, listed.Count(t => t.StartsWith("Line ", StringComparison.Ordinal)));
     }
 }

@@ -44,8 +44,8 @@ internal partial class LogsView(Ctx x)
         };
     }
 
-    /// <summary>F8 / Shift+F8 on the Logs page: the next or previous error line of a text log.</summary>
-    public bool NextError(int step) => _viewer.NextError(step);
+    /// <summary>The Bookmarks button's list (errors, bookmarks and notes), for tests.</summary>
+    internal StackPanel MarksList() => _viewer.MarksList(() => { });
 
     public Control Build(string? appId)
     {
