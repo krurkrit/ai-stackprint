@@ -112,31 +112,43 @@ internal partial class LogViewer
         return found;
     }
 
-    /// <summary>A result in some file: it opens in Raw (the result is a line of the file) and goes to the line.</summary>
+    /// <summary>A result in some file: it goes to that line in the view you are in (the step that holds it in Conversation and Compact, the row in Lines, the line in Raw).</summary>
     private void GoTo(LogFile f, SearchHit h)
     {
         _pending = h;
         if (f.Path != _file?.Path)
         {
-            Readable = false;
-            OpenFile?.Invoke(f);
-        }
-        else if (ShowReadable)
-        {
-            Readable = false;
-            _rebuild?.Invoke();
+            OpenFile?.Invoke(f);   // GoToPending goes to the line once it has loaded
         }
         else
         {
-            _pending = null;
-            Jump(h);
+            GoToPending();
         }
     }
 
-    /// <summary>After a file has loaded: goes to the line a search result pointed at.</summary>
+    /// <summary>After a file has loaded (or at once for the open file): goes to the line a search result pointed at.</summary>
     private void GoToPending()
     {
-        if (_pending is { } h && !ShowReadable && _code != null)
+        if (_pending is not { } h)
+        {
+            return;
+        }
+
+        if (ShowReadable)
+        {
+            _pending = null;
+            if (_linesOk)
+            {
+                RevealLine(h.Line);
+            }
+            else
+            {
+                Readable = false;   // the steps of a file shown cut to its end do not know their lines: the result is shown in Raw
+                _pending = h;
+                _rebuild?.Invoke();
+            }
+        }
+        else if (_code != null)
         {
             _pending = null;
             Jump(h);

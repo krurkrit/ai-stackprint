@@ -42,15 +42,21 @@ internal partial class LogViewer
 
         if (ShowReadable)
         {
-            if (_readable is { } log && (log.Steps.LastOrDefault(e => e.Line is > 0 && e.Line <= line) ?? log.Steps.FirstOrDefault()) is { } step)
-            {
-                log.Reveal(step);
-            }
+            RevealLine(line);
         }
         else
         {
             _pending = new SearchHit(line, "", 0, 0);   // the raw view goes to a line the same way it goes to a search result
             GoToPending();
+        }
+    }
+
+    /// <summary>Scrolls the step view to the step that holds this file line: the last step that starts at or before it.</summary>
+    private void RevealLine(long line)
+    {
+        if (_readable is { } log && (log.Steps.LastOrDefault(e => e.Line is > 0 && e.Line <= line) ?? log.Steps.FirstOrDefault()) is { } step)
+        {
+            log.Reveal(step);
         }
     }
 }
