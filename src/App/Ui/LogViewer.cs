@@ -106,7 +106,6 @@ internal partial class LogViewer
 
     public Control Build(LogFile? f, Action rebuild)
     {
-        _rebuild = rebuild;
         if (f?.Path != _file?.Path)
         {
             _code?.Dispose();

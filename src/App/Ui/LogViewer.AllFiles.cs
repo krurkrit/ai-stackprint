@@ -22,7 +22,6 @@ internal partial class LogViewer
         Padding = new Avalonia.Thickness(Space.M, Space.XS)
     };
     private SearchHit? _pending;   // a line to go to once the file that was opened for a search result has loaded
-    private Action? _rebuild;
 
     /// <summary>The app's log files, newest first (the Files list).</summary>
     public Func<List<LogFile>>? Files { get; set; }
@@ -143,9 +142,16 @@ internal partial class LogViewer
             }
             else
             {
-                Readable = false;   // the steps of a file shown cut to its end do not know their lines: the result is shown in Raw
-                _pending = h;
-                _rebuild?.Invoke();
+                // the steps of a file shown cut to its end do not know their file lines: find the step that holds the matched text; the view stays as it is
+                var word = h.Column >= 0 && h.Column + h.Length <= h.Text.Length && h.Length > 0 ? h.Text.Substring(h.Column, h.Length) : "";
+                if (word.Length > 0 && _readable?.Steps.FirstOrDefault(e => e.Text.Contains(word, StringComparison.OrdinalIgnoreCase)) is { } step)
+                {
+                    _readable.Reveal(step);
+                }
+                else
+                {
+                    _status.Text = "That match is older than the steps shown";
+                }
             }
         }
         else if (_code != null)
