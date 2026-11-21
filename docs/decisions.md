@@ -82,6 +82,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Usage page
 - A "Usage" page in the menu after MCP servers: cost and tokens across all apps for 7 or 30 days, with the same figures and caveats as an app's Usage card (estimates unless the app logs its own cost).
 
+- The side menu's selection is one background behind the items that slides (260 ms, ease out) from the item you were on to the item you click, also between a project and a page. When the menu changes (Settings opens its own) or it first appears, the background jumps into place instead of sliding.
+
 ## Logs
 - The log viewer is read-only. Config files are editable. The text and config viewer uses AvaloniaEdit.
 - Watching and tailing:

@@ -3,6 +3,7 @@
 
 using AiStackprint.Ui;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
@@ -154,6 +155,39 @@ public sealed class MainWindowTests : IDisposable
 
         Palette(w, "demo");
         Press(w, "By file", "By app");
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void The_side_menus_selection_background_slides_to_the_item_you_click()
+    {
+        var w = Open();
+        Border Indicator() => w.GetVisualDescendants().OfType<Border>().First(b => b.Name == "NavIndicator");
+        double Top()
+        {
+            Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();   // advances the animation
+            return Indicator().Margin.Top;
+        }
+        Ui.WaitUntil(() => Indicator().IsVisible);
+        var dashboard = Top();
+        Ui.Click(Nav(w, "Apps"));   // no waiting for the page: the slide is 260 ms
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        w.UpdateLayout();
+        var apps = Nav(w, "Apps");
+        var grid = Indicator().Parent as Grid;
+        var seen = new List<double>();
+        Ui.WaitUntil(() =>
+        {
+            seen.Add(Top());
+            return seen.Count > 3 && grid != null && Math.Abs(seen[^1] - Nav(w, "Apps").TranslatePoint(default, grid).Value.Y) < 1;
+        }, 3000);   // it moved to the clicked item
+        var target = Nav(w, "Apps").TranslatePoint(default, grid!).Value.Y;
+        Assert.Contains(seen, v => v > dashboard + 1 && v < target - 1);   // on the way it was in between: it slid, not jumped
+        Assert.True(target > dashboard);
+        Assert.Equal(apps.Bounds.Height, Indicator().Height, 1);
+        Ui.Click(Nav(w, "Settings"));   // the other menu: Back to app, the pages, About
+        Settle(w);
+        Ui.WaitUntil(() => Indicator().IsVisible && Math.Abs(Top() - Nav(w, "Appearance").TranslatePoint(default, (Grid)Indicator().Parent!)!.Value.Y) < 1, 3000);
         w.Close();
     }
 
