@@ -19,9 +19,11 @@ internal sealed class AgentGraphCell : Control
     private readonly string _kind;
     private readonly int _lanes;
     private readonly double _nodeY;   // where the step's dot sits: the middle of its line
+    private readonly Func<bool> _marked;   // the step is bookmarked
 
-    public AgentGraphCell(GraphRow row, int lanes, string kind, string? tip, double nodeY)
+    public AgentGraphCell(GraphRow row, int lanes, string kind, string? tip, double nodeY, Func<bool> marked)
     {
+        _marked = marked;
         _nodeY = nodeY;
         _row = row;
         _lanes = lanes;
@@ -66,9 +68,16 @@ internal sealed class AgentGraphCell : Control
         }
 
         var owner = _row.Owner;
-        var fill = owner.Agent > 0 ? Brush(AgentKey(owner.Agent)) : Brush(_kind == "user" ? W.Accent : _kind == "assistant" ? W.Text : W.Muted);
-        var r = owner.Agent == 0 && _kind == "user" ? Sizes.GraphNode + 1 : _kind is "tool" or "result" ? Sizes.GraphNode - 1 : Sizes.GraphNode;   // you: larger; tool calls and results: smaller
-        context.DrawEllipse(fill, new Pen(Brush(W.Surface), Stroke.Medium), new Point(X(owner.Lane), y), r, r);
+        // few colors: gray for most steps, blue for you, red for an error, a sub-agent's own color on its branch; a bookmarked step has a ring in the accent
+        var fill = _kind == "error" ? Brush(W.ErrorKey) : owner.Agent > 0 ? Brush(AgentKey(owner.Agent)) : Brush(_kind == "user" ? W.Accent : W.Muted);
+        var r = _kind == "error" || owner.Agent == 0 && _kind == "user" ? Sizes.GraphNode + 1 : _kind is "tool" or "result" ? Sizes.GraphNode - 1 : Sizes.GraphNode;   // you and errors: larger; tool calls and results: smaller
+        var pos = new Point(X(owner.Lane), y);
+        if (_marked())
+        {
+            context.DrawEllipse(null, new Pen(Brush(W.Accent), Stroke.Medium), pos, r + Stroke.Medium * 2, r + Stroke.Medium * 2);
+        }
+
+        context.DrawEllipse(fill, new Pen(Brush(W.Surface), Stroke.Medium), pos, r, r);
     }
 
     private static void Curve(DrawingContext context, IPen pen, Point from, Point to)

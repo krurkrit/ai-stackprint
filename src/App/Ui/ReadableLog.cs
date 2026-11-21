@@ -19,12 +19,9 @@ internal partial class ReadableLog
     private readonly Dictionary<LogEntry, Control> _controls = [];
     private readonly Dictionary<LogEntry, Panel> _holders = [];   // each step's slot: the fading highlight is laid over it
     private readonly ScrollViewer _scroll = new();
-    private readonly Grid _root = new() { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-    private SessionMinimap? _map;
+    private readonly Grid _root = new() { ColumnDefinitions = new ColumnDefinitions("*") };
     public Control Root => _root;
 
-    /// <summary>Sessions with fewer steps than this have no minimap: the whole of them is in view anyway.</summary>
-    internal const int MinimapFrom = 25;
     public List<LogEntry> Steps { get; }
 
     /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
@@ -42,7 +39,7 @@ internal partial class ReadableLog
     private int _built;           // steps built, counted from the end of Steps
     private readonly bool _compact;
     private readonly StepContext? _marks;
-    private readonly SessionGraph? _graph;   // sub-agent branches beside the steps (null when the session has none)
+    private readonly SessionGraph? _graph;   // the graph column beside the steps: sub-agent branches, or just the main line (null for text logs)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
 
@@ -66,7 +63,7 @@ internal partial class ReadableLog
         _lines = lines;
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
-        _graph = lines ? null : SessionGraph.Layout(Steps);
+        _graph = lines ? null : SessionGraph.Layout(Steps) ?? (Steps.Count > 0 ? SessionGraph.Single(Steps.Count) : null);
         if (lines || compact || _graph != null)
         {
             _list.Spacing = 0;   // the rows carry their own spacing (a graph's lines run unbroken from row to row)
@@ -81,7 +78,10 @@ internal partial class ReadableLog
         if (_graph != null)
         {
             _list.Margin = new Thickness(Space.XL, Space.XL, 0, Space.XL);   // the graph column runs to the right edge
-            _list.Children.Add(AgentLegend(_graph));
+            if (_graph.Agents.Length > 1)
+            {
+                _list.Children.Add(AgentLegend(_graph));
+            }
         }
 
         if (s.Entries.Count > cap)
@@ -98,11 +98,6 @@ internal partial class ReadableLog
 
         _scroll.Content = _list;
         _root.Children.Add(_scroll);
-        if (Steps.Count >= MinimapFrom)
-        {
-            AddMinimap();
-        }
-
         if (toEnd)
         {
             Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
@@ -173,7 +168,6 @@ internal partial class ReadableLog
         }
 
         _built += to - from;
-        _map?.InvalidateVisual();   // the box of what is in view moves when earlier steps are built
         if (from > 0)
         {
             _earlier = Btn($"Show {Math.Min(MoreSteps, from)} earlier steps ({from} not shown)", () => BuildEarlier(MoreSteps));

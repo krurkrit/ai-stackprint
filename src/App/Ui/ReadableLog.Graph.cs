@@ -10,7 +10,7 @@ using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
 
-/// <summary>A conversation with sub-agents: each step has its row of the branch graph on its right.</summary>
+/// <summary>Each step has its row of the graph on its right: the main line with a dot per step (red for an error, blue for you, ringed when bookmarked), and the branches of sub-agents.</summary>
 internal partial class ReadableLog
 {
     /// <summary>The step and its graph cell. The column also covers the space below a card, so the lines do not break between steps.</summary>
@@ -32,7 +32,8 @@ internal partial class ReadableLog
             }
         };
         var tip = graph.Rows[index].Owner.Agent is > 0 and var agent ? graph.Agents[agent] : null;
-        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.Role, tip, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY);
+        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.IsError ? "error" : e.Role, tip, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY, () => _marks?.Get(e) != null);
+        _marks?.Watch(e, cell.InvalidateVisual);
         // The graph is a column of its own: the side menu's background and a line on its left, unbroken from the first step to the last
         var column = new Border
         {

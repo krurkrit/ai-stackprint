@@ -25,8 +25,8 @@ internal sealed class StepContext(UiState state, string file, bool canMark, Func
 
     public List<Bookmark> All() => Bookmarks.For(state, file);
 
-    /// <summary>Calls <paramref name="changed"/> when the step's bookmark changes (so its row can show or hide its mark).</summary>
-    public void Watch(LogEntry e, Action changed) => _watch[e] = changed;
+    /// <summary>Calls <paramref name="changed"/> when the step's bookmark changes (so its row and its dot in the graph can show or hide their mark; several can watch).</summary>
+    public void Watch(LogEntry e, Action changed) => _watch[e] = _watch.TryGetValue(e, out var earlier) ? earlier + changed : changed;
 
     public void Set(LogEntry e, bool starred, string? note)
     {

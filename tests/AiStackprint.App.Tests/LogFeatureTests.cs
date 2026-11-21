@@ -207,37 +207,19 @@ public sealed class LogFeatureTests
     }
 
     [AvaloniaFact]
-    public void A_long_session_has_a_minimap_with_its_errors_and_a_click_goes_there()
+    public void A_session_without_agents_has_the_main_line_with_a_dot_per_step_and_no_legend()
     {
-        var steps = new List<string>();
-        for (var i = 1; i <= 60; i++)
-        {
-            steps.Add(i % 10 == 0 ? Line(i % 60, "user", "prompt " + i) : Line(i % 60, "assistant", "step " + i));
-        }
-
+        var steps = new List<string> { Line(1, "user", "prompt"), Line(2, "assistant", "step") };
         steps.Add("{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:01:00Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"boom\",\"is_error\":true}]}}");
-        var session = new ClaudeSessionParser().Parse(Lines([.. steps]));
-        var log = new ReadableLog(session, false, true);
-        var w = new Window { Width = 900, Height = 600, Content = log.Root };
-        w.Show();
+        var log = new ReadableLog(new ClaudeSessionParser().Parse(Lines([.. steps])), false, true);
+        var w = Ui.Show(log.Root);
         Dispatcher.UIThread.RunJobs();
-        var map = w.GetVisualDescendants().OfType<SessionMinimap>().Single();
-        Assert.True(map.Bounds.Height > 100);
-        var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Extent.Height > s.Viewport.Height);
-        Assert.Equal(0, scroll.Offset.Y);
-        map.RaiseEvent(new Avalonia.Input.PointerPressedEventArgs(map, new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true), w, new Avalonia.Point(5, map.Bounds.Height * .9),
-            0, new Avalonia.Input.PointerPointProperties(Avalonia.Input.RawInputModifiers.LeftMouseButton, Avalonia.Input.PointerUpdateKind.LeftButtonPressed), Avalonia.Input.KeyModifiers.None)
-        { RoutedEvent = Avalonia.Input.InputElement.PointerPressedEvent });
-        Dispatcher.UIThread.RunJobs();
-        Dispatcher.UIThread.RunJobs();
-        Assert.True(scroll.Offset.Y > 0);   // a click near the bottom went there
+        Assert.Equal(log.Steps.Count, w.GetVisualDescendants().OfType<AgentGraphCell>().Count());   // one dot per step, in the step's own row
+        Assert.Empty(w.GetVisualDescendants().OfType<FilterChip>());   // no agents: nothing to show or hide
 #pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
-        w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-minimap.png"));
+        w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-graph-main.png"));
 #pragma warning restore CS0618
         w.Close();
-
-        var few = new ReadableLog(WithAgents(), false, true);
-        Assert.Empty(few.Root.GetVisualDescendants().OfType<SessionMinimap>());   // a short session has none
     }
 
     [AvaloniaFact]
