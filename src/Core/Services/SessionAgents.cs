@@ -69,6 +69,32 @@ public static class SessionAgents
         return merged with { Entries = entries, InputTokens = 0, OutputTokens = 0, AgentsBefore = agents.Count(a => a.Last < from) };
     }
 
+    /// <summary>
+    /// The steps that start in the lines around <paramref name="line"/> of a session file (a search result in a long file, or one older than the steps shown), read from
+    /// the file itself: their lines are the file's own. Null when the format has no session parser. Tokens are left out (they would be the whole session's).
+    /// </summary>
+    public static Session? ReadAroundLine(LogFile f, long line, int maxSteps)
+    {
+        if (LogParsers.Find(f.Format) is not { } parser)
+        {
+            return null;
+        }
+
+        var (text, first) = LogSearch.Window(f.Path, line, LineContext, LineContext);
+        var lines = text.Split('\n');
+        var parsed = parser.Parse(LogReader.Utf8(lines.Take(lines.Length - 1)));   // the text ends with a line break: no last empty line
+        var entries = parsed.Entries.Select(e => e.Line is > 0 ? e with { Line = e.Line + first - 1 } : e).ToList();
+        if (entries.Count > maxSteps)
+        {
+            var at = entries.FindLastIndex(e => e.Line is > 0 && e.Line <= line);
+            var from = Math.Clamp(at - maxSteps / 2, 0, entries.Count - maxSteps);   // keep the step the result is in, near the middle
+            entries = entries.Skip(from).Take(maxSteps).ToList();
+        }
+
+        return new Session(entries, parsed.Models, 0, 0, entries.FirstOrDefault(e => e.Time != null)?.Time, entries.LastOrDefault(e => e.Time != null)?.Time);
+    }
+
+    private const int LineContext = 150;   // lines read before and after the result
     private const int ContextSteps = 12;   // main steps shown before the first and after the last step of the agents
 
     /// <param name="cut">The session was read cut to its end: the agents' steps from before its first step are left out.</param>

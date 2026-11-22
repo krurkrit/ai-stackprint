@@ -84,4 +84,16 @@ public sealed class SessionAgentsTests : IDisposable
         Assert.Single(session.Entries);
         Assert.Equal(1, session.AgentsBefore);
     }
+
+    [Fact]
+    public void The_steps_around_a_file_line_keep_the_files_own_line_numbers()
+    {
+        var f = Main([.. Enumerable.Range(0, 800).Select(i => Msg(i % 2 == 0 ? "user" : "assistant", i % 60, "m" + i))]);
+        var s = SessionAgents.ReadAroundLine(f, 500, 100)!;
+        Assert.Equal(100, s.Entries.Count);
+        Assert.Equal(500, s.Entries.Last(e => e.Line <= 500).Line);
+        Assert.Equal("m499", s.Entries.First(e => e.Line == 500).Text);   // line 500 is the 500th message (m499)
+        Assert.Contains(s.Entries, e => e.Line < 500);
+        Assert.Contains(s.Entries, e => e.Line > 500);
+    }
 }

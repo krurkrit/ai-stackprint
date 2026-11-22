@@ -135,24 +135,16 @@ internal partial class LogViewer
 
         if (ShowReadable)
         {
+            var first = _readable?.Steps.FirstOrDefault(e => e.Line is > 0)?.Line ?? 0;
+            var shown = IsLines || (_linesOk && first > 0 && h.Line >= first);   // the steps shown start at or before the result, and their lines are the file's
+            if (!shown && _aroundLine != h.Line)
+            {
+                ShowLine(h.Line);   // a result the steps shown do not hold: the steps around it are read from the file; this runs again when they are shown
+                return;
+            }
+
             _pending = null;
-            if (_linesOk)
-            {
-                RevealLine(h.Line, FadeSeconds);
-            }
-            else
-            {
-                // the steps of a file shown cut to its end do not know their file lines: find the step that holds the matched text; the view stays as it is
-                var word = h.Column >= 0 && h.Column + h.Length <= h.Text.Length && h.Length > 0 ? h.Text.Substring(h.Column, h.Length) : "";
-                if (word.Length > 0 && _readable?.Steps.FirstOrDefault(e => e.Text.Contains(word, StringComparison.OrdinalIgnoreCase)) is { } step)
-                {
-                    _readable.Reveal(step, FadeSeconds);
-                }
-                else
-                {
-                    _status.Text = "That match is older than the steps shown";
-                }
-            }
+            RevealLine(h.Line, FadeSeconds);
         }
         else if (_code != null)
         {
