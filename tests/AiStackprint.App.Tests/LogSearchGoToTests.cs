@@ -66,7 +66,7 @@ public sealed class LogSearchGoToTests : IDisposable
     private static List<Border> Results(Window w) =>
         [.. w.GetVisualDescendants().OfType<Border>().Where(b => Math.Abs(b.Width - Widths.Popup) < 0.5).SelectMany(p => p.GetVisualDescendants().OfType<Border>()).Where(b => b.Cursor == W.Hand)];
 
-    private static int Tints(Window w) => w.GetVisualDescendants().OfType<Border>().Count(b => !b.IsHitTestVisible && b.Parent is Grid);
+    private static int Tints(Window w) => w.GetVisualDescendants().OfType<Border>().Count(b => !b.IsHitTestVisible && b.Parent is Panel);
 
     private static void ClickFirstResult(Window w)
     {

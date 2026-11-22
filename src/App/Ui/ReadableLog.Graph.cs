@@ -19,30 +19,24 @@ internal partial class ReadableLog
         var graph = _graph!;
         var row = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions($"*,{(_compact ? Space.S : Space.XL)},Auto"),   // the step, a gutter, the graph column
             RowDefinitions = new RowDefinitions(_compact ? "Auto" : $"Auto,{Space.M}")   // cards carry the space below them, so the lines run on
         };
         row.Children.Add(step);
         _showStep[e] = on =>
         {
-            step.IsVisible = on;   // the graph column stays, so the lines run on over the hidden steps
+            step.IsVisible = on;   // the graph stays, so the lines run on over the hidden steps
             if (!_compact)
             {
                 row.RowDefinitions[1].Height = new GridLength(on ? Space.M : 0);
             }
         };
-        var tip = graph.Rows[index].Owner.Agent is > 0 and var agent ? graph.Agents[agent] : null;
-        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.IsError ? "error" : e.Role, tip, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY, () => _marks?.Get(e) != null);
+        var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.IsError ? "error" : e.Role, null, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY, () => _marks?.Get(e) != null);
         _marks?.Watch(e, cell.InvalidateVisual);
-        // The graph is a column of its own: the side menu's background and a line on its left, unbroken from the first step to the last
-        var column = new Border
-        {
-            Child = cell,
-            BorderThickness = new Thickness(Stroke.Thin, 0, 0, 0)
-        }.Themed(Border.BackgroundProperty, SideKey).Themed(Border.BorderBrushProperty, BorderKey);
-        Grid.SetColumn(column, 2);
-        Grid.SetRowSpan(column, _compact ? 1 : 2);
-        row.Children.Add(column);
+        // The graph lies over the right edge of the steps (it does not take a column of its own) and passes clicks through; the lines run unbroken from the first step to the last
+        cell.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+        cell.IsHitTestVisible = false;
+        Grid.SetRowSpan(cell, _compact ? 1 : 2);
+        row.Children.Add(cell);
         return row;
     }
 

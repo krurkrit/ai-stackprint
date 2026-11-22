@@ -28,7 +28,7 @@ public sealed class RevealHighlightTests
         var log = new ReadableLog(Session(), false, compact);
         var w = Ui.Show(log.Root);
         var step = log.Steps[1];
-        int Tints() => w.GetVisualDescendants().OfType<Border>().Count(b => !b.IsHitTestVisible && b.Parent is Grid);
+        int Tints() => w.GetVisualDescendants().OfType<Border>().Count(b => !b.IsHitTestVisible && b.Parent is Panel);
         var before = Tints();
         log.Reveal(step, 5);
         Assert.True(Tints() > before);

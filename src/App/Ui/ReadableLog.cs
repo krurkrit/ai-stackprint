@@ -67,7 +67,7 @@ internal partial class ReadableLog
         _lines = lines;
         var cap = lines ? MaxLines : MaxSteps;
         Steps = [.. s.Entries.TakeLast(cap)];
-        _graph = lines ? null : SessionGraph.Layout(Steps) ?? (Steps.Count > 0 ? SessionGraph.Single(Steps.Count) : null);
+        _graph = lines ? null : SessionGraph.Layout(Steps);   // only when a sub-agent branches off: a session with just the main agent has no graph
         if (lines || compact || _graph != null)
         {
             _list.Spacing = 0;   // the rows carry their own spacing (a graph's lines run unbroken from row to row)

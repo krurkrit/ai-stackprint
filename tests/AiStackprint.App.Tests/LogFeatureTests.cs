@@ -86,7 +86,7 @@ public sealed class LogFeatureTests
         Line(12, "assistant", "Both agents are back: tests pass."), Line(13, "user", "Thanks, ship it")));
 
     [AvaloniaFact]
-    public void Sub_agents_branch_in_a_graph_beside_the_steps()
+    public void Sub_agents_branch_in_a_graph_over_the_steps()
     {
         var session = WithAgents();
         var log = new ReadableLog(session, false, true);
@@ -95,8 +95,6 @@ public sealed class LogFeatureTests
         Dispatcher.UIThread.RunJobs();
         var cells = w.GetVisualDescendants().OfType<AgentGraphCell>().ToList();
         Assert.Equal(session.Entries.Count, cells.Count);   // one graph cell per step
-        Assert.Equal(8, cells.Count(c => ToolTip.GetTip(c) is string));   // the sub-agents' steps name their agent on hover
-        Assert.Contains(cells, c => ToolTip.GetTip(c) as string == "Agent 3 · c3");
         var png = Path.Combine(Path.GetTempPath(), "stackprint-agent-graph.png");
 #pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
         w.CaptureRenderedFrame()?.Save(png);
@@ -214,26 +212,26 @@ public sealed class LogFeatureTests
         var w = Ui.Show(log.Root);
         Dispatcher.UIThread.RunJobs();
         Dispatcher.UIThread.RunJobs();
-        var cells = () => w.GetVisualDescendants().OfType<AgentGraphCell>().Count();
+        var cells = () => w.GetVisualDescendants().OfType<Button>().Count(b => ToolTip.GetTip(b) as string == "Copy this step as Markdown");   // one Copy button per built card
         Assert.Equal(ReadableLog.FirstCards, cells());   // 120 steps, only the last 20 are built
         var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Extent.Height > s.Viewport.Height);
         var first = log.Steps[log.Steps.Count - ReadableLog.FirstCards];   // the first step built
         scroll.Offset = new Avalonia.Vector(0, 0);   // scrolled up to the top
         Dispatcher.UIThread.RunJobs();
         Assert.True(cells() > ReadableLog.FirstCards);   // the next earlier steps were built
-        Assert.InRange(log.Steps.IndexOf(log.StepAtTop()!), log.Steps.IndexOf(first) - 1, log.Steps.IndexOf(first));   // and what was at the top is still at the top of the view (give or take the gap between cards)
+        Assert.InRange(log.Steps.IndexOf(log.StepAtTop()!), log.Steps.IndexOf(first) - 3, log.Steps.IndexOf(first));   // and what was at the top is still at the top of the view (give or take a card or two: jumping to the top builds several batches in a row)
         w.Close();
     }
 
     [AvaloniaFact]
-    public void A_session_without_agents_has_the_main_line_with_a_dot_per_step_and_no_legend()
+    public void A_session_without_agents_has_no_graph_and_no_legend()
     {
         var steps = new List<string> { Line(1, "user", "prompt"), Line(2, "assistant", "step") };
         steps.Add("{\"type\":\"user\",\"timestamp\":\"2026-11-11T05:01:00Z\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"a\",\"content\":\"boom\",\"is_error\":true}]}}");
         var log = new ReadableLog(new ClaudeSessionParser().Parse(Lines([.. steps])), false, true);
         var w = Ui.Show(log.Root);
         Dispatcher.UIThread.RunJobs();
-        Assert.Equal(log.Steps.Count, w.GetVisualDescendants().OfType<AgentGraphCell>().Count());   // one dot per step, in the step's own row
+        Assert.Empty(w.GetVisualDescendants().OfType<AgentGraphCell>());   // only the main agent: nothing to draw
         Assert.Empty(w.GetVisualDescendants().OfType<FilterChip>());   // no agents: nothing to show or hide
 #pragma warning disable CS0618 // Save(path) writes a PNG (as the screenshot tests do)
         w.CaptureRenderedFrame()?.Save(Path.Combine(Path.GetTempPath(), "stackprint-graph-main.png"));

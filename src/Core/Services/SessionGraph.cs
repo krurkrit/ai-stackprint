@@ -16,9 +16,6 @@ public sealed record GraphRow(Branch Owner, Branch[] Open, Branch[] Forks, Branc
 /// <param name="Agents">A label per agent number (index 0 = main): "Agent 2", with the agent's id when the log has one.</param>
 public sealed record SessionGraph(GraphRow[] Rows, int Lanes, string[] Agents)
 {
-    /// <summary>The graph of a session with no sub-agents: just the main line, one row per step.</summary>
-    public static SessionGraph Single(int steps) => new([.. Enumerable.Repeat(new GraphRow(new Branch(0, 0), [], [], []), steps)], 1, ["Main"]);
-
     /// <summary>
     /// Lays the steps out like <c>git log --graph</c>: the main session is a line; each sub-agent branches off the main step before its first step and
     /// rejoins at the first main step after its last one. Agents that run at the same time get lanes side by side; a lane is used again once its agent has rejoined.
