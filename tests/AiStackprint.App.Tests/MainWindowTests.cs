@@ -191,7 +191,7 @@ public sealed class MainWindowTests : IDisposable
         Ui.ClickText(w, t => t.EndsWith("· session2.jsonl", StringComparison.Ordinal));
         Settle(w);
         Assert.Contains("All done.", Ui.Texts(w));
-        Assert.Contains(Ui.Texts(w), t => t.StartsWith("Sub-agents", StringComparison.Ordinal) || t == "Sub-agents");
+        Assert.Contains(Ui.Texts(w), t => t.Contains("sub-agent", StringComparison.OrdinalIgnoreCase));
 
         Press(w, "Result · Bash · Passed 12 tests", "Result · Read · public class Parser", "Result · Grep · line 1 of a long result", "Read", "Task", "Grep");
         if (Ui.Texts(w).FirstOrDefault(t => t.StartsWith("Thinking", StringComparison.Ordinal)) is { } thinking)

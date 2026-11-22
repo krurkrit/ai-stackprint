@@ -77,11 +77,6 @@ internal partial class ReadableLog
         }
 
         _list.Children.Add(lines ? LinesSummary(s) : Summary(s, agents));
-        if (AgentTimelines.Build(s.Entries) is { } timeline)
-        {
-            _list.Children.Add(AgentGraph.Build(timeline));
-        }
-
         if (_graph != null)
         {
             _list.Margin = new Thickness(Space.XL, Space.XL, 0, Space.XL);   // the graph column runs to the right edge

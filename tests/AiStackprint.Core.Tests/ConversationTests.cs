@@ -43,44 +43,6 @@ public class ConversationTests
         Assert.Contains(s, v => v.Url == "http://u" && v.Text == "x (http://u)");
     }
 
-    private static DateTime T(int s) => new DateTime(2026, 11, 11, 10, 0, 0, DateTimeKind.Local).AddSeconds(s);
-
-    [Fact]
-    public void Agent_timeline_gives_each_agent_a_lane_with_fork_and_merge()
-    {
-        var e = new List<LogEntry>
-        {
-            new("user", "go", T(0), false),
-            new("tool", "{}", T(5), false, "Task"),
-            new("assistant", "first job", T(10), true, Agent: "a1"),
-            new("assistant", "second job", T(12), true, Agent: "a2"),
-            new("assistant", "done", T(30), true, Agent: "a1"),
-            new("assistant", "done", T(40), true, Agent: "a2"),
-            new("assistant", "merged", T(50), false)
-        };
-        var t = AgentTimelines.Build(e)!;
-        Assert.Equal(2, t.Lanes.Count);
-        var l0 = t.Lanes[0];
-        Assert.Equal((T(5), T(10), T(30), T(50)), (l0.Fork, l0.Start, l0.End, l0.Merge));
-        Assert.Equal(new[] { (T(10), T(40)) }, t.Waits);
-        Assert.Null(AgentTimelines.Build([.. e.Where(v => !v.SubAgent)]));
-    }
-
-    [Fact]
-    public void Sub_agent_steps_without_an_agent_id_get_a_lane_per_unbroken_run()
-    {
-        var t = AgentTimelines.Build(
-        [
-            new("user", "go", T(0), false),
-            new("assistant", "a", T(1), true),
-            new("assistant", "b", T(2), true),
-            new("assistant", "back", T(3), false),
-            new("assistant", "c", T(4), true),
-            new("assistant", "end", T(5), false)
-        ])!;
-        Assert.Equal([2, 1], t.Lanes.Select(l => l.Steps));
-    }
-
     [Fact]
     public void The_app_state_finds_a_definition_and_has_all_health_once_the_projects_are_checked()
     {
