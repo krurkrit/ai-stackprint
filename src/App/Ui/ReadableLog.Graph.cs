@@ -19,7 +19,8 @@ internal partial class ReadableLog
         var graph = _graph!;
         var row = new Grid
         {
-            RowDefinitions = new RowDefinitions(_compact ? "Auto" : $"Auto,{Space.M}")   // cards carry the space below them, so the lines run on
+            RowDefinitions = new RowDefinitions(_compact ? "Auto" : $"Auto,{Space.M}"),   // cards carry the space below them, so the lines run on
+            ColumnDefinitions = new ColumnDefinitions("*,Auto")   // the graph has a column of its own, so it covers no text or button of the step
         };
         row.Children.Add(step);
         _showStep[e] = on =>
@@ -32,9 +33,9 @@ internal partial class ReadableLog
         };
         var cell = new AgentGraphCell(graph.Rows[index], graph.Lanes, e.IsError ? "error" : e.Role, null, _compact ? Heights.LogRow / 2 : Sizes.GraphNodeY, () => _marks?.Get(e) != null);
         _marks?.Watch(e, cell.InvalidateVisual);
-        // The graph lies over the right edge of the steps (it does not take a column of its own) and passes clicks through; the lines run unbroken from the first step to the last
-        cell.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+        // The graph passes clicks through; the lines run unbroken from the first step to the last
         cell.IsHitTestVisible = false;
+        Grid.SetColumn(cell, 1);
         Grid.SetRowSpan(cell, _compact ? 1 : 2);
         row.Children.Add(cell);
         return row;

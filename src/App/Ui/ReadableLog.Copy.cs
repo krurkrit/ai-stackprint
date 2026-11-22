@@ -5,7 +5,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
@@ -33,19 +32,10 @@ internal partial class ReadableLog
         holder.Children.Add(copy);
         if (marks?.CanMarkStep(e) == true)
         {
-            var mark = IconBtn(marks.Get(e)?.Starred == true ? "bookmark_filled" : "bookmark", "Bookmark this step", () => { });
-            mark.Click += (_, _) =>
-            {
-                var now = marks.Get(e);
-                marks.Set(e, now?.Starred != true, now?.Note);
-                mark.Content = Icon(marks.Get(e)?.Starred == true ? "bookmark_filled" : "bookmark", IconSize.S).Themed(TextElement.ForegroundProperty, Muted);
-            };
+            var mark = BookmarkToggle(e, marks, holder);
             mark.HorizontalAlignment = HorizontalAlignment.Right;
             mark.VerticalAlignment = VerticalAlignment.Top;
             mark.Margin = new Thickness(0, Space.XS, Space.XL + Space.XXL, 0);
-            mark.Opacity = 0;
-            holder.PointerEntered += (_, _) => mark.Opacity = 1;
-            holder.PointerExited += (_, _) => mark.Opacity = marks.Get(e)?.Starred == true ? 1 : 0;
             holder.Children.Add(mark);
         }
     }

@@ -63,6 +63,7 @@ internal static class Stroke
 {
     internal const double Thin = 1;     // borders, dividers
     internal const double Medium = 2;   // rings, chart lines, focus marks
+    internal const double Outline = 1.5;   // the ring in the surface color around a dot of the sub-agent graph
 }
 
 /// <summary>Sizes of shared pieces. Input height is measured from the font (<see cref="Theme.InputHeight"/>).</summary>
@@ -70,7 +71,7 @@ internal static class Sizes
 {
     internal const double Dot = 8;           // legend and status dots
     internal const double GraphNodeY = 16;   // where a card's dot sits: level with its first line
-    internal const double GraphNode = 4;     // radius of a step's dot in the sub-agent graph
+    internal const double GraphNode = 4;     // radius of a step's dot in the sub-agent graph (your prompts and errors: one more)
     internal const double RadioDot = 8;      // the dot inside a selected radio button (the control default, 12, is large and bright in a 20 px ring)
     internal const double Bar = 10;          // bar charts and progress bars
     internal const double BarThin = 8;       // progress bars inside dense rows
@@ -101,7 +102,7 @@ internal static class Widths
 {
     internal const double LogTime = 64;      // time column of a conversation line
     internal const double LogWho = 130;      // who column of a conversation line
-    internal const double GraphLane = 18;    // one lane of the sub-agent graph
+    internal const double GraphLane = 22;    // one lane of the sub-agent graph
     internal const double DialogS = 380;
     internal const double DialogM = 520;
     internal const double DialogL = 640;

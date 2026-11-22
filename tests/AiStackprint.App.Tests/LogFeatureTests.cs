@@ -188,6 +188,36 @@ public sealed class LogFeatureTests
         w.Close();
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_bookmark_button_of_a_step_turns_the_bookmark_on_and_off_in_both_views(bool compact)
+    {
+        using var home = new FakeHome();
+        var session = WithAgents();
+        var marks = new StepContext(new UiState(), Path.Combine(home.Root, "a.jsonl"), true, _ => null);
+        var w = Ui.Show(new ReadableLog(session, false, compact, marks).Root);
+        var first = session.Entries[0];
+        var button = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Bookmark this step");
+        Assert.Equal(0, button.Opacity);   // hidden until the step is hovered
+
+        Ui.Click(button);
+        Assert.True(marks.Get(first)!.Starred);
+        Assert.Equal(1, button.Opacity);   // a bookmarked step shows it always
+        Assert.Equal("Remove the bookmark", ToolTip.GetTip(button));
+
+        Ui.Click(button);
+        Assert.Null(marks.Get(first));
+        Assert.Equal(0, button.Opacity);
+
+        marks.Set(first, true, "from the popup");   // a change made elsewhere shows on the button
+        Assert.Equal("from the popup", ToolTip.GetTip(button));
+        Ui.Click(button);
+        Assert.Equal("from the popup", marks.Get(first)!.Note);   // the bookmark is off, the note stays
+        Assert.False(marks.Get(first)!.Starred);
+        w.Close();
+    }
+
     [AvaloniaFact]
     public void A_failed_tool_result_is_marked_in_both_views_and_counted_in_the_header()
     {

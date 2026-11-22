@@ -54,24 +54,6 @@ internal partial class ReadableLog
         grid.Children.Add(name);
         grid.Children.Add(text);
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
-        if (marks?.CanMarkStep(e) == true)
-        {
-            var flag = Icon("bookmark_filled", IconSize.S).Themed(TextElement.ForegroundProperty, Accent);
-            flag.IsVisible = marks.Get(e) != null;
-            if (marks.Get(e)?.Note is { } note)
-            {
-                ToolTip.SetTip(flag, note);
-            }
-
-            marks.Watch(e, () =>
-            {
-                var b = marks.Get(e);
-                flag.IsVisible = b != null;
-                ToolTip.SetTip(flag, b?.Note);
-            });
-            right.Children.Add(flag);
-        }
-
         if (e.Usage != null && ModelCatalog.Cost(e.Usage) is { } cost)
         {
             right.Children.Add(Txt(StepMoney(cost), TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center));
@@ -89,6 +71,13 @@ internal partial class ReadableLog
             Background = Brushes.Transparent,
             Cursor = Hand
         }.Themed(Border.BorderBrushProperty, BorderKey);
+        if (marks?.CanMarkStep(e) == true)
+        {
+            var mark = BookmarkToggle(e, marks, row);   // a click on it bookmarks the step; it does not open the popup (the button takes the click)
+            mark.Padding = new Thickness(Space.XS);
+            right.Children.Insert(0, mark);
+        }
+
         row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
         row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
         row.PointerReleased += (_, a) =>

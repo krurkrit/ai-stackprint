@@ -8,6 +8,7 @@ using Xunit;
 namespace AiStackprint.Core.Tests;
 
 /// <summary>What was worked out from a log file is kept on disk, so the next start reads only the files that changed.</summary>
+[Collection("Environment")]   // it changes the home folder of every test: not while others run
 public sealed class FileMemoTests : IDisposable
 {
     private sealed record Counts(int N);
