@@ -119,7 +119,7 @@ public sealed class AppsViewTests
     }
 
     [AvaloniaFact]
-    public void The_Category_menu_unchecks_a_category_and_its_button_says_how_many_are_on()
+    public void The_Category_menu_unchecks_a_category_and_the_line_under_the_tool_bar_lists_what_is_on()
     {
         var (w, _) = Open(1400);
         var menu = w.GetVisualDescendants().OfType<FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Category"));
@@ -129,7 +129,7 @@ public sealed class AppsViewTests
         Assert.Equal(2, boxes.Count);   // Agents and Editors, each with its count
         boxes[1].IsChecked = false;     // Editors off
         Dispatcher.UIThread.RunJobs();
-        Assert.Contains(menu.GetLogicalDescendants().OfType<TextBlock>(), t => t.Text == "Category (1)");
+        Assert.Contains("Status: Installed, Not found    Category: Agents    Group by: Category", Ui.Texts(w));   // the summary under the tool bar lists what is on
         Assert.DoesNotContain("Delta", Ui.Texts(w));
         boxes[0].IsChecked = false;     // the last one on stays on
         Assert.True(boxes[0].IsChecked);

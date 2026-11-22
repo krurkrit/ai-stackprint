@@ -10,23 +10,19 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// A filter as a drop-down button: its menu has a check box per value with a muted count; the set of off values holds the unchecked values (empty = all).
-/// While some are unchecked, the button says how many are on ("Category (2)") and has the accent border.
+/// While some are unchecked, the button has the accent border (the page lists what is on below its tool bar).
 /// </summary>
 internal sealed class FilterMenu : Button
 {
-    private readonly string _label;
     private readonly HashSet<string> _off;
-    private readonly TextBlock _text;
 
     protected override Type StyleKeyOverride => typeof(Button);   // styled as a button
 
     /// <param name="opts">The values offered now, read each time the menu opens (the counts follow the search and the other filters).</param>
     public FilterMenu(string label, Func<IReadOnlyList<(string Label, string Value, int Count)>> opts, HashSet<string> off, Action changed)
     {
-        _label = label;
         _off = off;
-        _text = W.Txt(label, TextSize.Body).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-        Content = W.Row(_text, W.Icon("chevron_down", IconSize.XS).Themed(TextElement.ForegroundProperty, W.Muted));
+        Content = W.Row(W.Txt(label, TextSize.Body).With(t => t.VerticalAlignment = VerticalAlignment.Center), W.Icon("chevron_down", IconSize.XS).Themed(TextElement.ForegroundProperty, W.Muted));
         MinHeight = AiStackprint.Ui.Theme.InputHeight;   // (Button.Theme is the control theme)
         Padding = new Thickness(Space.L, 0);
         VerticalContentAlignment = VerticalAlignment.Center;
@@ -64,13 +60,8 @@ internal sealed class FilterMenu : Button
         Update(0);
     }
 
-    /// <summary>Shows how many values are on, out of <paramref name="offered"/>, while some are off.</summary>
-    public void Update(int offered)
-    {
-        var filtered = _off.Count > 0 && offered > 0;
-        _text.Text = filtered ? $"{_label} ({offered - _off.Count})" : _label;
-        this.Themed(BorderBrushProperty, filtered ? W.Accent : W.BorderKey);
-    }
+    /// <summary>The accent border while some of the <paramref name="offered"/> values are off.</summary>
+    public void Update(int offered) => this.Themed(BorderBrushProperty, _off.Count > 0 && offered > 0 ? W.Accent : W.BorderKey);
 }
 
 internal static partial class W

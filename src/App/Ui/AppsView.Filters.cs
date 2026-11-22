@@ -20,6 +20,7 @@ internal partial class AppsView
     private FilterMenu? _statusMenu, _catMenu;
     private Button? _reset;
     private readonly ContentControl _groupHost = new();
+    private TextBlock? _summary;   // under the tool bar: what each filter lets through and the grouping
     private List<(string Label, string Value, int Count)> _statusOpts = [], _catOpts = [];
 
     private bool ByCat => _group.Contains(ByCategory);
@@ -55,7 +56,12 @@ internal partial class AppsView
         };
         DockPanel.SetDock(right, Dock.Right);
         _search.MinWidth = Widths.FieldM;
-        return new DockPanel { Children = { right, _search.Free() } };
+        _summary = Txt("", TextSize.Small, false, Muted).With(t => t.TextWrapping = Avalonia.Media.TextWrapping.Wrap);
+        return new StackPanel
+        {
+            Spacing = Space.M,
+            Children = { new DockPanel { Children = { right, _search.Free() } }, _summary }
+        };
     }
 
     /// <summary>The menus' values and counts, their labels, Group by and Reset, after the list changed.</summary>
@@ -84,6 +90,43 @@ internal partial class AppsView
 
             Fill();
         });
+        Summarize(statuses, cats);
         _reset?.IsEnabled = _q != "" || _offStatus.Count > 0 || _offCats.Count > 0;   // always at the end of the row; dimmed with nothing to reset
+    }
+
+    /// <summary>"Status: Installed, Not found  Category: Agents, Editors  Group by: Category": the values on (a filter with one value is left out).</summary>
+    private void Summarize(List<(string Label, string Value, int)> statuses, List<(string Label, string Value, int)> cats)
+    {
+        if (_summary == null)
+        {
+            return;
+        }
+
+        var parts = new List<(string Label, string Values)>();
+        if (statuses.Count > 1)
+        {
+            parts.Add(("Status", string.Join(", ", statuses.Where(s => !_offStatus.Contains(s.Value)).Select(s => s.Label))));
+        }
+
+        if (cats.Count > 1)
+        {
+            parts.Add(("Category", string.Join(", ", cats.Where(c => !_offCats.Contains(c.Value)).Select(c => c.Label))));
+        }
+
+        var by = new[] { ByCat ? "Category" : null, ByStat ? "Status" : null }.OfType<string>().ToList();
+        parts.Add(("Group by", by.Count == 0 ? "None" : string.Join(", ", by)));
+        var inlines = new Avalonia.Controls.Documents.InlineCollection();
+        foreach (var (label, values) in parts)
+        {
+            if (inlines.Count > 0)
+            {
+                inlines.Add(new Avalonia.Controls.Documents.Run("    "));
+            }
+
+            inlines.Add(new Avalonia.Controls.Documents.Run(label + ": ") { FontWeight = Emphasis }.With(r => r.Bind(Avalonia.Controls.Documents.TextElement.ForegroundProperty, _summary.GetResourceObservable(Text))));
+            inlines.Add(new Avalonia.Controls.Documents.Run(values));
+        }
+
+        _summary.Inlines = inlines;
     }
 }
