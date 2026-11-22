@@ -57,7 +57,14 @@ public sealed class LogSearchGoToTests : IDisposable
         }
 
         w.GetVisualDescendants().OfType<ToggleButton>().First(t => t.Content as string == "Aa").IsChecked = true;   // searches at once
-        Ui.WaitUntil(() => Results(w).Count > 0);
+        for (var i = 0; i < 60; i++)   // the typed text and the toggles each start a search (typing waits 300 ms, on a timer): let them all finish before a result is clicked
+        {
+            Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(20);
+        }
+
+        Ui.WaitUntil(() => Results(w).Count > 0 && !Ui.Texts(w).Any(t => t.StartsWith("Searching", StringComparison.Ordinal)));
     }
 
     private static string ToolTipText(Control c) => ToolTip.GetTip(c) as string ?? "";
@@ -112,9 +119,11 @@ public sealed class LogSearchGoToTests : IDisposable
         }
 
         Search(w, "needle1", true);
+        var row = Results(w)[0];
         var before = Tints(w);
         ClickFirstResult(w);
         Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.Contains("filler 1", StringComparison.Ordinal)));
+        Assert.Same(row, Results(w)[0]);   // the results stay as they are: opening the file for a result does not search again
         Ui.WaitUntil(() => Tints(w) > before);
         w.Close();
     }
@@ -157,10 +166,12 @@ public sealed class LogSearchGoToTests : IDisposable
         File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
         var w = Page();
         Search(w, "oldneedle", false);   // this file only: the steps shown do not hold the match, the file does
+        var row = Results(w)[0];
         var before = Tints(w);
         ClickFirstResult(w);
         Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the file around the result", StringComparison.Ordinal)));
         Ui.WaitUntil(() => Tints(w) > before);
+        Assert.Same(row, Results(w)[0]);   // the results are the same ones: showing the part of the file does not search again
         w.Close();
     }
 

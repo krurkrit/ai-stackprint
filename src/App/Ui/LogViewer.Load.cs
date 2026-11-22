@@ -78,7 +78,9 @@ internal partial class LogViewer
 
         GoToPending();
         ShowRememberedPlace();
-        if (_query.Text is { Length: > 0 })
+        var keep = _keepResults || AllFiles;   // a result was clicked (the file, or the part of it, loads to show it), or the results are of every file: they stay as they are, not searched again
+        _keepResults = false;
+        if (!keep && _query.Text is { Length: > 0 })
         {
             Search();
         }

@@ -11,6 +11,7 @@ internal partial class LogViewer
     private DateTime? _agentsFrom;    // set: show the part of the file around the newest sub-agent that started before this time
     private string? _aroundAgent;     // set: show the part of the session around this sub-agent file (a search result in it)
     private long _aroundLine;         // set: show the steps around this file line (a search result the steps shown do not hold)
+    private bool _keepResults;         // the next load was asked for by a click on a search result: the results are not searched again
     private bool _agentsWindow;       // the part shown is such a window (around sub-agents or a result), not the end of the file
 
     /// <summary>The summary's links: earlier sub-agents (when some are left) and, inside a window, back to the end. Null for a file without either.</summary>
@@ -29,6 +30,7 @@ internal partial class LogViewer
         _aroundLine = 0;
         _aroundAgent = null;
         Follow = false;
+        _keepResults = true;
         LoadAsync(false);
     }
 
@@ -39,6 +41,7 @@ internal partial class LogViewer
         _aroundLine = 0;
         _agentsFrom = null;
         Follow = false;
+        _keepResults = true;
         LoadAsync(false);
     }
 
@@ -49,6 +52,7 @@ internal partial class LogViewer
         _aroundAgent = null;
         _agentsFrom = null;
         Follow = false;
+        _keepResults = true;
         LoadAsync(false);
     }
 
@@ -58,6 +62,7 @@ internal partial class LogViewer
         _aroundLine = 0;
         _aroundAgent = null;
         _agentsWindow = false;
+        _keepResults = true;
         LoadAsync(true);
     }
 }
