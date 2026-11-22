@@ -28,7 +28,14 @@ public static class SessionAgents
     /// that started before <paramref name="before"/> (and the agents running at the same time), a few main steps either side, with the same branches.
     /// Null when no agent started before that time. Its steps keep their real file lines; tokens are left out (they would be the whole session's).
     /// </summary>
-    public static Session? ReadAround(LogFile f, DateTime before, int maxSteps)
+    public static Session? ReadAround(LogFile f, DateTime before, int maxSteps) =>
+        ReadAround(f, maxSteps, agents => agents.Where(a => a.First < before).OrderByDescending(a => a.First).FirstOrDefault());
+
+    /// <summary>Like the other overload, around one given agent file (a search result in it): null when that file has no steps.</summary>
+    public static Session? ReadAroundAgent(LogFile f, string agentFile, int maxSteps) =>
+        ReadAround(f, maxSteps, agents => agents.FirstOrDefault(a => string.Equals(a.File, agentFile, StringComparison.OrdinalIgnoreCase)));
+
+    private static Session? ReadAround(LogFile f, int maxSteps, Func<List<(string File, DateTime First, DateTime Last)>, (string File, DateTime First, DateTime Last)> pick)
     {
         var dir = Path.Combine(Path.GetDirectoryName(f.Path) ?? "", Path.GetFileNameWithoutExtension(f.Path), "subagents");
         if (f.Format != "claude-session" || !Directory.Exists(dir))
@@ -47,7 +54,7 @@ public static class SessionAgents
             }
         }
 
-        var target = agents.Where(a => a.First < before).OrderByDescending(a => a.First).FirstOrDefault();
+        var target = pick(agents);
         if (target.File == null)
         {
             return null;

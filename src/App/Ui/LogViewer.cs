@@ -122,6 +122,7 @@ internal partial class LogViewer
             _window = false;
             _agentsFrom = null;
             _aroundLine = 0;
+            _aroundAgent = null;
             _agentsWindow = false;
             _hits.Clear();
         }

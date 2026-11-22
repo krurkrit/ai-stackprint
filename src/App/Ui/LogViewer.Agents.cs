@@ -9,6 +9,7 @@ namespace AiStackprint.Ui;
 internal partial class LogViewer
 {
     private DateTime? _agentsFrom;    // set: show the part of the file around the newest sub-agent that started before this time
+    private string? _aroundAgent;     // set: show the part of the session around this sub-agent file (a search result in it)
     private long _aroundLine;         // set: show the steps around this file line (a search result the steps shown do not hold)
     private bool _agentsWindow;       // the part shown is such a window (around sub-agents or a result), not the end of the file
 
@@ -26,6 +27,17 @@ internal partial class LogViewer
     {
         _agentsFrom = before;
         _aroundLine = 0;
+        _aroundAgent = null;
+        Follow = false;
+        LoadAsync(false);
+    }
+
+    /// <summary>Loads the part of the session around a sub-agent (a search result in its file).</summary>
+    private void ShowAgent(string agentFile)
+    {
+        _aroundAgent = agentFile;
+        _aroundLine = 0;
+        _agentsFrom = null;
         Follow = false;
         LoadAsync(false);
     }
@@ -34,6 +46,7 @@ internal partial class LogViewer
     private void ShowLine(long line)
     {
         _aroundLine = line;
+        _aroundAgent = null;
         _agentsFrom = null;
         Follow = false;
         LoadAsync(false);
@@ -43,6 +56,7 @@ internal partial class LogViewer
     {
         _agentsFrom = null;
         _aroundLine = 0;
+        _aroundAgent = null;
         _agentsWindow = false;
         LoadAsync(true);
     }

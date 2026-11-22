@@ -32,12 +32,12 @@ public sealed class SessionSearchTests : IDisposable
     {
         File.WriteAllLines(Path.Combine(_dir, "s1", "subagents", "agent-a1.jsonl"), [Msg("assistant", 5, "agent has a needle", "a1")]);
         var f = Session(Msg("user", 1, "nothing"), Msg("assistant", 2, "a needle here"), Msg("user", 3, "another needle"));
-        var hits = SessionSearch.File(f, LogQuery.Parse("needle", false, false, steps: true), 2, default, out var total);
+        var hits = SessionSearch.File(f, LogQuery.Parse("needle", false, false, steps: true)!, 2, TestContext.Current.CancellationToken, out var total);
         Assert.Equal(3, total);   // all matches counted, two listed
         Assert.Equal([2L, 3L], hits.Select(h => h.Line));
         Assert.All(hits, h => Assert.Null(h.Source));
 
-        var all = SessionSearch.File(f, LogQuery.Parse("needle", false, false, steps: true), 10, default, out _);
+        var all = SessionSearch.File(f, LogQuery.Parse("needle", false, false, steps: true)!, 10, TestContext.Current.CancellationToken, out _);
         var agent = Assert.Single(all, h => h.Source != null);
         Assert.EndsWith("agent-a1.jsonl", agent.Source);
         Assert.Equal(1, agent.Line);   // its line in the agent's own file
@@ -47,7 +47,7 @@ public sealed class SessionSearchTests : IDisposable
     public void Role_filters_work_and_the_json_around_the_text_does_not_match()
     {
         var f = Session(Msg("user", 1, "needle from me"), Msg("assistant", 2, "needle from it"));
-        Assert.Equal([1L], SessionSearch.File(f, LogQuery.Parse("role:user needle", false, false, steps: true), 10, default, out _).Select(h => h.Line));
-        Assert.Empty(SessionSearch.File(f, LogQuery.Parse("timestamp", false, false, steps: true), 10, default, out _));   // a key of the JSON line, not text of a step
+        Assert.Equal([1L], SessionSearch.File(f, LogQuery.Parse("role:user needle", false, false, steps: true)!, 10, TestContext.Current.CancellationToken, out _).Select(h => h.Line));
+        Assert.Empty(SessionSearch.File(f, LogQuery.Parse("timestamp", false, false, steps: true)!, 10, TestContext.Current.CancellationToken, out _));   // a key of the JSON line, not text of a step
     }
 }

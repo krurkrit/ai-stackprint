@@ -164,6 +164,12 @@ internal partial class LogViewer
                 return;
             }
 
+            if (!shown && h.Source != null && !string.Equals(_aroundAgent, h.Source, StringComparison.OrdinalIgnoreCase))
+            {
+                ShowAgent(h.Source);   // an agent that is not in the part shown: the part of the session around it is read; this runs again when it is shown
+                return;
+            }
+
             _pending = null;
             if (!shown && h.Source != null)
             {

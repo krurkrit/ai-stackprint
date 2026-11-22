@@ -163,4 +163,25 @@ public sealed class LogSearchGoToTests : IDisposable
         Ui.WaitUntil(() => Tints(w) > before);
         w.Close();
     }
+
+    [AvaloniaFact]
+    public void A_result_in_an_older_sub_agent_loads_the_part_of_the_session_around_it_and_is_tinted()
+    {
+        static string At(int n, string text, string? agent = null) =>
+            "{\"type\":\"" + (n % 2 == 0 ? "user" : "assistant") + "\",\"timestamp\":\"2026-11-11T05:" + (n / 60).ToString("00") + ":" + (n % 60).ToString("00") + "Z\""
+            + (agent == null ? "" : ",\"isSidechain\":true,\"agentId\":\"" + agent + "\"") + ",\"message\":{\"id\":\"m" + n + "\",\"role\":\"" + (n % 2 == 0 ? "user" : "assistant") + "\",\"content\":\"" + text + "\"}}";
+        var f = Path.Combine(_tmp, "long.jsonl");
+        File.WriteAllLines(f, Enumerable.Range(0, 700).Select(n => At(n, $"filler long {n}")));
+        File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
+        Directory.CreateDirectory(Path.Combine(_tmp, "long", "subagents"));
+        File.WriteAllLines(Path.Combine(_tmp, "long", "subagents", "agent-z1.jsonl"), [At(11, "agentneedle early", "z1"), At(12, "agent second", "z1")]);   // between main steps 11 and 12: far before the last 400
+        var w = Page();
+        Search(w, "agentneedle", true);
+        var before = Tints(w);
+        ClickFirstResult(w);
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the session around the sub-agent", StringComparison.Ordinal)));
+        Ui.WaitUntil(() => Tints(w) > before);
+        Assert.Contains(Ui.Texts(w), t => t.Contains("agentneedle early", StringComparison.Ordinal));
+        w.Close();
+    }
 }
