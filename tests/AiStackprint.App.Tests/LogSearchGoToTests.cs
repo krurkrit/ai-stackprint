@@ -129,7 +129,7 @@ public sealed class LogSearchGoToTests : IDisposable
     }
 
     [AvaloniaFact]
-    public void A_result_older_than_the_steps_shown_loads_the_steps_around_it_and_is_tinted()
+    public void A_result_among_steps_not_built_yet_builds_the_steps_around_it_and_is_tinted()
     {
         var f = Path.Combine(_tmp, "long.jsonl");
         File.WriteAllLines(f, Enumerable.Range(0, 700).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n % 60, n == 10 ? "oldneedle here" : $"filler long {n}")));
@@ -138,9 +138,54 @@ public sealed class LogSearchGoToTests : IDisposable
         Search(w, "oldneedle", true);
         var before = Tints(w);
         ClickFirstResult(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the file around the result", StringComparison.Ordinal)));
         Ui.WaitUntil(() => Tints(w) > before);
         Assert.Contains(Ui.Texts(w), t => t.Contains("oldneedle", StringComparison.Ordinal));   // the step is built and shown
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_result_far_before_the_window_of_a_long_file_reads_the_window_around_it()
+    {
+        var f = Path.Combine(_tmp, "huge.jsonl");
+        var pad = new string('x', 160);
+        File.WriteAllLines(f, Enumerable.Range(0, 30000).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n % 60, n == 10 ? "farneedle here" : $"filler {n} {pad}")));   // about 6 MB: more than a window
+        File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
+        var w = Page();
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing ", StringComparison.Ordinal) && t.Contains(" MB of ", StringComparison.Ordinal)));   // the end of the file, and where it is
+        Assert.DoesNotContain(Ui.Texts(w), t => t.Contains("farneedle", StringComparison.Ordinal));
+        Search(w, "farneedle", false);
+        var before = Tints(w);
+        ClickFirstResult(w);
+        Ui.WaitUntil(() => Tints(w) > before);
+        Assert.Contains(Ui.Texts(w), t => t.Contains("farneedle", StringComparison.Ordinal));   // the window around the result was read and its step built
+        Assert.Contains(Ui.Texts(w), t => t.StartsWith("Showing 0", StringComparison.Ordinal) && t.Contains(" MB of ", StringComparison.Ordinal));   // the window is at the start of the file now
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void Scrolling_up_a_long_file_reads_the_part_before_it_and_keeps_the_steps_in_view()
+    {
+        var f = Path.Combine(_tmp, "huge.jsonl");
+        var pad = new string('x', 30000);
+        File.WriteAllLines(f, Enumerable.Range(0, 200).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n % 60, n == 40 ? "topneedle" : $"filler {n} {pad}")));   // about 6 MB in 200 steps
+        File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
+        var w = Page();
+        string Where() => Ui.Texts(w).FirstOrDefault(t => t.StartsWith("Showing ", StringComparison.Ordinal) && t.Contains(" MB of ", StringComparison.Ordinal)) ?? "";
+        Ui.WaitUntil(() => Where().Length > 0 && Ui.Texts(w).Any(t => t.StartsWith("filler 199", StringComparison.Ordinal)));
+        var end = Where();
+        Search(w, "topneedle", false);   // a step near the top of the window: going to it builds the steps there
+        ClickFirstResult(w);
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("topneedle", StringComparison.Ordinal)));
+        for (var i = 0; i < 100 && (Where() == end || Where().Length == 0); i++)
+        {
+            var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().LastOrDefault(s => s.Content is StackPanel { Children.Count: > 15 });   // the steps view (the innermost list of many)
+            scroll?.Offset = new Avalonia.Vector(0, 0);   // up and up: the steps above are built, then the part before is read
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(5);
+        }
+
+        Assert.NotEqual(end, Where());   // a window further toward the start
+        Assert.Contains(Ui.Texts(w), t => t.StartsWith("filler ", StringComparison.Ordinal));   // the steps stay on screen while it is read and after
         w.Close();
     }
 
@@ -159,24 +204,23 @@ public sealed class LogSearchGoToTests : IDisposable
     }
 
     [AvaloniaFact]
-    public void Searching_the_open_long_file_finds_a_step_older_than_the_steps_shown()
+    public void Searching_the_open_long_file_finds_a_step_far_above_the_view()
     {
         var f = Path.Combine(_tmp, "long.jsonl");
         File.WriteAllLines(f, Enumerable.Range(0, 700).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n % 60, n == 10 ? "oldneedle here" : $"filler long {n}")));
         File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
         var w = Page();
-        Search(w, "oldneedle", false);   // this file only: the steps shown do not hold the match, the file does
+        Search(w, "oldneedle", false);   // this file only: the match is far above the steps built
         var row = Results(w)[0];
         var before = Tints(w);
         ClickFirstResult(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the file around the result", StringComparison.Ordinal)));
         Ui.WaitUntil(() => Tints(w) > before);
-        Assert.Same(row, Results(w)[0]);   // the results are the same ones: showing the part of the file does not search again
+        Assert.Same(row, Results(w)[0]);   // the results are the same ones: going to one does not search again
         w.Close();
     }
 
     [AvaloniaFact]
-    public void A_result_in_an_older_sub_agent_loads_the_part_of_the_session_around_it_and_is_tinted()
+    public void A_result_in_an_early_sub_agent_goes_to_its_step_and_is_tinted()
     {
         static string At(int n, string text, string? agent = null) =>
             "{\"type\":\"" + (n % 2 == 0 ? "user" : "assistant") + "\",\"timestamp\":\"2026-11-11T05:" + (n / 60).ToString("00") + ":" + (n % 60).ToString("00") + "Z\""
@@ -190,7 +234,6 @@ public sealed class LogSearchGoToTests : IDisposable
         Search(w, "agentneedle", true);
         var before = Tints(w);
         ClickFirstResult(w);
-        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the session around the sub-agent", StringComparison.Ordinal)));
         Ui.WaitUntil(() => Tints(w) > before);
         Assert.Contains(Ui.Texts(w), t => t.Contains("agentneedle early", StringComparison.Ordinal));
         w.Close();

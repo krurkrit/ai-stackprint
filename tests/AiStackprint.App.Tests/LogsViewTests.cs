@@ -152,13 +152,14 @@ public sealed class LogsViewTests : IDisposable
         var seen = Ui.Texts(w);
         Assert.Contains("ERROR", seen);
         Assert.Contains("INFO", seen);
-        Assert.Contains("3 lines", seen);
-        Assert.Contains("Error 2", seen);   // the level chip with its count
+        Assert.Contains("6 lines", seen);   // log01.log and log00.log are the parts of one log: read one after the other
+        Assert.Contains("log01.log ends · log00.log starts", seen);   // where they meet
+        Assert.Contains("Error 4", seen);   // the level chip with its count
         Assert.Contains(seen, t => t.Contains("at trace 0", StringComparison.Ordinal));   // the line under the message belongs to it
         Assert.Contains("Raw", Ui.ButtonTexts(w));   // the switch back to the file as written
         var popup = view.MarksList();   // the Bookmarks button's list: the errors first
         var listed = Ui.Texts(popup);
-        Assert.Contains("Errors (2)", listed);
-        Assert.Equal(2, listed.Count(t => t.StartsWith("Line ", StringComparison.Ordinal)));
+        Assert.Contains("Errors (4)", listed);
+        Assert.Equal(4, listed.Count(t => t.Contains("Line ", StringComparison.Ordinal)));
     }
 }

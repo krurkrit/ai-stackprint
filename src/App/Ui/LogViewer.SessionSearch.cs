@@ -13,7 +13,7 @@ namespace AiStackprint.Ui;
 internal partial class LogViewer
 {
     /// <summary>The steps shown are the whole session (nothing older was left out): searching them is the same as searching the file, without reading it again.</summary>
-    private bool WholeSessionLoaded => _readable is { } log && _linesOk && !_agentsWindow && log.Session.AgentsBefore == 0 && log.Session.Entries.Count == log.Steps.Count;
+    private bool WholeSessionLoaded => _readable is { } log && _linesOk && !_agentsWindow && _span is not { Cut: true } && log.Session.AgentsBefore == 0 && log.Session.Entries.Count == log.Steps.Count;
 
     private async Task SearchSessionAsync(LogQuery p)
     {

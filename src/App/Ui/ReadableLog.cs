@@ -5,7 +5,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
@@ -40,14 +39,14 @@ internal partial class ReadableLog
         Spacing = Space.M,
         Margin = new Thickness(Space.XL)
     };
-    private int _built;           // steps built, counted from the end of Steps
+    private int _lo, _hi;         // the steps built: Steps[_lo] to Steps[_hi - 1]
     private readonly bool _compact;
     private readonly StepContext? _marks;
     private readonly SessionGraph? _graph;   // the graph column beside the steps: sub-agent branches, or just the main line (null for text logs)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
     private readonly AgentsNav? _nav;
-    private readonly TextBlock? _shownNote;   // "Showing the last 400 of …"
+    private readonly TextBlock? _shownNote;   // "Showing the last 400 of …" (a part read around a place, cut to its steps)
 
     /// <summary>A conversation as cards.</summary>
     public ReadableLog(Session s, bool toEnd) : this(s, toEnd, false)
@@ -60,16 +59,19 @@ internal partial class ReadableLog
     }
 
     /// <param name="marks">The file's bookmarks (stars and notes on steps); null: none (a file shown cut to its end has no reliable lines).</param>
-    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks, AgentsNav? agents = null)
+    /// <param name="paging">The part of the log before or after this one can be read: scrolling near the top or the bottom asks for it.</param>
+    /// <param name="anchor">The step to show first, at the same height in the view as in the view this one replaces.</param>
+    internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks, AgentsNav? agents = null, Paging? paging = null, Anchor? anchor = null)
     {
         Session = s;
         _nav = agents;
         _marks = marks;
         _compact = compact;
+        _paging = paging;
         var lines = IsLines(s);
         _lines = lines;
-        var cap = lines ? MaxLines : MaxSteps;
-        Steps = [.. s.Entries.TakeLast(cap)];
+        var cap = paging != null ? int.MaxValue : lines ? MaxLines : MaxSteps;   // a window of the log holds all its steps: only those near the view are built
+        Steps = s.Entries.Count > cap ? [.. s.Entries.TakeLast(cap)] : [.. s.Entries];
         _graph = lines ? null : SessionGraph.Layout(Steps);   // only when a sub-agent branches off: a session with just the main agent has no graph
         if (lines || compact || _graph != null)
         {
@@ -93,6 +95,13 @@ internal partial class ReadableLog
         }
 
         _headerCount = _list.Children.Count;
+        var at = anchor?.IndexIn(Steps) ?? -1;
+        _lo = _hi = at >= 0 ? at : Steps.Count;
+        if (at >= 0)
+        {
+            BuildLater(More);
+        }
+
         BuildEarlier(More);
         if (Steps.Count == 0)
         {
@@ -101,51 +110,36 @@ internal partial class ReadableLog
 
         _scroll.Content = _list;
         _root.Children.Add(_scroll);
-        _scroll.ScrollChanged += (_, e) =>
+        _scroll.ScrollChanged += (_, e) => Scrolled(e.OffsetDelta.Y);
+        if (at >= 0)
         {
-            if (e.OffsetDelta.Y < 0 && _scroll.Offset.Y < NearTop && _earlier != null)
-            {
-                BuildEarlierKeepingPlace();
-            }
-        };
-        if (toEnd)
+            KeepAnchor(Steps[at], anchor!.Y);
+        }
+        else if (toEnd)
         {
             Dispatcher.UIThread.Post(_scroll.ScrollToEnd, DispatcherPriority.Background);
         }
     }
 
-    /// <summary>Builds up to <paramref name="count"/> more steps before the ones already shown, and keeps a "Show earlier steps" button above them while some are left.</summary>
+    /// <summary>Builds up to <paramref name="count"/> more steps before the ones built, and keeps a "Show earlier steps" button above them while some are left.</summary>
     private void BuildEarlier(int count)
     {
-        var to = Steps.Count - _built;
+        var to = _lo;
         var from = Math.Max(0, to - count);
-        if (_earlier != null)
-        {
-            _list.Children.Remove(_earlier);
-            _earlier = null;
-        }
-
+        RemoveEdges();
         var at = _headerCount;
-        bool? wasSub = from > 0 ? Steps[from - 1].SubAgent : null;
         for (var i = from; i < to; i++)
         {
-            var e = Steps[i];
-            if (e.SubAgent && wasSub != true && _graph == null)   // with the graph, the lines run on and the agent is named on hover
-            {
-                _list.Children.Insert(at++, Chip("Sub-agent", Accent).With(c => c.Margin = new Thickness(Space.XXXL, Space.S, 0, 0)));
-            }
-
-            wasSub = e.SubAgent;
-            _list.Children.Insert(at++, Holder(e, i));
+            _list.Children.Insert(at++, Built(i));
         }
 
-        _built += to - from;
-        if (from > 0)
+        _lo = from;
+        if (_hi - _lo > MaxBuilt)
         {
-            _earlier = Btn($"Show {Math.Min(More, from)} earlier steps ({from} not shown)", () => BuildEarlier(More));
-            _earlier.HorizontalAlignment = HorizontalAlignment.Center;
-            _list.Children.Insert(_headerCount, _earlier);
+            Unbuild(_lo + MaxBuilt, _hi);   // the steps far below the view: they are built again when you scroll back down
         }
+
+        AddEdges();
     }
 
     /// <summary>Step <paramref name="i"/> of <see cref="Steps"/> in its slot: the card, row or line, with its usage, sub-agent indent, graph row and copy button.</summary>
@@ -193,13 +187,21 @@ internal partial class ReadableLog
     }
 
     /// <summary>Builds the next earlier steps above the view without moving what is on screen (the content grows upward, so the offset grows with it).</summary>
-    private void BuildEarlierKeepingPlace()
+    private void BuildEarlierKeepingPlace() => KeepingPlace(() => BuildEarlier(More));
+
+    /// <summary>Changes the list (steps built above, dropped above or below) without moving what is on screen: a step in view stays where it was.</summary>
+    private void KeepingPlace(Action change)
     {
-        var before = _scroll.Extent.Height;
-        var offset = _scroll.Offset.Y;
-        BuildEarlier(More);
         _scroll.UpdateLayout();
-        _scroll.Offset = new Vector(_scroll.Offset.X, offset + _scroll.Extent.Height - before);
+        var keep = StepAtTop() ?? (_hi > _lo ? Steps[_lo] : null);   // above the first step (the header in view): the first step built stays put
+        var y = keep != null && _holders.TryGetValue(keep, out var h) ? h.TranslatePoint(default, _list)?.Y : null;
+        var offset = _scroll.Offset.Y;
+        change();
+        _scroll.UpdateLayout();
+        if (y is { } before && keep != null && _holders.TryGetValue(keep, out var held) && held.TranslatePoint(default, _list) is { } after)
+        {
+            _scroll.Offset = new Vector(_scroll.Offset.X, Math.Max(0, offset + after.Y - before));
+        }
     }
 
     /// <summary>The step in the middle of the view (the last one when the view is at its end); null when none is built.</summary>
@@ -212,8 +214,9 @@ internal partial class ReadableLog
     {
         var middle = _scroll.Offset.Y + _scroll.Viewport.Height * fraction;
         LogEntry? found = null;
-        foreach (var e in Steps)
+        for (var i = _lo; i < _hi; i++)
         {
+            var e = Steps[i];
             if (!_holders.TryGetValue(e, out var holder) || holder.TranslatePoint(default, _list) is not { } at)
             {
                 continue;
@@ -228,119 +231,5 @@ internal partial class ReadableLog
         }
 
         return found;
-    }
-
-    private StepIndex? _index;
-
-    /// <summary>The steps by their file and line: how a search result, a bookmark or an error finds its step.</summary>
-    internal StepIndex Index => _index ??= new StepIndex(Steps);
-
-    /// <summary>
-    /// Goes to the step that holds a place in a file: <paramref name="source"/> is a sub-agent's file, null the session file. A reply that spans lines holds them all; steps that
-    /// start on the same line are all tinted. False when no shown step starts at or before the line.
-    /// </summary>
-    public bool RevealAt(string? source, long line, double fade)
-    {
-        var found = Index.Find(source, line);
-        if (found.Count == 0)
-        {
-            return false;
-        }
-
-        Reveal(found[0], fade);
-        Flash(found.Skip(1), fade);
-        return true;
-    }
-
-    /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>
-    public void Reveal(LogEntry e) => Reveal(e, 0);
-
-    /// <param name="fade">More than 0: the step is tinted and the tint fades out over this many seconds (where a search result or bookmark is).</param>
-    public void Reveal(LogEntry e, double fade)
-    {
-        var i = Steps.IndexOf(e);
-        if (i >= 0 && i < Steps.Count - _built)
-        {
-            BuildEarlier(Steps.Count - _built - i);   // a search hit above what is built: build down to it
-        }
-
-        if (!_controls.TryGetValue(e, out var c))
-        {
-            return;
-        }
-
-        if (c is Expander x)
-        {
-            x.IsExpanded = true;
-        }
-
-        Dispatcher.UIThread.Post(c.BringIntoView, DispatcherPriority.Background);
-        Flash([e], fade);
-    }
-
-    /// <summary>Steps after <paramref name="previousLast"/> (the last step of the earlier read); none when it is no longer in view.</summary>
-    public List<LogEntry> After(LogEntry? previousLast)
-    {
-        if (previousLast == null)
-        {
-            return [];
-        }
-
-        var i = Steps.LastIndexOf(previousLast);
-        return i < 0 ? [] : [.. Steps.Skip(i + 1)];
-    }
-
-    /// <summary>Tints the given steps and fades the tint out over <paramref name="seconds"/>.</summary>
-    public void Flash(IEnumerable<LogEntry> steps, double seconds)
-    {
-        if (seconds <= 0)
-        {
-            return;
-        }
-
-        foreach (var e in steps)
-        {
-            if (!_holders.TryGetValue(e, out var holder) || holder.Children.FirstOrDefault(c => c.IsHitTestVisible) is not { } step)
-            {
-                continue;
-            }
-
-            var margin = step.Margin;   // the step's own indent (20 px sides, sub-agent indent), so the highlight lines up with it
-            // Fill behind the step (text keeps its contrast) and a ring on top (visible on opaque bubbles too)
-            var fill = new Border
-            {
-                CornerRadius = new CornerRadius(Radius.L),
-                Margin = margin,
-                IsHitTestVisible = false
-            }.Themed(Border.BackgroundProperty, HighlightKey);
-            var ring = new Border
-            {
-                CornerRadius = new CornerRadius(Radius.L),
-                Margin = margin,
-                BorderThickness = new Thickness(Stroke.Medium),
-                IsHitTestVisible = false
-            }.Themed(Border.BorderBrushProperty, HighlightRingKey);
-            holder.Children.Insert(0, fill);
-            holder.Children.Add(ring);
-            foreach (var b in new[] { fill, ring })
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    b.Transitions = [new Avalonia.Animation.DoubleTransition
-                    {
-                        Property = Visual.OpacityProperty,
-                        Duration = TimeSpan.FromSeconds(seconds),
-                        Easing = new Avalonia.Animation.Easings.CubicEaseIn()
-                    }];
-                    b.Opacity = 0;
-                }, DispatcherPriority.Background);
-            }
-
-            DispatcherTimer.RunOnce(() =>
-            {
-                holder.Children.Remove(fill);
-                holder.Children.Remove(ring);
-            }, TimeSpan.FromSeconds(seconds + 0.5));
-        }
     }
 }

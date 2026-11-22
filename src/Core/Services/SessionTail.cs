@@ -45,8 +45,13 @@ public sealed class SessionTail
     /// <summary>The session as read so far.</summary>
     public Session Session { get; private set; } = null!;
 
-    /// <summary>The main file was read cut to its newest bytes: the steps' lines count from where the read started, not from the file's first line.</summary>
+    /// <summary>The main file was read cut to its newest bytes (its steps still have the file's own line numbers).</summary>
     public bool Cut { get; private set; }
+
+    /// <summary>The part of the main file read: from a line start to its end.</summary>
+    public LogSpan Span { get; private set; } = null!;
+
+    private long _shift;   // lines of the file before the part read
 
     /// <summary>Reads the session; null for a format whose parse cannot be given lines in pieces.</summary>
     public static SessionTail? Open(LogFile f, long maxBytes)
@@ -76,7 +81,8 @@ public sealed class SessionTail
             return Again();
         }
 
-        var main = _main.Parsed!.Entries.Skip(before).ToList();
+        var main = Main(before);
+        Span = Span with { Sizes = [size], To = size };
         var sub = new List<LogEntry>();
         if (_file.Format == "claude-session")
         {
@@ -108,11 +114,12 @@ public sealed class SessionTail
 
     private void ReadAll()
     {
-        var size = new FileInfo(_file.Path).Length;
-        Cut = size > _max;
-        _mainFrom = Cut ? size - _max : 0;
+        Span = LogWindow.End([_file.Path], _max);
+        Cut = Span.Cut;
+        _mainFrom = Span.From;   // a line start: the steps' lines are the file's, counted on from the lines before it
+        _shift = Cut ? LineIndex.LinesBefore(_file.Path, _mainFrom) : 0;
         _main = new Part(_file.Path, _parser.Feed()!);
-        Read(_main, _mainFrom, Cut);
+        Read(_main, _mainFrom, false);
         _from = Cut ? _main.Parsed!.Entries.FirstOrDefault(e => e.Time != null)?.Time : null;
         _agents.Clear();
         var sub = new List<LogEntry>();
@@ -124,8 +131,12 @@ public sealed class SessionTail
             }
         }
 
-        Session = Totals(sub.Count == 0 ? [.. _main.Parsed!.Entries] : SessionAgents.ByTime(_main.Parsed!.Entries, sub));
+        var main = Main(0);
+        Session = Totals(sub.Count == 0 ? main : SessionAgents.ByTime(main, sub));
     }
+
+    /// <summary>The main file's steps from index <paramref name="from"/>, with the file's own line numbers.</summary>
+    private List<LogEntry> Main(int from) => [.. _main.Parsed!.Entries.Skip(from).Select(e => _shift == 0 || e.Line <= 0 ? e : e with { Line = e.Line + _shift })];
 
     /// <summary>The new steps of an agent file (all of a new one) added to <paramref name="sub"/>; false when the file shrank or an earlier step changed.</summary>
     private bool More(string file, List<LogEntry> sub)

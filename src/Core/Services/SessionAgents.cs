@@ -114,7 +114,8 @@ public static partial class SessionAgents
 
     /// <param name="cut">The session was read cut to its end: the agents' steps from before its first step are left out.</param>
     /// <param name="only">Read only these agent files; null: all.</param>
-    internal static Session Merge(Session main, string path, bool cut, HashSet<string>? only = null)
+    /// <param name="until">A window of the session that ends before its end: the agents' steps after this time are left out too.</param>
+    internal static Session Merge(Session main, string path, bool cut, HashSet<string>? only = null, DateTime? until = null)
     {
         var dir = Path.Combine(Path.GetDirectoryName(path) ?? "", Path.GetFileNameWithoutExtension(path), "subagents");
         if (!Directory.Exists(dir))
@@ -134,7 +135,7 @@ public static partial class SessionAgents
             {
                 var id = Path.GetFileNameWithoutExtension(file)["agent-".Length..];
                 var s = parser.Parse(LogReader.Utf8Lines(file, AgentBytes));
-                var inside = s.Entries.Where(e => from == null || e.Time == null || e.Time >= from).ToList();
+                var inside = s.Entries.Where(e => e.Time == null || ((from == null || e.Time >= from) && (until == null || e.Time <= until))).ToList();
                 if (inside.Count == 0)
                 {
                     before += s.Entries.Count > 0 ? 1 : 0;   // the agent ran before the part of the session that was read

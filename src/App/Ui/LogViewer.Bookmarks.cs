@@ -104,7 +104,8 @@ internal partial class LogViewer
     private static string Preview(LogEntry e)
     {
         var text = (e.Text ?? "").Split((char)10).FirstOrDefault(l => l.Trim().Length > 0)?.Trim() ?? "";
-        var line = e.Line is > 0 ? $"{(e.Source != null ? "Sub-agent · " : "")}Line {e.Line:N0} · " : "";
+        var from = e.Source == null ? "" : LineLogs.IsLevel(e.Role) ? Path.GetFileName(e.Source) + " · " : "Sub-agent · ";   // another part of a text log, or a sub-agent's file
+        var line = e.Line is > 0 ? $"{from}Line {e.Line:N0} · " : "";
         return line + (e.Tool != null && e.Role != "tool" ? e.Tool + " · " : "") + (text.Length > 160 ? text[..160] : text);
     }
 
@@ -139,6 +140,13 @@ internal partial class LogViewer
             return;
         }
 
-        _status.Text = "That step is older than the steps shown: use Show earlier steps";
+        if (source == null && _span != null)
+        {
+            _pending = new SearchHit(line, "", 0, 0);   // outside the part shown: the part around it is read, then it is shown
+            GoToPending();
+            return;
+        }
+
+        _status.Text = "That step is not in the part of the session shown";
     }
 }

@@ -40,15 +40,8 @@ internal partial class LogViewer
             return;
         }
 
-        if (ShowReadable)
-        {
-            RevealLine(line, 0);
-        }
-        else
-        {
-            _pending = new SearchHit(line, "", 0, 0);   // the raw view goes to a line the same way it goes to a search result
-            GoToPending();
-        }
+        _pending = new SearchHit(line, "", 0, 0);   // both views go to a line the way they go to a search result: the part of the file around it is read when it is not shown
+        GoToPending();
     }
 
     /// <summary>Goes to a step the app already has (a search result among the steps, an error): by its place in its file, like every other way to a step.</summary>
@@ -61,9 +54,6 @@ internal partial class LogViewer
 
         _readable?.Reveal(e, FadeSeconds);
     }
-
-    /// <summary>Goes to the step that holds this line of the session file: the last step that starts at or before it.</summary>
-    private void RevealLine(long line, double fade) => RevealAt(null, line, fade);
 
     /// <summary>Goes to the step that holds a place in the session file (<paramref name="source"/> null) or in a sub-agent's file; the first step when the place is older than the steps shown.</summary>
     private void RevealAt(string? source, long line, double fade)

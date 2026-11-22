@@ -55,7 +55,12 @@ internal partial class LogViewer
             _view.Content = _readable?.Root;
             return;
         }
-        _code ??= new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true, ScrollPastEnd = true };
+        if (_code == null)
+        {
+            _code = new CodeView(_file!.Path, lineNumbers: _x.S.Settings.LogLineNumbers) { KeepOnDetach = true, ScrollPastEnd = true };
+            _code.Scrolled += RawScrolled;
+        }
+
         var text = _raw;
         if (_only.IsChecked == true && Pattern() is { } p)
         {

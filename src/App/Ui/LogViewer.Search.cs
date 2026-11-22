@@ -164,15 +164,20 @@ internal partial class LogViewer
         }
         if (h.Line < _firstLine || h.Line > lastShown)
         {
-            try { (_raw, _firstLine) = LogSearch.Window(_file.Path, h.Line); }
+            try
+            {
+                _span = LogWindow.Around([_file.Path], 0, h.Line, RawBytes);   // the window around the match: scrolling reads on from there
+                (_raw, _firstLine) = LogWindow.Text(_span);
+                _lastLine = LastLineOf(_span, _file.Path);
+            }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
                 _status.Text = "Cannot read: " + e.Message;
                 return;
             }
-            _window = true;
+            _window = !_span.AtEnd;
             Follow = false;
-            _status.Text = $"Showing lines {_firstLine:N0}–{_firstLine + _raw.Count(c => c == '\n') - 1:N0} around the match";
+            _status.Text = Where(_span);
             Render(false);
         }
         var line = (int)(h.Line - _firstLine + 1);

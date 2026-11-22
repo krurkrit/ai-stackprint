@@ -96,8 +96,14 @@ internal partial class LogViewer
         };
         _newer = Btn("New lines", () =>
         {
-            _window = false;
-            ShowNew();
+            if (_window || _agentsWindow)
+            {
+                ShowLatest();
+            }
+            else
+            {
+                ShowNew();
+            }
         }, true, "chevron_down")
             .With(b =>
             {

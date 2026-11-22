@@ -158,7 +158,7 @@ internal partial class LogViewer
         if (ShowReadable)
         {
             var covered = _readable?.Index.Covers(h.Source, h.Line) == true;   // some shown step starts at or before the result
-            var shown = IsLines || (covered && (h.Source != null || _linesOk));   // and the lines are the file's (not those of a file shown cut to its end)
+            var shown = covered && (h.Source != null || (_linesOk && h.Line <= _lastLine));   // the lines are the file's (not those of a file shown cut to its end), and the part shown reaches the result
             if (!shown && h.Source == null && _aroundLine != h.Line)
             {
                 ShowLine(h.Line);   // a result the steps shown do not hold: the steps around it are read from the file; this runs again when they are shown

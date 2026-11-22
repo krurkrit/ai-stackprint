@@ -231,7 +231,10 @@ internal sealed class CodeView : Border, IDisposable
     }
 
     /// <summary>The 1-based line in the middle of the view; 0 when nothing is shown.</summary>
-    public int CenterLine()
+    public int CenterLine() => LineAt(.5);
+
+    /// <summary>The 1-based line at <paramref name="fraction"/> of the view's height (0 the top, 1 the bottom); 0 when nothing is shown.</summary>
+    public int LineAt(double fraction)
     {
         var tv = _editor.TextArea.TextView;
         if (_editor.Document == null || !tv.VisualLinesValid)
@@ -239,8 +242,51 @@ internal sealed class CodeView : Border, IDisposable
             return 0;
         }
 
-        var middle = tv.GetDocumentLineByVisualTop(tv.ScrollOffset.Y + tv.Bounds.Height / 2);
-        return middle?.LineNumber ?? 0;
+        var line = tv.GetDocumentLineByVisualTop(tv.ScrollOffset.Y + tv.Bounds.Height * fraction);
+        return line?.LineNumber ?? (fraction > 0 ? _editor.Document.LineCount : 0);
+    }
+
+    /// <summary>Lines in the text.</summary>
+    public int LineCount => _editor.Document?.LineCount ?? 0;
+
+    /// <summary>The view scrolled; the argument is how far down (negative: up).</summary>
+    public event Action<double>? Scrolled
+    {
+        add
+        {
+            if (_scrolled == null)
+            {
+                _editor.TextArea.TextView.ScrollOffsetChanged += OnScroll;
+            }
+
+            _scrolled += value;
+        }
+        remove => _scrolled -= value;
+    }
+
+    private Action<double>? _scrolled;
+    private double _lastOffset;
+
+    private void OnScroll(object? sender, EventArgs e)
+    {
+        var y = _editor.TextArea.TextView.ScrollOffset.Y;
+        var delta = y - _lastOffset;
+        _lastOffset = y;
+        _scrolled?.Invoke(delta);
+    }
+
+    /// <summary>Scrolls so line <paramref name="line"/> (1-based) is at the top of the view.</summary>
+    public void ScrollLineToTop(int line)
+    {
+        var doc = _editor.Document;
+        if (doc == null || doc.LineCount == 0)
+        {
+            return;
+        }
+
+        var tv = _editor.TextArea.TextView;
+        tv.EnsureVisualLines();
+        _editor.ScrollToVerticalOffset(tv.GetVisualTopByDocumentLine(Math.Clamp(line, 1, doc.LineCount)));
     }
 
     /// <summary>Scrolls to the last line with text; with <see cref="ScrollPastEnd"/> it ends up in the middle of the view.</summary>

@@ -70,6 +70,14 @@ public static class LineIndex
         return (sb.Replace("\r\n", "\n").ToString(), first);
     }
 
+    /// <summary>The byte line <paramref name="line"/> (1-based) starts at; the size of the file when it has fewer lines.</summary>
+    public static long ByteOfLine(string path, long line)
+    {
+        using var fs = Open(path);
+        var (at, n) = Forward(fs, MarkBefore(fs, path, Math.Max(1, line)), Math.Max(1, line), long.MaxValue);
+        return n < line ? fs.Length : at;
+    }
+
     /// <summary>Number of line breaks before byte <paramref name="offset"/> (which file line a view that starts there starts at, less one).</summary>
     public static long LinesBefore(string path, long offset)
     {

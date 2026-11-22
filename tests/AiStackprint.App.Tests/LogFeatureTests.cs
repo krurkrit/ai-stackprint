@@ -254,6 +254,38 @@ public sealed class LogFeatureTests
     }
 
     [AvaloniaFact]
+    public void A_part_of_a_long_log_builds_only_the_steps_near_the_view_and_asks_for_the_part_before_near_its_top()
+    {
+        var steps = Enumerable.Range(1, 600).Select(i => Line(i % 60, i % 2 == 0 ? "user" : "assistant", "step " + i));
+        var session = new ClaudeSessionParser().Parse(Lines([.. steps]));
+        var asked = 0;
+        var log = new ReadableLog(session, true, true, null, null, new Paging(() => asked++, null));
+        var w = Ui.Show(log.Root);
+        Dispatcher.UIThread.RunJobs();
+        Dispatcher.UIThread.RunJobs();
+        int Rows() => Ui.Texts(w).Count(t => t.StartsWith("step ", StringComparison.Ordinal));
+        Assert.Equal(600, log.Steps.Count);   // a part of a log keeps all its steps (no cap of 400)
+        Assert.Equal(ReadableLog.FirstLines, Rows());   // but builds only the last ones
+        var scroll = w.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Extent.Height > s.Viewport.Height);
+        for (var i = 0; i < 40 && asked == 0; i++)
+        {
+            scroll.Offset = new Avalonia.Vector(0, 0);   // up, again and again
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        Assert.Equal(1, asked);   // in the first quarter of the steps: the part before is asked for, once
+        Assert.InRange(Rows(), ReadableLog.FirstLines, 5 * ReadableLog.FirstLines);   // the steps far below were dropped
+        var top = log.TopAnchor();
+        Assert.NotNull(top);
+        var again = new ReadableLog(session, true, true, null, null, new Paging(null, null), top);   // the part that replaces it: the same step at the top
+        w.Content = again.Root;
+        Dispatcher.UIThread.RunJobs();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(top.Line, again.StepAtTop()?.Line);
+        w.Close();
+    }
+
+    [AvaloniaFact]
     public void A_session_without_agents_has_no_graph_and_no_legend()
     {
         var steps = new List<string> { Line(1, "user", "prompt"), Line(2, "assistant", "step") };

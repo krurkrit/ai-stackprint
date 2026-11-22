@@ -51,9 +51,9 @@ internal partial class LogViewer
             return;
         }
 
-        if ((_window && !Follow) || _agentsWindow)
+        if (_window || _agentsWindow)
         {
-            Render(false);
+            _newer.IsVisible = true;   // an older part of the log is shown: "New lines" goes back to its end
             return;
         }
 
@@ -89,7 +89,8 @@ internal partial class LogViewer
         }
 
         _readSize = size;
-        _status.Text = tail.Cut ? "Showing the last 8 MB" : "";
+        _span = tail.Span;
+        _status.Text = tail.Cut ? Where(tail.Span) : "";
         if (!u.Rebuilt && log.Append(u.Session, u.Added))
         {
             log.Flash(u.Added, FadeSeconds);
@@ -99,9 +100,9 @@ internal partial class LogViewer
         }
 
         var last = log.Steps.LastOrDefault();
-        _linesOk = !tail.Cut;
+        _linesOk = true;
         ReadMarks();
-        _readable = new ReadableLog(u.Session, true, Compact && !IsLines, _marks, NavFor(u.Session));
+        _readable = new ReadableLog(u.Session, true, Compact && !IsLines, _marks, NavFor(u.Session), PagingFor(tail.Span));
         Render(true);
         _readable.Flash(_readable.After(last), FadeSeconds);
         if (u.Rebuilt)
@@ -121,14 +122,17 @@ internal partial class LogViewer
         var readable = ShowReadable;
         var before = _readSize;
         var lastStep = readable ? _readable?.Steps.LastOrDefault() : null;
-        var r = await Task.Run(() => ReadFile(f, readable, null, 0, null), CancellationToken.None);
+        var ask = new ReadAsk(readable, null, null, 0, null, PartsOf(f));
+        var r = await Task.Run(() => ReadFile(f, ask), CancellationToken.None);
         if (id != _loadId || _file != f)
         {
             return;
         }
 
-        _status.Text = r.Problem ?? (r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "");
+        _status.Text = r.Problem ?? (r.Span is { Cut: true } s ? Where(s) : r.Cut ? $"Showing the last {(readable ? "8 MB" : "256 KB")}" : "");
         _readSize = r.Bytes;
+        _span = r.Span;
+        _lastLine = r.LastLine;
         var newLines = 0;
         if (r.Problem != null)
         {
@@ -138,9 +142,9 @@ internal partial class LogViewer
         else if (r.Parsed != null)
         {
             _tail = r.Tail;
-            _linesOk = !r.Cut;
+            _linesOk = r.Span != null || !r.Cut;
             ReadMarks();
-            _readable = new ReadableLog(r.Parsed, true, Compact && !IsLines, _marks, NavFor(r.Parsed));
+            _readable = new ReadableLog(r.Parsed, true, Compact && !IsLines, _marks, NavFor(r.Parsed), PagingFor(r.Span));
         }
         else
         {

@@ -226,7 +226,9 @@ public sealed class SessionTailTests : IDisposable
         var f = Session("s", Enumerable.Range(0, 40).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n, $"step {n}")));
         var tail = SessionTail.Open(f, 2000)!;
         Assert.True(tail.Cut);
-        SameSession(SessionAgents.Read(f, 2000), tail.Session);
+        SameSession(LogWindow.Parse(f, LogWindow.End([f.Path], 2000)), tail.Session);
+        Assert.Equal(22, tail.Session.Entries[0].Line);   // "step 21" is line 22 of the file: the lines are the file's, not counted from the cut
+        Assert.Equal(tail.Span.From, LineIndex.ByteOfLine(f.Path, 22));
         File.AppendAllLines(f.Path, [Msg("user", 50, "more")]);
         Assert.Equal(["more"], tail.Next().Added.Select(e => e.Text));
     }
