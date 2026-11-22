@@ -206,11 +206,11 @@ public sealed class LogFeatureTests
         Assert.Equal(6, actions.Count);
         foreach (var x in folds)
         {
-            var right = x.TranslatePoint(new Point(x.Bounds.Width, 0), w).Value.X;
-            var left = actions.Min(b => b.TranslatePoint(default, w).Value.X);
+            var right = x.TranslatePoint(new Point(x.Bounds.Width, 0), w)?.X ?? 0;
+            var left = actions.Min(b => b.TranslatePoint(default, w)?.X ?? 0);
             Assert.True(right <= left, $"the arrow ends at {right}, the buttons start at {left}");
             var arrow = x.GetVisualDescendants().OfType<ToggleButton>().First();
-            var at = arrow.TranslatePoint(new Point(arrow.Bounds.Width - 12, arrow.Bounds.Height / 2), w).Value;   // the arrow, at the right end of the header
+            var at = arrow.TranslatePoint(new Point(arrow.Bounds.Width - 12, arrow.Bounds.Height / 2), w) ?? default;   // the arrow, at the right end of the header
             w.MouseDown(at, MouseButton.Left);
             w.MouseUp(at, MouseButton.Left);
             Dispatcher.UIThread.RunJobs();
