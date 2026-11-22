@@ -159,7 +159,11 @@ internal partial class LogViewer
             Render(false);
         }
         var line = (int)(h.Line - _firstLine + 1);
-        Dispatcher.UIThread.Post(() => _code.Reveal(line, h.Column), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() =>
+        {
+            _code.Reveal(line, h.Column);
+            _code.Flash(line, line, FadeSeconds);   // the line is selected and also tinted, so it shows even when the box has no focus
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>A step's text on one line, cut around its first match.</summary>

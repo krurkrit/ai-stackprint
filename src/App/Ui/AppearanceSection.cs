@@ -114,11 +114,11 @@ internal static class AppearanceSection
         };
         lines.IsCheckedChanged += (_, _) => Change(() => st.LogLineNumbers = lines.IsChecked == true);
         Add("Line numbers", lines, "Logs only; the config editor always shows them");
-        Add("New log lines", SizeBox(st.FadeSeconds, 0, 60, n =>
+        Add("New log lines", SizeBox(Math.Max(1, st.FadeSeconds), 1, 60, n =>
         {
             st.FadeSeconds = (int)n;
             SettingsStore.Save(st);
-        }), "Seconds new lines and steps stay highlighted while they fade; 0 = off");
+        }), "Seconds new lines, steps and search results stay highlighted while they fade (1 to 60)");
 
         var preview = new Border
         {

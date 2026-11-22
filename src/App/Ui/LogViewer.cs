@@ -178,5 +178,5 @@ internal partial class LogViewer
     private const int ReadableBytes = 8 << 20, RawBytes = 256 * 1024;
 
     /// <summary>Highlight time for new content, from Settings (0 = off).</summary>
-    private double FadeSeconds => Math.Clamp(_x.S.Settings.FadeSeconds, 0, 60);
+    private double FadeSeconds => Math.Clamp(_x.S.Settings.FadeSeconds, 1, 60);
 }

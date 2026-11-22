@@ -156,7 +156,10 @@ internal sealed class CodeView : Border, IDisposable
     private Avalonia.Threading.DispatcherTimer? _flashTimer;
 
     /// <summary>Tints lines from <paramref name="fromLine"/> (1-based) to the end and fades the tint out over <paramref name="seconds"/>.</summary>
-    public void Flash(int fromLine, double seconds)
+    public void Flash(int fromLine, double seconds) => Flash(fromLine, int.MaxValue, seconds);
+
+    /// <summary>Tints lines <paramref name="fromLine"/> to <paramref name="toLine"/> (1-based) and fades the tint out over <paramref name="seconds"/>.</summary>
+    public void Flash(int fromLine, int toLine, double seconds)
     {
         if (seconds <= 0 || _disposed)
         {
@@ -170,6 +173,7 @@ internal sealed class CodeView : Border, IDisposable
             tv.BackgroundRenderers.Add(_flash);
         }
         _flash.From = Math.Max(1, fromLine);
+        _flash.To = toLine;
         _flash.Start = DateTime.UtcNow;
         _flash.Seconds = seconds;
         _flash.Brush = this.TryFindResource(W.HighlightKey, ActualThemeVariant, out var b) ? b as Avalonia.Media.IBrush : null;
@@ -187,7 +191,7 @@ internal sealed class CodeView : Border, IDisposable
     /// <summary>Draws the fading tint behind the flashed lines.</summary>
     private sealed class Flasher : AvaloniaEdit.Rendering.IBackgroundRenderer
     {
-        public int From;
+        public int From, To = int.MaxValue;
         public DateTime Start;
         public double Seconds;
         public Avalonia.Media.IBrush? Brush;
@@ -206,7 +210,7 @@ internal sealed class CodeView : Border, IDisposable
             {
                 foreach (var vl in textView.VisualLines)
                 {
-                    if (vl.FirstDocumentLine.LineNumber >= From)
+                    if (vl.FirstDocumentLine.LineNumber >= From && vl.FirstDocumentLine.LineNumber <= To)
                     {
                         drawingContext.FillRectangle(Brush, new Rect(0, vl.VisualTop - textView.ScrollOffset.Y, textView.Bounds.Width, vl.Height));
                     }
