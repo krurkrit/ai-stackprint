@@ -139,6 +139,22 @@ public sealed class AppsViewTests
     }
 
     [AvaloniaFact]
+    public void A_filter_menu_has_the_accent_border_while_its_list_is_open()
+    {
+        var (w, _) = Open(1400);
+        var menu = w.GetVisualDescendants().OfType<FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Category"));
+        menu.TryFindResource(W.Accent, menu.ActualThemeVariant, out var accent);
+        Assert.NotNull(accent);
+        Assert.NotEqual(accent, menu.BorderBrush);
+        menu.Flyout!.ShowAt(menu);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(accent, menu.BorderBrush);   // like an open drop-down and a focused text box
+        menu.Flyout.Hide();
+        Dispatcher.UIThread.RunJobs();
+        Assert.NotEqual(accent, menu.BorderBrush);
+    }
+
+    [AvaloniaFact]
     public void Filtering_out_the_only_apps_with_counts_keeps_the_same_columns()
     {
         var (w, _) = Open(1400);

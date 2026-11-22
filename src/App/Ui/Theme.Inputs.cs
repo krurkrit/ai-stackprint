@@ -65,6 +65,11 @@ internal static partial class Theme
         {
             Setters = { new Setter(Layoutable.WidthProperty, Sizes.RadioDot), new Setter(Layoutable.HeightProperty, Sizes.RadioDot), new Setter(Visual.OpacityProperty, .9) }
         });
+        // An open drop-down has the focus: the accent border, like a focused text box (its list keeps a neutral border)
+        styles.Add(new Style(x => x.OfType<ComboBox>().Class(":dropdownopen").Template().OfType<Border>().Name("Background"))
+        {
+            Setters = { new Setter(Border.BorderBrushProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(W.Accent)) }
+        });
         // A filter menu's pop-up has a drop-down list's inner padding
         styles.Add(new Style(x => x.OfType<FlyoutPresenter>().Class(FilterMenu.PresenterClass))
         {
