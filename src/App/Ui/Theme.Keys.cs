@@ -118,11 +118,14 @@ internal static partial class Theme
         {
             d[k] = B(onPrimary);
         }
-        // The accent button and the checked check box are always the color a side menu item shows under the pointer (the accent, a little away from the text color: the text never loses contrast)
-        var fill = B(Shade(primary, onPrimary, .15));
-        var pressed = B(Shade(primary, onPrimary, .28));
+        // The accent button at rest and the checked check box are the color a side menu item shows under the pointer: the accent, a little away from the text color,
+        // and far enough for 7.1:1 text (WCAG 2.2 AAA; a custom accent too). Hover and pressed go further away from the text, so they only gain contrast.
+        var rest = Color.FromUInt32(Services.Contrast.AtLeast(Shade(primary, onPrimary, .15).ToUInt32(), onPrimary.ToUInt32(), Services.Contrast.Minimum));
+        var fill = B(rest);
+        var hovered = B(Shade(rest, onPrimary, .12));
+        var pressed = B(Shade(rest, onPrimary, .24));
         d["AccentButtonBackground"] = fill;
-        d["AccentButtonBackgroundPointerOver"] = fill;
+        d["AccentButtonBackgroundPointerOver"] = hovered;
         d["AccentButtonBackgroundPressed"] = pressed;
         foreach (var (s, brush) in new[] { ("", fill), ("PointerOver", fill), ("Pressed", pressed) })
         {
@@ -130,8 +133,8 @@ internal static partial class Theme
             d["CheckBoxCheckBackgroundStrokeChecked" + s] = brush;
             d["CheckBoxCheckGlyphForegroundChecked" + s] = B(onPrimary);   // the check mark has the accent button's text color
         }
-        // Drop-downs under the pointer look like a side menu item under the pointer: the same fill and text color, a little darker while pressed
-        foreach (var (s, brush) in new[] { ("PointerOver", fill), ("Pressed", pressed) })
+        // Drop-downs under the pointer look like a side menu item under the pointer: the accent button's rest fill and text color, one step further while pressed
+        foreach (var (s, brush) in new[] { ("PointerOver", fill), ("Pressed", hovered) })
         {
             d["ComboBoxBackground" + s] = brush;
             d["ComboBoxBorderBrush" + s] = brush;

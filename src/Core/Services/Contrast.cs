@@ -34,6 +34,24 @@ public static class Contrast
         return Blend((a << 24) | (toward & 0xFFFFFF), color | 0xFF000000);
     }
 
+    /// <summary>
+    /// <paramref name="color"/> moved away from <paramref name="text"/> (toward black or white) by the least that gives text on it at least
+    /// <paramref name="min"/>:1; unchanged when it already does. A custom accent stays as close to the chosen color as the minimum allows.
+    /// </summary>
+    public static uint AtLeast(uint color, uint text, double min)
+    {
+        for (var step = 0; step <= 100; step++)
+        {
+            var c = AwayFrom(color, text, step / 100.0);
+            if (Ratio(text, c) >= min)
+            {
+                return c;
+            }
+        }
+
+        return AwayFrom(color, text, 1);   // black or white: the most there is
+    }
+
     private static double Luminance(uint c)
     {
         double Ch(int shift)

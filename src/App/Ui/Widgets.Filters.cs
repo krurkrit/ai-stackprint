@@ -68,16 +68,18 @@ internal sealed class FilterMenu : Button
 
 internal static partial class W
 {
-    /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own colors, as a side menu item and an input show them under the pointer.</summary>
+    /// <summary>
+    /// Pointer over: the accent (Rescan) button's rest fill and text color; pressed: its hover fill (one step further from the text). Side menu items, drop-downs and Group by use it.
+    /// </summary>
     public static void AccentHover(Button b)
     {
         var app = Application.Current!;
         foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
         {
             var d = new ResourceDictionary();
-            foreach (var s in new[] { "PointerOver", "Pressed" })
+            foreach (var (s, from) in new[] { ("PointerOver", ""), ("Pressed", "PointerOver") })
             {
-                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg))
+                if (app.TryGetResource("AccentButtonBackground" + from, v, out var bg))
                 {
                     d["ButtonBackground" + s] = bg;
                     d["ButtonBorderBrush" + s] = bg;

@@ -218,6 +218,8 @@ internal static class ColorSettings
             2 => ContrastRatio(d.Text, Color.FromUInt32(Services.Contrast.Blend(c.ToUInt32(), d.Background.ToUInt32()))),   // text on top of the selection
             _ => 99
         };
-        return ratio < Services.Contrast.Minimum ? $"Contrast {ratio:0.0}:1 — below the 7.1:1 minimum" : null;
+        return ratio >= Services.Contrast.Minimum ? null
+            : which == 0 ? $"Contrast {ratio:0.0}:1 — buttons use a deeper shade of it to reach 7.1:1"   // Theme.Keys moves the button fill (Contrast.AtLeast)
+            : $"Contrast {ratio:0.0}:1 — below the 7.1:1 minimum";
     }
 }

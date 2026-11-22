@@ -36,4 +36,21 @@ public class ContrastTests
             Assert.True(Contrast.Ratio(text, Contrast.AwayFrom(accent, text, amount)) > before);
         }
     }
+
+    [Theory]
+    [InlineData(0xFFFFE066u, 0xFF141517u)]   // pale yellow with dark text: already passes, unchanged
+    [InlineData(0xFF6FA8FFu, 0xFFFFFFFFu)]   // light blue with white text: goes darker
+    [InlineData(0xFF808080u, 0xFFFFFFFFu)]   // mid gray with white text
+    [InlineData(0xFF808080u, 0xFF000000u)]   // mid gray with black text
+    public void AtLeast_moves_a_color_just_far_enough_from_its_text(uint color, uint text)
+    {
+        var c = Contrast.AtLeast(color, text, Contrast.Minimum);
+        Assert.True(Contrast.Ratio(text, c) >= Contrast.Minimum);
+        var step = Enumerable.Range(0, 101).First(i => Contrast.AwayFrom(color, text, i / 100.0) == c);
+        Assert.True(step == 0 || Contrast.Ratio(text, Contrast.AwayFrom(color, text, (step - 1) / 100.0)) < Contrast.Minimum);   // the least that passes
+    }
+
+    [Fact]
+    public void AtLeast_keeps_a_color_that_already_passes() =>
+        Assert.Equal(0xFF1450A0u, Contrast.AtLeast(0xFF1450A0u, 0xFFFFFFFFu, Contrast.Minimum));
 }

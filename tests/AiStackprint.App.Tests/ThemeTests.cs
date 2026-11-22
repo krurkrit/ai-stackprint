@@ -57,10 +57,45 @@ public class ThemeTests
         Assert.Equal(Get(W.Accent), Get("TextControlBorderBrushFocused"));   // the accent: Fluent UI 2 brand focus
         Assert.Equal(Get(W.Accent), Get("TextControlBorderBrushPointerOver"));   // text boxes: the accent border under the pointer
         Assert.Equal(Get("TextControlBackground"), Get("TextControlBackgroundPointerOver"));
-        // a drop-down under the pointer looks like a side menu item under the pointer: the accent button's fill and text color
-        Assert.Equal(Get("AccentButtonBackgroundPointerOver"), Get("ComboBoxBackgroundPointerOver"));
+        // a drop-down under the pointer looks like a side menu item under the pointer: the accent button's rest fill and text color; pressed, its hover fill
+        Assert.Equal(Get("AccentButtonBackground"), Get("ComboBoxBackgroundPointerOver"));
+        Assert.Equal(Get("AccentButtonBackgroundPointerOver"), Get("ComboBoxBackgroundPressed"));
         Assert.Equal(Get("AccentButtonForegroundPointerOver"), Get("ComboBoxForegroundPointerOver"));
         Assert.Equal(new CornerRadius(Radius.M), Get("ControlCornerRadius"));
         Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
+    }
+
+    /// <summary>WCAG 2.2 AAA (1.4.6): button text needs 7:1 in every state, hover and pressed too; the app's minimum is 7.1. Each state is a different color.</summary>
+    [AvaloniaTheory]
+    [InlineData(null)]
+    [InlineData("#6FA8FF")]   // a light blue: white text on it is below 7:1, so the fill is moved
+    [InlineData("#FFD43B")]   // a pale yellow: dark text
+    [InlineData("#808080")]   // mid gray: the hardest case for either text color
+    public void The_accent_button_text_reads_at_7_to_1_at_rest_under_the_pointer_and_pressed(string? accent)
+    {
+        var app = Application.Current!;
+        var s = SettingsStore.Defaults();
+        s.Light.Accent = accent;
+        s.Dark.Accent = accent;
+        Theme.Appearance(app, s);
+        try
+        {
+            foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
+            {
+                uint Get(string key) => app.Resources.TryGetResource(key, variant, out var v) && v is Avalonia.Media.ISolidColorBrush b ? b.Color.ToUInt32() : throw new KeyNotFoundException(key);
+                var fills = new[] { "", "PointerOver", "Pressed" }.Select(st => (State: st, Fill: Get("AccentButtonBackground" + st), Text: Get("AccentButtonForeground" + st))).ToList();
+                foreach (var (state, fill, text) in fills)
+                {
+                    var ratio = Contrast.Ratio(text, fill);
+                    Assert.True(ratio >= Contrast.Minimum, $"{variant} {accent} {state}: {ratio:0.00}:1");
+                }
+
+                Assert.Equal(3, fills.Select(f => f.Fill).Distinct().Count());   // hover and pressed show a change
+            }
+        }
+        finally
+        {
+            Theme.Appearance(app, SettingsStore.Defaults());
+        }
     }
 }

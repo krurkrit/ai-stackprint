@@ -65,7 +65,7 @@ internal partial class MainWindow
         return b;
     }
 
-    /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own hover and pressed colors.</summary>
+    /// <summary>Pointer over and pressed: the accent (Rescan) button's rest and hover colors (<see cref="AccentHover"/>).</summary>
     private static void HoverStyle(Button b)
     {
         b.CornerRadius = new CornerRadius(Radius.L);
