@@ -136,11 +136,11 @@ public sealed class LogsViewTests : IDisposable
 
         Assert.Equal(2, Named(w, "log03.log"));   // the file with the match is now the open one
         Assert.Contains(w.GetVisualDescendants().OfType<Control>(), c => c.Classes.Contains(Table.SelectedClass));   // its row in the Files list is the selected one (the page scrolls to it)
-        Assert.Contains(Ui.Texts(w), x => x.StartsWith("1 match in 1 file", StringComparison.Ordinal));
+        Assert.Contains(Ui.Texts(w), x => x.Contains("1 match in 1 file", StringComparison.Ordinal));   // the results stay ("1 of 1 match …" once one was gone to)
         var query = w.GetVisualDescendants().OfType<TextBox>().First(x => x.IsEffectivelyVisible && x.PlaceholderText?.StartsWith("Search this file", StringComparison.Ordinal) == true);
         Ui.Click(w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) is string tip && tip.StartsWith("Close the results", StringComparison.Ordinal)));
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-        Assert.DoesNotContain(Ui.Texts(w), x => x.StartsWith("1 match in 1 file", StringComparison.Ordinal));   // the results are closed
+        Assert.DoesNotContain(Ui.Texts(w), x => x.Contains("1 match in 1 file", StringComparison.Ordinal));   // the results are closed
         Assert.Equal("\"of log 3\"", query.Text);   // the search words stay
     }
 

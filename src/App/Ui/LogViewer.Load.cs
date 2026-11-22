@@ -12,11 +12,15 @@ internal partial class LogViewer
 {
     private int _loadId;
 
-    private sealed record FileRead(Session? Parsed, string Raw, long FirstLine, long Bytes, bool Cut, string? Problem);
+    private sealed record FileRead(Session? Parsed, string Raw, long FirstLine, long Bytes, bool Cut, string? Problem)
+    {
+        /// <summary>A session that is read on in pieces when the file grows (Follow): only what is written after is parsed.</summary>
+        public SessionTail? Tail { get; init; }
+    }
 
     /// <summary>
     /// Opens a file: the loading icon shows in the viewer while the file is read and parsed off the UI thread, then the text fades in. A newer call (another file,
-    /// F5) makes an older one that is still reading stop. Changes of the open file while it is followed use <see cref="Load"/>, which keeps the scroll position.
+    /// F5) makes an older one that is still reading stop. Changes of the open file while it is followed use <see cref="ShowNew"/>, which reads only what is new.
     /// </summary>
     private void LoadAsync(bool toEnd) => Fire.Forget(LoadAsyncCore(toEnd));
 
@@ -47,6 +51,7 @@ internal partial class LogViewer
         }
 
         _readSize = r.Bytes;
+        _tail = r.Tail;
         _linesOk = !r.Cut;
         ReadMarks();   // a file cut to its end: the steps' line numbers do not count from its first line
         var window = (around != null || atLine > 0 || agent != null) && r.Parsed != null && !r.Cut;   // ReadAround returns a whole-file read; a null from it falls back to the cut end
@@ -95,6 +100,11 @@ internal partial class LogViewer
             if (readable && (agent != null ? SessionAgents.ReadAroundAgent(f, agent, ReadableLog.MaxSteps) : atLine > 0 ? SessionAgents.ReadAroundLine(f, atLine, ReadableLog.MaxSteps) : around is { } before ? SessionAgents.ReadAround(f, before, ReadableLog.MaxSteps) : null) is { } window)
             {
                 return new FileRead(window, "", 1, size, false, null);   // read whole: the steps have the file's own line numbers
+            }
+
+            if (readable && !LineLogs.Is(f.Format) && SessionTail.Open(f, ReadableBytes) is { } tail)
+            {
+                return new FileRead(tail.Session, "", 1, size, tail.Cut, null) { Tail = tail };
             }
 
             if (readable)

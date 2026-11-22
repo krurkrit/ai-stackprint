@@ -11,7 +11,7 @@ namespace AiStackprint.Services;
 /// </summary>
 public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, string? Tool = null, string? Lang = null, string? Detail = null, string? Agent = null)
 {
-    /// <summary>The line of the file this step comes from, counted from the first line the parser was given (1-based); 0 = unknown. Set while a parser reads <see cref="LogParsers.Json"/>.</summary>
+    /// <summary>The line of the file this step comes from, counted from the first line the parser was given (1-based); 0 = unknown. Set while a parser reads the lines as JSON.</summary>
     public long Line { get; init; } = LogParsers.CurrentLine;
 
     /// <summary>The file the step comes from when it is not the session file: a sub-agent's own file; <see cref="Line"/> counts in that file. Null = the session file.</summary>
@@ -49,6 +49,9 @@ public interface ILogParser
     /// <summary>The same counts <see cref="SessionCounts.Of"/> gives for <see cref="Parse"/>, without building the steps' text: a format may count more cheaply.</summary>
     SessionCounts Count(IEnumerable<ReadOnlyMemory<byte>> lines) => SessionCounts.Of(Parse(lines));
 
+    /// <summary>A parse that can be given the lines in pieces (a file read, then what is written to it after); null for a format that is read whole each time.</summary>
+    ISessionFeed? Feed() => null;
+
     /// <summary>Billed responses in the session (for the Usage card). Formats without usage data return nothing.</summary>
     IEnumerable<UsageEvent> Usage(IEnumerable<ReadOnlyMemory<byte>> lines) => [];
 
@@ -62,27 +65,49 @@ public interface ILogParser
     IEnumerable<LimitSample> Limits(IEnumerable<ReadOnlyMemory<byte>> lines) => [];
 }
 
+/// <summary>
+/// A session parsed in pieces: the lines of a file, then the lines written to it after. The steps are the same as one <see cref="ILogParser.Parse"/> of all the lines,
+/// and each piece's steps keep their line in the file (counted after the lines given before). Not thread-safe: one piece at a time.
+/// </summary>
+public interface ISessionFeed
+{
+    /// <summary>Parses more lines.</summary>
+    /// <returns>The index of the first step that is new or changed: the number of steps before this call, or less when an earlier step changed (Codex puts a reply's tokens on it later).</returns>
+    int Add(IEnumerable<ReadOnlyMemory<byte>> lines);
+
+    /// <summary>The session so far, as a copy (the feed keeps changing its own lists).</summary>
+    Session Snapshot();
+}
+
 public static class LogParsers
 {
-    /// <summary>The number of the line <see cref="Json"/> is handing out (per thread: a parse runs on one thread); 0 outside a parse.</summary>
+    /// <summary>The number of the line the JSON reader is handing out (per thread: a parse runs on one thread); 0 outside a parse.</summary>
     [ThreadStatic]
     internal static long CurrentLine;
 
     private static readonly ILogParser[] _all = [new ClaudeSessionParser(), new CodexSessionParser(), new OpenCodeUsage()];
     public static ILogParser? Find(string? format) => format == null ? null : _all.FirstOrDefault(p => p.Format == format);
 
+    /// <summary>The lines a parser has been given so far: a session read in pieces (<see cref="ISessionFeed"/>) numbers each piece's lines after the ones before.</summary>
+    internal sealed class LineCounter
+    {
+        public long Count { get; set; }
+    }
+
     /// <summary>
     /// Each line as JSON; lines that are not JSON (or cut off) are skipped, and so are lines without any of <paramref name="needs"/> (when given):
     /// a plain text search is far cheaper than parsing the large lines that cannot matter.
     /// Each element is valid only until the loop moves to the next line (its document is then returned to the pool): read what you need, keep no element.
     /// </summary>
-    internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, params string[] needs)
+    internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, params string[] needs) => Json(lines, new LineCounter(), needs);
+
+    /// <summary>Like the other overload, numbering the lines after the <see cref="LineCounter.Count"/> lines already counted (and counting these).</summary>
+    internal static IEnumerable<JsonElement> Json(IEnumerable<ReadOnlyMemory<byte>> lines, LineCounter counter, params string[] needs)
     {
         var keys = needs.Select(System.Text.Encoding.UTF8.GetBytes).ToArray();
-        long n = 0;
         foreach (var l in lines)
         {
-            n++;
+            var n = ++counter.Count;
             if (l.Span.IndexOfAnyExcept(" \t\r"u8) < 0 || (keys.Length > 0 && !Any(l.Span, keys)))
             {
                 continue;

@@ -25,7 +25,7 @@ internal partial class ReadableLog
     public List<LogEntry> Steps { get; }
 
     /// <summary>The whole parsed session (Steps keeps only the last ones): what Export writes.</summary>
-    public Session Session { get; }
+    public Session Session { get; private set; }
 
     /// <summary>
     /// Steps built when a file opens: cards are heavy (about 8 ms each), so 20; one-line rows are light, so 60. Earlier ones are built as you scroll up
@@ -46,6 +46,8 @@ internal partial class ReadableLog
     private readonly SessionGraph? _graph;   // the graph column beside the steps: sub-agent branches, or just the main line (null for text logs)
     private readonly int _headerCount;   // controls above the first step (summary, graph, notes)
     private Button? _earlier;
+    private readonly AgentsNav? _nav;
+    private readonly TextBlock? _shownNote;   // "Showing the last 400 of …"
 
     /// <summary>A conversation as cards.</summary>
     public ReadableLog(Session s, bool toEnd) : this(s, toEnd, false)
@@ -61,6 +63,7 @@ internal partial class ReadableLog
     internal ReadableLog(Session s, bool toEnd, bool compact, StepContext? marks, AgentsNav? agents = null)
     {
         Session = s;
+        _nav = agents;
         _marks = marks;
         _compact = compact;
         var lines = IsLines(s);
@@ -90,7 +93,8 @@ internal partial class ReadableLog
 
         if (s.Entries.Count > cap)
         {
-            _list.Children.Add(Txt($"Showing the last {cap:N0} of {s.Entries.Count:N0} {(lines ? "lines" : "steps")}.", TextSize.Caption, false, Muted));
+            _shownNote = Txt($"Showing the last {cap:N0} of {s.Entries.Count:N0} {(lines ? "lines" : "steps")}.", TextSize.Caption, false, Muted);
+            _list.Children.Add(_shownNote);
         }
 
         _headerCount = _list.Children.Count;
@@ -137,45 +141,7 @@ internal partial class ReadableLog
             }
 
             wasSub = e.SubAgent;
-            var step = _lines ? LogLine(e) : _compact ? CompactRow(e, _marks) : Step(e);   // compact: one line per step, its card opens in a popup
-            _controls[e] = step;
-            if (!_lines && !_compact)
-            {
-                if (e.Usage != null)
-                {
-                    step = WithUsage(step, e.Usage);
-                }
-
-                if (e.SubAgent)
-                {
-                    step = new Border
-                    {
-                        BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
-                        Padding = new Thickness(Space.L, 0, 0, 0),
-                        Margin = new Thickness(Space.XXXL, 0, 0, 0),
-                        Child = step
-                    }
-                        .Themed(Border.BorderBrushProperty, Accent);
-                }
-            }
-
-            var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
-            if (_lines)
-            {
-                holder.IsVisible = !_hidden.Contains(e.Role);
-            }
-            else if (!_compact)
-            {
-                AddCopy(holder, e, _marks);
-            }
-
-            if (_graph != null && _hiddenAgents.Contains(_graph.Rows[i].Owner.Agent) && _showStep.TryGetValue(e, out var show))
-            {
-                show(false);   // an agent hidden by its chip stays hidden in steps built later
-            }
-
-            _holders[e] = holder;
-            _list.Children.Insert(at++, holder);
+            _list.Children.Insert(at++, Holder(e, i));
         }
 
         _built += to - from;
@@ -185,6 +151,50 @@ internal partial class ReadableLog
             _earlier.HorizontalAlignment = HorizontalAlignment.Center;
             _list.Children.Insert(_headerCount, _earlier);
         }
+    }
+
+    /// <summary>Step <paramref name="i"/> of <see cref="Steps"/> in its slot: the card, row or line, with its usage, sub-agent indent, graph row and copy button.</summary>
+    private Panel Holder(LogEntry e, int i)
+    {
+        var step = _lines ? LogLine(e) : _compact ? CompactRow(e, _marks) : Step(e);   // compact: one line per step, its card opens in a popup
+        _controls[e] = step;
+        if (!_lines && !_compact)
+        {
+            if (e.Usage != null)
+            {
+                step = WithUsage(step, e.Usage);
+            }
+
+            if (e.SubAgent)
+            {
+                step = new Border
+                {
+                    BorderThickness = new Thickness(Space.XXS, 0, 0, 0),
+                    Padding = new Thickness(Space.L, 0, 0, 0),
+                    Margin = new Thickness(Space.XXXL, 0, 0, 0),
+                    Child = step
+                }
+                    .Themed(Border.BorderBrushProperty, Accent);
+            }
+        }
+
+        var holder = _graph == null ? new Panel { Children = { step } } : GraphRow(step, i, e);
+        if (_lines)
+        {
+            holder.IsVisible = !_hidden.Contains(e.Role);
+        }
+        else if (!_compact)
+        {
+            AddCopy(holder, e, _marks);
+        }
+
+        if (_graph != null && _hiddenAgents.Contains(_graph.Rows[i].Owner.Agent) && _showStep.TryGetValue(e, out var show))
+        {
+            show(false);   // an agent hidden by its chip stays hidden in steps built later
+        }
+
+        _holders[e] = holder;
+        return holder;
     }
 
     /// <summary>Builds the next earlier steps above the view without moving what is on screen (the content grows upward, so the offset grows with it).</summary>

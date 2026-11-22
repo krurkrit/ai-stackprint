@@ -12,85 +12,128 @@ internal class CodexSessionParser : ILogParser
 
     public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines)
     {
-        var list = new List<LogEntry>();
-        var models = new HashSet<string>();
-        long inTok = 0, outTok = 0, peak = 0, window = 0;
-        var model = "";
-        var firstSince = 0;   // the steps since the last token count are the reply it counts
-        foreach (var e in LogParsers.Json(lines))
+        var feed = new SessionFeed();
+        feed.Add(lines);
+        return feed.Build();
+    }
+
+    public ISessionFeed Feed() => new SessionFeed();
+
+    /// <summary>The parse, kept between pieces of the file: the token count that follows a reply is put on its first step, even when it is written later.</summary>
+    private sealed class SessionFeed : ISessionFeed
+    {
+        private readonly List<LogEntry> _list = [];
+        private readonly HashSet<string> _models = [];
+        private readonly LogParsers.LineCounter _lines = new();
+        private long _in, _out, _peak, _window;
+        private string _model = "";
+        private int _firstSince;   // the steps since the last token count are the reply it counts
+
+        public int Add(IEnumerable<ReadOnlyMemory<byte>> lines)
+        {
+            var from = _list.Count;
+            foreach (var e in LogParsers.Json(lines, _lines))
+            {
+                if (Line(e) is { } changed)
+                {
+                    from = Math.Min(from, changed);
+                }
+            }
+
+            return from;
+        }
+
+        public Session Snapshot() => LogParsers.Build([.. _list], [.. _models], _in, _out, _peak, _window);
+
+        public Session Build() => LogParsers.Build(_list, _models, _in, _out, _peak, _window);
+
+        /// <returns>The index of an earlier step this line changed (its reply's tokens), or null.</returns>
+        private int? Line(JsonElement e)
         {
             var p = e.Get("payload");
             var time = e.Time();
             switch (e.Str("type"))
             {
                 case "turn_context" when p.Str("model") != "":
-                    models.Add(p.Str("model"));
-                    model = p.Str("model");
+                    _models.Add(p.Str("model"));
+                    _model = p.Str("model");
                     break;
                 case "event_msg" when p.Str("type") == "token_count":
-                    var info = p.Get("info");
-                    var total = info.Get("total_token_usage");   // cumulative: keep the latest
-                    var grew = total.ValueKind == JsonValueKind.Object && (total.Num("input_tokens") != inTok || total.Num("output_tokens") != outTok);   // the same count is written again: not a new reply
-                    if (total.ValueKind == JsonValueKind.Object)
-                    {
-                        inTok = total.Num("input_tokens");
-                        outTok = total.Num("output_tokens");
-                    }
-
-                    if (grew && info.Get("last_token_usage") is { ValueKind: JsonValueKind.Object } last && time is { } at)
-                    {
-                        var at1 = list.FindIndex(firstSince, x => x.Role is "assistant" or "thinking" or "tool");
-                        if (at1 >= 0)
-                        {
-                            long cached = last.Num("cached_input_tokens");
-                            list[at1] = list[at1] with
-                            {
-                                Usage = new(at, model == "" ? "codex" : model, "", Math.Max(0, last.Num("input_tokens") - cached), last.Num("output_tokens"), cached, 0, last.Num("reasoning_output_tokens"), false)
-                            };
-                        }
-                    }
-
-                    firstSince = list.Count;
-                    peak = Math.Max(peak, info.Get("last_token_usage").Num("input_tokens"));   // one reply's input, cached part included
-                    window = info.Num("model_context_window") is > 0 and var w ? w : window;
-                    break;
+                    return TokenCount(p.Get("info"), time);
                 case "response_item":
-                    switch (p.Str("type"))
+                    Item(p, time);
+                    break;
+            }
+
+            return null;
+        }
+
+        private int? TokenCount(JsonElement info, DateTime? time)
+        {
+            int? changed = null;
+            var total = info.Get("total_token_usage");   // cumulative: keep the latest
+            var grew = total.ValueKind == JsonValueKind.Object && (total.Num("input_tokens") != _in || total.Num("output_tokens") != _out);   // the same count is written again: not a new reply
+            if (total.ValueKind == JsonValueKind.Object)
+            {
+                _in = total.Num("input_tokens");
+                _out = total.Num("output_tokens");
+            }
+
+            if (grew && info.Get("last_token_usage") is { ValueKind: JsonValueKind.Object } last && time is { } at)
+            {
+                var at1 = _list.FindIndex(_firstSince, x => x.Role is "assistant" or "thinking" or "tool");
+                if (at1 >= 0)
+                {
+                    long cached = last.Num("cached_input_tokens");
+                    _list[at1] = _list[at1] with
                     {
-                        case "message":
-                            var text = LogParsers.Text(p.Get("content"));
-                            var role = p.Str("role");
-                            var context = role is "developer" or "system" || text.TrimStart().StartsWith("<environment_context>") || text.TrimStart().StartsWith("<user_instructions>");
-                            if (text.Trim() != "")
-                            {
-                                list.Add(new(context ? "system" : role == "assistant" ? "assistant" : "user", text, time, false));
-                            }
+                        Usage = new(at, _model == "" ? "codex" : _model, "", Math.Max(0, last.Num("input_tokens") - cached), last.Num("output_tokens"), cached, 0, last.Num("reasoning_output_tokens"), false)
+                    };
+                    changed = at1;
+                }
+            }
 
-                            break;
-                        case "reasoning":
-                            var sum = string.Join("\n", p.Get("summary") is { ValueKind: JsonValueKind.Array } s ? s.EnumerateArray().Select(x => x.Str("text")) : []);
-                            if (sum != "")
-                            {
-                                list.Add(new("thinking", sum, time, false));
-                            }
+            _firstSince = _list.Count;
+            _peak = Math.Max(_peak, info.Get("last_token_usage").Num("input_tokens"));   // one reply's input, cached part included
+            _window = info.Num("model_context_window") is > 0 and var w ? w : _window;
+            return changed;
+        }
 
-                            break;
-                        case "function_call":
-                            list.Add(LogParsers.ToolCall(p.Str("name"), p.Get("arguments"), time, false));
-                            break;
-                        case "custom_tool_call":
-                            list.Add(new("tool", LogParsers.Cut(p.Str("input"), 300), time, false, p.Str("name"), p.Str("name") == "apply_patch" ? ".diff" : ".txt", p.Str("input")));
-                            break;
-                        case "function_call_output" or "custom_tool_call_output":
-                            var o = p.Get("output");
-                            var outText = LogParsers.Cut(o.ValueKind == JsonValueKind.String ? o.GetString()! : o.ValueKind == JsonValueKind.Undefined ? "" : o.Str("output") is { Length: > 0 } x ? x : o.GetRawText(), 20000);
-                            list.Add(new("result", outText, time, false, null, LogParsers.Detect(outText, null)));
-                            break;
+        private void Item(JsonElement p, DateTime? time)
+        {
+            switch (p.Str("type"))
+            {
+                case "message":
+                    var text = LogParsers.Text(p.Get("content"));
+                    var role = p.Str("role");
+                    var context = role is "developer" or "system" || text.TrimStart().StartsWith("<environment_context>") || text.TrimStart().StartsWith("<user_instructions>");
+                    if (text.Trim() != "")
+                    {
+                        _list.Add(new(context ? "system" : role == "assistant" ? "assistant" : "user", text, time, false));
                     }
+
+                    break;
+                case "reasoning":
+                    var sum = string.Join("\n", p.Get("summary") is { ValueKind: JsonValueKind.Array } s ? s.EnumerateArray().Select(x => x.Str("text")) : []);
+                    if (sum != "")
+                    {
+                        _list.Add(new("thinking", sum, time, false));
+                    }
+
+                    break;
+                case "function_call":
+                    _list.Add(LogParsers.ToolCall(p.Str("name"), p.Get("arguments"), time, false));
+                    break;
+                case "custom_tool_call":
+                    _list.Add(new("tool", LogParsers.Cut(p.Str("input"), 300), time, false, p.Str("name"), p.Str("name") == "apply_patch" ? ".diff" : ".txt", p.Str("input")));
+                    break;
+                case "function_call_output" or "custom_tool_call_output":
+                    var o = p.Get("output");
+                    var outText = LogParsers.Cut(o.ValueKind == JsonValueKind.String ? o.GetString()! : o.ValueKind == JsonValueKind.Undefined ? "" : o.Str("output") is { Length: > 0 } x ? x : o.GetRawText(), 20000);
+                    _list.Add(new("result", outText, time, false, null, LogParsers.Detect(outText, null)));
                     break;
             }
         }
-        return LogParsers.Build(list, models, inTok, outTok, peak, window);
     }
 
     /// <summary>The steps <see cref="Parse"/> would make, only counted: tool output is not copied or checked. Codex has no sub-agent steps.</summary>

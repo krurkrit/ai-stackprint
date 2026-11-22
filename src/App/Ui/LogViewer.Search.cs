@@ -22,6 +22,9 @@ internal partial class LogViewer
     private readonly List<SearchHit> _hits = [];
     private readonly List<Action> _jumps = [];   // one per result row, for Enter / Shift+Enter
     private TextBlock? _count;
+    private StackPanel? _rows;     // the result rows shown: the matches in what a followed file adds go at their end
+    private int _found;            // results the count says (more than the rows when they are capped)
+    private bool _stepResults;     // the results are steps (Conversation, Compact), not lines
     private int _at = -1;
 
     /// <summary>Goes to the next (1) or previous (-1) result, round the end.</summary>
@@ -97,6 +100,7 @@ internal partial class LogViewer
         if (ShowReadable)
         {
             var steps = _readable?.Steps.Where(p.IsMatch).ToList() ?? [];
+            (_found, _stepResults) = (steps.Count, true);
             _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => RevealStep(e))));
             _results.Content = Panel(Count(ReadableLog.Plural(steps.Count, "step")),
                 steps.Take(500).Select((e, i) => Hit($"{e.Time:HH:mm:ss} {e.Role}{(e.Tool is { } t ? " · " + t : "")}", Around($"{e.Text} {e.Detail}", p), p, i)));
@@ -116,6 +120,7 @@ internal partial class LogViewer
             }
 
             _hits.AddRange(hits);
+            (_found, _stepResults) = (hits.Count, false);
             _jumps.AddRange(hits.Select(h => (Action)(() => Jump(h))));
             _results.Content = Panel(Count(hits.Count >= LogSearch.MaxHits ? $"first {LogSearch.MaxHits:N0} matches" : $"{hits.Count:N0} {(hits.Count == 1 ? "match" : "matches")}"),
                 hits.Select((h, i) => Hit($"Line {h.Line:N0}", h.Text, p, i)));
@@ -188,6 +193,7 @@ internal partial class LogViewer
         _jumps.Clear();
         _at = -1;
         _count = null;
+        _rows = null;
         _results.Content = null;
     }
 
@@ -200,7 +206,7 @@ internal partial class LogViewer
         DockPanel.SetDock(close, Dock.Right);
         var top = new DockPanel { Margin = new Thickness(Space.XS, 0, 0, Space.S), Children = { close, head } };
         DockPanel.SetDock(top, Dock.Top);   // the count and the x stay where they are while the results scroll
-        var sp = new StackPanel { Spacing = Space.XXS };
+        var sp = _rows = new StackPanel { Spacing = Space.XXS };
         if (rows != null)
         {
             sp.Children.AddRange(rows);

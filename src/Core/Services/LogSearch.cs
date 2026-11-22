@@ -32,14 +32,18 @@ public static class LogSearch
     /// Lines that match, with the first match in each line. Reads the file in blocks and tests each line in place:
     /// only a matching line becomes a string, so a large file costs a block of memory, not a copy of every line.
     /// </summary>
-    public static List<SearchHit> File(string path, LogQuery pattern, int max, CancellationToken ct)
+    public static List<SearchHit> File(string path, LogQuery pattern, int max, CancellationToken ct) => File(path, pattern, max, ct, 0, 1);
+
+    /// <summary>Like the other overload, from byte <paramref name="from"/> on (what was written to a log since it was searched), whose first line is <paramref name="firstLine"/>.</summary>
+    public static List<SearchHit> File(string path, LogQuery pattern, int max, CancellationToken ct, long from, long firstLine)
     {
         var hits = new List<SearchHit>();
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        using var r = new StreamReader(fs, Encoding.UTF8, true);
+        fs.Seek(Math.Min(from, fs.Length), SeekOrigin.Begin);
+        using var r = new StreamReader(fs, Encoding.UTF8, from == 0);
         var buf = new char[Block];
         int len = 0;
-        long n = 0;
+        long n = firstLine - 1;
         bool Line(ReadOnlySpan<char> line)   // false when there are enough hits
         {
             if ((++n & 1023) == 0)

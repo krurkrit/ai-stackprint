@@ -97,7 +97,7 @@ internal partial class LogViewer
         _newer = Btn("New lines", () =>
         {
             _window = false;
-            Load(true, update: true);
+            ShowNew();
         }, true, "chevron_down")
             .With(b =>
             {

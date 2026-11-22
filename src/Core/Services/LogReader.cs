@@ -8,7 +8,7 @@ using AiStackprint.Models;
 namespace AiStackprint.Services;
 
 /// <summary>Finds an app's log files and reads their end. Read-only; opens files shared so apps can keep writing.</summary>
-public static class LogReader
+public static partial class LogReader
 {
     public static readonly int MaxFiles = 300;
 

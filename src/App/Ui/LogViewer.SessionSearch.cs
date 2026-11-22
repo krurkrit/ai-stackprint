@@ -36,6 +36,7 @@ internal partial class LogViewer
             }
 
             _hits.AddRange(found.hits);
+            (_found, _stepResults) = (found.total, true);
             _jumps.AddRange(found.hits.Select(h => (Action)(() =>
             {
                 _pending = h;   // the place (file and line) goes to the view, which finds the step, or reads the steps around it when it is not shown
