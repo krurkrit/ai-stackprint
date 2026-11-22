@@ -33,6 +33,15 @@ public sealed class ProjectFilesChecksTests : IDisposable
     }
 
     [Fact]
+    public void Ignore_patterns_count_files_in_nested_ignored_folders_once_and_a_pattern_used_below_one_is_not_dead()
+    {
+        string[] files = ["build/out/a.dll", "build/out/b.dll", "build/x.txt", "src/build.cs", "src/deep/c.tmp", "Src/Deep/D.TMP"];
+        var r = GitIgnore.Apply("build/\n*.dll\n*.tmp\n!src/deep/c.tmp\n", files);
+        Assert.Equal(4, r.Hidden);   // the three in build/, and D.TMP (case is ignored); c.tmp is taken back
+        Assert.Empty(r.Dead);   // *.dll matches only inside build/, which is ignored anyway
+    }
+
+    [Fact]
     public void Ignore_files_of_apps_are_listed_with_their_counts()
     {
         Write("src/a.ts", "x");

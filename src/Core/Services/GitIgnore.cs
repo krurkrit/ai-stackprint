@@ -51,43 +51,49 @@ public sealed partial class GitIgnore
     }
 
     /// <summary>How many of <paramref name="files"/> (paths relative to the folder the ignore file sits in, with /) the patterns in <paramref name="text"/> hide, and the patterns that match none of them.</summary>
+    /// <remarks>One pass: each folder is matched once (files share folders), and each file once; a pattern that matched anything is marked on the way.</remarks>
     public static IgnoreResult Apply(string text, IReadOnlyList<string> files)
     {
         var rules = Parse(text);
-        var dirs = files.SelectMany(Ancestors).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var hidden = files.Count(f => Hides(rules, f));
-        var dead = rules.Where(r => !r.Negate && !files.Any(f => r.Rx.IsMatch(f) && !r.DirOnly) && !dirs.Any(d => r.Rx.IsMatch(d))).Select(r => r.Text).Distinct().ToList();
-        return new(hidden, dead);
-    }
-
-    private static IEnumerable<string> Ancestors(string file)
-    {
-        var parts = file.Split('/');
-        for (var i = 1; i < parts.Length; i++)
+        var used = new bool[rules.Count];
+        var folders = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase).GetAlternateLookup<ReadOnlySpan<char>>();   // folder → it or a folder above it is ignored
+        var hidden = 0;
+        foreach (var f in files)
         {
-            yield return string.Join('/', parts[..i]);
-        }
-    }
-
-    private static bool Hides(List<Rule> rules, string file)
-    {
-        foreach (var dir in Ancestors(file))
-        {
-            if (Match(rules, dir, true) == true)
+            var inIgnored = false;
+            for (var at = f.IndexOf('/'); at >= 0; at = f.IndexOf('/', at + 1))
             {
-                return true;   // an ignored folder cannot be re-included
+                var folder = f.AsSpan(0, at);
+                if (!folders.TryGetValue(folder, out var ignored))
+                {
+                    ignored = Match(rules, folder, true, used) == true || inIgnored;   // matched even below an ignored folder: its patterns are not dead
+                    folders[folder] = ignored;
+                }
+
+                inIgnored = ignored;
+            }
+
+            if (Match(rules, f, false, used) == true || inIgnored)   // an ignored folder cannot be re-included
+            {
+                hidden++;
             }
         }
 
-        return Match(rules, file, false) == true;
+        var dead = rules.Where((r, i) => !r.Negate && !used[i]).Select(r => r.Text).Distinct().ToList();
+        return new(hidden, dead);
     }
 
-    private static bool? Match(List<Rule> rules, string path, bool dir)
+    private static bool? Match(List<Rule> rules, ReadOnlySpan<char> path, bool dir, bool[]? used = null)
     {
         bool? res = null;
-        foreach (var r in rules.Where(r => (dir || !r.DirOnly) && r.Rx.IsMatch(path)))
+        for (var i = 0; i < rules.Count; i++)
         {
-            res = !r.Negate;
+            var r = rules[i];
+            if ((dir || !r.DirOnly) && r.Rx.IsMatch(path))
+            {
+                res = !r.Negate;   // the last matching pattern wins
+                used?[i] = true;
+            }
         }
 
         return res;

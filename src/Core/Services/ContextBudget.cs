@@ -49,6 +49,7 @@ public static partial class ContextBudget
     public static IContextRule? Find(string? id) => id == null ? null : Rules.FirstOrDefault(r => r.Id == id);
 
     private static readonly HashSet<string> _skip = new(StringComparer.OrdinalIgnoreCase) { "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__" };
+    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _skipLookup = _skip.GetAlternateLookup<ReadOnlySpan<char>>();
 
     public static ContextFile Measure(string path, LoadWhen load, string? via, string? note)
     {
@@ -60,7 +61,24 @@ public static partial class ContextBudget
 
     public static ContextFile Measure(string path, LoadWhen load) => Measure(path, load, null, null);
 
-    public static string ReadText(string path)
+    private static readonly AsyncLocal<System.Collections.Concurrent.ConcurrentDictionary<string, string>?> _texts = new();
+
+    /// <summary>Until the result is disposed, <see cref="ReadText"/> on this flow (and the parallel work it starts) reads each file once: one check run reads the same instruction files for every start folder and app.</summary>
+    public static IDisposable ReadOnce()
+    {
+        var before = _texts.Value;
+        _texts.Value = before ?? new(OperatingSystem.IsLinux() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+        return new Restore(() => _texts.Value = before);
+    }
+
+    private sealed class Restore(Action undo) : IDisposable
+    {
+        public void Dispose() => undo();
+    }
+
+    public static string ReadText(string path) => _texts.Value is { } texts ? texts.GetOrAdd(path, ReadFile) : ReadFile(path);
+
+    private static string ReadFile(string path)
     {
         try
         {
@@ -114,43 +132,6 @@ public static partial class ContextBudget
 
         return null;
     }
-
-    /// <summary>Files named one of <paramref name="names"/> in sub-folders below <paramref name="start"/> (not start itself), skipping hidden and build folders.</summary>
-    public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names, int depth)
-    {
-        if (depth == 0)
-        {
-            yield break;
-        }
-
-        List<string> dirs;
-        try { dirs = [.. Directory.EnumerateDirectories(start)]; }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { yield break; }
-        foreach (var d in dirs.Order(StringComparer.OrdinalIgnoreCase))
-        {
-            var n = Path.GetFileName(d);
-            if (n.StartsWith('.') || _skip.Contains(n))
-            {
-                continue;
-            }
-
-            // The folder's file names are read once and compared with the wanted names (a stat call per name and folder took most of the time in a big project)
-            HashSet<string> present;
-            try { present = Directory.EnumerateFiles(d).Select(f => Path.GetFileName(f)).ToHashSet(OperatingSystem.IsLinux() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase); }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { present = []; }
-            foreach (var name in names.Where(present.Contains))
-            {
-                yield return Path.Combine(d, name);
-            }
-
-            foreach (var f in Below(d, names, depth - 1))
-            {
-                yield return f;
-            }
-        }
-    }
-
-    public static IEnumerable<string> Below(string start, IReadOnlyCollection<string> names) => Below(start, names, 3);
 
     /// <summary>Markdown files under a folder (any depth), sorted.</summary>
     public static List<string> FilesIn(string dir, string pattern) =>

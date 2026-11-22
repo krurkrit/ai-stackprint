@@ -78,6 +78,33 @@ public sealed class ContextTests : IDisposable
     }
 
     [Fact]
+    public async Task Within_one_run_a_file_is_read_once_and_after_it_again()
+    {
+        Write(_project, "AGENTS.md", "first");
+        var path = Path.Combine(_project, "AGENTS.md");
+        using (ContextBudget.ReadOnce())
+        {
+            Assert.Equal("first", ContextBudget.ReadText(path));
+            File.WriteAllText(path, "second");
+            Assert.Equal("first", await Task.Run(() => ContextBudget.ReadText(path), TestContext.Current.CancellationToken));   // the parallel work of the run shares it
+        }
+
+        Assert.Equal("second", ContextBudget.ReadText(path));
+    }
+
+    [Fact]
+    public void Below_finds_the_wanted_names_three_folders_down_in_name_order_skipping_hidden_and_build_folders()
+    {
+        foreach (var rel in new[] { "b/CLAUDE.md", "a/x/y/CLAUDE.md", "a/x/y/z/CLAUDE.md", "a/AGENTS.md", "a/CLAUDE.md", ".hidden/CLAUDE.md", "node_modules/CLAUDE.md", "a/other.md" })
+        {
+            Write(_project, rel, "x");
+        }
+
+        var found = ContextBudget.Below(_project, ["CLAUDE.md", "AGENTS.md"]).Select(f => Path.GetRelativePath(_project, f).Replace('\\', '/'));
+        Assert.Equal(["a/CLAUDE.md", "a/AGENTS.md", "a/x/y/CLAUDE.md", "b/CLAUDE.md"], found);   // the names in the order asked, folder by folder; z is too deep
+    }
+
+    [Fact]
     public void Imports_skip_code_quotes_and_mail()
     {
         var md = "See @docs/a.md and @~/notes.md.\n`@not/this.md` and \"@quoted.md\" mail me@example.com\n```\n@fenced.md\n```\n@My\\ Docs/x.md";

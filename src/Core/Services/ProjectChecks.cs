@@ -29,6 +29,7 @@ public static partial class ProjectChecks
 
     public static ProjectCheck Run(string project, string start, IReadOnlyList<AppDefinition> defs, string home)
     {
+        using var _ = ContextBudget.ReadOnce();   // the start folders read the same files again
         var context = defs.Select(d => (App: d, Rule: ContextBudget.Find(d.Context))).Where(a => a.Rule != null)
             .Select(a => (a.App, a.Rule!.Read(project, start, home))).ToList();
         var issues = new List<ProjectIssue>();

@@ -118,59 +118,13 @@ public static class LogSearch
         return (start > 0 ? "…" : "") + line[start..end].Trim() + (end < line.Length ? "…" : "");
     }
 
-    /// <summary>Lines [from, from+count) of a file (1-based), for showing the part of a large file around a match.</summary>
-    public static (string Text, long First) Window(string path, long around, int before, int after)
-    {
-        long first = Math.Max(1, around - before), n = 0;
-        var sb = new StringBuilder();
-        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        using var r = new StreamReader(fs, Encoding.UTF8, true);
-        while (r.ReadLine() is { } line)
-        {
-            n++;
-            if (n < first)
-            {
-                continue;
-            }
-
-            if (n > around + after)
-            {
-                break;
-            }
-
-            sb.Append(line).Append('\n');
-        }
-        return (sb.ToString(), first);
-    }
+    /// <summary>Lines <c>around - before</c> to <c>around + after</c> of a file (1-based), for showing the part of a large file around a match (<see cref="LineIndex"/>).</summary>
+    public static (string Text, long First) Window(string path, long around, int before, int after) => LineIndex.Window(path, around, before, after);
 
     public static (string Text, long First) Window(string path, long around, int before) => Window(path, around, before, 2000);
 
     public static (string Text, long First) Window(string path, long around) => Window(path, around, 2000, 2000);
 
     /// <summary>Number of lines before byte <paramref name="offset"/> (to know which file line the tail view starts at).</summary>
-    public static long LinesBefore(string path, long offset)
-    {
-        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        var buf = new byte[64 * 1024];
-        long count = 0, left = offset;
-        while (left > 0)
-        {
-            var n = fs.Read(buf, 0, (int)Math.Min(buf.Length, left));
-            if (n <= 0)
-            {
-                break;
-            }
-
-            for (var i = 0; i < n; i++)
-            {
-                if (buf[i] == (byte)'\n')
-                {
-                    count++;
-                }
-            }
-
-            left -= n;
-        }
-        return count;
-    }
+    public static long LinesBefore(string path, long offset) => LineIndex.LinesBefore(path, offset);
 }
