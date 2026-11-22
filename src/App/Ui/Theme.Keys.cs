@@ -133,13 +133,11 @@ internal static partial class Theme
             d["CheckBoxCheckBackgroundStrokeChecked" + s] = brush;
             d["CheckBoxCheckGlyphForegroundChecked" + s] = B(onPrimary);   // the check mark has the accent button's text color
         }
-        // Drop-downs under the pointer look like a side menu item under the pointer: the accent button's rest fill and text color, one step further while pressed
-        foreach (var (s, brush) in new[] { ("PointerOver", fill), ("Pressed", hovered) })
+        // Drop-downs under the pointer and pressed look like a text box under the pointer: the same card background and text, the accent border
+        foreach (var s in new[] { "PointerOver", "Pressed" })
         {
-            d["ComboBoxBackground" + s] = brush;
-            d["ComboBoxBorderBrush" + s] = brush;
-            d["ComboBoxForeground" + s] = d["AccentButtonForeground" + s];
-            d["ComboBoxPlaceHolderForeground" + s] = d["AccentButtonForeground" + s];
+            d["ComboBoxBackground" + s] = d[W.Surface];
+            d["ComboBoxBorderBrush" + s] = d[W.Accent];
         }
 
         return d;

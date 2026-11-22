@@ -57,10 +57,9 @@ public class ThemeTests
         Assert.Equal(Get(W.Accent), Get("TextControlBorderBrushFocused"));   // the accent: Fluent UI 2 brand focus
         Assert.Equal(Get(W.Accent), Get("TextControlBorderBrushPointerOver"));   // text boxes: the accent border under the pointer
         Assert.Equal(Get("TextControlBackground"), Get("TextControlBackgroundPointerOver"));
-        // a drop-down under the pointer looks like a side menu item under the pointer: the accent button's rest fill and text color; pressed, its hover fill
-        Assert.Equal(Get("AccentButtonBackground"), Get("ComboBoxBackgroundPointerOver"));
-        Assert.Equal(Get("AccentButtonBackgroundPointerOver"), Get("ComboBoxBackgroundPressed"));
-        Assert.Equal(Get("AccentButtonForegroundPointerOver"), Get("ComboBoxForegroundPointerOver"));
+        // a drop-down under the pointer looks like a text box under the pointer: the same background, the accent border
+        Assert.Equal(Get("ComboBoxBackground"), Get("ComboBoxBackgroundPointerOver"));
+        Assert.Equal(Get(W.Accent), Get("ComboBoxBorderBrushPointerOver"));
         Assert.Equal(new CornerRadius(Radius.M), Get("ControlCornerRadius"));
         Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
     }

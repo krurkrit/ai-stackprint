@@ -65,11 +65,6 @@ internal static partial class Theme
         {
             Setters = { new Setter(Layoutable.WidthProperty, Sizes.RadioDot), new Setter(Layoutable.HeightProperty, Sizes.RadioDot), new Setter(Visual.OpacityProperty, .9) }
         });
-        // The drop-down arrow takes the text color under the pointer too (its template gives it a fixed color)
-        styles.Add(new Style(x => x.OfType<ComboBox>().Class(":pointerover").Template().OfType<FluentAvalonia.UI.Controls.FAFontIcon>().Name("DropDownGlyph"))
-        {
-            Setters = { new Setter(TemplatedControl.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("ComboBoxForegroundPointerOver")) }
-        });
         if (_inputStyles != null)
         {
             app.Styles.Remove(_inputStyles);

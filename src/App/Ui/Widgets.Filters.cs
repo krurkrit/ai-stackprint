@@ -24,7 +24,7 @@ internal sealed class FilterMenu : Button
         _off = off;
         // a plain text block takes the button's text color, so it follows the hover color (W.Txt has a fixed one)
         Content = W.Row(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }, W.Icon("chevron_down", IconSize.XS).With(i => i.Opacity = .7));   // the button's text color, quieter (it follows the hover colors)
-        W.AccentHover(this);   // under the pointer: like an input and a side menu item
+        W.InputHover(this);   // under the pointer: like a drop-down (the accent border)
         MinHeight = AiStackprint.Ui.Theme.InputHeight;   // (Button.Theme is the control theme)
         Padding = new Thickness(Space.L, 0);
         VerticalContentAlignment = VerticalAlignment.Center;
@@ -68,6 +68,32 @@ internal sealed class FilterMenu : Button
 
 internal static partial class W
 {
+    /// <summary>Pointer over and pressed like a text box or drop-down: the same background and text as at rest, the accent border.</summary>
+    public static void InputHover(Button b)
+    {
+        var app = Application.Current!;
+        foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
+        {
+            var d = new ResourceDictionary();
+            foreach (var s in new[] { "PointerOver", "Pressed" })
+            {
+                foreach (var part in new[] { "Background", "Foreground" })
+                {
+                    if (app.TryGetResource("Button" + part, v, out var rest))
+                    {
+                        d["Button" + part + s] = rest;
+                    }
+                }
+
+                if (app.TryGetResource(Accent, v, out var accent))
+                {
+                    d["ButtonBorderBrush" + s] = accent;
+                }
+            }
+            b.Resources.ThemeDictionaries[v] = d;
+        }
+    }
+
     /// <summary>
     /// Pointer over: the accent (Rescan) button's rest fill and text color; pressed: its hover fill (one step further from the text). Side menu items, drop-downs and Group by use it.
     /// </summary>
