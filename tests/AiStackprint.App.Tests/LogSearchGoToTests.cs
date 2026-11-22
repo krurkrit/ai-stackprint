@@ -148,4 +148,19 @@ public sealed class LogSearchGoToTests : IDisposable
         Ui.WaitUntil(() => Tints(w) > before);
         w.Close();
     }
+
+    [AvaloniaFact]
+    public void Searching_the_open_long_file_finds_a_step_older_than_the_steps_shown()
+    {
+        var f = Path.Combine(_tmp, "long.jsonl");
+        File.WriteAllLines(f, Enumerable.Range(0, 700).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n % 60, n == 10 ? "oldneedle here" : $"filler long {n}")));
+        File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddMinutes(10));
+        var w = Page();
+        Search(w, "oldneedle", false);   // this file only: the steps shown do not hold the match, the file does
+        var before = Tints(w);
+        ClickFirstResult(w);
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the file around the result", StringComparison.Ordinal)));
+        Ui.WaitUntil(() => Tints(w) > before);
+        w.Close();
+    }
 }

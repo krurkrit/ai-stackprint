@@ -88,6 +88,12 @@ internal partial class LogViewer
             return;
         }
 
+        if (ShowReadable && !IsLines && !WholeSessionLoaded && LogParsers.Find(_file.Format) != null)
+        {
+            await SearchSessionAsync(p);
+            return;
+        }
+
         if (ShowReadable)
         {
             var steps = _readable?.Steps.Where(p.IsMatch).ToList() ?? [];

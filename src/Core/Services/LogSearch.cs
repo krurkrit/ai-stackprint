@@ -10,6 +10,9 @@ public record SearchHit(long Line, string Text, int Column, int Length)
 {
     /// <summary>The file the line is in when it is not the file that was searched: a sub-agent's own file (Claude Code); null = the searched file itself.</summary>
     public string? Source { get; init; }
+
+    /// <summary>What a step result shows above its text: its time, who and tool; null for a result that is a plain line of a file.</summary>
+    public string? Caption { get; init; }
 }
 
 /// <summary>Searches a whole log file line by line (not just the part on screen). Opens it shared so the app can keep writing.</summary>
