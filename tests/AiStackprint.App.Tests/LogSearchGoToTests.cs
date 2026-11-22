@@ -21,8 +21,8 @@ public sealed class LogSearchGoToTests : IDisposable
     private readonly string _tmp = Directory.CreateTempSubdirectory("sp-goto-").FullName;
     public void Dispose() => Directory.Delete(_tmp, true);
 
-    private static string Msg(string role, int second, string text) =>
-        "{\"type\":\"" + role + "\",\"timestamp\":\"2026-11-11T05:00:" + second.ToString("00") + "Z\",\"message\":{\"id\":\"m" + second + "\",\"role\":\"" + role + "\",\"content\":\"" + text + "\"}}";
+    private static string Msg(string role, int second, string text, string? agent = null) =>
+        "{\"type\":\"" + role + "\",\"timestamp\":\"2026-11-11T05:00:" + second.ToString("00") + "Z\"" + (agent == null ? "" : ",\"isSidechain\":true,\"agentId\":\"" + agent + "\"") + ",\"message\":{\"id\":\"m" + second + "\",\"role\":\"" + role + "\",\"content\":\"" + text + "\"}}";
 
     private Window Page()
     {
@@ -132,6 +132,20 @@ public sealed class LogSearchGoToTests : IDisposable
         Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.StartsWith("Showing the part of the file around the result", StringComparison.Ordinal)));
         Ui.WaitUntil(() => Tints(w) > before);
         Assert.Contains(Ui.Texts(w), t => t.Contains("oldneedle", StringComparison.Ordinal));   // the step is built and shown
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_result_in_a_sub_agents_file_goes_to_its_step_and_is_tinted()
+    {
+        Directory.CreateDirectory(Path.Combine(_tmp, "s0", "subagents"));
+        File.WriteAllLines(Path.Combine(_tmp, "s0", "subagents", "agent-a1.jsonl"), [Msg("assistant", 10, "agentneedle in the agent", "a1")]);
+        var w = Page();
+        Search(w, "agentneedle", true);
+        Assert.Contains(Ui.Texts(w), t => t.StartsWith("Sub-agent · Line 1", StringComparison.Ordinal));   // the result says it is in an agent's file, and which line
+        var before = Tints(w);
+        ClickFirstResult(w);
+        Ui.WaitUntil(() => Tints(w) > before);
         w.Close();
     }
 }

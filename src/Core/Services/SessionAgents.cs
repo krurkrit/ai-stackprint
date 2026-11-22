@@ -8,7 +8,7 @@ namespace AiStackprint.Services;
 /// <summary>
 /// Claude Code keeps each sub-agent in its own file, <c>&lt;session&gt;/subagents/agent-&lt;id&gt;.jsonl</c>, next to the session's <c>&lt;session&gt;.jsonl</c>
 /// (which has only the call that starts it and its result). This reads a session together with those files: their steps are put among the session's by time,
-/// marked as sub-agent steps, so the graph shows the branches. Read-only; the steps of an agent have no line in the main file (Line 0), so they cannot be bookmarked.
+/// marked as sub-agent steps, so the graph shows the branches. Read-only; the steps of an agent keep their line in the agent file (`LogEntry.Source` is that file; an agent file read cut to its end has no reliable lines: Line 0).
 /// </summary>
 public static class SessionAgents
 {
@@ -94,6 +94,20 @@ public static class SessionAgents
         return new Session(entries, parsed.Models, 0, 0, entries.FirstOrDefault(e => e.Time != null)?.Time, entries.LastOrDefault(e => e.Time != null)?.Time);
     }
 
+    /// <summary>The sub-agent files of a session file (Claude Code): where its agents' own lines are.</summary>
+    public static List<string> AgentFiles(string sessionPath)
+    {
+        var dir = Path.Combine(Path.GetDirectoryName(sessionPath) ?? "", Path.GetFileNameWithoutExtension(sessionPath), "subagents");
+        try
+        {
+            return Directory.Exists(dir) ? [.. Directory.EnumerateFiles(dir, "agent-*.jsonl").Order(StringComparer.Ordinal).Take(MaxAgents)] : [];
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
     private const int LineContext = 150;   // lines read before and after the result
     private const int ContextSteps = 12;   // main steps shown before the first and after the last step of the agents
 
@@ -126,7 +140,8 @@ public static class SessionAgents
                     continue;
                 }
 
-                sub.AddRange(inside.Select(e => e with { SubAgent = true, Agent = string.IsNullOrEmpty(e.Agent) ? id : e.Agent, Line = 0 }));
+                var whole = new FileInfo(file).Length <= AgentBytes;   // read whole: the steps keep their lines in the agent file; a cut one has no reliable lines
+                sub.AddRange(inside.Select(e => e with { SubAgent = true, Agent = string.IsNullOrEmpty(e.Agent) ? id : e.Agent, Source = whole ? file : null, Line = whole ? e.Line : 0 }));
                 models.UnionWith(s.Models);
                 input += s.InputTokens;
                 output += s.OutputTokens;

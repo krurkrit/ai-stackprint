@@ -34,7 +34,8 @@ public sealed class SessionAgentsTests : IDisposable
         var session = SessionAgents.Read(Main(Msg("user", 1, "start"), Msg("assistant", 4, "got the answer")), 1 << 20);
         Assert.Equal(["start", "explore it", "found it", "got the answer"], session.Entries.Select(e => e.Text));
         Assert.Equal([false, true, true, false], session.Entries.Select(e => e.SubAgent));
-        Assert.All(session.Entries.Where(e => e.SubAgent), e => Assert.Equal(0, e.Line));   // no place in the main file: no bookmark
+        Assert.All(session.Entries.Where(e => e.SubAgent), e => Assert.EndsWith("agent-a1.jsonl", e.Source));   // an agent step has its place in its own file: its line counts there
+        Assert.Equal([1, 2], session.Entries.Where(e => e.SubAgent).Select(e => e.Line));
         Assert.Equal(1, session.Entries[0].Line);
         var graph = SessionGraph.Layout(session.Entries)!;
         Assert.Equal(2, graph.Lanes);   // the main line and one branch

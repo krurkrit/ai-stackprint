@@ -54,7 +54,7 @@ internal partial class ReadableLog
         grid.Children.Add(name);
         grid.Children.Add(text);
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.M, VerticalAlignment = VerticalAlignment.Center };
-        if (marks is { CanMark: true } && e.Line > 0)
+        if (marks?.CanMarkStep(e) == true)
         {
             var flag = Icon("bookmark_filled", IconSize.S).Themed(TextElement.ForegroundProperty, Accent);
             flag.IsVisible = marks.Get(e) != null;
@@ -160,7 +160,7 @@ internal partial class ReadableLog
             Margin = new Thickness(Space.M),
             Children = { copy, body }
         };
-        if (marks is { CanMark: true } && e.Line > 0)
+        if (marks?.CanMarkStep(e) == true)
         {
             content.Children.Insert(0, BookmarkBar(e, marks));
         }

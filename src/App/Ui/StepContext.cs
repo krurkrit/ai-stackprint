@@ -18,24 +18,27 @@ internal sealed class StepContext(UiState state, string file, bool canMark, Func
     /// <summary>A step has a place in the file (its line) only when the file was read whole.</summary>
     public bool CanMark => canMark;
 
-    public Bookmark? Get(LogEntry e) => canMark && e.Line > 0 ? Bookmarks.Find(state, file, e.Line) : null;
+    /// <summary>A step can be bookmarked when it has a line in its file: a sub-agent's step always has (its own file was read whole), a step of the session file when the file was read whole.</summary>
+    public bool CanMarkStep(LogEntry e) => e.Line > 0 && (e.Source != null || canMark);
+
+    public Bookmark? Get(LogEntry e) => CanMarkStep(e) ? Bookmarks.Find(state, e.Source ?? file, e.Line) : null;
 
     /// <summary>The links of a step: one for each thing it points at that the app can show.</summary>
     public List<(string Label, Action Go)> Links(LogEntry e) => [.. StepReferences.Find(e).Select(r => link(r)).OfType<(string Label, Action Go)>()];
 
-    public List<Bookmark> All() => Bookmarks.For(state, file);
+    public List<Bookmark> All() => Bookmarks.ForSession(state, file);
 
     /// <summary>Calls <paramref name="changed"/> when the step's bookmark changes (so its row and its dot in the graph can show or hide their mark; several can watch).</summary>
     public void Watch(LogEntry e, Action changed) => _watch[e] = _watch.TryGetValue(e, out var earlier) ? earlier + changed : changed;
 
     public void Set(LogEntry e, bool starred, string? note)
     {
-        if (!canMark || e.Line <= 0)
+        if (!CanMarkStep(e))
         {
             return;
         }
 
-        Bookmarks.Set(state, file, e.Line, ReadableLog.OneLine(e), starred, note);
+        Bookmarks.Set(state, e.Source ?? file, e.Line, ReadableLog.OneLine(e), starred, note);
         StateStore.Save(state);
         if (_watch.TryGetValue(e, out var changed))
         {

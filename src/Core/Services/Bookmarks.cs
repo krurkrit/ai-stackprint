@@ -19,6 +19,11 @@ public static class Bookmarks
     public static List<Bookmark> For(UiState s, string file) =>
         [.. s.Bookmarks.Where(b => string.Equals(b.File, file, StringComparison.OrdinalIgnoreCase)).OrderBy(b => b.Line)];
 
+    /// <summary>The bookmarks of a session file and of its sub-agents' files, in file order (the main file first).</summary>
+    public static List<Bookmark> ForSession(UiState s, string file) =>
+        [.. s.Bookmarks.Where(b => string.Equals(b.File, file, StringComparison.OrdinalIgnoreCase) || SessionAgents.AgentFiles(file).Contains(b.File, StringComparer.OrdinalIgnoreCase))
+            .OrderBy(b => string.Equals(b.File, file, StringComparison.OrdinalIgnoreCase) ? 0 : 1).ThenBy(b => b.File, StringComparer.Ordinal).ThenBy(b => b.Line)];
+
     /// <summary>Stars a step and/or sets its note. A step that is neither starred nor noted is not kept.</summary>
     public static void Set(UiState s, string file, long line, string preview, bool starred, string? note)
     {

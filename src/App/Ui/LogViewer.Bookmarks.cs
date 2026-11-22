@@ -58,7 +58,7 @@ internal partial class LogViewer
             foreach (var e in errors)
             {
                 var step = e;
-                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => _readable?.Reveal(step, FadeSeconds), close));
+                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => RevealStep(step), close));
             }
         }
 
@@ -87,15 +87,15 @@ internal partial class LogViewer
         {
             var row = new StackPanel
             {
-                Children = { Txt($"Line {b.Line:N0} · {b.Preview}", TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis) }
+                Children = { Txt($"{(IsSession(b.File) ? "" : "Sub-agent · ")}Line {b.Line:N0} · {b.Preview}", TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis) }
             };
             if (b.Note != null)
             {
                 row.Children.Add(Txt(b.Note, TextSize.Caption, false, Muted).With(t => t.TextWrapping = Avalonia.Media.TextWrapping.Wrap));
             }
 
-            var line = b.Line;
-            list.Children.Add(MarkRow(b.Starred ? "bookmark_filled" : "document_edit", row, () => GoToStepLine(line), close));
+            var (source, line) = (IsSession(b.File) ? null : b.File, b.Line);
+            list.Children.Add(MarkRow(b.Starred ? "bookmark_filled" : "document_edit", row, () => GoToStepLine(source, line), close));
         }
 
         return list;
@@ -104,7 +104,7 @@ internal partial class LogViewer
     private static string Preview(LogEntry e)
     {
         var text = (e.Text ?? "").Split((char)10).FirstOrDefault(l => l.Trim().Length > 0)?.Trim() ?? "";
-        var line = e.Line is > 0 ? $"Line {e.Line:N0} · " : "";
+        var line = e.Line is > 0 ? $"{(e.Source != null ? "Sub-agent · " : "")}Line {e.Line:N0} · " : "";
         return line + (e.Tool != null && e.Role != "tool" ? e.Tool + " · " : "") + (text.Length > 160 ? text[..160] : text);
     }
 
@@ -129,16 +129,16 @@ internal partial class LogViewer
         return border;
     }
 
-    /// <summary>Scrolls to the step that starts at this file line (when it is among the steps shown).</summary>
-    private void GoToStepLine(long line)
+    private bool IsSession(string path) => string.Equals(path, _file?.Path, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Scrolls to the step that holds a place (a line of the session file, or of a sub-agent's file) when it is among the steps shown.</summary>
+    private void GoToStepLine(string? source, long line)
     {
-        if (_readable?.Steps.FirstOrDefault(e => e.Line == line) is { } step)
+        if (_readable?.Index.Find(source, line) is { Count: > 0 } && _readable.RevealAt(source, line, FadeSeconds))
         {
-            _readable.Reveal(step, FadeSeconds);
+            return;
         }
-        else
-        {
-            _status.Text = "That step is older than the steps shown: use Show earlier steps";
-        }
+
+        _status.Text = "That step is older than the steps shown: use Show earlier steps";
     }
 }

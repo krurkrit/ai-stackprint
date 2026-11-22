@@ -91,7 +91,7 @@ internal partial class LogViewer
         if (ShowReadable)
         {
             var steps = _readable?.Steps.Where(p.IsMatch).ToList() ?? [];
-            _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => _readable!.Reveal(e, FadeSeconds))));
+            _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => RevealStep(e))));
             _results.Content = Panel(Count(ReadableLog.Plural(steps.Count, "step")),
                 steps.Take(500).Select((e, i) => Hit($"{e.Time:HH:mm:ss} {e.Role}{(e.Tool is { } t ? " · " + t : "")}", Around($"{e.Text} {e.Detail}", p), p, i)));
             return;

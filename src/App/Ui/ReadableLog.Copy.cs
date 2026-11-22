@@ -31,7 +31,7 @@ internal partial class ReadableLog
         holder.PointerEntered += (_, _) => copy.Opacity = 1;
         holder.PointerExited += (_, _) => copy.Opacity = 0;
         holder.Children.Add(copy);
-        if (marks is { CanMark: true } && e.Line > 0)
+        if (marks?.CanMarkStep(e) == true)
         {
             var mark = IconBtn(marks.Get(e)?.Starred == true ? "bookmark_filled" : "bookmark", "Bookmark this step", () => { });
             mark.Click += (_, _) =>

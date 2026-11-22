@@ -42,7 +42,7 @@ internal partial class LogViewer
 
         if (ShowReadable)
         {
-            RevealLine(line);
+            RevealLine(line, 0);
         }
         else
         {
@@ -51,12 +51,26 @@ internal partial class LogViewer
         }
     }
 
-    /// <summary>Scrolls the step view to the step that holds this file line: the last step that starts at or before it.</summary>
-    private void RevealLine(long line, double fade = 0)
+    /// <summary>Goes to a step the app already has (a search result among the steps, an error): by its place in its file, like every other way to a step.</summary>
+    private void RevealStep(LogEntry e)
     {
-        if (_readable is { } log && (log.Steps.LastOrDefault(e => e.Line is > 0 && e.Line <= line) ?? log.Steps.FirstOrDefault()) is { } step)
+        if (e.Line > 0 && _readable?.RevealAt(e.Source, e.Line, FadeSeconds) == true)
         {
-            log.Reveal(step, fade);
+            return;
+        }
+
+        _readable?.Reveal(e, FadeSeconds);
+    }
+
+    /// <summary>Goes to the step that holds this line of the session file: the last step that starts at or before it.</summary>
+    private void RevealLine(long line, double fade) => RevealAt(null, line, fade);
+
+    /// <summary>Goes to the step that holds a place in the session file (<paramref name="source"/> null) or in a sub-agent's file; the first step when the place is older than the steps shown.</summary>
+    private void RevealAt(string? source, long line, double fade)
+    {
+        if (_readable is { } log && !log.RevealAt(source, line, fade) && log.Steps.FirstOrDefault() is { } first)
+        {
+            log.Reveal(first, fade);
         }
     }
 }

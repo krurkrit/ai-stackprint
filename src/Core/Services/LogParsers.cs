@@ -14,6 +14,9 @@ public record LogEntry(string Role, string Text, DateTime? Time, bool SubAgent, 
     /// <summary>The line of the file this step comes from, counted from the first line the parser was given (1-based); 0 = unknown. Set while a parser reads <see cref="LogParsers.Json"/>.</summary>
     public long Line { get; init; } = LogParsers.CurrentLine;
 
+    /// <summary>The file the step comes from when it is not the session file: a sub-agent's own file; <see cref="Line"/> counts in that file. Null = the session file.</summary>
+    public string? Source { get; init; }
+
     /// <summary>The tokens (and so the cost) of the reply this step starts, once per reply; null when the log has none (not every format records them).</summary>
     public UsageEvent? Usage { get; init; }
 

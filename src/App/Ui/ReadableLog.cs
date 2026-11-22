@@ -225,6 +225,28 @@ internal partial class ReadableLog
         return found;
     }
 
+    private StepIndex? _index;
+
+    /// <summary>The steps by their file and line: how a search result, a bookmark or an error finds its step.</summary>
+    internal StepIndex Index => _index ??= new StepIndex(Steps);
+
+    /// <summary>
+    /// Goes to the step that holds a place in a file: <paramref name="source"/> is a sub-agent's file, null the session file. A reply that spans lines holds them all; steps that
+    /// start on the same line are all tinted. False when no shown step starts at or before the line.
+    /// </summary>
+    public bool RevealAt(string? source, long line, double fade)
+    {
+        var found = Index.Find(source, line);
+        if (found.Count == 0)
+        {
+            return false;
+        }
+
+        Reveal(found[0], fade);
+        Flash(found.Skip(1), fade);
+        return true;
+    }
+
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>
     public void Reveal(LogEntry e) => Reveal(e, 0);
 

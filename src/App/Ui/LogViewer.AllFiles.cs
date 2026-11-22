@@ -66,7 +66,7 @@ internal partial class LogViewer
                     var file = f;
                     var hit = h;
                     _jumps.Add(() => GoTo(file, hit));
-                    rows.Add(Hit($"Line {h.Line:N0}", h.Text, p, index++));
+                    rows.Add(Hit($"{(h.Source != null ? "Sub-agent · " : "")}Line {h.Line:N0}", h.Text, p, index++));
                 }
             }
 
@@ -95,6 +95,20 @@ internal partial class LogViewer
             try
             {
                 var hits = LogSearch.File(f.Path, p, Math.Min(MaxHitsPerFile, LogSearch.MaxHits - total), ct);
+                if (f.Format == "claude-session")
+                {
+                    foreach (var agent in SessionAgents.AgentFiles(f.Path))   // the sub-agents' own files: their lines are reached by their file and line
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        if (hits.Count >= MaxHitsPerFile)
+                        {
+                            break;
+                        }
+
+                        hits.AddRange(LogSearch.File(agent, p, MaxHitsPerFile - hits.Count, ct).Select(h => h with { Source = agent }));
+                    }
+                }
+
                 if (hits.Count > 0)
                 {
                     found.Add((f, hits));
@@ -133,18 +147,31 @@ internal partial class LogViewer
             return;
         }
 
+        if (h.Source != null && !ShowReadable)
+        {
+            _pending = null;
+            _status.Text = "A sub-agent's steps are shown in Conversation or Compact";
+            return;
+        }
+
         if (ShowReadable)
         {
-            var first = _readable?.Steps.FirstOrDefault(e => e.Line is > 0)?.Line ?? 0;
-            var shown = IsLines || (_linesOk && first > 0 && h.Line >= first);   // the steps shown start at or before the result, and their lines are the file's
-            if (!shown && _aroundLine != h.Line)
+            var covered = _readable?.Index.Covers(h.Source, h.Line) == true;   // some shown step starts at or before the result
+            var shown = IsLines || (covered && (h.Source != null || _linesOk));   // and the lines are the file's (not those of a file shown cut to its end)
+            if (!shown && h.Source == null && _aroundLine != h.Line)
             {
                 ShowLine(h.Line);   // a result the steps shown do not hold: the steps around it are read from the file; this runs again when they are shown
                 return;
             }
 
             _pending = null;
-            RevealLine(h.Line, FadeSeconds);
+            if (!shown && h.Source != null)
+            {
+                _status.Text = "That sub-agent step is not in the part shown";
+                return;
+            }
+
+            RevealAt(h.Source, h.Line, FadeSeconds);
         }
         else if (_code != null)
         {

@@ -6,7 +6,11 @@ using System.Text;
 namespace AiStackprint.Services;
 
 /// <summary>A match: 1-based line number in the file, the line text (trimmed for display), and the match position within the full line.</summary>
-public record SearchHit(long Line, string Text, int Column, int Length);
+public record SearchHit(long Line, string Text, int Column, int Length)
+{
+    /// <summary>The file the line is in when it is not the file that was searched: a sub-agent's own file (Claude Code); null = the searched file itself.</summary>
+    public string? Source { get; init; }
+}
 
 /// <summary>Searches a whole log file line by line (not just the part on screen). Opens it shared so the app can keep writing.</summary>
 public static class LogSearch
