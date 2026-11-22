@@ -127,7 +127,7 @@ public sealed class AppsViewTests
         var menu = w.GetVisualDescendants().OfType<FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Category"));
         menu.Flyout!.ShowAt(menu);
         Dispatcher.UIThread.RunJobs();
-        var boxes = ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<CheckBox>().ToList();
+        var boxes = ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<Border>().Select(b => (CheckBox)b.Child!).ToList();
         Assert.Equal(2, boxes.Count);   // Agents and Editors, each with its count
         boxes[1].IsChecked = false;     // Editors off
         Dispatcher.UIThread.RunJobs();
@@ -145,7 +145,7 @@ public sealed class AppsViewTests
         var menu = w.GetVisualDescendants().OfType<FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Category"));
         menu.Flyout!.ShowAt(menu);
         Dispatcher.UIThread.RunJobs();
-        var boxes = ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<CheckBox>().ToList();
+        var boxes = ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<Border>().Select(b => (CheckBox)b.Child!).ToList();
         boxes[0].IsChecked = false;     // Agents off: Alpha, the only app with plugins or config files, is not listed
         Dispatcher.UIThread.RunJobs();
         menu.Flyout.Hide();

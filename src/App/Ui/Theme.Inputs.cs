@@ -65,6 +65,11 @@ internal static partial class Theme
         {
             Setters = { new Setter(Layoutable.WidthProperty, Sizes.RadioDot), new Setter(Layoutable.HeightProperty, Sizes.RadioDot), new Setter(Visual.OpacityProperty, .9) }
         });
+        // A filter menu's pop-up has a drop-down list's inner padding
+        styles.Add(new Style(x => x.OfType<FlyoutPresenter>().Class(FilterMenu.PresenterClass))
+        {
+            Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(Space.XS)) }
+        });
         if (_inputStyles != null)
         {
             app.Styles.Remove(_inputStyles);

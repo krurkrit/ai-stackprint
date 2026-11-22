@@ -24,16 +24,21 @@ internal sealed class FilterMenu : Button
         _off = off;
         // a plain text block takes the button's text color, so it follows the hover color (W.Txt has a fixed one)
         Content = W.Row(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }, W.Icon("chevron_down", IconSize.XS).With(i => i.Opacity = .7));   // the button's text color, quieter (it follows the hover colors)
-        W.InputHover(this);   // under the pointer: like a drop-down (the accent border)
+        // Looks like a drop-down: card background, the text where a drop-down's sits, the arrow as far from the right edge, the accent border under the pointer
+        this.Themed(BackgroundProperty, W.Surface);
+        W.InputHover(this);
         MinHeight = AiStackprint.Ui.Theme.InputHeight;   // (Button.Theme is the control theme)
-        Padding = new Thickness(Space.L, 0);
+        Padding = new Thickness(Space.L, 0, Space.L + Space.XXS, 0);
         VerticalContentAlignment = VerticalAlignment.Center;
-        var list = new StackPanel { Spacing = Space.XS, Margin = new Thickness(Space.S) };
+        // The menu looks like a drop-down's list: a small inner padding, rows one input tall with no gap, each lit under the pointer, at least as wide as the button
+        var list = new StackPanel();
         var menu = new Flyout { Content = list, Placement = PlacementMode.BottomEdgeAlignedLeft };
+        menu.FlyoutPresenterClasses.Add(PresenterClass);
         Flyout = menu;
         menu.Opening += (_, _) =>
         {
             var now = opts();
+            list.MinWidth = Bounds.Width - (2 * (Space.XS + Stroke.Thin));
             list.Children.Clear();
             foreach (var (text, value, count) in now)
             {
@@ -56,11 +61,24 @@ internal sealed class FilterMenu : Button
 
                     changed();
                 };
-                list.Children.Add(cb);
+                cb.HorizontalAlignment = HorizontalAlignment.Stretch;
+                var row = new Border
+                {
+                    Child = cb,
+                    Padding = new Thickness(Space.L, 0),   // the box where a drop-down's item text starts
+                    CornerRadius = new CornerRadius(Radius.M),
+                    Background = Avalonia.Media.Brushes.Transparent
+                };
+                row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, W.Subtle);
+                row.PointerExited += (_, _) => row.Background = Avalonia.Media.Brushes.Transparent;
+                list.Children.Add(row);
             }
         };
         Update(0);
     }
+
+    /// <summary>The class of the menu's presenter: <see cref="Theme"/> gives it a drop-down list's inner padding.</summary>
+    public const string PresenterClass = "filter-menu";
 
     /// <summary>The accent border while some of the <paramref name="offered"/> values are off.</summary>
     public void Update(int offered) => this.Themed(BorderBrushProperty, _off.Count > 0 && offered > 0 ? W.Accent : W.BorderKey);
@@ -68,7 +86,7 @@ internal sealed class FilterMenu : Button
 
 internal static partial class W
 {
-    /// <summary>Pointer over and pressed like a text box or drop-down: the same background and text as at rest, the accent border.</summary>
+    /// <summary>Pointer over and pressed like a text box or drop-down: the card background and text as at rest, the accent border.</summary>
     public static void InputHover(Button b)
     {
         var app = Application.Current!;
@@ -77,12 +95,14 @@ internal static partial class W
             var d = new ResourceDictionary();
             foreach (var s in new[] { "PointerOver", "Pressed" })
             {
-                foreach (var part in new[] { "Background", "Foreground" })
+                if (app.TryGetResource(Surface, v, out var card))
                 {
-                    if (app.TryGetResource("Button" + part, v, out var rest))
-                    {
-                        d["Button" + part + s] = rest;
-                    }
+                    d["ButtonBackground" + s] = card;
+                }
+
+                if (app.TryGetResource("ButtonForeground", v, out var text))
+                {
+                    d["ButtonForeground" + s] = text;
                 }
 
                 if (app.TryGetResource(Accent, v, out var accent))
