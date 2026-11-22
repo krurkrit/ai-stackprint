@@ -226,7 +226,10 @@ internal partial class ReadableLog
     }
 
     /// <summary>Scrolls to a step and opens it if folded (search result click).</summary>
-    public void Reveal(LogEntry e)
+    public void Reveal(LogEntry e) => Reveal(e, 0);
+
+    /// <param name="fade">More than 0: the step is tinted and the tint fades out over this many seconds (where a search result or bookmark is).</param>
+    public void Reveal(LogEntry e, double fade)
     {
         var i = Steps.IndexOf(e);
         if (i >= 0 && i < Steps.Count - _built)
@@ -245,6 +248,7 @@ internal partial class ReadableLog
         }
 
         Dispatcher.UIThread.Post(c.BringIntoView, DispatcherPriority.Background);
+        Flash([e], fade);
     }
 
     /// <summary>Steps after <paramref name="previousLast"/> (the last step of the earlier read); none when it is no longer in view.</summary>

@@ -52,11 +52,11 @@ internal partial class LogViewer
     }
 
     /// <summary>Scrolls the step view to the step that holds this file line: the last step that starts at or before it.</summary>
-    private void RevealLine(long line)
+    private void RevealLine(long line, double fade = 0)
     {
         if (_readable is { } log && (log.Steps.LastOrDefault(e => e.Line is > 0 && e.Line <= line) ?? log.Steps.FirstOrDefault()) is { } step)
         {
-            log.Reveal(step);
+            log.Reveal(step, fade);
         }
     }
 }

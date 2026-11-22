@@ -138,7 +138,7 @@ internal partial class LogViewer
             _pending = null;
             if (_linesOk)
             {
-                RevealLine(h.Line);
+                RevealLine(h.Line, FadeSeconds);
             }
             else
             {
@@ -146,7 +146,7 @@ internal partial class LogViewer
                 var word = h.Column >= 0 && h.Column + h.Length <= h.Text.Length && h.Length > 0 ? h.Text.Substring(h.Column, h.Length) : "";
                 if (word.Length > 0 && _readable?.Steps.FirstOrDefault(e => e.Text.Contains(word, StringComparison.OrdinalIgnoreCase)) is { } step)
                 {
-                    _readable.Reveal(step);
+                    _readable.Reveal(step, FadeSeconds);
                 }
                 else
                 {

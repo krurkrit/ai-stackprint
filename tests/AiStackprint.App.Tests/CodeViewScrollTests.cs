@@ -41,7 +41,7 @@ public sealed class CodeViewScrollTests
         view.ScrollToEnd();
         Dispatcher.UIThread.RunJobs();
         Assert.InRange(view.CenterLine(), 295, 301);   // the last line is in the middle
-        view.Reveal(120, 0, 0);
+        view.Reveal(120, 0);
         Dispatcher.UIThread.RunJobs();
         Assert.InRange(view.CenterLine(), 115, 125);
         w.Close();

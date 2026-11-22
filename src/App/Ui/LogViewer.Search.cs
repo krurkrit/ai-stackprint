@@ -91,7 +91,7 @@ internal partial class LogViewer
         if (ShowReadable)
         {
             var steps = _readable?.Steps.Where(p.IsMatch).ToList() ?? [];
-            _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => _readable!.Reveal(e))));
+            _jumps.AddRange(steps.Take(500).Select(e => (Action)(() => _readable!.Reveal(e, FadeSeconds))));
             _results.Content = Panel(Count(ReadableLog.Plural(steps.Count, "step")),
                 steps.Take(500).Select((e, i) => Hit($"{e.Time:HH:mm:ss} {e.Role}{(e.Tool is { } t ? " · " + t : "")}", Around($"{e.Text} {e.Detail}", p), p, i)));
             return;
@@ -159,7 +159,7 @@ internal partial class LogViewer
             Render(false);
         }
         var line = (int)(h.Line - _firstLine + 1);
-        Dispatcher.UIThread.Post(() => _code.Reveal(line, h.Column, h.Length), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => _code.Reveal(line, h.Column), DispatcherPriority.Background);
     }
 
     /// <summary>A step's text on one line, cut around its first match.</summary>

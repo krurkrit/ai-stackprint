@@ -58,7 +58,7 @@ internal partial class LogViewer
             foreach (var e in errors)
             {
                 var step = e;
-                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => _readable?.Reveal(step), close));
+                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => _readable?.Reveal(step, FadeSeconds), close));
             }
         }
 
@@ -134,7 +134,7 @@ internal partial class LogViewer
     {
         if (_readable?.Steps.FirstOrDefault(e => e.Line == line) is { } step)
         {
-            _readable.Reveal(step);
+            _readable.Reveal(step, FadeSeconds);
         }
         else
         {

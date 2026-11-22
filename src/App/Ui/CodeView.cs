@@ -257,8 +257,8 @@ internal sealed class CodeView : Border, IDisposable
         _editor.ScrollTo(last, 0);
     }
 
-    /// <summary>Scrolls to a 1-based line and selects <paramref name="length"/> characters from <paramref name="column"/> (0-based).</summary>
-    public void Reveal(int line, int column, int length)
+    /// <summary>Scrolls to a 1-based line (and sideways to <paramref name="column"/>, 0-based) and selects the whole line, as if picked to copy.</summary>
+    public void Reveal(int line, int column)
     {
         var doc = _editor.Document;
         if (doc == null || doc.LineCount == 0)
@@ -267,8 +267,8 @@ internal sealed class CodeView : Border, IDisposable
         }
 
         var l = doc.GetLineByNumber(Math.Clamp(line, 1, doc.LineCount));
-        var start = l.Offset + Math.Clamp(column, 0, l.Length);
-        _editor.Select(start, Math.Clamp(length, 0, l.Offset + l.Length - start));
+
+        _editor.Select(l.Offset, l.Length);   // the whole line is selected, as if picked to copy (the column only decides how far it scrolls sideways)
         _editor.ScrollTo(l.LineNumber, column);
     }
 }
