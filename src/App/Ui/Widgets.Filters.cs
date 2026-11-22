@@ -75,13 +75,18 @@ internal sealed class FilterMenu : Button
 
 internal static partial class W
 {
+    /// <summary>Toggles in one rounded group (like the theme switch): each one is on or off on its own; one that is on is filled with the selection color. The same height as an input.</summary>
+    public static Control Toggles(IEnumerable<(string Label, string Value)> opts, ISet<string> on, Action<string> toggle) => Segmented(opts, on.Contains, toggle);
+
     /// <summary>One choice among a few as one rounded group (like the theme switch): the chosen one is filled with the selection color. The same height as an input.</summary>
-    public static Control Segmented(IEnumerable<(string Label, string Value)> opts, string current, Action<string> pick)
+    public static Control Segmented(IEnumerable<(string Label, string Value)> opts, string current, Action<string> pick) => Segmented(opts, v => v == current, pick);
+
+    private static Border Segmented(IEnumerable<(string Label, string Value)> opts, Func<string, bool> isOn, Action<string> pick)
     {
         var group = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS };
         foreach (var (label, value) in opts)
         {
-            var on = value == current;
+            var on = isOn(value);
             var b = new Button
             {
                 Content = label,

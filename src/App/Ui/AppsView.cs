@@ -111,7 +111,7 @@ internal partial class AppsView(Ctx x)
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
             Spacing = Space.XS,
-            IsVisible = _group != NoGroup
+            IsVisible = _group.Count > 0
         };
         all.Children.Add(IconBtn("chevron_down", "Expand all", () =>
         {
@@ -145,7 +145,7 @@ internal partial class AppsView(Ctx x)
             a.Installed ? Status("Installed") : Txt("Not found", TextSize.Small, false, Muted),
             .. counts.Select(c => Shown(c.Of(a), a.Installed))
         ], () => x.Go("App:" + a.Id));
-        if (_group == NoGroup)
+        if (_group.Count == 0)
         {
             foreach (var a in apps) { yield return Row(a); }
             yield break;
@@ -155,7 +155,7 @@ internal partial class AppsView(Ctx x)
             var open = !_collapsed.Contains(g.Key);
             var key = g.Key;
             var first = g.First();
-            var name = ByCat ? Plural(first.Category) : StatusName(first);
+            var name = ByCat ? Plural(first.Category) + (ByStat ? " · " + StatusName(first) : "") : StatusName(first);
             var cells = new Control[cols];
             cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
                 ByCat ? Icon(Icons.ForCategory(first.Category), IconSize.S) : new Panel(), Title(name, TextSize.Body),
@@ -182,7 +182,7 @@ internal partial class AppsView(Ctx x)
     }
 
     private static string StatusName(Models.AppInfo a) => a.Installed ? "Installed" : "Not found";
-    private string Key(Models.AppInfo a) => ByCat ? a.Category : a.Installed ? "0" : "1";
+    private string Key(Models.AppInfo a) => (ByCat ? a.Category : "") + "|" + (ByStat ? (a.Installed ? "0" : "1") : "");
     private IEnumerable<string> Keys(IEnumerable<Models.AppInfo> apps) => apps.Select(Key).Distinct();
 
     private static TextBlock Shown(int n, bool installed) => Txt(n == 0 && !installed ? "-" : n.ToString(), TextSize.Body, false, n == 0 ? Muted : Text);   // a zero is quiet, so the numbers that are there stand out

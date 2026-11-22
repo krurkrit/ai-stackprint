@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 
 using static AiStackprint.Ui.W;
@@ -9,33 +10,42 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// The Apps page's tool bar, one row: the search, the Status and Category menus, Group by (None / Category / Status) and Reset while something is filtered.
+/// The Apps page's tool bar, one row: the search, the Status and Category menus, Group by (Category and Status toggles) and Reset at the end (dimmed while nothing is filtered).
 /// It is built once per visit, so a menu stays open while its check boxes change the list.
 /// </summary>
 internal partial class AppsView
 {
-    private const string NoGroup = "none", ByCategory = "category", ByStatus = "status";
-    private string _group = ByCategory;
+    private const string ByCategory = "category", ByStatus = "status";
+    private readonly HashSet<string> _group = [ByCategory];   // Group by: each one on or off; both on groups by both, none on is a plain list
     private FilterMenu? _statusMenu, _catMenu;
     private Button? _reset;
     private readonly ContentControl _groupHost = new();
     private List<(string Label, string Value, int Count)> _statusOpts = [], _catOpts = [];
 
-    private bool ByCat => _group == ByCategory;
-    private bool ByStat => _group == ByStatus;
+    private bool ByCat => _group.Contains(ByCategory);
+    private bool ByStat => _group.Contains(ByStatus);
 
     private Control Toolbar()
     {
         _statusMenu = new FilterMenu("Status", () => _statusOpts, _offStatus, Fill);
         _catMenu = new FilterMenu("Category", () => _catOpts, _offCats, Fill);
-        _reset = Btn("Reset", () =>
+        _reset = IconBtn("arrow_reset", "Reset the search and filters", () =>
         {
             _offStatus.Clear();
             _offCats.Clear();
             _q = "";
             _search.Text = "";
             Fill();
-        }, false, "arrow_reset");
+        });
+        _reset.Resources["ButtonBackgroundDisabled"] = Avalonia.Media.Brushes.Transparent;   // dimmed: a faded icon, no gray fill
+        _reset.Resources["ButtonBorderBrushDisabled"] = Avalonia.Media.Brushes.Transparent;
+        _reset.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == InputElement.IsEnabledProperty && _reset.Content is Control c)
+            {
+                c.Opacity = _reset.IsEnabled ? 1 : .35;
+            }
+        };
         var right = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -65,11 +75,15 @@ internal partial class AppsView
             c.Update(cats.Count);
         }
 
-        _groupHost.Content = Segmented([("None", NoGroup), ("Category", ByCategory), ("Status", ByStatus)], _group, g =>
+        _groupHost.Content = Toggles([("Category", ByCategory), ("Status", ByStatus)], _group, g =>
         {
-            _group = g;
+            if (!_group.Remove(g))
+            {
+                _group.Add(g);
+            }
+
             Fill();
         });
-        _reset?.IsVisible = _q != "" || _offStatus.Count > 0 || _offCats.Count > 0;
+        _reset?.IsEnabled = _q != "" || _offStatus.Count > 0 || _offCats.Count > 0;   // always at the end of the row; dimmed with nothing to reset
     }
 }

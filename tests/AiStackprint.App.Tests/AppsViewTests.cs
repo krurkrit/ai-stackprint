@@ -88,27 +88,33 @@ public sealed class AppsViewTests
     }
 
     private static Button Find(Window w, string text) =>
-        w.GetVisualDescendants().OfType<Button>().First(b => b.Content as string == text || b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == text));   // a hidden button has no visual text
+        w.GetVisualDescendants().OfType<Button>().Where(b => b is not FilterMenu).First(b => b.Content as string == text || b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == text));   // a hidden button has no visual text
 
     [AvaloniaFact]
-    public void The_filters_are_one_row_with_Group_by_as_a_choice_and_Reset_while_something_is_filtered()
+    public void The_filters_are_one_row_Group_by_toggles_Category_and_Status_and_Reset_works_while_something_is_filtered()
     {
         var (w, _) = Open(1400);
-        var reset = Find(w, "Reset");
-        Assert.False(reset.IsVisible);
+        var reset = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Reset the search and filters");
+        Assert.False(reset.IsEnabled);
         Assert.Contains("Editors", Ui.Texts(w));   // grouped by category at first
 
-        Ui.Click(Find(w, "None"));
-        Assert.DoesNotContain("Editors", Ui.Texts(w));   // no group rows
+        Ui.Click(Find(w, "Status"));   // Category and Status both on: grouped by both
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains("Agents · Not found", Ui.Texts(w));
+        Ui.Click(Find(w, "Category"));
+        Ui.Click(Find(w, "Status"));   // both off: a plain list
+        Dispatcher.UIThread.RunJobs();
+        Assert.DoesNotContain("Editors", Ui.Texts(w));
+        Assert.Contains("Delta", Ui.Texts(w));
 
         var search = w.GetVisualDescendants().OfType<TextBox>().First();
         search.Text = "Alpha";
         Dispatcher.UIThread.RunJobs();
-        Assert.True(reset.IsVisible);
+        Assert.True(reset.IsEnabled);
         Ui.Click(reset);
         Dispatcher.UIThread.RunJobs();
         Assert.Equal("", search.Text);
-        Assert.False(reset.IsVisible);
+        Assert.False(reset.IsEnabled);
         Assert.Contains("Delta", Ui.Texts(w));
     }
 
