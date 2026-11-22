@@ -6,7 +6,6 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
@@ -27,17 +26,14 @@ internal partial class ItemBrowser
     private readonly Ctx _x;
     private readonly string _kind;
     private readonly DispatcherTimer _wait = new() { Interval = _typing };
-    private readonly SkillFilter _filter = new();
+    private readonly SkillFilter _filter;
     private readonly DetailPanel _panel;
     // Kept while the page is shown (rebuilt rows keep the box's focus and the list its place); new ones once it is left: see Leave
     private TextBox _search = null!;
-    private ComboBox _app = null!;
     private ContentControl _table = null!;
-    private ContentControl _own = null!;   // the filter rows: rebuilt when a filter changes, so their counts follow the other filters
-    private TextBlock _shown = null!;
-    private string _appId = "", _q = "";
+    private string _q = "";
     private Item? _sel;
-    private bool _building, _max;
+    private bool _max;
     private List<Item> _items = [];
     private ItemSearch _index = new([]);
     private SearchQuery _query = SearchQuery.Empty;
@@ -48,6 +44,11 @@ internal partial class ItemBrowser
         _x = ctx;
         _kind = kind;
         _panel = new DetailPanel(ctx);
+        _filter = new SkillFilter(kind, ctx.AppName, () => _q, Fill, () =>
+        {
+            _q = "";
+            _search.Text = "";
+        });
         _wait.Tick += (_, _) =>
         {
             _wait.Stop();
@@ -76,16 +77,7 @@ internal partial class ItemBrowser
                 _wait.Start();
             }
         };
-        var app = _app = new ComboBox { MinWidth = Widths.Field };
-        app.SelectionChanged += (_, _) =>
-        {
-            if (_building || app != _app) { return; }
-            _appId = (app.SelectedItem as AppOption)?.Id ?? "";
-            Fill();
-        };
         _table = new();
-        _own = new();
-        _shown = Txt("", TextSize.Small, false, Muted);
         _grid = null;
         _splitter = null;
         _bottom = null;
@@ -97,7 +89,6 @@ internal partial class ItemBrowser
     public void Reset()
     {
         _sel = null;
-        _appId = "";
         _q = "";
         _search.Text = "";
         _filter.Reset();
@@ -108,7 +99,11 @@ internal partial class ItemBrowser
     public void Filter(string? app, string? query)
     {
         Reset();
-        _appId = app ?? "";
+        if (app != null)
+        {
+            _filter.Bar.Only("App", app);
+        }
+
         _q = query ?? "";
         _search.Text = _q;
     }
@@ -131,41 +126,13 @@ internal partial class ItemBrowser
             _sel = items.FirstOrDefault(i => Same(i, _sel));   // the same item after a rescan (a new record), or gone
         }
 
-        _building = true;
-        var apps = _x.ShownApps.Where(a => items.Any(i => i.App == a.Id)).Select(a => new AppOption(a.Id, a.Name)).Prepend(new AppOption("", "All apps")).ToList();
-        _app.ItemsSource = apps;
-        _app.SelectedItem = apps.FirstOrDefault(a => a.Id == _appId) ?? apps[0];
-        if (_app.SelectedItem is AppOption { Id: "" })
-        {
-            _appId = "";
-        }
-
-        _building = false;
-
-        _own.Content = _filter.Controls(items, _kind is "Skill" or "Part", FilterChanged);
-        var search = new DockPanel
-        {
-            Children = { _app.Free().With(c =>
-            {
-                DockPanel.SetDock(c, Dock.Right);
-                c.Margin = new Thickness(Space.L, 0, 0, 0);
-                c.VerticalAlignment = VerticalAlignment.Center;
-            }),
-            _shown.Free().With(t =>
-            {
-                DockPanel.SetDock(t, Dock.Right);
-                t.Margin = new Thickness(Space.L, 0, 0, 0);
-                t.VerticalAlignment = VerticalAlignment.Center;
-            }), _search.Free() }
-        };
         var list = new StackPanel
         {
             Spacing = Space.XL,
             Margin = new Thickness(Space.Page, Space.XXXL, Space.Page, Space.XXL)
         };
         list.Children.AddRange(top);
-        list.Children.Add(search);
-        list.Children.Add(_own.Free());
+        list.Children.Add(_filter.Bar.Build(_search));
         list.Children.Add(Card(_table.Free()));
         Fill();
 

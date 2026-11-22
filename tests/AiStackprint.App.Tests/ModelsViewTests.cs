@@ -58,9 +58,10 @@ public sealed class ModelsViewTests : IDisposable
         Assert.Contains("128K", texts);
         Assert.Contains("$4.00", texts);
 
-        Ui.Click(Ui.Button(w, "openai 1"));
-        Dispatcher.UIThread.RunJobs();
+        Assert.False(Ui.FilterMenu(w, "Changes").IsVisible);   // no model changed: nothing to choose
+        Ui.FilterOnly(w, "Provider", "openai");
         Assert.DoesNotContain("claude-opus-5-5", Ui.Texts(w));
+        Assert.EndsWith("Shown: 1 of 2", Ui.Summary(w));
 
         var (linked, _) = Open("gpt-6");   // from the Usage page: the search holds the model's name
         Assert.Equal("gpt-6", linked.GetVisualDescendants().OfType<TextBox>().Single().Text);
@@ -115,7 +116,7 @@ public sealed class ModelsViewTests : IDisposable
 
         var (w, _) = Open("my-local");
         Assert.Contains("Yours", Ui.Texts(w));
-        Assert.Contains("custom 1", w.GetVisualDescendants().OfType<Button>().Select(b => b.Content as string));
+        Assert.EndsWith("Shown: 1 of 3", Ui.Summary(w));
     }
 
     private static List<AutoCompleteBox> Slots(Window w) => [.. w.GetVisualDescendants().OfType<AutoCompleteBox>()];

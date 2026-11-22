@@ -131,7 +131,7 @@ public sealed class AppsViewTests
         Assert.Equal(2, boxes.Count);   // Agents and Editors, each with its count
         boxes[1].IsChecked = false;     // Editors off
         Dispatcher.UIThread.RunJobs();
-        Assert.Contains("Status: Installed, Not found    Category: Agents    Group by: Category", Ui.Texts(w));   // the summary under the tool bar lists what is on
+        Assert.Contains("Status: Installed, Not found    Category: Agents    Group by: Category    Shown: 3 of 4", Ui.Texts(w));   // the summary under the tool bar lists what is on
         Assert.DoesNotContain("Delta", Ui.Texts(w));
         boxes[0].IsChecked = false;     // the last one on stays on
         Assert.True(boxes[0].IsChecked);

@@ -16,7 +16,7 @@ namespace AiStackprint.App.Tests;
 public sealed class McpViewTests
 {
     [AvaloniaFact]
-    public void Servers_are_listed_highest_level_first_and_Warnings_narrows_the_list()
+    public void Servers_are_listed_highest_level_first_and_the_Type_and_Status_menus_narrow_the_list()
     {
         var s = new AppState
         {
@@ -59,12 +59,13 @@ public sealed class McpViewTests
         Assert.Contains("Not pinned: db", texts);
         Assert.Contains("from plugin go-tools", texts);
 
-        Ui.Click(Ui.Button(w, "LSP 1"));
-        Dispatcher.UIThread.RunJobs();
+        Assert.False(Ui.FilterMenu(w, "App").IsVisible);   // one app: nothing to choose
+        Ui.FilterOnly(w, "Type", "LSP");
         Assert.Equal(["gopls"], new[] { "gopls", "db-server", "fs-server" }.Where(Ui.Texts(w).Contains));
+        Assert.Contains("Shown: 1 of 3", Ui.Summary(w));
 
-        Ui.Click(Ui.Button(w, "Warnings 1"));
-        Dispatcher.UIThread.RunJobs();
+        Ui.FilterOnly(w, "Type", "MCP");
+        Ui.FilterOnly(w, "Status", "Warning");
         Assert.DoesNotContain("fs-server", Ui.Texts(w));
         Assert.Contains("db-server", Ui.Texts(w));
     }

@@ -9,7 +9,7 @@ Short, checkable rules the user has asked for. Follow them in any new list, card
 | Side menu / page titles | Dashboard, Apps, Plugins, Skills, Commands & Agents, Servers, Hooks, Usage, Models, Logs, Health, Settings |
 | Routes (`MainWindow.Go`) | `Dashboard`, `Apps`, `Plugin`, `Skill`, `Part`, `Mcp`, `Hooks`, `Usage`, `Models`, `Logs`, `Health`, `Settings`, `App:<id>`, `Project:<path>` |
 | Pair order | "Plugins and skills" (cards, charts, text). Never "Skills and plugins" |
-| Servers | MCP and LSP together; the filter pills say MCP / LSP |
+| Servers | MCP and LSP together; the Type filter says MCP / LSP |
 | Dashboard Health tile and menu icon | `heart_pulse`; Usage = `data_pie`; Commands & Agents = `bot` |
 | Capital letters | "Commands & Agents" (both capitalised); "Plugins and skills by author" |
 

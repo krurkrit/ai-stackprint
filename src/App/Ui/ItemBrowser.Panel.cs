@@ -55,20 +55,11 @@ internal partial class ItemBrowser
     /// <summary>The same skill or plugin across scans. Records compare lists by reference, so a rescan would make every item look new.</summary>
     public static bool Same(Item a, Item b) => a.Kind == b.Kind && a.App == b.App && a.Level == b.Level && a.Name == b.Name && a.Path == b.Path && a.Project == b.Project;
 
-    private sealed record AppOption(string Id, string Name) { public override string ToString() => Name; }
-
-    private void FilterChanged()
-    {
-        _own.Content = _filter.Controls(_items, _kind is "Skill" or "Part", FilterChanged);
-        Fill();
-    }
-
     private void Fill()
     {
         _wait.Stop();
         _query = SearchQuery.Parse(_q);
-        var shown = _index.Find(_query).Where(i => (_appId == "" || i.App == _appId) && _filter.Match(i)).ToList();   // best matches first
-        _shown.Text = shown.Count == _items.Count ? $"{_items.Count:N0}" : $"{shown.Count:N0} of {_items.Count:N0}";
+        var shown = _filter.Apply([.. _index.Find(_query)], _items);   // best matches first
 
         var cols = _kind == "Plugin"
             // minimums fit the narrowest window (900 px): Path gives way first

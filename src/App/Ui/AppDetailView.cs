@@ -16,7 +16,9 @@ internal class AppDetailView(Ctx x)
 {
     private string? _preview;   // config file shown in the viewer/editor (click a row)
     private readonly UsageCard.Prefs _usage = new();
-    private readonly SkillFilter _skillFilter = new();
+    private SkillFilter? _skillFilter;
+    private Action _skillFill = () => { };   // the Skills section's Fill this visit
+    private TextBox? _skillSearch;
     private string? _skillsApp;   // app the skill filters belong to: reset when another app opens
     private string _skillQuery = "";
 
@@ -159,14 +161,24 @@ internal class AppDetailView(Ctx x)
     }
 
     /// <summary>The page was left: see <see cref="ItemBrowser.Leave"/>.</summary>
-    public void Leave() => _skillFilter.Leave();
+    public void Leave()
+    {
+        _skillFilter?.Leave();
+        _skillFill = () => { };
+        _skillSearch = null;
+    }
 
     private Border Skills(AppDefinition d, List<Item> items)
     {
+        var filter = _skillFilter ??= new SkillFilter("Skill", null, () => _skillQuery, () => _skillFill(), () =>
+        {
+            _skillQuery = "";
+            _skillSearch?.Text = "";
+        });
         if (_skillsApp != d.Id)
         {
             _skillsApp = d.Id;
-            _skillFilter.Reset();
+            filter.Reset();
             _skillQuery = "";
         }
         var skills = items.Where(i => i.Kind == "Skill").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => Levels.Rank(i.Level)).ToList();
@@ -180,7 +192,7 @@ internal class AppDetailView(Ctx x)
         ], () => x.Open(s));
         var cols = new[] { Cols.Name("Skill", "2.6*"), Cols.Level(), Cols.Type("Invoked by"), new Col("From", ".9*"), Cols.Actions() };
         var body = new ContentControl();
-        void Fill()   // re-renders only this section, so the Usage card above is not recalculated
+        void Fill()   // re-renders only the table, so the Usage card above is not recalculated and the tool bar keeps its focus and open menu
         {
             if (skills.Count == 0)
             {
@@ -188,21 +200,13 @@ internal class AppDetailView(Ctx x)
                 return;
             }
 
-            var filters = _skillFilter.Controls(skills, skill: true, Fill);   // first: drops filter values no longer offered, before rows are matched
             query = SearchQuery.Parse(_skillQuery);
-            var table = Table.Virtual(cols, _skillFilter.RowMakers([.. index.Find(query).Where(_skillFilter.Match)], Row, cols.Length, Fill), "No skills match the search or these filters.");
-            body.Content = new StackPanel
-            {
-                Spacing = Space.XL,
-                Children = { filters, table }
-            };
+            body.Content = Table.Virtual(cols, filter.RowMakers(filter.Apply([.. index.Find(query)], skills), Row, cols.Length, Fill), "No skills match the search or these filters.");
         }
-        Fill();
-        // The search box stays outside the part Fill replaces, so it keeps the focus while you type
-        var search = SearchBox("Search skills, or author: level: name:").With(b =>
+        _skillFill = Fill;
+        var search = _skillSearch = SearchBox("Search skills, or author: level: name:").With(b =>
         {
             b.Text = _skillQuery;
-            b.IsVisible = skills.Count > 0;
             ToolTip.SetTip(b, ItemBrowser.SearchTip);
         })
             .OnPause(q =>
@@ -210,11 +214,13 @@ internal class AppDetailView(Ctx x)
                 _skillQuery = q;
                 Fill();
             });
+        var bar = filter.Bar.Build(search).With(b => b.IsVisible = skills.Count > 0);
+        Fill();
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();
         return Section("sparkle", $"Skills · {skills.Count}", new StackPanel
         {
             Spacing = Space.XL,
-            Children = { search, body }
+            Children = { bar, body }
         }, add);
     }
 }

@@ -32,13 +32,13 @@ internal sealed class FilterMenu : Button
         VerticalContentAlignment = VerticalAlignment.Center;
         // The menu looks like a drop-down's list: a small inner padding, rows one input tall with no gap, each lit under the pointer, at least as wide as the button
         var list = new StackPanel();
-        var menu = new Flyout { Content = list, Placement = PlacementMode.BottomEdgeAlignedLeft };
+        var menu = new ListFlyout { Content = list, Placement = PlacementMode.BottomEdgeAlignedLeft };
         menu.FlyoutPresenterClasses.Add(PresenterClass);
         Flyout = menu;
         menu.Opening += (_, _) =>
         {
             var now = opts();
-            list.MinWidth = Bounds.Width - (2 * (Space.XS + Stroke.Thin));
+            list.MinWidth = Math.Max(0, Bounds.Width - (2 * (Space.XS + Stroke.Thin)));   // (not laid out yet: no minimum)
             list.Children.Clear();
             foreach (var (text, value, count) in now)
             {
@@ -79,6 +79,28 @@ internal sealed class FilterMenu : Button
 
     /// <summary>The class of the menu's presenter: <see cref="Theme"/> gives it a drop-down list's inner padding.</summary>
     public const string PresenterClass = "filter-menu";
+
+    /// <summary>The page was left: closes the menu and lets go of its popup, which would otherwise keep pointing at this button (and so at the old page).</summary>
+    public void Release()
+    {
+        if (Flyout is ListFlyout m)
+        {
+            m.Release();
+        }
+
+        Flyout = null;
+    }
+
+    private sealed class ListFlyout : Flyout
+    {
+        public void Release()
+        {
+            Hide();
+            Content = null;
+            Popup.Child = null;
+            Popup.PlacementTarget = null;
+        }
+    }
 
     /// <summary>The accent border while some of the <paramref name="offered"/> values are off.</summary>
     public void Update(int offered) => this.Themed(BorderBrushProperty, _off.Count > 0 && offered > 0 ? W.Accent : W.BorderKey);

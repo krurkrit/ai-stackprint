@@ -25,15 +25,14 @@ internal partial class AppsView(Ctx x)
         _search = SearchBox("Search apps");
         _search.Text = _q;
         _table = new();
-        _statusMenu = _catMenu = null;
-        _reset = null;
+        _bar?.Leave();
     }
 
     public Control Build()
     {
         _search.TextChanged -= OnSearch;
         _search.TextChanged += OnSearch;
-        var bar = Toolbar();
+        var bar = Bar().Build(_search);
         Fill();
         var head = Head();
         var btns = Row(Btn("Open apps.json", () => PathUtil.OpenFolder(Path.GetDirectoryName(AppCatalog.UserFile)!), false, "document_edit"),
@@ -77,30 +76,9 @@ internal partial class AppsView(Ctx x)
 
     private void Fill()
     {
-        var cats = x.ShownApps.Select(a => a.Category).Distinct().Order().ToList();
-        KeepOffered(_offCats, cats);
+        // The menus' counts follow the search and the other menu; a value no app found has is not offered
         var found = x.ShownApps.Where(a => _q == "" || a.Name.Contains(_q, StringComparison.OrdinalIgnoreCase)).ToList();
-        var inst = found.Count(a => a.Installed);
-        var statuses = new List<string>();
-        if (inst > 0)
-        {
-            statuses.Add("Installed");
-        }
-
-        if (inst < found.Count)
-        {
-            statuses.Add("Not found");
-        }
-
-        KeepOffered(_offStatus, statuses);
-        var byStatus = found.Where(a => !_offStatus.Contains(a.Installed ? "Installed" : "Not found")).ToList();
-
-        // Counts follow the search (and status for categories); a category with no apps is not listed
-        UpdateToolbar(
-            statuses.Select(s => (s, s, s == "Installed" ? inst : found.Count - inst)).ToList(),
-            cats.Select(c => (Plural(c), c, byStatus.Count(a => a.Category == c))).ToList());
-
-        var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
+        var apps = Bar().Apply(found, [.. x.ShownApps]).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
         // A count column that is empty for every app is left out: less to read, and the rest fit. Decided over all apps, not the filtered ones, so the columns stay put while filtering
         var counts = Counts().Where(c => x.ShownApps.Any(a => c.Of(a) > 0)).ToList();
         var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Status() }.Concat(counts.Select(c => Cols.Count(c.Head))).ToArray();

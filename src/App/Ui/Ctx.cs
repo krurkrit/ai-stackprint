@@ -50,5 +50,8 @@ internal class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
     /// <summary>Apps to show: scanned apps, minus not-installed ones when the setting is on.</summary>
     public IEnumerable<AppInfo> ShownApps => S.Apps.Where(a => a.Installed || !S.Settings.HideNotInstalled);
 
+    /// <summary>An app's name from its id (the id for an app no longer defined).</summary>
+    public string AppName(string id) => S.Def(id)?.Name ?? id;
+
     public static string ProjectName(string path) => Path.GetFileName(path.TrimEnd('/', '\\'));
 }

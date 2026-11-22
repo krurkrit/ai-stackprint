@@ -11,12 +11,14 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// Servers page (route Mcp): every MCP server (tools for the model) and LSP server (code intelligence for the agent) in the apps' config files and
-/// plugins, at every level (<see cref="McpServers"/>, read with each scan), highest level first. A search narrows the list; the pills pick a type,
-/// or Warnings: servers that run an unpinned package or keep a key in plain text.
+/// plugins, at every level (<see cref="McpServers"/>, read with each scan), highest level first. The tool bar (<see cref="FilterBar{T}"/>) has the search
+/// and App, Level, Type and Status menus; Status "Warning": servers that run an unpinned package or keep a key in plain text.
 /// </summary>
 internal class McpView(Ctx x)
 {
-    private string _query = "", _show = "";   // "" all, "MCP", "LSP", "w" warnings
+    private string _query = "";
+    private readonly HashSet<string> _offApps = [], _offLevels = [], _offTypes = [], _offStatus = [];
+    private FilterBar<McpServer>? _bar;
     private ContentControl _table = new();
     private TextBox? _box;
     /// <summary>The page was left: new controls for the next visit, so nothing here keeps the old page in memory (see <see cref="ItemBrowser.Leave"/>).</summary>
@@ -24,20 +26,32 @@ internal class McpView(Ctx x)
     {
         _table = new();
         _box = null;
+        _bar?.Leave();
+    }
+
+    private FilterBar<McpServer> Bar()
+    {
+        if (_bar != null)
+        {
+            return _bar;
+        }
+
+        _bar = new FilterBar<McpServer>(() => _query, Fill, () =>
+        {
+            _query = "";
+            _box?.Text = "";
+        });
+        _bar.Add("App", _offApps, s => s.Apps, x.AppName, vs => vs.OrderBy(x.AppName, StringComparer.OrdinalIgnoreCase));
+        _bar.Add("Level", _offLevels, s => [s.Level], order: vs => Levels.Order.Where(vs.Contains));
+        _bar.Add("Type", _offTypes, s => [s.Kind]);
+        _bar.Add("Status", _offStatus, s => [s.Warn ? "Warning" : "OK"], order: vs => vs.OrderByDescending(v => v == "OK"));
+        return _bar;
     }
 
     public Control Build()
     {
         var all = x.S.Mcp;
         var head = Head();
-        var pills = Pills([($"All {all.Count:N0}", ""), ($"MCP {all.Count(s => s.Kind == "MCP"):N0}", "MCP"), ($"LSP {all.Count(s => s.Kind == "LSP"):N0}", "LSP"),
-            ($"Warnings {all.Count(s => s.Warn):N0}", "w")], _show, v =>
-            {
-                _show = v;
-                x.Refresh();
-            });
-        DockPanel.SetDock(pills, Dock.Right);
-        head.Children.Add(pills);
         head.Children.Add(H1("Servers"));
         var apps = all.SelectMany(s => s.Apps).Distinct().Count();
         var intro = Txt($"{ReadableLog.Plural(all.Count, "server")} in {ReadableLog.Plural(apps, "app")}. MCP servers give the model tools: programs the apps start, " +
@@ -48,15 +62,16 @@ internal class McpView(Ctx x)
             _query = t.Trim();
             Fill();
         });
+        var bar = Bar().Build(_box);
         Fill();
-        return Page(head, intro, _box.Free(), _table.Free());
+        return Page(head, intro, bar, _table.Free());
     }
 
     private void Fill()
     {
         var words = _query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var shown = x.S.Mcp.Where(s => _show switch { "" => true, "w" => s.Warn, _ => s.Kind == _show })
-            .Where(s => words.All(w => Text(s).Contains(w, StringComparison.OrdinalIgnoreCase)))
+        var searched = x.S.Mcp.Where(s => words.All(w => Text(s).Contains(w, StringComparison.OrdinalIgnoreCase))).ToList();
+        var shown = Bar().Apply(searched, x.S.Mcp)
             .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(s => Levels.Rank(s.Level)).ToList();
         var rows = shown.Select(s => new TableRow(
         [
@@ -76,10 +91,10 @@ internal class McpView(Ctx x)
         ]));
         _table.Content = TableSurface(Table.Build([Cols.Name(), Cols.App(), Cols.Level(), Cols.Type(),
             new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
-            x.S.Mcp.Count == 0 ? "No MCP or LSP servers in the apps' config files or plugins." : "Nothing matches. Clear the search or choose All."));
+            x.S.Mcp.Count == 0 ? "No MCP or LSP servers in the apps' config files or plugins." : "Nothing matches. Clear the search or filters."));
     }
 
-    private string AppName(McpServer s) => string.Join(", ", s.Apps.Select(a => x.S.Def(a)?.Name ?? a));
+    private string AppName(McpServer s) => string.Join(", ", s.Apps.Select(x.AppName));
 
     private string Text(McpServer s) => $"{s.Name} {s.Kind} {AppName(s)} {s.What} {s.File} {s.Note} {s.Level} {s.Project} {s.Plugin}";
 }

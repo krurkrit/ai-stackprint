@@ -26,6 +26,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Dashboard top: "Apps by category" (2 x 2) on the left: only installed apps, the count per category (not "n of total": whether every known app is installed does not matter, only which kinds of AI apps the user has). On the right, Plugins and Skills on the first row, MCP servers (by level) and Health warnings on the second. No "Apps installed" tile.
 - The page and menu item are "Apps", not "AI apps": everything in the app is about AI, and the other menu items are one word.
 - Apps page: one tool bar row under the title: the search, Status and Category filter menus, Group by (Category and Status as toggles in one group: either, both, or neither for a plain list; Category by default; collapsible per group, like the Dashboard) and a Reset icon at the end (search, filters and grouping back to the first view; dimmed while nothing differs from it). The filter buttons show no counts; a line under the tool bar lists what is on ("Status: Installed, Not found  Category: …  Group by: Category"). A count column that is empty for every app is left out; it is decided over all apps, not the filtered ones, so the columns stay the same while filtering.
+- Every list page with filters has the same tool bar (`FilterBar`): the search, one multi-select filter menu per field (shown only when it has two values or more among what the search found; counts follow the search and the other menus), Group by toggles where the list can be grouped, and Reset at the end; under it one line lists what is on and "Shown: X of Y". A search never drops a filter or a grouping: they apply again when it is cleared. On a narrow window the search takes its own row above the menus. Pages: Apps (Status, Category; Group by Category, Status), Skills (App, Level, Invoked by, From; Group by Invoked by, From), Plugins (App, Level), Commands & Agents (App, Level, Type), an app's Skills section (as Skills without App), Servers (App, Level, Type, Status), Hooks (App, Level, Event, Status), the Models catalog (Provider, Changes). Health keeps its Warnings / All switch (one choice, not a filter of a list with fields).
 - The app detail page shows per-app usage where logs have the data: tokens, a per-day chart, a cost estimate, and more.
 - Live usage limits (limit %, plan, and so on) come from each app's saved token plus its API. At most one call per app per refresh interval, with cached data shown in between. The interval is a setting in minutes, default 1.
 
@@ -39,8 +40,8 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - Descriptions never show raw HTML or Markdown marks: lists and the detail panel show one line of plain text; rendered SKILL.md and README files show their HTML as Markdown (badges as their alt text). Chat text in logs is shown as written.
 - Skills page matches the Plugins page. Clicking a skill opens a bottom panel (like Logs) with all skill info and rendered markdown. Linked references and scripts in that panel can be opened and viewed, with markdown supported.
 - Skill filters:
-  - Level is check boxes for System, Local, Project and User, all checked by default.
-  - Invoked by has four options: Agent or User (all), Agent only, User only, Agent and User.
+  - Level is a filter menu for System, Local, Project and User, all checked by default.
+  - Invoked by is a filter menu of Agent only, User only, Agent and User (all checked by default).
   - App category is also a filter.
   - The same filters, and the same search, appear on an app's Skills section.
 - Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, app, level, keyword or tag, path, has) matches one field; author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
@@ -59,7 +60,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 - "Claude Code settings" card (only when a settings file exists): permission rules and settings by level, highest priority first; a deny anywhere wins; env shows names only.
 
 ## Servers (MCP and LSP)
-- MCP and LSP servers share one page, "Servers", with a Type column and pills: both are programs an app starts with your rights and have the same columns; they differ in purpose (tools for the model, code intelligence for the agent), and LSP servers are few (mostly from plugins). Servers a plugin adds are rows of that plugin ("from plugin X").
+- MCP and LSP servers share one page, "Servers", with a Type column and a Type filter: both are programs an app starts with your rights and have the same columns; they differ in purpose (tools for the model, code intelligence for the agent), and LSP servers are few (mostly from plugins). Servers a plugin adds are rows of that plugin ("from plugin X").
 - One page lists every MCP server in every app's config files, at every level, highest first: what runs or where it connects, and notes (not pinned, key in plain text, env names, disabled). Warnings alone on request; a search narrows it.
 - Read-only and offline: servers are never started or asked for their tools. Secret values are never shown.
 

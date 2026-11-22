@@ -16,7 +16,6 @@ namespace AiStackprint.Ui;
 internal class LibraryView(Ctx x, string kind)
 {
     private readonly ItemBrowser _browser = new(x, kind);
-    private string _type = "";   // Part: "" = both, "Command" or "Agent"
 
     public void Leave() => _browser.Leave();
     public void Select(Item i) => _browser.Select(i);
@@ -32,13 +31,7 @@ internal class LibraryView(Ctx x, string kind)
         {
             "Skill" => Btn("Add skill", () => AppActions.AddSkillPickApp(x, null), true, "add"),
             "Plugin" when x.S.Defs.Any(d => d.PluginCommands != null) => Btn("Add plugin", () => AppActions.AddPluginPickApp(x), true, "add"),
-            "Part" => Pills([($"All {all.Count:N0}", ""), ($"Commands {all.Count(i => i.Kind == "Command"):N0}", "Command"), ($"Agents {all.Count(i => i.Kind == "Agent"):N0}", "Agent")],
-                _type, v =>
-                {
-                    _type = v;
-                    x.Refresh();
-                }),
-            _ => null
+            _ => null   // commands and agents: the Type filter in the tool bar
         };
         if (right != null)
         {
@@ -46,6 +39,6 @@ internal class LibraryView(Ctx x, string kind)
             head.Children.Add(right);
         }
         head.Children.Add(H1(kind switch { "Plugin" => "Plugins", "Part" => "Commands & Agents", _ => "Skills" }));
-        return _browser.Build([head], [.. all.Where(i => _type == "" || i.Kind == _type)]);
+        return _browser.Build([head], all);
     }
 }

@@ -16,27 +16,40 @@ namespace AiStackprint.App.Tests;
 public sealed partial class PagesTests
 {
     [AvaloniaFact]
-    public void Skills_count_returns_to_the_total_when_All_is_picked_again_and_follows_the_level_checks()
+    public void Skills_count_returns_to_the_total_when_every_value_is_on_again_and_the_menu_counts_follow_the_level_filter()
     {
         var (w, x) = Host(State());
         var skills = new LibraryView(x, "Skill");
         w.Content = skills.Build();
         Settle();
-        Assert.Contains("3", Ui.Texts(w));   // the count beside the search: all skills shown
+        Assert.EndsWith("Shown: 3", Ui.Summary(w));   // under the tool bar: all skills shown
+        Assert.False(Ui.FilterMenu(w, "App").IsVisible);   // one app: nothing to choose
 
-        Radio(w, "Agent only").IsChecked = true;
-        Settle();
-        Assert.Contains("1 of 3", Ui.Texts(w));
+        Ui.FilterOnly(w, "Invoked by", "Agent only");
+        Assert.EndsWith("Shown: 1 of 3", Ui.Summary(w));
+        Assert.Contains("Invoked by: Agent only", Ui.Summary(w));
 
-        Radio(w, "All").IsChecked = true;   // the first choice again: the bug left "1 of 3"
-        Settle();
-        Assert.Contains("3", Ui.Texts(w));
-        Assert.DoesNotContain("1 of 3", Ui.Texts(w));
+        foreach (var b in Ui.FilterBoxes(w, "Invoked by"))
+        {
+            b.IsChecked = true;   // every value on again: the total
+        }
 
-        w.GetVisualDescendants().OfType<CheckBox>().First(c => Ui.Texts(c).Contains("Project")).IsChecked = false;
+        Ui.FilterMenu(w, "Invoked by").Flyout!.Hide();
         Settle();
-        Assert.Contains("2 of 3", Ui.Texts(w));
-        Assert.Contains("All 2", Ui.Texts(w));   // the radio counts follow the level filter
+        Assert.EndsWith("Shown: 3", Ui.Summary(w));
+
+        Ui.FilterOnly(w, "Level", "User");
+        Assert.EndsWith("Shown: 2 of 3", Ui.Summary(w));
+        var counts = Ui.FilterBoxes(w, "Invoked by").Select(b => int.Parse(Ui.Texts(b)[^1], System.Globalization.CultureInfo.InvariantCulture)).ToList();
+        Assert.Equal(2, counts.Sum());   // the counts follow the level filter
+        Ui.FilterMenu(w, "Invoked by").Flyout!.Hide();
+        skills.Leave();
+        Show(w, skills.Build());
+        Assert.Contains("Level: User", Ui.Summary(w));   // kept for the next visit
+
+        Ui.Click(w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Reset the search, filters and grouping"));
+        Settle();
+        Assert.EndsWith("Shown: 3", Ui.Summary(w));
         w.Close();
         Settle();
     }
@@ -56,8 +69,12 @@ public sealed partial class PagesTests
 
         Show(w, skills.Build());
         Assert.Equal("review", SearchBox(w).Text);
-        Assert.Contains("1 of 3", Ui.Texts(w));
-        Assert.True(Radio(w, "Agent only").IsChecked);
+        Assert.EndsWith("Shown: 1 of 3", Ui.Summary(w));
+        SearchBox(w).Text = "";   // the search cleared: the filter and grouping set before it still apply
+        Settle();
+        Show(w, skills.Build());
+        Assert.Contains("Group by: Invoked by", Ui.Summary(w));
+        Assert.EndsWith("Shown: 3", Ui.Summary(w));
         w.Close();
         Settle();
     }
@@ -66,10 +83,10 @@ public sealed partial class PagesTests
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     private static (WeakReference Page, WeakReference Box) FirstVisit(Window w, LibraryView skills)
     {
-        skills.Filter(null, "review");   // as the dashboard does (headless timers do not run, so typing would not search)
-        var page = Show(w, skills.Build());
-        Assert.Contains("1 of 3", Ui.Texts(w));
-        Radio(w, "Agent only").IsChecked = true;
+        var page = Show(w, skills.Build());   // no filter menu is opened: the headless mouse, shared by the tests, can keep pointing into a closed menu's list
+        Ui.Click(Ui.Button(w, "Invoked by"));   // Group by Invoked by
+        Settle();
+        SearchBox(w).Text = "review";   // kept for the next visit (headless timers do not run, so it searches when the page is built again)
         Settle();
         return (new WeakReference(page), new WeakReference(SearchBox(w)));
     }
@@ -98,7 +115,4 @@ public sealed partial class PagesTests
 
         GC.KeepAlive(w);
     }
-
-    private static RadioButton Radio(Window w, string label) =>
-        w.GetVisualDescendants().OfType<RadioButton>().First(r => r.Content is string t && t.StartsWith(label + " ", StringComparison.Ordinal));
 }

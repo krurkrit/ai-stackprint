@@ -16,7 +16,7 @@ namespace AiStackprint.App.Tests;
 public sealed class HooksViewTests
 {
     [AvaloniaFact]
-    public void Hooks_are_listed_highest_level_first_with_their_plugin_and_Warnings_narrows_the_list()
+    public void Hooks_are_listed_highest_level_first_with_their_plugin_and_the_Status_menu_narrows_the_list()
     {
         var s = new AppState
         {
@@ -63,8 +63,7 @@ public sealed class HooksViewTests
         Assert.Contains("from plugin guard", texts);
         Assert.Contains("runs /r/gone.sh, which does not exist", texts);
 
-        Ui.Click(Ui.Button(w, "Warnings 1"));
-        Dispatcher.UIThread.RunJobs();
+        Ui.FilterOnly(w, "Status", "Warning");
         Assert.Equal(["afterFileEdit"], new[] { "afterFileEdit", "Stop", "PreToolUse" }.Where(Ui.Texts(w).Contains));
     }
 }

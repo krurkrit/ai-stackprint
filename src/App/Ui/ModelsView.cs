@@ -23,7 +23,8 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
     private readonly Action<UiState> _save = saveState ?? (s => StateStore.Save(s));
     private readonly ModelEdits _edits = edits ?? ModelEdits.Mine;
     private string _query = "";
-    private string _provider = "";
+    private readonly HashSet<string> _offProviders = [], _offChanges = [];
+    private FilterBar<ModelRow>? _bar;
     private string? _selected;
     private List<ModelRow> _rows = [];
     private ContentControl _table = new();
@@ -44,6 +45,26 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         _tabs = null;
         _box = null;
         _selected = null;
+        _bar?.Leave();
+    }
+
+    /// <summary>The catalog's tool bar: the search, Provider (most models first) and Changes (the model data, changed by you, added by you).</summary>
+    private FilterBar<ModelRow> Bar()
+    {
+        if (_bar != null)
+        {
+            return _bar;
+        }
+
+        _bar = new FilterBar<ModelRow>(() => _query, Fill, () =>
+        {
+            _query = "";
+            _box?.Text = "";
+        });
+        _bar.Add("Provider", _offProviders, r => [r.Provider], order: vs => vs.OrderByDescending(v => _rows.Count(r => r.Provider == v)).ThenBy(v => v, StringComparer.Ordinal));
+        _bar.Add("Changes", _offChanges, r => [r.Added ? "Added by you" : r.Changed.Count > 0 ? "Changed by you" : "Model data"],
+            order: vs => vs.OrderBy(v => v switch { "Model data" => 0, "Changed by you" => 1, _ => 2 }));
+        return _bar;
     }
 
     public Control Build(string? select = null)
@@ -54,7 +75,7 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         {
             _selected = select;
             _query = select;
-            _provider = "";
+            _bar?.Clear();
             _box = null;
             x.S.State.ModelsTab = "Catalog";   // a model sent from the Usage page is looked up in the catalog
             if (!_rows.Any(r => r.Key == select))
@@ -73,23 +94,17 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         var intro = Txt($"{ReadableLog.Plural(_rows.Count, "model")} from model data of {table.Updated} ({(table.Downloaded ? "downloaded" : "built in")}), with your changes. " +
             "Prices are USD per 1M tokens; costs on the Usage page use them. Values you changed are in the accent color; they are saved in models.json in the data folder.",
             TextSize.Small, false, Muted);
-        var providers = _rows.GroupBy(r => r.Provider).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal)
-            .Select(g => ($"{g.Key} {g.Count():N0}", g.Key));
-        var pills = Pills([($"All {_rows.Count:N0}", ""), .. providers], _provider, v =>
-        {
-            _provider = v;
-            x.Refresh();
-        });
         _box ??= SearchBox("Search model or provider").With(b => b.Text = _query).OnPause(t =>
         {
             _query = t.Trim();
             Fill();
         });
+        var bar = Bar().Build(_box);
         Fill();
         _catalogPane.Content = new StackPanel
         {
             Spacing = Space.L,
-            Children = { pills, _box.Free(), _table.Free() }
+            Children = { bar, _table.Free() }
         };
         var compareOpen = x.S.State.ModelsTab == "Compare";
         if (compareOpen)
@@ -130,8 +145,7 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
     private void Fill()
     {
         var words = _query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var shown = _rows.Where(r => _provider == "" || r.Provider == _provider)
-            .Where(r => words.All(w => $"{r.Key} {r.Provider}".Contains(w, StringComparison.OrdinalIgnoreCase))).ToList();
+        var shown = Bar().Apply([.. _rows.Where(r => words.All(w => $"{r.Key} {r.Provider}".Contains(w, StringComparison.OrdinalIgnoreCase)))], _rows);
         var rows = shown.Select(r => (Func<TableRow>)(() => new TableRow(
         [
             r.Added ? Row(Txt(r.Key, TextSize.Body, true), Chip("Yours")) : Txt(r.Key, TextSize.Body, true),
@@ -143,7 +157,7 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
         ], () => Edit(r, null), r.Key == _selected))).ToList();   // a row's controls are made when it comes near the screen (Table.Virtual)
         _table.Content = TableSurface(Table.Virtual([new Col("Name", "2*", Min: 120), new Col("Provider", "1*", Min: 64), new Col("Context", "1*", true), new Col("Max output", "1*", true),
             new Col("Input", "1*", true), new Col("Output", "1*", true), new Col("Cache read", "1*", true), new Col("Cache write", "1*", true), new Col("Retires", "1.2*", true), new Col("", "112")],
-            rows, "Nothing matches. Clear the search or choose All."));
+            rows, "Nothing matches. Clear the search or filters."));
     }
 
     private static string RawText(int axis, double? v)

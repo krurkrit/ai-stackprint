@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -62,6 +63,37 @@ internal static class Ui
         [.. root.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible).Select(b => b.Content as string ?? string.Join("|", Texts(b)))];
 
     public static void Click(Button b) => b.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+
+    /// <summary>A tool bar's filter menu (<see cref="AiStackprint.Ui.FilterMenu"/>) by its label.</summary>
+    public static AiStackprint.Ui.FilterMenu FilterMenu(Visual root, string label) =>
+        root.GetVisualDescendants().OfType<AiStackprint.Ui.FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == label));
+
+    /// <summary>Opens a filter menu and returns its check boxes, each with its value's name and count as texts.</summary>
+    public static List<CheckBox> FilterBoxes(Visual root, string label)
+    {
+        var menu = FilterMenu(root, label);
+        menu.Flyout!.ShowAt(menu);
+        Dispatcher.UIThread.RunJobs();
+        return [.. ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<Border>().Select(b => (CheckBox)b.Child!)];
+    }
+
+    /// <summary>Leaves only <paramref name="value"/> checked in a filter menu (the name it shows), then closes the menu.</summary>
+    public static void FilterOnly(Visual root, string label, string value)
+    {
+        var boxes = FilterBoxes(root, label);
+        var keep = boxes.First(b => b.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == value));
+        keep.IsChecked = true;
+        foreach (var b in boxes.Where(b => b != keep))
+        {
+            b.IsChecked = false;
+        }
+
+        FilterMenu(root, label).Flyout!.Hide();
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    /// <summary>The line under a filter tool bar: "Level: …    Shown: 2 of 3".</summary>
+    public static string Summary(Visual root) => Texts(root).First(t => t.Contains("Shown: ", StringComparison.Ordinal));
 
     /// <summary>Runs the UI thread's queued work until <paramref name="done"/> holds (background work posts its results back).</summary>
     public static void WaitUntil(Func<bool> done, int ms = 5000)

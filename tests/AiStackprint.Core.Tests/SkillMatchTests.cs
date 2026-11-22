@@ -10,27 +10,22 @@ namespace AiStackprint.Core.Tests;
 
 public class SkillMatchTests
 {
-    private static Item Skill(string level, params string[] invokers) => new("Skill", "s", "", "App", level, "p") { Invokers = invokers };
-    private static readonly Item _agentOnly = Skill("User", "Agent"), _userOnly = Skill("User", "User"), _both = Skill("User", "Agent", "User");
-    private static readonly HashSet<string> _none = [];
-
-    private static string[] Shown(string invoked) =>
-        [.. new[] { _agentOnly, _userOnly, _both }.Where(i => SkillMatch.Shows(i, _none, invoked, "")).Select(SkillMatch.Label)];
+    private static Item Skill(params string[] invokers) => new("Skill", "s", "", "App", "User", "p") { Invokers = invokers };
 
     [Fact]
-    public void Invoked_by_is_one_choice_matched_exactly()
+    public void Invoked_by_labels_each_combination_and_plugins_have_none()
     {
-        Assert.Equal(new[] { "Agent only", "User only", "Agent and User" }, Shown(""));   // All
-        Assert.Equal(new[] { "Agent only" }, Shown("Agent only"));
-        Assert.Equal(new[] { "User only" }, Shown("User only"));
-        Assert.Equal(new[] { "Agent and User" }, Shown("Agent and User"));
+        Assert.Equal("Agent only", SkillMatch.Label(Skill("Agent")));
+        Assert.Equal("User only", SkillMatch.Label(Skill("User")));
+        Assert.Equal("Agent and User", SkillMatch.Label(Skill("Agent", "User")));
+        Assert.Equal("", SkillMatch.Label(new Item("Plugin", "p", "", "App", "User", "x")));
     }
 
     [Fact]
-    public void Levels_filter_by_unchecked_levels()
+    public void From_is_the_plugin_the_app_or_a_folder()
     {
-        Assert.False(SkillMatch.Shows(Skill("Project", "Agent"), new HashSet<string> { "Project" }, "", ""));
-        Assert.True(SkillMatch.Shows(Skill("User", "Agent"), new HashSet<string> { "Project", "Local" }, "", ""));
-        Assert.Equal("", SkillMatch.Label(new Item("Plugin", "p", "", "App", "User", "x")));
+        Assert.Equal("git-helper", SkillMatch.From(Skill("Agent") with { Plugin = "git-helper@market" }));
+        Assert.Equal("Bundled", SkillMatch.From(Skill("Agent") with { Bundled = true }));
+        Assert.Equal("Folder", SkillMatch.From(Skill("Agent")));
     }
 }
