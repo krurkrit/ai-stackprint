@@ -135,4 +135,22 @@ public sealed class AppsViewTests
         Assert.True(boxes[0].IsChecked);
         menu.Flyout.Hide();
     }
+
+    [AvaloniaFact]
+    public void Filtering_out_the_only_apps_with_counts_keeps_the_same_columns()
+    {
+        var (w, _) = Open(1400);
+        var menu = w.GetVisualDescendants().OfType<FilterMenu>().First(m => m.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == "Category"));
+        menu.Flyout!.ShowAt(menu);
+        Dispatcher.UIThread.RunJobs();
+        var boxes = ((StackPanel)((Flyout)menu.Flyout).Content!).Children.OfType<CheckBox>().ToList();
+        boxes[0].IsChecked = false;     // Agents off: Alpha, the only app with plugins or config files, is not listed
+        Dispatcher.UIThread.RunJobs();
+        menu.Flyout.Hide();
+        var texts = Ui.Texts(w);
+        Assert.DoesNotContain("Alpha", texts);
+        Assert.Contains("Plugins", texts);
+        Assert.Contains("Config files", texts);
+        Assert.DoesNotContain("Servers", texts);   // still left out: no app has one
+    }
 }

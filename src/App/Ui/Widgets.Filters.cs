@@ -3,8 +3,8 @@
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Layout;
+using Avalonia.Styling;
 
 namespace AiStackprint.Ui;
 
@@ -22,7 +22,8 @@ internal sealed class FilterMenu : Button
     public FilterMenu(string label, Func<IReadOnlyList<(string Label, string Value, int Count)>> opts, HashSet<string> off, Action changed)
     {
         _off = off;
-        Content = W.Row(W.Txt(label, TextSize.Body).With(t => t.VerticalAlignment = VerticalAlignment.Center), W.Icon("chevron_down", IconSize.XS).Themed(TextElement.ForegroundProperty, W.Muted));
+        Content = W.Row(W.Txt(label, TextSize.Body).With(t => t.VerticalAlignment = VerticalAlignment.Center), W.Icon("chevron_down", IconSize.XS).With(i => i.Opacity = .7));   // the button's text color, quieter (it follows the hover colors)
+        W.AccentHover(this);   // under the pointer: like an input and a side menu item
         MinHeight = AiStackprint.Ui.Theme.InputHeight;   // (Button.Theme is the control theme)
         Padding = new Thickness(Space.L, 0);
         VerticalContentAlignment = VerticalAlignment.Center;
@@ -66,6 +67,30 @@ internal sealed class FilterMenu : Button
 
 internal static partial class W
 {
+    /// <summary>Pointer over and pressed: exactly the accent (Rescan) button's own colors, as a side menu item and an input show them under the pointer.</summary>
+    public static void AccentHover(Button b)
+    {
+        var app = Application.Current!;
+        foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
+        {
+            var d = new ResourceDictionary();
+            foreach (var s in new[] { "PointerOver", "Pressed" })
+            {
+                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg))
+                {
+                    d["ButtonBackground" + s] = bg;
+                    d["ButtonBorderBrush" + s] = bg;
+                }
+
+                if (app.TryGetResource("AccentButtonForeground" + s, v, out var fg))
+                {
+                    d["ButtonForeground" + s] = fg;
+                }
+            }
+            b.Resources.ThemeDictionaries[v] = d;
+        }
+    }
+
     /// <summary>Toggles in one rounded group (like the theme switch): each one is on or off on its own; one that is on is filled with the selection color. The same height as an input.</summary>
     public static Control Toggles(IEnumerable<(string Label, string Value)> opts, ISet<string> on, Action<string> toggle) => Segmented(opts, on.Contains, toggle);
 

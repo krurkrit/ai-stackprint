@@ -80,12 +80,12 @@ internal static partial class Theme
             d[W.LevelKey(LevelNames[i])] = B(ParseHex(o.Levels?.ElementAtOrDefault(i)) ?? LevelDefault(p == _dark, i, primary));
         }
         // Inputs sit on cards: card background and the divider color as border (cards themselves have no border)
-        foreach (var k in new[] { "TextControlBackground", "TextControlBackgroundPointerOver", "TextControlBackgroundFocused", "ComboBoxBackground", "ComboBoxBackgroundPointerOver", "ComboBoxBackgroundPressed" })
+        foreach (var k in new[] { "TextControlBackground", "TextControlBackgroundFocused", "ComboBoxBackground" })
         {
             d[k] = d[W.Surface];
         }
 
-        foreach (var k in new[] { "TextControlBorderBrush", "TextControlBorderBrushPointerOver", "ComboBoxBorderBrush", "ComboBoxBorderBrushPointerOver", "ComboBoxBorderBrushPressed" })
+        foreach (var k in new[] { "TextControlBorderBrush", "ComboBoxBorderBrush" })
         {
             d[k] = d[W.BorderKey];
         }
@@ -104,17 +104,10 @@ internal static partial class Theme
             d["CheckBoxCheckBackgroundStrokeUnchecked" + s] = b;
             d["RadioButtonOuterEllipseStroke" + s] = b;
         }
-        d["TextControlBorderBrushPointerOver"] = d[W.Accent];
         d["TextControlBorderBrushFocused"] = d[W.Accent];   // Fluent UI 2: the focused input shows the brand color (the same thickness on every side)
-        // The date picker looks like the other inputs: card background, divider-colored border, accent under the pointer
+        // The date picker looks like the other inputs: card background, divider-colored border
         d["CalendarDatePickerBackground"] = d[W.Surface];
-        d["CalendarDatePickerBackgroundPointerOver"] = d[W.Surface];
-        d["CalendarDatePickerBackgroundPressed"] = d[W.Surface];
         d["CalendarDatePickerBorderBrush"] = d[W.BorderKey];
-        d["CalendarDatePickerBorderBrushPointerOver"] = d[W.Accent];
-        d["CalendarDatePickerBorderBrushPressed"] = d[W.Accent];
-        d["ComboBoxBorderBrushPointerOver"] = d[W.Accent];
-        d["ComboBoxBorderBrushPressed"] = d[W.Accent];
         // Fluent accent buttons default to white text; each accent here has its own text color.
         foreach (var k in new[] { "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed" })
         {
@@ -132,6 +125,29 @@ internal static partial class Theme
             d["CheckBoxCheckBackgroundStrokeChecked" + s] = brush;
             d["CheckBoxCheckGlyphForegroundChecked" + s] = B(onPrimary);   // the check mark has the accent button's text color
         }
+        // Inputs under the pointer look like a side menu item under the pointer: the accent fill and its text color, a little darker while pressed (a focused text box keeps its own look while typing)
+        foreach (var (s, brush) in new[] { ("PointerOver", fill), ("Pressed", pressed) })
+        {
+            foreach (var k in new[] { "ComboBoxBackground", "ComboBoxBorderBrush", "CalendarDatePickerBackground", "CalendarDatePickerBorderBrush" })
+            {
+                d[k + s] = brush;
+            }
+
+            d["ComboBoxForeground" + s] = B(onPrimary);
+        }
+
+        d["TextControlBackgroundPointerOver"] = fill;
+        d["TextControlBorderBrushPointerOver"] = fill;
+        foreach (var k in new[] { "TextControlForegroundPointerOver", "CalendarDatePickerTextForegroundPointerOver", "CalendarDatePickerCalendarGlyphForegroundPointerOver" })
+        {
+            d[k] = B(onPrimary);
+        }
+
+        foreach (var k in new[] { "TextControlPlaceholderForegroundPointerOver", "ComboBoxPlaceHolderForegroundPointerOver" })
+        {
+            d[k] = B(A(onPrimary, .8));
+        }
+
         return d;
     }
 

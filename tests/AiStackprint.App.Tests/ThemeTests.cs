@@ -6,6 +6,7 @@ using AiStackprint.Ui;
 
 using Avalonia;
 using Avalonia.Headless.XUnit;
+using Avalonia.Media;
 using Avalonia.Styling;
 
 using Xunit;
@@ -54,7 +55,15 @@ public class ThemeTests
         Assert.NotNull(Get("TextControlBorderBrush"));
         Assert.Equal(Get("TextControlBorderBrush"), Get("CalendarDatePickerBorderBrush"));
         Assert.Equal(Get("TextControlBorderBrushPointerOver"), Get("CalendarDatePickerBorderBrushPointerOver"));
-        Assert.Equal(Get("TextControlBorderBrushPointerOver"), Get("TextControlBorderBrushFocused"));   // the accent: Fluent UI 2 brand focus
+        Assert.Equal(Get(W.Accent), Get("TextControlBorderBrushFocused"));   // the accent: Fluent UI 2 brand focus
+        // under the pointer every input looks like a side menu item under the pointer: the accent button's fill and text color
+        foreach (var k in new[] { "TextControlBackgroundPointerOver", "ComboBoxBackgroundPointerOver", "CalendarDatePickerBackgroundPointerOver" })
+        {
+            Assert.Equal(Get("AccentButtonBackgroundPointerOver"), Get(k));
+        }
+
+        Assert.Equal(((ISolidColorBrush)Get("AccentButtonForegroundPointerOver")!).Color, ((ISolidColorBrush)Get("TextControlForegroundPointerOver")!).Color);
+        Assert.Equal(((ISolidColorBrush)Get("AccentButtonForegroundPointerOver")!).Color, ((ISolidColorBrush)Get("ComboBoxForegroundPointerOver")!).Color);
         Assert.Equal(new CornerRadius(Radius.M), Get("ControlCornerRadius"));
         Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
     }

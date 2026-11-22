@@ -101,8 +101,8 @@ internal partial class AppsView(Ctx x)
             cats.Select(c => (Plural(c), c, byStatus.Count(a => a.Category == c))).ToList());
 
         var apps = byStatus.Where(a => !_offCats.Contains(a.Category)).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
-        // A count column that is empty for every app listed is left out: less to read, and the rest fit
-        var counts = Counts().Where(c => apps.Any(a => c.Of(a) > 0)).ToList();
+        // A count column that is empty for every app is left out: less to read, and the rest fit. Decided over all apps, not the filtered ones, so the columns stay put while filtering
+        var counts = Counts().Where(c => x.ShownApps.Any(a => c.Of(a) > 0)).ToList();
         var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Status() }.Concat(counts.Select(c => Cols.Count(c.Head))).ToArray();
         var table = Table.Scrollable(Table.Build(cols, Rows(apps, counts, cols.Length), "No apps match. Clear the search or filters."), Table.MinWidth(cols));
         // Expand all / Collapse all: icon buttons over the top right of the table, while it is grouped

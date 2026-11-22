@@ -176,8 +176,9 @@ internal static partial class W
     public static TextBox SearchBox(string placeholder, double minHeight = 0) => new TextBox
     {
         PlaceholderText = placeholder,
-        InnerLeftContent = Icon("search", IconSize.S).Themed(TextElement.ForegroundProperty, Muted).With(i =>
+        InnerLeftContent = Icon("search", IconSize.S).With(i =>
         {
+            i.Opacity = .7;   // the box's text color, quieter: it follows the box under the pointer too
             i.Margin = new Thickness(Space.L, 0, 0, 0);
             i.VerticalAlignment = VerticalAlignment.Center;
         })

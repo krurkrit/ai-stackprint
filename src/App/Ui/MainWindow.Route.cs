@@ -6,7 +6,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Styling;
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -70,24 +69,7 @@ internal partial class MainWindow
     private static void HoverStyle(Button b)
     {
         b.CornerRadius = new CornerRadius(Radius.L);
-        var app = Application.Current!;
-        foreach (var v in new[] { ThemeVariant.Light, ThemeVariant.Dark })
-        {
-            var d = new ResourceDictionary();
-            foreach (var s in new[] { "PointerOver", "Pressed" })
-            {
-                if (app.TryGetResource("AccentButtonBackground" + s, v, out var bg))
-                {
-                    d["ButtonBackground" + s] = bg;
-                }
-
-                if (app.TryGetResource("AccentButtonForeground" + s, v, out var fg))
-                {
-                    d["ButtonForeground" + s] = fg;
-                }
-            }
-            b.Resources.ThemeDictionaries[v] = d;
-        }
+        AccentHover(b);
     }
 
     private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
