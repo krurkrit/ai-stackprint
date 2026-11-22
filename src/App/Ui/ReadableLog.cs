@@ -149,6 +149,12 @@ internal partial class ReadableLog
         _controls[e] = step;
         if (!_lines && !_compact)
         {
+            if (e.Role is not ("user" or "assistant"))
+            {
+                var m = step.Margin;   // a folded step's arrow is at its right edge: keep it clear of the Copy and Bookmark buttons laid over the top right
+                step.Margin = new Thickness(m.Left, m.Top, m.Right + StepActions, m.Bottom);
+            }
+
             if (e.Usage != null)
             {
                 step = WithUsage(step, e.Usage);

@@ -14,6 +14,9 @@ namespace AiStackprint.Ui;
 /// <summary>A step's Copy button (shows while the pointer is over the step): the step as Markdown on the clipboard.</summary>
 internal partial class ReadableLog
 {
+    /// <summary>The width the Copy and Bookmark buttons take at a step's top right (two icon buttons and their margins).</summary>
+    private const double StepActions = Space.XS + (2 * (IconSize.S + (2 * Space.M))) + Space.XS;
+
     private static void AddCopy(Panel holder, LogEntry e, StepContext? marks)
     {
         var copy = IconBtn("copy", "Copy this step as Markdown", () =>

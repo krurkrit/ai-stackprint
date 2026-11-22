@@ -5,10 +5,12 @@ using System.Text;
 using AiStackprint.Models;
 using AiStackprint.Services;
 using AiStackprint.Ui;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Xunit;
@@ -113,7 +115,7 @@ public sealed class LogFeatureTests
         Assert.Equal(2, rows.Count);
         foreach (var row in rows)
         {
-            var click = new Avalonia.Input.PointerReleasedEventArgs(row, new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true), w, new Avalonia.Point(5, 5),
+            var click = new Avalonia.Input.PointerReleasedEventArgs(row, new Avalonia.Input.Pointer(1, Avalonia.Input.PointerType.Mouse, true), w, new Point(5, 5),
                 0, new Avalonia.Input.PointerPointProperties(Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PointerUpdateKind.LeftButtonReleased), Avalonia.Input.KeyModifiers.None, Avalonia.Input.MouseButton.Left)
             {
                 RoutedEvent = Avalonia.Input.InputElement.PointerReleasedEvent
@@ -185,6 +187,36 @@ public sealed class LogFeatureTests
         Assert.False(marks.Get(first)!.Starred);
         Assert.Equal("check this", marks.Get(first)!.Note);
         host.Close();
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void The_arrow_of_a_folded_step_is_not_under_its_Copy_and_Bookmark_buttons()
+    {
+        using var home = new FakeHome();
+        var session = new ClaudeSessionParser().Parse(Lines(
+            """{"type":"assistant","timestamp":"2026-11-11T05:00:00Z","message":{"id":"m1","model":"m","content":[{"type":"thinking","thinking":"first\nsecond"},{"type":"tool_use","id":"a","name":"Bash","input":{"command":"ls\npwd"}}]}}""",
+            """{"type":"user","timestamp":"2026-11-11T05:00:01Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"a","content":"one\ntwo\nthree"}]}}"""));
+        var marks = new StepContext(new UiState(), Path.Combine(home.Root, "a.jsonl"), true, _ => null);
+        var w = Ui.Show(new ReadableLog(session, false, false, marks).Root);
+        var actions = w.GetVisualDescendants().OfType<Button>()
+            .Where(b => ToolTip.GetTip(b) is "Copy this step as Markdown" or "Bookmark this step").ToList();
+        var folds = w.GetVisualDescendants().OfType<Expander>().ToList();
+        Assert.Equal(3, folds.Count);   // thinking, the call and its result
+        Assert.Equal(6, actions.Count);
+        foreach (var x in folds)
+        {
+            var right = x.TranslatePoint(new Point(x.Bounds.Width, 0), w).Value.X;
+            var left = actions.Min(b => b.TranslatePoint(default, w).Value.X);
+            Assert.True(right <= left, $"the arrow ends at {right}, the buttons start at {left}");
+            var arrow = x.GetVisualDescendants().OfType<ToggleButton>().First();
+            var at = arrow.TranslatePoint(new Point(arrow.Bounds.Width - 12, arrow.Bounds.Height / 2), w).Value;   // the arrow, at the right end of the header
+            w.MouseDown(at, MouseButton.Left);
+            w.MouseUp(at, MouseButton.Left);
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(x.IsExpanded);   // a real click there reaches the arrow, not a button laid over it
+        }
+
         w.Close();
     }
 
