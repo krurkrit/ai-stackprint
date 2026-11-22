@@ -15,7 +15,6 @@ namespace AiStackprint.Ui;
 internal sealed class FilterMenu : Button
 {
     private readonly HashSet<string> _off;
-    private int _offered;   // how many values the page offers now (Update)
 
     protected override Type StyleKeyOverride => typeof(Button);   // styled as a button
 
@@ -36,9 +35,6 @@ internal sealed class FilterMenu : Button
         var menu = new Flyout { Content = list, Placement = PlacementMode.BottomEdgeAlignedLeft };
         menu.FlyoutPresenterClasses.Add(PresenterClass);
         Flyout = menu;
-        // While open: the accent border, like an open drop-down and a focused text box
-        menu.Opened += (_, _) => this.Themed(BorderBrushProperty, W.Accent);
-        menu.Closed += (_, _) => Update(_offered);
         menu.Opening += (_, _) =>
         {
             var now = opts();
@@ -85,11 +81,7 @@ internal sealed class FilterMenu : Button
     public const string PresenterClass = "filter-menu";
 
     /// <summary>The accent border while some of the <paramref name="offered"/> values are off.</summary>
-    public void Update(int offered)
-    {
-        _offered = offered;
-        this.Themed(BorderBrushProperty, (_off.Count > 0 && offered > 0) || Flyout?.IsOpen == true ? W.Accent : W.BorderKey);
-    }
+    public void Update(int offered) => this.Themed(BorderBrushProperty, _off.Count > 0 && offered > 0 ? W.Accent : W.BorderKey);
 }
 
 internal static partial class W
