@@ -41,6 +41,12 @@ internal record TableRow(Control[] Cells, Action? Click = null, bool Selected = 
 /// <summary>Flat list with column headers, row dividers, hover and selection. Replaces the old expandable tree.</summary>
 internal static partial class Table
 {
+    internal const string SelectedClass = "selected-row";
+
+    /// <summary>Scrolls the page so the selected row of the table under <paramref name="host"/> is in view (after the next layout, when the rows have their places).</summary>
+    internal static void RevealSelected(Control host) =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(host).OfType<Control>().FirstOrDefault(c => c.Classes.Contains(SelectedClass))?.BringIntoView(),
+            Avalonia.Threading.DispatcherPriority.Loaded);
 
     /// <summary>
     /// A list with more rows than this is built for the part on screen only (<see cref="VirtualRows"/>); a shorter one builds every row.
@@ -153,6 +159,7 @@ internal static partial class Table
         if (r.Selected)
         {
             row.Themed(Border.BackgroundProperty, Selected);
+            divider.Classes.Add(SelectedClass);   // a page can scroll to the selected row
         }
 
         if (r.Click is { } click)

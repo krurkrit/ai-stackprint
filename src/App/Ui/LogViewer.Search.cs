@@ -38,8 +38,25 @@ internal partial class LogViewer
     private void Go(int i)
     {
         _at = i;
-        _jumps[i]();
+        Jumping(_jumps[i]);
         _count?.Text = $"{i + 1:N0} of {_count.Tag}";
+    }
+
+    /// <summary>Shows the loading icon over the log, then goes to the result: building the steps around it can take a moment and the icon must be on screen first.</summary>
+    private void Jumping(Action go)
+    {
+        _jumping.IsVisible = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                go();
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() => _jumping.IsVisible = false, DispatcherPriority.Background);   // after the view has laid out
+            }
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>Raw: searches the whole file in the background. Conversation: searches the steps. Results go in the side panel.</summary>
@@ -171,11 +188,9 @@ internal partial class LogViewer
     {
         var close = IconBtn("dismiss", "Close the results (the search words stay; change them or an option to search again)", CloseResults);
         DockPanel.SetDock(close, Dock.Right);
-        var sp = new StackPanel
-        {
-            Spacing = Space.XXS,
-            Children = { new DockPanel { Margin = new Thickness(Space.XS, 0, 0, Space.S), Children = { close, head } } }
-        };
+        var top = new DockPanel { Margin = new Thickness(Space.XS, 0, 0, Space.S), Children = { close, head } };
+        DockPanel.SetDock(top, Dock.Top);   // the count and the x stay where they are while the results scroll
+        var sp = new StackPanel { Spacing = Space.XXS };
         if (rows != null)
         {
             sp.Children.AddRange(rows);
@@ -186,7 +201,7 @@ internal partial class LogViewer
             Width = Widths.Popup,
             CornerRadius = new CornerRadius(Radius.M),
             Padding = new Thickness(Space.S),
-            Child = new ScrollViewer { Content = sp }
+            Child = new DockPanel { Children = { top, new ScrollViewer { Content = sp } } }
         }.Themed(Border.BackgroundProperty, Background);
     }
 

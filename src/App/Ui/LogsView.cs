@@ -39,7 +39,7 @@ internal partial class LogsView(Ctx x)
         {
             if (_app != null && x.S.Def(_app) is { } def)
             {
-                Open(def, f);
+                Open(def, f, true);
             }
         };
     }

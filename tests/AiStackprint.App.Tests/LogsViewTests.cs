@@ -135,6 +135,7 @@ public sealed class LogsViewTests : IDisposable
         }
 
         Assert.Equal(2, Named(w, "log03.log"));   // the file with the match is now the open one
+        Assert.Contains(w.GetVisualDescendants().OfType<Control>(), c => c.Classes.Contains(Table.SelectedClass));   // its row in the Files list is the selected one (the page scrolls to it)
         Assert.Contains(Ui.Texts(w), x => x.StartsWith("1 match in 1 file", StringComparison.Ordinal));
         var query = w.GetVisualDescendants().OfType<TextBox>().First(x => x.IsEffectivelyVisible && x.PlaceholderText?.StartsWith("Search this file", StringComparison.Ordinal) == true);
         Ui.Click(w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) is string tip && tip.StartsWith("Close the results", StringComparison.Ordinal)));

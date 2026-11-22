@@ -56,10 +56,18 @@ internal partial class LogsView
     private int _rows = RowsStep;
 
     /// <summary>A click on a file: the selection moves and only the viewer changes, so the page stays where it is.</summary>
-    private void Open(AppDefinition def, LogFile f)
+    private void Open(AppDefinition def, LogFile f) => Open(def, f, false);
+
+    /// <param name="reveal">A search result opened it: the Files list scrolls to the file.</param>
+    private void Open(AppDefinition def, LogFile f, bool reveal)
     {
         if (f.Path == _file?.Path)
         {
+            if (reveal)
+            {
+                Table.RevealSelected(_table);
+            }
+
             return;
         }
 
@@ -72,6 +80,10 @@ internal partial class LogsView
 
         FillTable(def);
         _viewerHost.Content = _viewer.Build(_file, () => x.Go("Logs:" + _app));
+        if (reveal)
+        {
+            Table.RevealSelected(_table);
+        }
     }
 
     private void Delete(List<LogFile> files) => Fire.Forget(DeleteAsync(files));

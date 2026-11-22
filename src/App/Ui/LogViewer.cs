@@ -36,6 +36,15 @@ internal partial class LogViewer
     private readonly ContentControl _view = new(), _results = new();
     private readonly TextBlock _status = Txt("", TextSize.Caption, false, Muted);
     private readonly Button _newer;        // "New lines": the file grew while Follow is off
+    private readonly Border _jumping = new Border   // over the log while a search result is being shown: the loading icon, at once
+    {
+        IsVisible = false,
+        Child = Busy.Loading("Going to the result…").With(c =>
+        {
+            c.HorizontalAlignment = HorizontalAlignment.Center;
+            c.VerticalAlignment = VerticalAlignment.Center;
+        })
+    }.Themed(Border.BackgroundProperty, Background);
     private LogFile? _file;
     private CodeView? _code;
     private ReadableLog? _readable;
@@ -155,7 +164,7 @@ internal partial class LogViewer
         {
             CornerRadius = new CornerRadius(Radius.M),
             ClipToBounds = true,
-            Child = new Panel { Children = { _view.Free(), _newer.Free() } }
+            Child = new Panel { Children = { _view.Free(), _newer.Free(), _jumping.Free() } }
         });
         body.Children.Add(_results.Free().With(r => Grid.SetColumn(r, 1)));
         var dock = new DockPanel();
