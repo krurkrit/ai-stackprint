@@ -94,13 +94,14 @@ public sealed class AppsViewTests
     public void The_filters_are_one_row_Group_by_toggles_Category_and_Status_and_Reset_works_while_something_is_filtered()
     {
         var (w, _) = Open(1400);
-        var reset = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Reset the search and filters");
+        var reset = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Reset the search, filters and grouping");
         Assert.False(reset.IsEnabled);
         Assert.Contains("Editors", Ui.Texts(w));   // grouped by category at first
 
         Ui.Click(Find(w, "Status"));   // Category and Status both on: grouped by both
         Dispatcher.UIThread.RunJobs();
         Assert.Contains("Agents · Not found", Ui.Texts(w));
+        Assert.True(reset.IsEnabled);   // a grouping other than the first one can be reset too
         Ui.Click(Find(w, "Category"));
         Ui.Click(Find(w, "Status"));   // both off: a plain list
         Dispatcher.UIThread.RunJobs();
@@ -116,6 +117,7 @@ public sealed class AppsViewTests
         Assert.Equal("", search.Text);
         Assert.False(reset.IsEnabled);
         Assert.Contains("Delta", Ui.Texts(w));
+        Assert.Contains("Editors", Ui.Texts(w));   // grouped by category again
     }
 
     [AvaloniaFact]

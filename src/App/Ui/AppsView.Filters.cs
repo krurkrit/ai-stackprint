@@ -30,10 +30,12 @@ internal partial class AppsView
     {
         _statusMenu = new FilterMenu("Status", () => _statusOpts, _offStatus, Fill);
         _catMenu = new FilterMenu("Category", () => _catOpts, _offCats, Fill);
-        _reset = IconBtn("arrow_reset", "Reset the search and filters", () =>
+        _reset = IconBtn("arrow_reset", "Reset the search, filters and grouping", () =>
         {
             _offStatus.Clear();
             _offCats.Clear();
+            _group.Clear();
+            _group.Add(ByCategory);
             _q = "";
             _search.Text = "";
             Fill();
@@ -91,7 +93,7 @@ internal partial class AppsView
             Fill();
         });
         Summarize(statuses, cats);
-        _reset?.IsEnabled = _q != "" || _offStatus.Count > 0 || _offCats.Count > 0;   // always at the end of the row; dimmed with nothing to reset
+        _reset?.IsEnabled = _q != "" || _offStatus.Count > 0 || _offCats.Count > 0 || !(ByCat && !ByStat);   // always at the end of the row; dimmed while all is as at first (grouped by category)
     }
 
     /// <summary>"Status: Installed, Not found  Category: Agents, Editors  Group by: Category": the values on (a filter with one value is left out).</summary>
