@@ -51,6 +51,19 @@ public class ContrastTests
     }
 
     [Fact]
+    public void AtLeast_also_makes_each_state_made_from_the_color_pass()
+    {
+        static uint Lighter(uint c) => Contrast.Mix(c, 0xFFFFFFFFu, .12);
+        var c = Contrast.AtLeast(0xFF114488u, 0xFFF8F9FAu, Contrast.Minimum, Lighter);   // white text: a 12% lighter hover needs a deeper rest color
+        Assert.True(Contrast.Ratio(0xFFF8F9FAu, Lighter(c)) >= Contrast.Minimum);
+        Assert.True(Contrast.Ratio(0xFFF8F9FAu, c) > Contrast.Ratio(0xFFF8F9FAu, 0xFF114488u));
+    }
+
+    [Fact]
+    public void Mix_goes_part_of_the_way() =>
+        Assert.Equal(0xFF808080u, Contrast.Mix(0xFF000000u, 0xFFFFFFFFu, .5));
+
+    [Fact]
     public void AtLeast_keeps_a_color_that_already_passes() =>
         Assert.Equal(0xFF1450A0u, Contrast.AtLeast(0xFF1450A0u, 0xFFFFFFFFu, Contrast.Minimum));
 }

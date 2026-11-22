@@ -27,23 +27,27 @@ public static class Contrast
     /// <paramref name="color"/> mixed toward black or white, whichever moves it away from <paramref name="text"/>,
     /// so text on the result always reads at least as well as on the original (hover and pressed fills).
     /// </summary>
-    public static uint AwayFrom(uint color, uint text, double amount)
+    public static uint AwayFrom(uint color, uint text, double amount) =>
+        Mix(color, Luminance(text | 0xFF000000) > Luminance(color | 0xFF000000) ? 0xFF000000u : 0xFFFFFFFFu, amount);
+
+    /// <summary><paramref name="color"/> mixed <paramref name="amount"/> (0 to 1) of the way toward <paramref name="toward"/> (opaque result).</summary>
+    public static uint Mix(uint color, uint toward, double amount)
     {
-        var toward = Luminance(text | 0xFF000000) > Luminance(color | 0xFF000000) ? 0xFF000000u : 0xFFFFFFFFu;
         var a = (uint)Math.Round(Math.Clamp(amount, 0, 1) * 255);
         return Blend((a << 24) | (toward & 0xFFFFFF), color | 0xFF000000);
     }
 
     /// <summary>
     /// <paramref name="color"/> moved away from <paramref name="text"/> (toward black or white) by the least that gives text on it at least
-    /// <paramref name="min"/>:1; unchanged when it already does. A custom accent stays as close to the chosen color as the minimum allows.
+    /// <paramref name="min"/>:1, and on each of <paramref name="states"/> made from it (a hover fill, say); unchanged when all already do.
+    /// A custom accent stays as close to the chosen color as the minimum allows.
     /// </summary>
-    public static uint AtLeast(uint color, uint text, double min)
+    public static uint AtLeast(uint color, uint text, double min, params Func<uint, uint>[] states)
     {
         for (var step = 0; step <= 100; step++)
         {
             var c = AwayFrom(color, text, step / 100.0);
-            if (Ratio(text, c) >= min)
+            if (Ratio(text, c) >= min && states.All(s => Ratio(text, s(c)) >= min))
             {
                 return c;
             }

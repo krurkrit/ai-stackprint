@@ -118,12 +118,17 @@ internal static partial class Theme
         {
             d[k] = B(onPrimary);
         }
-        // The accent button at rest and the checked check box are the color a side menu item shows under the pointer: the accent, a little away from the text color,
-        // and far enough for 7.1:1 text (WCAG 2.2 AAA; a custom accent too). Hover and pressed go further away from the text, so they only gain contrast.
-        var rest = Color.FromUInt32(Services.Contrast.AtLeast(Shade(primary, onPrimary, .15).ToUInt32(), onPrimary.ToUInt32(), Services.Contrast.Minimum));
-        var fill = B(rest);
-        var hovered = B(Shade(rest, onPrimary, .12));
-        var pressed = B(Shade(rest, onPrimary, .24));
+        // The accent button at rest and the checked check box are the color a side menu item shows under the pointer: the accent, a little away from the text color.
+        // Under the pointer the button is 12% lighter in both themes. Text keeps 7.1:1 at rest, under the pointer and pressed (WCAG 2.2 AAA 1.4.6, a custom accent too):
+        // where lighter moves toward the text (white text, the light theme) the rest color is deep enough for the lighter hover to pass, and pressed goes 12% darker;
+        // where lighter moves away from it (dark text), pressed goes 24% lighter.
+        var text = onPrimary.ToUInt32();
+        static uint Lighter(uint c) => Services.Contrast.Mix(c, 0xFFFFFFFF, .12);
+        var restArgb = Services.Contrast.AtLeast(Shade(primary, onPrimary, .15).ToUInt32(), text, Services.Contrast.Minimum, Lighter);
+        var lighterIsAway = Services.Contrast.Ratio(text, Lighter(restArgb)) >= Services.Contrast.Ratio(text, restArgb);
+        var fill = B(Color.FromUInt32(restArgb));
+        var hovered = B(Color.FromUInt32(Lighter(restArgb)));
+        var pressed = B(Color.FromUInt32(Services.Contrast.AwayFrom(restArgb, text, lighterIsAway ? .24 : .12)));
         d["AccentButtonBackground"] = fill;
         d["AccentButtonBackgroundPointerOver"] = hovered;
         d["AccentButtonBackgroundPressed"] = pressed;

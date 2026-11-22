@@ -90,6 +90,7 @@ public class ThemeTests
                 }
 
                 Assert.Equal(3, fills.Select(f => f.Fill).Distinct().Count());   // hover and pressed show a change
+                Assert.True(Contrast.Ratio(0xFF000000, fills[1].Fill) > Contrast.Ratio(0xFF000000, fills[0].Fill), $"{variant} {accent}: hover is lighter");
             }
         }
         finally
