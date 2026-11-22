@@ -60,6 +60,7 @@ public class ThemeTests
         // a drop-down under the pointer looks like a text box under the pointer: the same background, the accent border
         Assert.Equal(Get("ComboBoxBackground"), Get("ComboBoxBackgroundPointerOver"));
         Assert.Equal(Get(W.Accent), Get("ComboBoxBorderBrushPointerOver"));
+        Assert.Equal(Get(W.Accent), Get("ComboBoxDropDownBorderBrush"));   // the open list too
         Assert.Equal(new CornerRadius(Radius.M), Get("ControlCornerRadius"));
         Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
     }

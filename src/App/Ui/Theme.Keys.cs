@@ -145,6 +145,8 @@ internal static partial class Theme
             d["ComboBoxBorderBrush" + s] = d[W.Accent];
         }
 
+        d["ComboBoxDropDownBorderBrush"] = d[W.Accent];   // the open list: the accent border, like the open drop-down above it
+
         return d;
     }
 
