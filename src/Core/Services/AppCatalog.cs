@@ -18,7 +18,7 @@ public sealed record Catalog(List<AppDefinition> Defs, List<AppDefinition> Shado
 /// <summary>
 /// The built-in apps (default/apps.json), then your custom apps from apps.json in the data folder. A custom app never replaces a built-in one:
 /// its id starts with <see cref="CustomPrefix"/>, Add app refuses a built-in id or name, and when a later version supports the same tool the built-in wins.
-/// Format: <see cref="VersionedJson"/>; version 1 was a bare list, possibly with entries that changed a built-in app.
+/// Format: <see cref="VersionedJson"/>, version 1 (before 1.0 the structure may change without a version bump).
 /// </summary>
 public static class AppCatalog
 {
@@ -34,8 +34,7 @@ public static class AppCatalog
         AllowTrailingCommas = true
     };
 
-    private static readonly VersionedJson _format = new("apps", 2, PrefixIds) { ListKey = "apps" };
-    private static readonly Lazy<HashSet<string>> _builtInIds = new(() => [.. BuiltIn().Select(d => d.Id)]);
+    private static readonly VersionedJson _format = new("apps", 1) { ListKey = "apps" };
 
     public static string UserFile => Path.Combine(DataFolder.Root, "apps.json");
 
@@ -140,24 +139,5 @@ public static class AppCatalog
             return data?["apps"]?.Deserialize<List<AppDefinition>>(_opt) ?? [];
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { return []; }
-    }
-
-    /// <summary>Version 1 → 2: custom ids get <see cref="CustomPrefix"/>; an entry with a built-in id (it changed that app) keeps it and is then shadowed.</summary>
-    private static JsonObject PrefixIds(JsonObject v1)
-    {
-        if (v1["apps"] is not JsonArray apps)
-        {
-            return v1;
-        }
-
-        foreach (var n in apps)
-        {
-            if (n is JsonObject o && o["id"] is JsonValue v && v.TryGetValue(out string? id)
-                && !id.StartsWith(CustomPrefix, StringComparison.Ordinal) && !_builtInIds.Value.Contains(id))
-            {
-                o["id"] = CustomPrefix + id;
-            }
-        }
-        return v1;
     }
 }

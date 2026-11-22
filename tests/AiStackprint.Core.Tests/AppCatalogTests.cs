@@ -43,7 +43,7 @@ public sealed class AppCatalogTests : IDisposable
         Assert.Equal("custom.my-orch", mine.Id);
         Assert.Equal(AppOrigin.Custom, mine.Origin);
         var json = JsonNode.Parse(System.IO.File.ReadAllText(File))!;
-        Assert.Equal(2, (int)json["version"]!);
+        Assert.Equal(1, (int)json["version"]!);
         Assert.Equal("custom.my-orch", (string)json["apps"]![0]!["id"]!);
     }
 
@@ -58,29 +58,9 @@ public sealed class AppCatalogTests : IDisposable
     }
 
     [Fact]
-    public void An_old_bare_list_is_upgraded_custom_ids_prefixed_and_a_built_in_override_is_shadowed()
-    {
-        System.IO.File.WriteAllText(File, """
-            [
-              { "id": "my-tool", "name": "My Tool", "category": "agent" },
-              { "id": "claude-code", "name": "Claude Code", "category": "agent", "roots": [] }
-            ]
-            """);
-
-        var c = AppCatalog.Read(File);
-
-        Assert.Contains(c.Defs, d => d.Id == "custom.my-tool" && d.Origin == AppOrigin.Custom);
-        var claude = Assert.Single(c.Defs, d => d.Id == "claude-code");
-        Assert.Equal(AppOrigin.BuiltIn, claude.Origin);   // the built-in wins
-        Assert.Equal("claude-code", Assert.Single(c.Shadowed).Id);
-        Assert.True(System.IO.File.Exists(Path.Combine(_dir, "backups", "apps.v1.json")));
-        Assert.Equal(2, (int)JsonNode.Parse(System.IO.File.ReadAllText(File))!["version"]!);
-    }
-
-    [Fact]
     public void A_custom_app_for_a_tool_that_became_built_in_is_shadowed_until_removed()
     {
-        System.IO.File.WriteAllText(File, """{ "version": 2, "apps": [ { "id": "custom.claude-code", "name": "Claude Code" } ] }""");
+        System.IO.File.WriteAllText(File, """{ "version": 1, "apps": [ { "id": "custom.claude-code", "name": "Claude Code" } ] }""");
         var c = AppCatalog.Read(File);
         Assert.DoesNotContain(c.Defs, d => d.Id == "custom.claude-code");
         Assert.Single(c.Shadowed);

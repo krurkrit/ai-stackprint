@@ -3,7 +3,7 @@
 Three ways, easiest first.
 
 1. UI: sidebar > "+ Add app". Pick a name, category and config folder. Saved to `~/.ai-stackprint/apps.json`.
-2. Edit `~/.ai-stackprint/apps.json`: `{ "version": 2, "apps": [ … ] }`, each entry with the schema below. Custom apps only: ids start with `custom.` (added if missing), and an app with a built-in id or name is refused. To change a built-in app, contribute the change instead.
+2. Edit `~/.ai-stackprint/apps.json`: `{ "version": 1, "apps": [ … ] }`, each entry with the schema below. Custom apps only: ids start with `custom.` (added if missing), and an app with a built-in id or name is refused. To change a built-in app, contribute the change instead.
 3. Contribute a built-in: edit `default/apps.json` (same entries under `"apps"`). When a tool you added yourself becomes built in, the built-in app is used and the Apps page offers to remove your entry.
 
 ## Schema
@@ -53,7 +53,7 @@ Three ways, easiest first.
 
 ## Hide or remove
 - Hide any app in Settings (or "Hide" on its page). Hidden apps are not scanned. Stored in `settings.json`.
-- Apps added through the UI or `apps.json` can be removed on their page. Before version 2, `apps.json` was a bare list and could change a built-in app; such an entry is now unused (the built-in wins) and listed under "Now built in" on the Apps page, with Remove.
+- Apps added through the UI or `apps.json` can be removed on their page. An older `apps.json` could hold a bare list that changed a built-in app; such an entry is now unused (the built-in wins) and listed under "Now built in" on the Apps page, with Remove.
 
 ## Orchestrators
 Orchestrators such as T3 Code and Orca mostly drive other agents, so their own skills usually live in the agents' folders. Their entries detect the app and scan only what is documented. Verify paths on your machine and extend `roots` in `apps.json`.

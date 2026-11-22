@@ -32,7 +32,7 @@ Each phase is one Conventional commit (or PR), ends with `dotnet format`, a 0-wa
 - Missing folders: greyed in the menu and on the dashboard, with a bin icon to remove; a click on the row opens the folder picker, and the chosen folder replaces the path (same position, same added date).
 - Tests: save/load, `~` paths on each OS form, duplicates, missing folder.
 
-## Phase 5 — Built-in apps in `default/`, custom apps only (done; the user file is version 2, the old bare list is version 1 and its custom ids get the prefix; "Now built in" on the Apps page lists unused entries with Remove until they are removed, rather than a one-time toast)
+## Phase 5 — Built-in apps in `default/`, custom apps only (done; the user file is version 1 (before 1.0 no upgrade steps); "Now built in" on the Apps page lists unused entries with Remove until they are removed, rather than a one-time toast)
 - Move `src/Core/Assets/apps.builtin.json` to `default/apps.json` (still embedded). Update `AGENTS.md`, `adding-apps.md`, the file map.
 - `apps.json` (user): custom apps only, ids `custom.<name>`; Add app refuses a built-in id or name. Remove the "reset an overridden built-in" path. A custom app whose tool later becomes built-in: the built-in wins, one note with Remove.
 - Wrap the file as `{ "version": 1, "apps": [...] }`; read the old bare list.
