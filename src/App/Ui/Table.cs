@@ -128,7 +128,7 @@ internal static partial class Table
         };
         for (var c = 0; c < r.Cells.Length; c++)
         {
-            r.Cells[c].VerticalAlignment = VerticalAlignment.Center;
+            r.Cells[c].VerticalAlignment = VerticalAlignment.Top;   // every cell from the top of the row
             if (c < cols.Length && cols[c].Right)
             {
                 r.Cells[c].HorizontalAlignment = HorizontalAlignment.Right;
