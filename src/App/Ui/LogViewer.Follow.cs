@@ -192,7 +192,8 @@ internal partial class LogViewer
         {
             var where = (e.Source != null ? "Sub-agent · " : "") + $"{e.Time:HH:mm:ss} {e.Role}{(e.Tool is { } t ? " · " + t : "")}";
             _jumps.Add(() => RevealStep(e));
-            _rows!.Children.Add(Hit(where, Around($"{e.Text} {e.Detail}", p), p, _jumps.Count - 1));
+            var at = _jumps.Count - 1;
+            AddRow(() => Hit(where, Around($"{e.Text} {e.Detail}", p), p, at));
         }
 
         Counted(steps.Count);
@@ -229,7 +230,8 @@ internal partial class LogViewer
             {
                 _hits.Add(h);
                 _jumps.Add(() => Jump(h));
-                _rows!.Children.Add(Hit($"Line {h.Line:N0}", h.Text, p, _jumps.Count - 1));
+                var at = _jumps.Count - 1;
+                AddRow(() => Hit($"Line {h.Line:N0}", h.Text, p, at));
             }
 
             Counted(hits.Count);

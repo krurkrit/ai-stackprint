@@ -55,6 +55,12 @@ internal partial class LogsView
     private const int RowsStep = 50;
     private int _rows = RowsStep;
 
+    /// <summary>The --perf run: opens a file of the app (its largest session) as a click on it would.</summary>
+    internal void OpenForPerf(AppDefinition def, LogFile f) => Open(def, f);
+
+    /// <summary>The --perf run: searches the open file (its whole session in Conversation) or every file of the app.</summary>
+    internal void SearchForPerf(string text, bool allFiles) => _viewer.SearchForPerf(text, allFiles);
+
     /// <summary>A click on a file: the selection moves and only the viewer changes, so the page stays where it is.</summary>
     private void Open(AppDefinition def, LogFile f) => Open(def, f, false);
 

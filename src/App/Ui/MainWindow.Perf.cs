@@ -12,7 +12,7 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// <c>AiStackprint --perf</c>: after the first scan, opens every page in turn and records how long it took to build, how long until no loading icon
-/// was left, the CPU time used and the memory after it; appends the rows to perf.log, writes perf-report.txt (this run next to the one before) and closes.
+/// was left, the CPU time used and the memory after it, then the largest session (<c>.PerfLogs</c>) and the peak memory; appends the rows to perf.log, writes perf-report.txt (this run next to the one before) and closes.
 /// </summary>
 internal partial class MainWindow
 {
@@ -57,6 +57,8 @@ internal partial class MainWindow
             rows.Add(new PerfRow(at, version, name, build, ready, (long)(after.Cpu - before.Cpu).TotalMilliseconds, after.HeapMb, after.WorkingSetMb));
         }
 
+        await PerfLargestSession(at, version, rows);
+        rows.Add(PerfPeak(at, version));
         try
         {
             PerfLog.Append(rows);

@@ -55,18 +55,19 @@ internal partial class LogViewer
                 return;
             }
 
-            var rows = new List<Control>();
+            var rows = new List<Func<Control>>();
             var index = 0;
             foreach (var (f, hits) in found)
             {
-                rows.Add(Txt($"{f.Modified:yyyy-MM-dd HH:mm} · {f.Label} · {hits.Count}{(hits.Count >= MaxHitsPerFile ? "+" : "")}", TextSize.Caption, true, Muted)
-                    .With(t => t.Margin = new Avalonia.Thickness(Space.XS, Space.M, 0, Space.XXS)));
+                var head = $"{f.Modified:yyyy-MM-dd HH:mm} · {f.Label} · {hits.Count}{(hits.Count >= MaxHitsPerFile ? "+" : "")}";
+                rows.Add(() => Txt(head, TextSize.Caption, true, Muted).With(t => t.Margin = new Avalonia.Thickness(Space.XS, Space.M, 0, Space.XXS)));
                 foreach (var h in hits)
                 {
                     var file = f;
                     var hit = h;
                     _jumps.Add(() => GoTo(file, hit));
-                    rows.Add(Hit($"{(h.Source != null ? "Sub-agent · " : "")}Line {h.Line:N0}", h.Text, p, index++));
+                    var at = index++;
+                    rows.Add(() => Hit($"{(h.Source != null ? "Sub-agent · " : "")}Line {h.Line:N0}", h.Text, p, at));
                 }
             }
 

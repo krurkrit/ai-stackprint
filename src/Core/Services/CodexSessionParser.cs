@@ -45,6 +45,14 @@ internal class CodexSessionParser : ILogParser
 
         public Session Snapshot() => LogParsers.Build([.. _list], [.. _models], _in, _out, _peak, _window);
 
+        public List<LogEntry> Take()
+        {
+            var steps = new List<LogEntry>(_list);
+            _list.Clear();
+            _firstSince = 0;
+            return steps;
+        }
+
         public Session Build() => LogParsers.Build(_list, _models, _in, _out, _peak, _window);
 
         /// <returns>The index of an earlier step this line changed (its reply's tokens), or null.</returns>

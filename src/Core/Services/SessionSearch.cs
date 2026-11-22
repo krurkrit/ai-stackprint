@@ -27,8 +27,8 @@ public static class SessionSearch
         void Scan(string path, string? source, long maxBytes)
         {
             ct.ThrowIfCancellationRequested();
-            var session = parser.Parse(LogReader.Utf8Lines(path, maxBytes));
-            foreach (var e in session.Entries.Where(query.IsMatch))
+            var steps = parser.Feed() is { } feed ? Steps(feed, path, ct) : parser.Parse(LogReader.Utf8Lines(path, maxBytes)).Entries;
+            foreach (var e in steps.Where(query.IsMatch))
             {
                 count++;
                 if (hits.Count < max && e.Line > 0)
@@ -53,6 +53,37 @@ public static class SessionSearch
 
         total = count;
         return hits;
+    }
+
+    /// <summary>Bytes read at a time when a whole file is read as steps.</summary>
+    internal const long Batch = 4L << 20;
+
+    /// <summary>
+    /// Every step of a session file, read <see cref="Batch"/> bytes at a time: only one batch and its steps are held, not the whole session
+    /// (the steps and their lines are those of one parse of the file).
+    /// </summary>
+    internal static IEnumerable<LogEntry> Steps(ISessionFeed feed, string path, CancellationToken ct) => Steps(feed, path, ct, Batch);
+
+    internal static IEnumerable<LogEntry> Steps(ISessionFeed feed, string path, CancellationToken ct, long batch)
+    {
+        long at = 0;
+        var inLine = false;
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+            var piece = LogReader.CompleteLines(path, at, inLine, batch);
+            if (piece.End == at)
+            {
+                yield break;
+            }
+
+            (at, inLine) = (piece.End, piece.InLine);
+            feed.Add(piece.Rows);
+            foreach (var e in feed.Take())
+            {
+                yield return e;
+            }
+        }
     }
 
     private static SearchHit Hit(LogEntry e, LogQuery query, string? source)

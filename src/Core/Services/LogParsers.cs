@@ -77,6 +77,12 @@ public interface ISessionFeed
 
     /// <summary>The session so far, as a copy (the feed keeps changing its own lists).</summary>
     Session Snapshot();
+
+    /// <summary>
+    /// The steps made since the last call, which the feed then forgets: a search keeps only its matches, not the whole session. The counts go on; a token count
+    /// written after its reply was taken is not put on it (Codex).
+    /// </summary>
+    List<LogEntry> Take();
 }
 
 public static class LogParsers

@@ -3,6 +3,8 @@
 
 using AiStackprint.Services;
 
+using Avalonia.Controls;
+
 using static AiStackprint.Ui.W;
 
 namespace AiStackprint.Ui;
@@ -43,7 +45,7 @@ internal partial class LogViewer
                 GoToPending();
             })));
             _results.Content = Panel(Count(found.total > found.hits.Count ? $"{ReadableLog.Plural(found.total, "step")} (first {found.hits.Count:N0} listed)" : ReadableLog.Plural(found.total, "step")),
-                found.hits.Select((h, i) => Hit((h.Source != null ? "Sub-agent · " : "") + h.Caption, h.Text, p, i)));
+                [.. found.hits.Select((h, i) => (Func<Control>)(() => Hit((h.Source != null ? "Sub-agent · " : "") + h.Caption, h.Text, p, i)))]);
         }
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

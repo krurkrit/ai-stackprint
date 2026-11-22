@@ -48,6 +48,14 @@ internal class ClaudeSessionParser : ILogParser
 
         public Session Snapshot() => LogParsers.Build([.. _list], [.. _models], _in, _out, _peak);
 
+        public List<LogEntry> Take()
+        {
+            var steps = new List<LogEntry>(_list);
+            _list.Clear();
+            _start = 0;
+            return steps;
+        }
+
         /// <summary>The session, sharing the feed's lists (a parse of the whole file, which is not fed again).</summary>
         public Session Build() => LogParsers.Build(_list, _models, _in, _out, _peak);
 

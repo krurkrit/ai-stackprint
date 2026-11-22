@@ -34,6 +34,15 @@ public sealed class PerfLogTests : IDisposable
     }
 
     [Fact]
+    public void The_report_says_whether_the_run_stayed_under_the_memory_limit()
+    {
+        var at = new DateTime(2026, 11, 15, 10, 0, 0, DateTimeKind.Local);
+        Assert.Contains("Memory stayed under 500 MB (most: 201 MB)", PerfLog.Compare([Row(at, "Skills", 400)]));
+        var over = PerfLog.Compare([Row(at, "Skills", 400), new(at, "1.0.0", PerfLog.PeakPage, 0, 0, 0, 0, 612)]);
+        Assert.Contains("Over the 500 MB memory limit: Peak memory 612 MB", over);
+    }
+
+    [Fact]
     public void Compare_puts_the_newest_run_next_to_the_one_before()
     {
         var first = new DateTime(2026, 11, 15, 10, 0, 0, DateTimeKind.Local);

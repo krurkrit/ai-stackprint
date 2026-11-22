@@ -25,6 +25,12 @@ public static class PerfLog
     public static string File => Path.Combine(DataFolder.Logs, "perf.log");
     public static string Report => Path.Combine(DataFolder.Logs, "perf-report.txt");
 
+    /// <summary>The most memory (working set) the app should use, in MB: the report says when a run went over it.</summary>
+    public const double MemoryLimitMb = 500;
+
+    /// <summary>The row with the most memory the run used (its working set; the times are 0).</summary>
+    public const string PeakPage = "Peak memory";
+
     /// <summary>
     /// The process now: CPU time used so far, managed heap and working set in MB. <paramref name="live"/>: collect first, so the heap is what is still held
     /// (a page that keeps memory after it closes shows here), not garbage waiting for the next collection.
@@ -114,6 +120,11 @@ public static class PerfLog
             var change = before.TryGetValue(r.Page, out var b) ? Change(b.ReadyMs, r.ReadyMs) : "new";
             sb.AppendLine(CultureInfo.InvariantCulture, $"{r.Page,-16}{r.BuildMs,10}{r.ReadyMs,10}{change,10}{r.CpuMs,10}{r.HeapMb,10:0.0}{r.WorkingSetMb,10:0.0}");
         }
+
+        var over = last.Where(r => r.WorkingSetMb > MemoryLimitMb).ToList();
+        sb.AppendLine(over.Count > 0
+            ? string.Create(_inv, $"Over the {MemoryLimitMb:0} MB memory limit: {string.Join(", ", over.Select(r => string.Create(_inv, $"{r.Page} {r.WorkingSetMb:0} MB")))}")
+            : string.Create(_inv, $"Memory stayed under {MemoryLimitMb:0} MB (most: {last.Max(r => r.WorkingSetMb):0} MB)"));
 
         return sb.ToString();
     }

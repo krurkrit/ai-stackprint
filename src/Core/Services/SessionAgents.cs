@@ -10,7 +10,7 @@ namespace AiStackprint.Services;
 /// (which has only the call that starts it and its result). This reads a session together with those files: their steps are put among the session's by time,
 /// marked as sub-agent steps, so the graph shows the branches. Read-only; the steps of an agent keep their line in the agent file (`LogEntry.Source` is that file; an agent file read cut to its end has no reliable lines: Line 0).
 /// </summary>
-public static class SessionAgents
+public static partial class SessionAgents
 {
     /// <summary>At most this many agent files are read, each its newest <see cref="AgentBytes"/>.</summary>
     internal const int MaxAgents = 40;
@@ -47,13 +47,13 @@ public static class SessionAgents
         var agents = new List<(string File, DateTime First, DateTime Last)>();
         foreach (var file in Directory.EnumerateFiles(dir, "agent-*.jsonl").Order(StringComparer.Ordinal).Take(MaxAgents))
         {
-            var times = parser.Parse(LogReader.Utf8Lines(file, AgentBytes)).Entries.Where(e => e.Time != null).Select(e => e.Time!.Value).ToList();
-            if (times.Count > 0)
+            if (Span(file, parser) is { First: { } first, Last: { } last })
             {
-                agents.Add((file, times.Min(), times.Max()));
+                agents.Add((file, first, last));
             }
         }
 
+        _spans.Flush();
         var target = pick(agents);
         if (target.File == null)
         {
@@ -62,15 +62,9 @@ public static class SessionAgents
 
         var cluster = agents.Where(a => a.First <= target.Last && a.Last >= target.First).ToList();
         DateTime from = cluster.Min(a => a.First), to = cluster.Max(a => a.Last);
-        var main = parser.Parse(LogReader.Utf8Lines(f.Path, new FileInfo(f.Path).Length));
-        var first = main.Entries.FindIndex(e => e.Time >= from);
-        var last = main.Entries.FindLastIndex(e => e.Time <= to);
-        first = first < 0 ? main.Entries.Count - 1 : first;
-        last = Math.Max(first, last);
-        var lo = Math.Max(0, first - ContextSteps);
-        var hi = Math.Min(main.Entries.Count - 1, last + ContextSteps);
-        var part = main.Entries.Skip(lo).Take(hi - lo + 1).ToList();
-        var shown = new Session(part, main.Models, 0, 0, part.FirstOrDefault(e => e.Time != null)?.Time, part.LastOrDefault(e => e.Time != null)?.Time);
+        var feed = parser.Feed()!;
+        var part = Around(SessionSearch.Steps(feed, f.Path, default), from, to);
+        var shown = new Session(part, feed.Snapshot().Models, 0, 0, part.FirstOrDefault(e => e.Time != null)?.Time, part.LastOrDefault(e => e.Time != null)?.Time);
         var merged = Merge(shown, f.Path, false, [.. cluster.Select(a => a.File)]);
         var entries = merged.Entries.Count > maxSteps ? merged.Entries.Take(maxSteps).ToList() : merged.Entries;   // the start stays: the fork is there
         return merged with { Entries = entries, InputTokens = 0, OutputTokens = 0, AgentsBefore = agents.Count(a => a.Last < from) };

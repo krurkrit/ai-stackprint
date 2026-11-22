@@ -199,6 +199,43 @@ public sealed class SessionTailTests : IDisposable
     }
 
     [Fact]
+    public void A_session_read_in_small_batches_has_the_steps_and_lines_of_one_parse()
+    {
+        var f = Session("s", [.. _claude, .. _claude]);
+        var parser = LogParsers.Find("claude-session")!;
+        var whole = parser.Parse(LogReader.Utf8Lines(f.Path, f.Size)).Entries;
+        foreach (var batch in new long[] { 10, 200, 1000, 1 << 20 })   // smaller than a line: each line is read whole
+        {
+            Assert.Equal(whole, SessionSearch.Steps(parser.Feed()!, f.Path, TestContext.Current.CancellationToken, batch).ToList());
+        }
+    }
+
+    [Fact]
+    public void A_batch_ends_at_its_last_line_break()
+    {
+        var path = Path.Combine(_dir, "d.jsonl");
+        File.WriteAllText(path, "{\"a\":1}\n{\"b\":2}\n{\"c\":3}");
+        var piece = LogReader.CompleteLines(path, 0, false, 12);
+        Assert.Equal(["{\"a\":1}"], piece.Rows.Select(r => Encoding.UTF8.GetString(r.Span)));
+        Assert.Equal(8, piece.End);
+        piece = LogReader.CompleteLines(path, piece.End, false, 3);   // shorter than the line: read until its line break
+        Assert.Equal(["{\"b\":2}"], piece.Rows.Select(r => Encoding.UTF8.GetString(r.Span)));
+        piece = LogReader.CompleteLines(path, piece.End, false, 100);
+        Assert.Equal(["{\"c\":3}"], piece.Rows.Select(r => Encoding.UTF8.GetString(r.Span)));   // the end of the file: a whole JSON line without its break
+    }
+
+    [Fact]
+    public void The_stretch_around_agents_keeps_a_dozen_steps_either_side_or_the_last_ones()
+    {
+        var steps = Enumerable.Range(0, 100).Select(n => new LogEntry("user", $"s{n}", new DateTime(2026, 11, 11, 5, 0, 0, DateTimeKind.Utc).AddSeconds(n), false)).ToList();
+        var part = SessionAgents.Around(steps, steps[40].Time!.Value, steps[50].Time!.Value);
+        Assert.Equal("s28", part[0].Text);
+        Assert.Equal("s62", part[^1].Text);
+        var late = SessionAgents.Around(steps, steps[99].Time!.Value.AddHours(1), steps[99].Time!.Value.AddHours(2));
+        Assert.Equal(["s87", "s99"], [late[0].Text, late[^1].Text]);   // nothing starts that late: the last steps
+    }
+
+    [Fact]
     public void A_text_log_has_no_tail()
     {
         var path = Path.Combine(_dir, "app.log");

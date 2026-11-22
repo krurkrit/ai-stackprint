@@ -23,11 +23,11 @@ public sealed class LogFollowTests : IDisposable
     private string File0 => Path.Combine(_tmp, "s0.jsonl");
 
     private static string Msg(string role, int second, string text) =>
-        "{\"type\":\"" + role + "\",\"timestamp\":\"2026-11-11T05:00:" + second.ToString("00") + "Z\",\"message\":{\"id\":\"m" + second + "\",\"role\":\"" + role + "\",\"content\":\"" + text + "\"}}";
+        "{\"type\":\"" + role + "\",\"timestamp\":\"2026-11-11T05:" + (second / 60).ToString("00") + ":" + (second % 60).ToString("00") + "Z\",\"message\":{\"id\":\"m" + second + "\",\"role\":\"" + role + "\",\"content\":\"" + text + "\"}}";
 
-    private Window Page()
+    private Window Page(int steps = 10, bool allMatch = false)
     {
-        File.WriteAllLines(File0, Enumerable.Range(0, 10).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n, n == 3 ? "first needle" : $"filler {n}")));
+        File.WriteAllLines(File0, Enumerable.Range(0, steps).Select(n => Msg(n % 2 == 0 ? "user" : "assistant", n, n == 3 || allMatch ? $"needle {n}" : $"filler {n}")));
         var def = new AppDefinition
         {
             Id = "app",
@@ -39,7 +39,7 @@ public sealed class LogFollowTests : IDisposable
         var w = new Window { Width = 1200, Height = 800 };
         w.Content = new LogsView(new Ctx(s, w, _ => { }, () => { })).Build("app");
         w.Show();
-        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.Contains("filler 9", StringComparison.Ordinal)));
+        Ui.WaitUntil(() => Ui.Texts(w).Any(t => t.Contains($"{(allMatch ? "needle" : "filler")} {steps - 1}", StringComparison.Ordinal)));
         w.GetVisualDescendants().OfType<ToggleSwitch>().First(t => t.OnContent as string == "Follow newest").IsChecked = true;
         Dispatcher.UIThread.RunJobs();
         return w;
@@ -53,6 +53,18 @@ public sealed class LogFollowTests : IDisposable
         [.. w.GetVisualDescendants().OfType<Border>().Where(b => Math.Abs(b.Width - Widths.Popup) < 0.5).SelectMany(p => p.GetVisualDescendants().OfType<Border>()).Where(b => b.Cursor == W.Hand)];
 
     private static int Tints(Window w) => w.GetVisualDescendants().OfType<Border>().Count(b => !b.IsHitTestVisible && b.Parent is Panel);
+
+    private static void Search(Window w, string text)
+    {
+        w.GetVisualDescendants().OfType<TextBox>().First(t => t.IsEffectivelyVisible && t.PlaceholderText?.StartsWith("Search this file", StringComparison.Ordinal) == true).Text = text;
+        w.GetVisualDescendants().OfType<ToggleButton>().First(t => t.Content as string == "Aa").IsChecked = true;
+        for (var i = 0; i < 30; i++)   // the typed text waits on a timer: let every search finish
+        {
+            Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(20);
+        }
+    }
 
     [AvaloniaFact]
     public void New_steps_go_at_the_end_and_are_tinted_without_building_the_others_again()
@@ -71,21 +83,30 @@ public sealed class LogFollowTests : IDisposable
     public void A_match_in_the_new_steps_is_added_to_the_results_without_searching_again()
     {
         var w = Page();
-        w.GetVisualDescendants().OfType<TextBox>().First(t => t.IsEffectivelyVisible && t.PlaceholderText?.StartsWith("Search this file", StringComparison.Ordinal) == true).Text = "needle";
-        w.GetVisualDescendants().OfType<ToggleButton>().First(t => t.Content as string == "Aa").IsChecked = true;
-        for (var i = 0; i < 30; i++)   // the typed text waits on a timer: let every search finish
-        {
-            Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
-            Dispatcher.UIThread.RunJobs();
-            Thread.Sleep(20);
-        }
-
+        Search(w, "needle");
         Ui.WaitUntil(() => Ui.Texts(w).Contains("1 step"));
         var first = Results(w)[0];
         File.AppendAllLines(File0, [Msg("assistant", 21, "second needle")]);
         Ui.WaitUntil(() => Ui.Texts(w).Contains("2 steps"), 15000);
         Assert.Equal(2, Results(w).Count);
         Assert.Same(first, Results(w)[0]);   // the first result row is the same: the results were added to, not searched again
+        w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_long_list_of_results_builds_a_hundred_rows_and_the_next_on_a_click()
+    {
+        var w = Page(250, allMatch: true);
+        Search(w, "needle");
+        Ui.WaitUntil(() => Ui.Texts(w).Contains("250 steps"));
+        Assert.Equal(100, Results(w).Count);
+        Ui.Click(Ui.Button(w, "Show 100 more (150 not shown)"));
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(200, Results(w).Count);
+        Ui.Click(Ui.Button(w, "Show 50 more (50 not shown)"));
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(250, Results(w).Count);
+        Assert.DoesNotContain(Ui.ButtonTexts(w), t => t.StartsWith("Show 50 more", StringComparison.Ordinal));
         w.Close();
     }
 }
