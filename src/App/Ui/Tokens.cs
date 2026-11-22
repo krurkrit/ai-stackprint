@@ -127,7 +127,7 @@ internal static class Widths
     internal const double ColApp = 150;      // table columns that hold the same kind of value are the same width on every page (see Cols)
     internal const double ColLevel = 110;
     internal const double ColType = 120;
-    internal const double ColVersion = 90;
+    internal const double ColVersion = 100;
     internal const double ColStatus = 92;    // "Installed" in its pill / "Not found"
     internal const double ColCount = 80;
     internal const double ColAction = 40;    // one icon button
