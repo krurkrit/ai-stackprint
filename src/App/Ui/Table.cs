@@ -70,12 +70,16 @@ internal static partial class Table
     public static Control Scrollable(Control table, double minWidth)
     {
         table.MinWidth = minWidth;
-        return new ScrollViewer
+        var sv = new ScrollViewer
         {
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
             Content = table
         };
+        // A scroll viewer measures its content with no width limit, so star columns would take their content's width and the last columns run off the card:
+        // the table is as wide as the viewer (or its minimum, then it scrolls)
+        sv.SizeChanged += (_, e) => table.Width = Math.Max(minWidth, e.NewSize.Width);
+        return sv;
     }
 
     private static ColumnDefinitions Defs(Col[] cols)
