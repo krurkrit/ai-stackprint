@@ -1,6 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using AiStackprint.Models;
 using AiStackprint.Services;
 
 using Xunit;
@@ -63,6 +64,38 @@ public class ConversationTests
         Assert.Equal((T(5), T(10), T(30), T(50)), (l0.Fork, l0.Start, l0.End, l0.Merge));
         Assert.Equal(new[] { (T(10), T(40)) }, t.Waits);
         Assert.Null(AgentTimelines.Build([.. e.Where(v => !v.SubAgent)]));
+    }
+
+    [Fact]
+    public void Sub_agent_steps_without_an_agent_id_get_a_lane_per_unbroken_run()
+    {
+        var t = AgentTimelines.Build(
+        [
+            new("user", "go", T(0), false),
+            new("assistant", "a", T(1), true),
+            new("assistant", "b", T(2), true),
+            new("assistant", "back", T(3), false),
+            new("assistant", "c", T(4), true),
+            new("assistant", "end", T(5), false)
+        ])!;
+        Assert.Equal([2, 1], t.Lanes.Select(l => l.Steps));
+    }
+
+    [Fact]
+    public void The_app_state_finds_a_definition_and_has_all_health_once_the_projects_are_checked()
+    {
+        var def = new AppDefinition { Id = "a" };
+        var s = new AppState();
+        s.Use(new Catalog([def], []));
+        Assert.Same(def, s.Def("a"));
+        Assert.Null(s.Def("b"));
+        s.Health = [new HealthIssue("Skills", "x", "a", new Finding("one"))];
+        Assert.False(s.HealthReady);
+        Assert.Single(s.AllHealth);
+        s.ProjectHealth = [new HealthIssue("Projects", "p", "a", new Finding("two"))];
+        Assert.True(s.HealthReady);
+        Assert.Equal(2, s.AllHealth.Count());
+        Assert.Empty(s.Changes.Changes);
     }
 
     [Fact]

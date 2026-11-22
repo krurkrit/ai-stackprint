@@ -82,13 +82,13 @@ public static partial class ModelCatalog
             }
         }
 
-        if (_format.IsNewer(file))
+        var mine = ReadOverrides(file) ?? [];   // read first: reading tells whether a newer version wrote the file
+        if (ProblemOf(file) is { } newer)
         {
-            return Problem;
+            return newer;
         }
 
         var theirs = data[key] as JsonObject;
-        var mine = ReadOverrides(file) ?? [];
         var yours = mine[key] as JsonObject ?? (theirs == null ? new JsonObject { ["provider"] = "custom" } : []);
         foreach (var (f, v) in values)
         {

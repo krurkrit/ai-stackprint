@@ -59,4 +59,28 @@ public sealed class CrashReportTests : IDisposable
         Assert.Contains("v0.2.0", q);
         Assert.Contains("Cut to fit the link", q);
     }
+
+    [Fact]
+    public void A_crash_log_over_its_limit_starts_over_and_one_that_cannot_be_written_is_skipped()
+    {
+        var log = Path.Combine(_tmp, "crash.log");
+        File.WriteAllText(log, new string('x', 300 * 1024));
+        CrashLog.Write("The app closed after this error", new InvalidOperationException("after"), _tmp);
+        Assert.True(new FileInfo(log).Length < 10_000);
+        Assert.True(CrashLog.TakeNew(_tmp));
+        Assert.False(CrashLog.TakeNew(_tmp));   // told once
+        var file = Path.Combine(_tmp, "a-file");
+        File.WriteAllText(file, "");
+        CrashLog.Write("x", null, file);   // a file where the folder should be: nothing written, no error
+        Assert.False(CrashLog.TakeNew(Path.Combine(_tmp, "none")));
+    }
+
+    [Fact]
+    public void The_crash_log_in_the_data_folder_is_used_without_a_folder()
+    {
+        CrashLog.Install();
+        CrashLog.Write("Test entry", new InvalidOperationException("default folder"));
+        Assert.Contains("default folder", File.ReadAllText(CrashLog.File));
+        Assert.True(CrashLog.TakeNew());
+    }
 }

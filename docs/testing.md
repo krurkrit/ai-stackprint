@@ -19,7 +19,7 @@ Nothing in a test may read this machine's home folder, open a program or reach t
 
 | Depends on | Seam | A test does |
 |---|---|---|
-| The home folder (`~/.claude`, `~/.ai-stackprint`) | `PathUtil.UseHome(folder)`; `DataFolder.Root` follows it | `new FakeHome()` (`tests/AiStackprint.App.Tests/FakeHome.cs`): a made-up home with skills, commands, settings, MCP servers, a project and two sessions |
+| The home folder (`~/.claude`, `~/.ai-stackprint`) and the OS app data folders | `PathUtil.UseHome(folder)`; `DataFolder.Root` follows it, and `PathUtil.SystemFolder` (app data, local app data) is a folder inside it | `new FakeHome()` (`tests/AiStackprint.App.Tests/FakeHome.cs`): a made-up home with skills, commands, settings, MCP servers, a project and two sessions |
 | The network (update check, model data, benchmark scores from Artificial Analysis, live limits) | `UpdateCheck.Http`, `ModelDataUpdate.Http`, `BenchmarkUpdate.Http`, `LimitsService.Http`; every provider's `Fetch(HttpClient, …)` takes the client | give it `new HttpClient(handler)` with a handler that answers from a function (`StubHandler` in Core.Tests, `FakeNetwork` in App.Tests) |
 | Opening a file or folder, the operating system | `PathUtil.Launcher`, `PathUtil.OsOverride` | record the `ProcessStartInfo` instead of starting it; run the macOS and Linux branches on Windows |
 | Cursor's database | `CursorLimits.DbOverride` | point it at a temp SQLite file |

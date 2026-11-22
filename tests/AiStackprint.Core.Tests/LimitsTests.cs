@@ -137,6 +137,25 @@ public sealed class LimitsTests : IDisposable
             Limits = "claude"
         }, [], force: true);
         Assert.False(svc.Status("claude-code").Busy);   // at most once a minute, even when forced
+        Assert.NotNull(svc.Fetched("claude-code"));
+    }
+
+    [Fact]
+    public void An_app_without_a_provider_is_never_read_and_errors_get_a_short_message()
+    {
+        var svc = new LimitsService(SettingsStore.Defaults);
+        svc.Request(new AppDefinition
+        {
+            Id = "x",
+            Name = "X",
+            Limits = "none"
+        }, []);
+        Assert.False(svc.Status("x").Busy);
+        Assert.Null(svc.Fetched("x"));
+        Assert.Equal("The provider did not answer in time.", LimitsService.ShortMessage(new TaskCanceledException()));
+        Assert.Equal("The provider answered 500.", LimitsService.ShortMessage(new HttpRequestException("x", null, System.Net.HttpStatusCode.InternalServerError)));
+        Assert.Equal("Cannot reach the provider (offline?).", LimitsService.ShortMessage(new HttpRequestException("x")));
+        Assert.Equal("Could not read the reply: bad", LimitsService.ShortMessage(new FormatException("bad")));
     }
 }
 

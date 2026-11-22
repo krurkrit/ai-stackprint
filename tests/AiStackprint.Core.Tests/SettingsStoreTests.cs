@@ -34,6 +34,42 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void A_value_of_the_wrong_type_or_a_file_that_cannot_be_read_gives_the_defaults()
+    {
+        System.IO.File.WriteAllText(File, """{ "version": 1, "hideNotInstalled": "yes please" }""");
+        Assert.False(SettingsStore.Load(File).HideNotInstalled);
+        var folder = Path.Combine(_dir, "a-folder.json");
+        Directory.CreateDirectory(folder);
+        Assert.Equal(SettingsStore.Defaults().HiddenApps, SettingsStore.Load(folder).HiddenApps);
+    }
+
+    [Fact]
+    public void The_data_folder_file_is_the_default_and_saving_the_defaults_reads_back_the_same()
+    {
+        Assert.Equal(Path.Combine(DataFolder.Root, "settings.json"), SettingsStore.File);
+        SettingsStore.Save(SettingsStore.Defaults());
+        Assert.Null(SettingsStore.Problem);
+        Assert.Equal(SettingsStore.Defaults().HideNotInstalled, SettingsStore.Load().HideNotInstalled);
+    }
+
+    [Fact]
+    public void State_that_cannot_be_read_or_written_is_new_and_kept_for_this_run_only()
+    {
+        var folder = Path.Combine(_dir, "state-folder.json");
+        Directory.CreateDirectory(folder);
+        Assert.Null(StateStore.Load(folder).BenchmarkKey);
+        System.IO.File.WriteAllText(File, """{ "version": 1, "panelHeight": "tall" }""");
+        Assert.Null(StateStore.Load(File).BenchmarkKey);
+        StateStore.Save(new UiState(), Path.Combine(File, "state.json"));   // under a file: no error
+        StateStore.Adopt(new JsonObject { ["panelHeight"] = 300 }, folder);   // cannot be read: nothing taken over
+        Assert.True(Directory.Exists(folder));
+
+        Assert.Equal(Path.Combine(DataFolder.Root, "state.json"), StateStore.File);
+        StateStore.Save(StateStore.Load());
+        Assert.True(System.IO.File.Exists(StateStore.File));
+    }
+
+    [Fact]
     public void Every_setting_has_a_default_in_default_settings_json()
     {
         var defaults = SettingsStore.DefaultJson();

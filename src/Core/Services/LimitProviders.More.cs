@@ -32,7 +32,7 @@ public class CopilotLimits : ILimitProvider
             }
         }
 
-        var apps = OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "github-copilot", "apps.json")
+        var apps = OperatingSystem.IsWindows() ? Path.Combine(PathUtil.SystemFolder(Environment.SpecialFolder.LocalApplicationData), "github-copilot", "apps.json")
             : Path.Combine(home, ".config", "github-copilot", "apps.json");
         using (var doc = LimitProviders.ReadJson(apps))
         {
@@ -106,7 +106,7 @@ public partial class CursorLimits : ILimitProvider
 
     private static string Db(string home) =>
         DbOverride ??
-        (OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cursor", "User", "globalStorage", "state.vscdb")
+        (OperatingSystem.IsWindows() ? Path.Combine(PathUtil.SystemFolder(Environment.SpecialFolder.ApplicationData), "Cursor", "User", "globalStorage", "state.vscdb")
         : OperatingSystem.IsMacOS() ? Path.Combine(home, "Library", "Application Support", "Cursor", "User", "globalStorage", "state.vscdb")
         : Path.Combine(home, ".config", "Cursor", "User", "globalStorage", "state.vscdb"));
 

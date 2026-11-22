@@ -102,4 +102,38 @@ public sealed class ScannerTests : IDisposable
         Assert.False(Assert.Single(skills, s => s.Name == "mine").Bundled);
         Assert.NotNull(SkillManager.CannotRemove(skills.First(s => s.Bundled)));
     }
+
+    [Fact]
+    public void User_level_sources_are_read_from_their_own_paths_and_project_plugins_from_each_project()
+    {
+        var user = Path.Combine(_tmp, "user");
+        var proj = Path.Combine(_tmp, "proj");
+        Directory.CreateDirectory(Path.Combine(user, "flat"));
+        File.WriteAllText(Path.Combine(user, "flat", "tidy.md"), "---\nname: tidy\ndescription: d\n---\n");
+        Directory.CreateDirectory(Path.Combine(user, "plugins"));
+        File.WriteAllText(Path.Combine(user, "plugins", "notify.ts"), "");
+        Directory.CreateDirectory(Path.Combine(proj, ".app", "plugins"));
+        File.WriteAllText(Path.Combine(proj, ".app", "plugins", "local.js"), "");
+        Directory.CreateDirectory(Path.Combine(user, "commands"));
+        File.WriteAllText(Path.Combine(user, "commands", "review.md"), "---\ndescription: r\n---\n");
+        File.WriteAllText(Path.Combine(user, "RULES.md"), "r");
+        var d = new AppDefinition
+        {
+            Id = "app",
+            Name = "App",
+            Roots = { new ScanRoot { Path = Path.Combine(user, "flat"), Level = "User", Layout = "flat-md" }, new ScanRoot { Path = Path.Combine(user, "none"), Level = "User" } },
+            PluginFormat = "claude",
+            PluginManifest = Path.Combine(user, "no-manifest.json"),
+            Plugins = { new PluginSource { Format = "opencode-files", Path = Path.Combine(user, "plugins") }, new PluginSource { Format = "opencode-files", Path = ".app/plugins", Level = "Project" } },
+            Configs = { new ConfigFile { Path = Path.Combine(user, "RULES.md"), Level = "User" }, new ConfigFile { Path = Path.Combine(user, "MISSING.md"), Level = "User" } },
+            Parts = { new PartSource { Path = Path.Combine(user, "commands") } }
+        };
+        var items = Scanner.Collect([d], [proj]).Items;
+        Assert.Contains(items, i => i.Kind == "Skill" && i.Name == "tidy");
+        Assert.Contains(items, i => i.Kind == "Plugin" && i.Name == "notify" && i.Project == null);
+        Assert.Contains(items, i => i.Kind == "Plugin" && i.Name == "local" && i.Project == proj);
+        Assert.Contains(items, i => i.Kind == "Config" && i.Name == "RULES.md" && i.Level == "User");
+        Assert.DoesNotContain(items, i => i.Name == "MISSING.md");
+        Assert.Contains(items, i => i.Name.Contains("review", StringComparison.Ordinal) && i.App == "app");
+    }
 }

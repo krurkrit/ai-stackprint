@@ -54,4 +54,23 @@ public sealed class PerfLogTests : IDisposable
         Assert.DoesNotContain("Logs", report);   // only pages of the newest run
         Assert.Equal("No performance runs yet.", PerfLog.Compare([]));
     }
+
+    [Fact]
+    public void A_sample_has_the_cpu_time_and_memory_and_the_data_folder_log_is_used_without_a_file()
+    {
+        var (cpu, heap, ws) = PerfLog.Sample(live: true);
+        Assert.True(cpu > TimeSpan.Zero && heap > 0 && ws >= heap);
+        Assert.True(PerfLog.Sample().HeapMb > 0);
+        var at = new DateTime(2026, 11, 22, 9, 0, 0, DateTimeKind.Local);
+        PerfLog.Append([Row(at, "Test page", 5)]);
+        Assert.Contains(PerfLog.Read(), r => r.Page == "Test page" && r.At == at);
+        Assert.EndsWith("perf-report.txt", PerfLog.Report, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Lines_that_do_not_parse_are_skipped()
+    {
+        File.WriteAllText(Log, PerfLog.Header + "\nnot,a,row\n2026-11-22T09:00:00,1.0,Skills,x,2,3,4.0,5.0\n2026-11-22T09:00:00,1.0,Skills,1,2,3,4.0,5.0\n");
+        Assert.Single(PerfLog.Read(Log));
+    }
 }

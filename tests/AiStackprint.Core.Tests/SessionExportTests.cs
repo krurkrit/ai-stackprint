@@ -94,4 +94,19 @@ public sealed class SessionExportTests
         Assert.Equal([false, true, false], s.Entries.Select(e => e.IsError));
         Assert.Contains(" · failed", SessionExport.Markdown(s.Entries[1]), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Each_kind_of_step_has_its_own_heading_and_a_reply_shows_its_tokens()
+    {
+        var at = new DateTime(2026, 11, 11, 5, 0, 0, DateTimeKind.Local);
+        var reply = new LogEntry("assistant", "done ", at, false) { Usage = new UsageEvent(at, "claude-opus-5-5", "p", 1200, 30, 800, 0, 0, false) };
+        var md = SessionExport.Markdown(reply);
+        Assert.StartsWith("### Assistant · 2026-11-11 05:00:00\n\ndone\n", md, StringComparison.Ordinal);
+        Assert.Contains("*claude-opus-5-5 · 2,000 in (800 cached) · 30 out", md, StringComparison.Ordinal);
+        Assert.StartsWith("#### Tool · Bash", SessionExport.Markdown(new LogEntry("tool", "ls", null, false, "Bash", Detail: "ls -la")), StringComparison.Ordinal);
+        Assert.StartsWith("#### Tool · tool", SessionExport.Markdown(new LogEntry("tool", "x", null, false)), StringComparison.Ordinal);
+        Assert.Equal("> **Thinking**\n>\n> a\n> b\n", SessionExport.Markdown(new LogEntry("thinking", "a\nb\n", null, false)));
+        Assert.StartsWith("#### System", SessionExport.Markdown(new LogEntry("system", "note", null, false)), StringComparison.Ordinal);
+        Assert.StartsWith("#### Note", SessionExport.Markdown(new LogEntry("", "note", null, false)), StringComparison.Ordinal);
+    }
 }

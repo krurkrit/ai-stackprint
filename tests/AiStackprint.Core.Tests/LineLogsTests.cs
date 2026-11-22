@@ -126,4 +126,30 @@ public sealed class LineLogsTests
         Assert.Equal(["info", "error"], s.Entries.Select(e => e.Role));
         Assert.Equal("startup pid=4580 protocolVersion=36", s.Entries[0].Text);
     }
+
+    [Fact]
+    public void Json_lines_cut_off_or_without_their_fields_are_not_read_as_entries_of_their_kind()
+    {
+        var s = Parse(
+            """{"timestamp":"2026-01-01T00:00:00Z","level":"WARN","message":"top-level message"}""",
+            """{"timestamp":"2026-01-01T00:00:01Z","level":"INFO","fields":{""",
+            """{"type":"effect-span","name":"cut""",
+            """{"type":"effect-span","name":"no start"}""",
+            """{"event":"cut""",
+            """{"event":"no time"}""");
+        var e = Assert.Single(s.Entries);   // the other lines are not entries: they go on the one before
+        Assert.Equal("warn", e.Role);
+        Assert.StartsWith("top-level message\n", e.Text, StringComparison.Ordinal);
+        Assert.EndsWith("""{"event":"no time"}""", e.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_glog_date_that_would_be_in_the_future_is_last_year()
+    {
+        var now = DateTime.Now;
+        var day = now.AddDays(3);
+        var s = Parse($"W{day:MMdd} 08:00:00.000000 1 server.go:10] later");
+        var expected = new DateTime(now.Year, day.Month, day.Day, 8, 0, 0, DateTimeKind.Local) > now.AddDays(1) ? now.Year - 1 : now.Year;
+        Assert.Equal(("warn", expected), (s.Entries[0].Role, s.Entries[0].Time!.Value.Year));
+    }
 }

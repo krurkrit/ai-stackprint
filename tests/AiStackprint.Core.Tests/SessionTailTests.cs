@@ -177,6 +177,39 @@ public sealed class SessionTailTests : IDisposable
     }
 
     [Fact]
+    public void An_agent_file_written_anew_reads_the_session_again_and_one_that_vanished_is_left_out()
+    {
+        var agents = Path.Combine(_dir, "s", "subagents");
+        Directory.CreateDirectory(agents);
+        var a1 = Path.Combine(agents, "agent-a1.jsonl");
+        File.WriteAllLines(a1, [Msg("user", 2, "explore", "a1"), Msg("assistant", 3, "a long first answer", "a1")]);
+        var f = Session("s", [Msg("user", 1, "start")]);
+        var tail = SessionTail.Open(f, 1 << 20)!;
+        Assert.Empty(tail.Next().Added);   // nothing new in the agent file either
+
+        File.WriteAllLines(a1, [Msg("user", 4, "new", "a1")]);   // shorter: written anew
+        var u = tail.Next();
+        Assert.True(u.Rebuilt);
+        Assert.Contains(u.Session.Entries, e => e.Text == "new");
+
+        File.Delete(a1);
+        File.AppendAllLines(f.Path, [Msg("assistant", 5, "done")]);
+        Assert.Equal(["done"], tail.Next().Added.Select(e => e.Text));
+    }
+
+    [Fact]
+    public void A_session_that_grew_far_past_what_was_kept_is_read_again_from_its_end()
+    {
+        var f = Session("s", [Msg("user", 1, "start")]);
+        var tail = SessionTail.Open(f, 2000)!;
+        File.AppendAllLines(f.Path, Enumerable.Range(2, 50).Select(n => Msg("assistant", n, "reply " + n)));
+        var u = tail.Next();
+        Assert.True(u.Rebuilt);
+        Assert.True(tail.Cut);
+        Assert.Equal("reply 51", u.Session.Entries[^1].Text);
+    }
+
+    [Fact]
     public void A_file_that_was_written_anew_is_read_again_from_the_start()
     {
         var f = Session("s", [Msg("user", 1, "start"), Msg("assistant", 2, "long reply")]);

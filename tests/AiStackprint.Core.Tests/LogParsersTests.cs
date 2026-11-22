@@ -75,4 +75,46 @@ public class LogParserHintsTests
         Assert.Equal("Read", e[2].Tool);
         Assert.Equal(".json", e[3].Lang);     // JSON-looking output
     }
+
+    private static System.Text.Json.JsonElement Json(string json) => System.Text.Json.JsonDocument.Parse(json).RootElement.Clone();
+
+    [Fact]
+    public void A_tool_input_given_as_a_string_is_read_as_json_when_it_is_and_kept_as_text_when_not()
+    {
+        Assert.Equal("ls -la", LogParsers.Summary(Json("\"{\\\"command\\\":\\\"ls -la\\\"}\"")));
+        Assert.Equal("plain words", LogParsers.Summary(Json("\"plain words\"")));
+        var call = LogParsers.ToolCall("apply", Json("\"not json {\""), null, false);
+        Assert.Equal((".txt", "not json {"), (call.Lang, call.Detail));
+        Assert.Equal("ls", LogParsers.ToolCall("Bash", Json("\"{\\\"command\\\":\\\"ls\\\"}\""), null, false).Text);
+    }
+
+    [Fact]
+    public void Output_types_are_detected_from_the_text()
+    {
+        Assert.Equal(".cs", LogParsers.Detect("{}", ".cs"));
+        Assert.Equal(".diff", LogParsers.Detect("  diff --git a/x b/x", null));
+        Assert.Equal(".diff", LogParsers.Detect("*** Begin Patch", null));
+        Assert.Equal(".json", LogParsers.Detect("[1, 2]", null));
+        Assert.Null(LogParsers.Detect("{ not json", null));
+        Assert.Null(LogParsers.Detect("words", null));
+        Assert.Equal("a\nb", LogParsers.Text(Json("""["a", {"type":"text","text":"b"}, {"type":"image"}]""")));
+        Assert.Equal("", LogParsers.Text(Json("42")));
+    }
+
+    [Fact]
+    public void A_format_without_its_own_count_feed_or_usage_uses_the_defaults()
+    {
+        ILogParser p = new MinimalParser();
+        Assert.Equal(1, p.Count(LogReader.Utf8(["""{"type":"user","message":{"content":"hi"}}"""])).Prompts);
+        Assert.Null(p.Feed());
+        Assert.Empty(p.Usage([]));
+        Assert.Empty(p.Limits([]));
+        Assert.False(p.WholeFile);
+    }
+
+    private sealed class MinimalParser : ILogParser
+    {
+        public string Format => "minimal";
+        public Session Parse(IEnumerable<ReadOnlyMemory<byte>> lines) => new([.. lines.Select(_ => new LogEntry("user", "hi", null, false))], [], 0, 0, null, null);
+    }
 }

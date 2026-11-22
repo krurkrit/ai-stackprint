@@ -88,4 +88,15 @@ public sealed class ProjectStoreTests : IDisposable
         Assert.Empty(ProjectStore.Load(File, Home));
         Assert.True(System.IO.File.Exists(Path.Combine(_dir, "backups", "projects.broken.json")));
     }
+
+    [Fact]
+    public void A_list_that_cannot_be_written_is_kept_for_this_run_only_and_the_data_folder_file_is_the_default()
+    {
+        System.IO.File.WriteAllText(File, "a file, not a folder");
+        ProjectStore.Save([new SavedProject(Path.Combine(_dir, "p"), DateTime.UtcNow)], Path.Combine(File, "projects.json"));   // no error
+        Assert.Empty(ProjectStore.Load(Path.Combine(File, "projects.json")));
+        Assert.Equal(Path.Combine(DataFolder.Root, "projects.json"), ProjectStore.File);
+        Assert.Null(ProjectStore.Problem);
+        _ = ProjectStore.Load();   // the test home's list: read without an error
+    }
 }

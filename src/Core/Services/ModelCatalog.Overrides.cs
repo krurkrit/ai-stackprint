@@ -19,7 +19,9 @@ public static partial class ModelCatalog
     public static string OldPricesFile => Path.Combine(DataFolder.Root, "prices.json");
 
     /// <summary>Shown once when models.json comes from a newer AI Stackprint: changes to it are not saved.</summary>
-    public static string? Problem => _format.IsNewer(OverridesFile)
+    public static string? Problem => ProblemOf(OverridesFile);
+
+    internal static string? ProblemOf(string file) => _format.IsNewer(file)
         ? "models.json comes from a newer AI Stackprint: model changes made here are not saved."
         : null;
 

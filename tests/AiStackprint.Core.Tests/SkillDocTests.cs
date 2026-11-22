@@ -125,4 +125,46 @@ public sealed class SkillDocTests : IDisposable
         Assert.Equal("meta-author", rows.Single(r => r.Name == "one").Author);
         Assert.Equal("top", rows.Single(r => r.Name == "two").Author);
     }
+
+    [Fact]
+    public void Front_matter_block_scalars_keep_their_blank_lines_and_lists_and_nested_keys_are_read()
+    {
+        var d = SkillDoc.Parse("---\ndescription: |\n  first line\n\n  # inside the block\n  second\ntags:\n- a\n- \"b\"\nnot a key line\nmetadata:\n  owner: me\n---\nbody\n");
+        Assert.StartsWith("first line\n\n", d.Get("description"), StringComparison.Ordinal);
+        Assert.EndsWith("second", d.Get("description"), StringComparison.Ordinal);
+        Assert.Equal("a, b", d.Get("tags"));
+        Assert.Equal("me", d.Get("metadata.owner"));
+        Assert.Equal("", d.Get("missing"));
+    }
+
+    [Fact]
+    public void Links_that_are_only_a_query_or_not_a_path_do_not_resolve()
+    {
+        var root = Path.Combine(_tmp, "skill");
+        var from = Path.Combine(root, "SKILL.md");
+        Assert.Null(SkillDoc.Resolve(root, from, "?x=1"));
+        Assert.Null(SkillDoc.Resolve(root, from, "a\0b.md"));
+        Assert.Null(SkillDoc.Resolve(root, from, "../outside.md"));
+        Assert.Equal(Path.Combine(root, "ref", "a b.md"), SkillDoc.Resolve(root, from, "ref/a%20b.md#part"));
+    }
+
+    [Fact]
+    public void Files_skip_hidden_folders_but_not_the_plugin_folder_and_stop_at_the_limit()
+    {
+        var root = Path.Combine(_tmp, "plugin");
+        foreach (var rel in new[] { "SKILL.md", ".git/config", ".claude-plugin/plugin.json", "deep/a.md" })
+        {
+            var p = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(p)!);
+            File.WriteAllText(p, "x");
+        }
+
+        var all = SkillDoc.Files(root).Select(f => f.Rel.Replace('\\', '/')).ToList();
+        Assert.Equal("SKILL.md", all[0]);   // the top folder first
+        Assert.Contains(".claude-plugin/plugin.json", all);
+        Assert.DoesNotContain(".git/config", all);
+        Assert.Single(SkillDoc.Files(root, 1));
+        Assert.Empty(SkillDoc.Files(Path.Combine(_tmp, "none")));
+        Assert.Equal(("SKILL.md", 1L), (SkillDoc.Entry(Path.Combine(root, "SKILL.md")).Rel, SkillDoc.Entry(Path.Combine(root, "SKILL.md")).Size));
+    }
 }

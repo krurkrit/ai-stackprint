@@ -14,6 +14,9 @@ public static class PathUtil
     /// <summary>Another home folder, for tests (null = the real one): the AI tools' folders (~/.claude, …) and the data folder (~/.ai-stackprint) all follow it, so a whole window can run on made-up files.</summary>
     internal static void UseHome(string? home) => _home = home;
 
+    /// <summary>A folder of the OS such as (local) app data; with a test home (<see cref="UseHome"/>) a folder inside it, so a test never reads or moves files in the real one.</summary>
+    public static string SystemFolder(Environment.SpecialFolder folder) => _home != null ? Path.Combine(_home, "system", folder.ToString()) : Environment.GetFolderPath(folder);
+
     /// <summary>Expands ~ and %ENV% and normalises separators.</summary>
     public static string Expand(string p)
     {

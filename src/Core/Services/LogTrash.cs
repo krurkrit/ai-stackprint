@@ -58,7 +58,7 @@ public static class LogTrash
                 Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin, Microsoft.VisualBasic.FileIO.UICancelOption.ThrowException);
             return;
         }
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var home = PathUtil.Home;
         if (trashRoot == null && OperatingSystem.IsMacOS())
         {
             File.Move(path, Unique(Path.Combine(home, ".Trash"), Path.GetFileName(path)));

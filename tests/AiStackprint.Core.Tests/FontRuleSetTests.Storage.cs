@@ -62,6 +62,58 @@ public partial class FontRuleSetTests
     }
 
     [Fact]
+    public void A_linked_field_ignores_new_values_and_an_adjusted_one_is_kept_within_a_thousand()
+    {
+        var set = new FontRuleSet(Sample());
+        set.SetMode("header", FontProp.Weight, FontMode.Set);
+        set.SetMode("header", FontProp.Weight, FontMode.Adjust);
+        Assert.Equal(300d, set.Number("header", FontProp.Weight));   // 700 - 400: the look is kept
+        set.SetNumber("header", FontProp.Weight, 5000);
+        Assert.Equal(1000d, set.Number("header", FontProp.Weight));
+        set.SetMode("header", FontProp.Size, FontMode.Link);
+        set.SetNumber("header", FontProp.Size, 30);
+        Assert.Equal(14d, set.Resolve("header").Size);
+        set.SetNumber("header", FontProp.Family, 1);   // not a number: nothing
+
+        set.SetMode("header", FontProp.Family, FontMode.Link);
+        set.SetName("header", "Roboto");
+        Assert.Equal(set.Resolve("body").Family, set.Resolve("header").Family);
+        set.SetMode("header", FontProp.Family, FontMode.Set);
+        set.SetName("header", "Roboto");
+        Assert.Equal("Roboto", set.Resolve("header").Family);
+    }
+
+    [Fact]
+    public void Wrong_sizes_and_limits_are_named()
+    {
+        static Dictionary<string, FontRule> With(Action<Dictionary<string, FontRule>> change)
+        {
+            var r = Sample();
+            change(r);
+            return r;
+        }
+
+        Assert.Contains("size", FontRuleSet.Validate(With(r => r["body"].Size = Own(0))));
+        Assert.Contains("options must be", FontRuleSet.Validate(With(r => r["body"].Weight = Own(400, new() { Options = [double.NaN] }))));
+        Assert.Contains("limit is not valid", FontRuleSet.Validate(With(r => r["body"].Size = Own(14, new() { Step = 0 }))));
+        Assert.Contains("limit is not valid", FontRuleSet.Validate(With(r => r["body"].Size = Own(14, new() { Min = 20, Max = 10 }))));
+        Assert.Contains("limit is not valid", FontRuleSet.Validate(With(r => r["body"].Size = Own(14, new() { Min = -1 }))));
+    }
+
+    [Theory]
+    [InlineData(100, "Thin (100)")]
+    [InlineData(200, "ExtraLight (200)")]
+    [InlineData(300, "Light (300)")]
+    [InlineData(400, "Normal (400)")]
+    [InlineData(500, "Medium (500)")]
+    [InlineData(600, "SemiBold (600)")]
+    [InlineData(700, "Bold (700)")]
+    [InlineData(800, "ExtraBold (800)")]
+    [InlineData(900, "Black (900)")]
+    [InlineData(450.4, "Weight (450)")]
+    public void Weights_have_their_names(double weight, string label) => Assert.Equal(label, FontWeights.Label(weight));
+
+    [Fact]
     public void Wrong_settings_are_named()
     {
         static Dictionary<string, FontRule> With(Action<Dictionary<string, FontRule>> change)

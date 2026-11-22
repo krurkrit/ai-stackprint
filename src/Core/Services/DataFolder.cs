@@ -25,7 +25,7 @@ public static class DataFolder
     /// <summary>Before anything reads or writes the folder: moves the files of older versions into it.</summary>
     public static void Prepare()
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var appData = PathUtil.SystemFolder(Environment.SpecialFolder.ApplicationData);
         var r = Move([Path.Combine(appData, "AiStackprint"), Path.Combine(appData, "AiProfiler")], Root);
         MoveProblem = r.Failed > 0
             ? $"{r.Failed} file(s) could not be moved to {Root}; they stay in the old folder and are tried again next start."

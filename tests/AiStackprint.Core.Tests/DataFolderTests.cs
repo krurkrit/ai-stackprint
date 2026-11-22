@@ -98,4 +98,31 @@ public sealed class DataFolderTests : IDisposable
     [InlineData("other/crash.log", "other/crash.log")]
     public void Each_old_file_has_a_place(string rel, string place) =>
         Assert.Equal(place.Replace('/', Path.DirectorySeparatorChar), DataFolder.Place(rel.Replace('/', Path.DirectorySeparatorChar)));
+
+    [Fact]
+    public void Prepare_moves_the_files_of_an_older_version_from_app_data_into_the_data_folder()
+    {
+        var name = $"moved-{Guid.NewGuid():N}.json";
+        var old = Path.Combine(PathUtil.SystemFolder(Environment.SpecialFolder.ApplicationData), "AiProfiler");
+        Write(old, name, "{}");
+        try
+        {
+            DataFolder.Prepare();
+            Assert.Null(DataFolder.MoveProblem);
+            Assert.True(File.Exists(Path.Combine(DataFolder.Root, name)));
+            Assert.False(File.Exists(Path.Combine(old, name)));
+        }
+        finally
+        {
+            File.Delete(Path.Combine(DataFolder.Root, name));
+            Directory.Delete(old, true);
+        }
+    }
+
+    [Fact]
+    public void The_data_folders_are_inside_the_data_folder()
+    {
+        Assert.All(new[] { DataFolder.Cache, DataFolder.Logs, DataFolder.Backups, DataFolder.ConfigBackups, DataFolder.SkillBackups }, p => Assert.StartsWith(DataFolder.Root, p, StringComparison.Ordinal));
+        Assert.Equal(Path.Combine(DataFolder.Backups, "skills"), DataFolder.SkillBackups);
+    }
 }

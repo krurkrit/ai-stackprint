@@ -83,14 +83,22 @@ public sealed class LimitProviderIoTests : IDisposable
     [Fact]
     public void Copilot_falls_back_to_the_editor_plugins_file_where_it_can_be_redirected()
     {
-        if (OperatingSystem.IsWindows())
-        {
-            return;   // there that file lives in the real local app data folder
-        }
-
         Environment.SetEnvironmentVariable("COPILOT_HOME", Path.Combine(_home, "none"));
-        Write(".config/github-copilot/apps.json", """{ "github.com:z": { "oauth_token": "z-token" }, "github.com:a": { "oauth_token": "a-token" }, "other": { "oauth_token": "x" } }""");
-        Assert.Equal("a-token", new CopilotLimits().Credential(_home)!.Token);
+        var apps = OperatingSystem.IsWindows()   // Windows: in local app data (a folder of the test home here)
+            ? Path.Combine(PathUtil.SystemFolder(Environment.SpecialFolder.LocalApplicationData), "github-copilot", "apps.json")
+            : Path.Combine(_home, ".config", "github-copilot", "apps.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(apps)!);
+        File.WriteAllText(apps, """{ "github.com:z": { "oauth_token": "z-token" }, "github.com:a": { "oauth_token": "a-token" }, "other": { "oauth_token": "x" } }""");
+        try
+        {
+            Assert.Equal("a-token", new CopilotLimits().Credential(_home)!.Token);
+            File.WriteAllText(apps, """{ "other": { "oauth_token": "x" } }""");
+            Assert.Null(new CopilotLimits().Credential(_home));
+        }
+        finally
+        {
+            File.Delete(apps);
+        }
     }
 
     [Fact]

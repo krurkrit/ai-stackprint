@@ -188,7 +188,7 @@ public sealed class LimitsService(Func<Settings> settings)
         return $"Sign-in expired {ago}. {renew}";
     }
 
-    private static string ShortMessage(Exception ex) => ex switch
+    internal static string ShortMessage(Exception ex) => ex switch
     {
         TaskCanceledException => "The provider did not answer in time.",
         HttpRequestException h when h.StatusCode != null => $"The provider answered {(int)h.StatusCode}.",

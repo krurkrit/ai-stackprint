@@ -126,4 +126,41 @@ public sealed class ModelCatalogEditTests : IDisposable
         Assert.Equal("""{"codex-auto-review":{"provider":"custom","price":{}},"gpt-6":{"maxOutput":128000}}""", Saved().ToJsonString());
         Assert.True(Row("codex-auto-review").Added);
     }
+
+    [Fact]
+    public void A_file_from_a_newer_version_is_not_changed()
+    {
+        File.WriteAllText(File_, """{ "version": 99, "models": {} }""");
+        Assert.Contains("newer AI Stackprint", ModelCatalog.Save(_data, File_, "gpt-6", new Dictionary<string, string?> { ["maxOutput"] = "1" }), StringComparison.Ordinal);
+        Assert.Equal("""{ "version": 99, "models": {} }""", File.ReadAllText(File_));
+    }
+
+    [Fact]
+    public void Reset_of_a_model_without_changes_writes_nothing_and_a_failed_write_says_why()
+    {
+        Assert.Null(ModelCatalog.Reset(File_, "gpt-6", null));
+        Assert.False(File.Exists(File_));
+        File.WriteAllText(File_, "not a folder");
+        var why = ModelCatalog.Save(_data, Path.Combine(File_, "models.json"), "gpt-6", new Dictionary<string, string?> { ["maxOutput"] = "1" });
+        Assert.StartsWith("models.json could not be saved", why, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Every_field_has_a_short_label()
+    {
+        Assert.Equal(["Context", "Max output", "Input", "Output", "Cache read", "Cache write", "Cache write 1h", "Retires"], ModelCatalog.Fields.Select(ModelCatalog.Label));
+        Assert.Equal("other", ModelCatalog.Label("other"));
+    }
+
+    [Fact]
+    public void The_data_folder_file_holds_a_model_you_add_until_you_reset_it()
+    {
+        const string Key = "test-only-model-edit";
+        Assert.Null(ModelCatalog.Save(Key, new Dictionary<string, string?> { ["contextWindow"] = "1000" }));
+        var row = ModelCatalog.Rows().Single(r => r.Key == Key);
+        Assert.True(row.Added);
+        Assert.Null(ModelCatalog.Reset(Key, "contextWindow"));
+        Assert.Null(ModelCatalog.Reset(Key));
+        Assert.DoesNotContain(ModelCatalog.Rows(), r => r.Key == Key);
+    }
 }

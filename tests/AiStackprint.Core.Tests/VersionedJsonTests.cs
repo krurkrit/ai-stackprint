@@ -84,4 +84,19 @@ public sealed class VersionedJsonTests : IDisposable
         Assert.Equal(changes.ToJsonString(), JsonLayers.Diff(merged, defaults).ToJsonString());
         Assert.Equal("{}", JsonLayers.Diff(defaults, defaults).ToJsonString());
     }
+
+    [Fact]
+    public void A_bare_list_is_version_1_under_its_key_and_another_value_is_kept_as_broken_each_time()
+    {
+        var f = new VersionedJson("list", 1) { ListKey = "apps" };
+        Assert.Equal(1, f.Current);
+        System.IO.File.WriteAllText(File, """[{ "id": "a" }]""");
+        Assert.Equal("a", (string?)f.Read(File, Backups)!["apps"]![0]!["id"]);
+
+        System.IO.File.WriteAllText(File, "42");
+        Assert.Null(f.Read(File, Backups));
+        Assert.Null(f.Read(File, Backups));   // a second time: a second copy, with a time in its name
+        Assert.Equal(2, Directory.GetFiles(Backups, "list.broken*.json").Length);
+        Assert.Null(f.Read(Path.Combine(_dir, "none.json"), Backups));
+    }
 }

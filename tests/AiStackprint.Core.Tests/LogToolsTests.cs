@@ -66,6 +66,28 @@ public sealed class LogToolsTests : IDisposable
     }
 
     [Fact]
+    public void A_second_file_of_the_same_name_gets_a_number_in_the_trash_and_a_missing_one_says_why()
+    {
+        var trash = Path.Combine(_tmp, "Trash");
+        var first = Log("a/same.log", "1");
+        LogTrash.Delete([first.Path], [first], trash);
+        var second = Log("b/same.log", "2");
+        LogTrash.Delete([second.Path], [second], trash);
+        Assert.Equal("2", File.ReadAllText(Path.Combine(trash, "files", "same.2.log")));
+        var gone = Log("gone.log", "x");
+        File.Delete(gone.Path);
+        Assert.Single(LogTrash.Delete([gone.Path], [gone], trash).Failed);
+    }
+
+    [Fact]
+    public void Older_than_and_active_use_modified_time_and_now_by_default()
+    {
+        var recent = new LogFile("a", "Logs", "/x/new.log", 1, DateTime.Now, null);
+        Assert.True(LogTrash.IsActive(recent));
+        Assert.Empty(LogTrash.OlderThan([recent], 1));
+    }
+
+    [Fact]
     public void Older_than_and_active_use_modified_time()
     {
         var now = new DateTime(2026, 11, 11, 12, 0, 0, DateTimeKind.Local);
@@ -125,6 +147,40 @@ public sealed class LogToolsTests : IDisposable
         File.WriteAllText(added, "new");
         Wait(() => batches.Any(b => b.Structure));
         Assert.Contains(batches, b => b.Structure && b.Paths.Contains(added, StringComparer.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Folder_watcher_reports_deleted_and_renamed_files_as_a_change_of_the_list()
+    {
+        var dir = Directory.CreateDirectory(Path.Combine(_tmp, "watched")).FullName;
+        var file = Path.Combine(dir, "a.log");
+        File.WriteAllText(file, "a");
+        var batches = new System.Collections.Concurrent.ConcurrentQueue<LogFolderWatcher.Batch>();
+        using var w = new LogFolderWatcher([(dir, "*.log", false), (Path.Combine(_tmp, "missing"), "*.log", false)], null) { Quiet = TimeSpan.FromMilliseconds(100) };
+        w.Changed += batches.Enqueue;
+        File.Move(file, Path.Combine(dir, "b.log"));
+        Wait(() => batches.Any(b => b.Structure));
+        Assert.Contains(batches, b => b.Structure);
+        batches.Clear();
+        File.Delete(Path.Combine(dir, "b.log"));
+        Wait(() => batches.Any(b => b.Structure));
+        Assert.Contains(batches, b => b.Structure);
+    }
+
+    [Fact]
+    public void Without_a_folder_to_watch_the_newest_file_is_polled_and_its_removal_changes_the_list()
+    {
+        var file = Path.Combine(_tmp, "polled.log");
+        File.WriteAllText(file, "a");
+        var batches = new System.Collections.Concurrent.ConcurrentQueue<LogFolderWatcher.Batch>();
+        using var w = new LogFolderWatcher([(Path.Combine(_tmp, "missing"), "*.log", false)], file, TimeSpan.FromMilliseconds(100)) { Quiet = TimeSpan.FromMilliseconds(50) };
+        w.Changed += batches.Enqueue;
+        File.AppendAllText(file, "more");
+        Wait(() => batches.Any(b => !b.Structure));
+        Assert.Contains(batches, b => !b.Structure && b.Paths.Contains(file));
+        File.Delete(file);
+        Wait(() => batches.Any(b => b.Structure));
+        Assert.Contains(batches, b => b.Structure);
     }
 
     [Fact]
