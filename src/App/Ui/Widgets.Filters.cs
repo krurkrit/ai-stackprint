@@ -22,7 +22,8 @@ internal sealed class FilterMenu : Button
     public FilterMenu(string label, Func<IReadOnlyList<(string Label, string Value, int Count)>> opts, HashSet<string> off, Action changed)
     {
         _off = off;
-        Content = W.Row(W.Txt(label, TextSize.Body).With(t => t.VerticalAlignment = VerticalAlignment.Center), W.Icon("chevron_down", IconSize.XS).With(i => i.Opacity = .7));   // the button's text color, quieter (it follows the hover colors)
+        // a plain text block takes the button's text color, so it follows the hover color (W.Txt has a fixed one)
+        Content = W.Row(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }, W.Icon("chevron_down", IconSize.XS).With(i => i.Opacity = .7));   // the button's text color, quieter (it follows the hover colors)
         W.AccentHover(this);   // under the pointer: like an input and a side menu item
         MinHeight = AiStackprint.Ui.Theme.InputHeight;   // (Button.Theme is the control theme)
         Padding = new Thickness(Space.L, 0);
@@ -117,6 +118,7 @@ internal static partial class W
                 b.Themed(Button.BackgroundProperty, Selected).Themed(Button.ForegroundProperty, Accent);
             }
 
+            AccentHover(b);   // under the pointer: like a side menu item
             Avalonia.Automation.AutomationProperties.SetName(b, label + (on ? " (on)" : ""));
             b.Click += (_, _) => pick(value);
             group.Children.Add(b);
