@@ -122,7 +122,6 @@ public sealed class ItemSearch
             "name" => Has(e.Name),
             "desc" => Has(e.Desc),
             "author" => Has(e.Author),
-            "app" => Has(e.AppId) || Has(e.AppName),
             "level" => Has(e.Level) || (e.LevelLabel != "" && Has(e.LevelLabel)),
             "keyword" => e.Keywords.Any(Has),
             "path" => Has(e.Path),
@@ -153,8 +152,6 @@ public sealed class ItemSearch
         public string Desc => Item.Description;
         public string Path => Item.Path;
         public string Author { get; } = author;
-        public string AppId => Item.App;
-        public string AppName { get; } = item.Source.IndexOf(" · ", StringComparison.Ordinal) is var i and >= 0 ? item.Source[..i] : item.Source;   // a plugin's skills: "Claude Code · plugin"
         public string Level => Item.Level;
         public string LevelLabel => Item.LevelLabel ?? "";
         public IReadOnlyList<string> Keywords => Item.Keywords;

@@ -71,8 +71,7 @@ public class ItemSearchTests
         Assert.Equal(["code-review", "pdf"], Find("author:anthropic"));
         Assert.Equal(["deploy", "pdf-tools"], Find("by:jane"));
         Assert.Equal(["deploy"], Find("author:\"Jane\""));         // not "Jane Doe"
-        Assert.Equal(["deploy"], Find("app:codex"));
-        Assert.Equal(["deploy"], Find("app:\"Codex\" pdf"));
+        Assert.Empty(Find("app:codex"));   // no app: field: the App menu filters by app
         Assert.Equal(["deploy"], Find("level:project"));
         Assert.Equal(["fmt@acme"], Find("tag:lint"));
         Assert.Equal(["fmt@acme"], Find("keyword:\"prettier\""));
@@ -106,7 +105,6 @@ public class ItemSearchTests
         var search = new ItemSearch([inside, market, bundled, mine], author);
         Assert.Equal(["format"], search.Find("author:\"acme\"").Select(i => i.Name));
         Assert.Equal(["mine"], search.Find("author:\"Local\"").Select(i => i.Name));
-        Assert.Equal(["format"], search.Find("app:\"claude code\" format").Select(i => i.Name));   // "Claude Code · fmt" is Claude Code
     }
 
     [Fact]
