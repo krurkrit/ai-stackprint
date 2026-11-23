@@ -200,8 +200,8 @@ internal sealed partial class FilterBar<T>
         _summary.Inlines = inlines;
     }
 
-    /// <summary>The bar for this visit: the search box (taken from its old page), the menus, Group by, Reset, and the summary line under them.</summary>
-    public Control Build(TextBox search)
+    /// <summary>The bar for this visit: the search box (taken from its old page) with an optional help button after it, the menus, Group by, Reset, and the summary line under them.</summary>
+    public Control Build(TextBox search, Control? help = null)
     {
         var right = new WrapPanel { ItemSpacing = Space.M, LineSpacing = Space.M, HorizontalAlignment = HorizontalAlignment.Right };
         foreach (var f in _fields)
@@ -234,12 +234,20 @@ internal sealed partial class FilterBar<T>
         };
         right.Children.Add(reset);
         search.MinWidth = Widths.Search;
+        Control first = search.Free();
+        if (help != null)
+        {
+            DockPanel.SetDock(help, Dock.Right);
+            help.VerticalAlignment = VerticalAlignment.Center;
+            first = new DockPanel { MinWidth = Widths.Search, Children = { help, first } };
+        }
+
         _summary = Txt("", TextSize.Small, false, Muted).With(t => t.TextWrapping = Avalonia.Media.TextWrapping.Wrap);
         Refresh();
         return new StackPanel
         {
             Spacing = Space.M,
-            Children = { new ToolbarPanel { Children = { search.Free(), right } }, _summary }
+            Children = { new ToolbarPanel { Children = { first, right } }, _summary }
         };
     }
 }

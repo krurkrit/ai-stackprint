@@ -204,17 +204,13 @@ internal class AppDetailView(Ctx x)
             body.Content = Table.Virtual(cols, filter.RowMakers(filter.Apply([.. index.Find(query)], skills), Row, cols.Length, Fill), "No skills match the search or these filters.");
         }
         _skillFill = Fill;
-        var search = _skillSearch = SearchBox("Search skills, or author: level: name:").With(b =>
-        {
-            b.Text = _skillQuery;
-            ToolTip.SetTip(b, ItemBrowser.SearchTip);
-        })
+        var search = _skillSearch = SearchBox("Search skills, or author: keyword: name:").With(b => b.Text = _skillQuery)
             .OnPause(q =>
             {
                 _skillQuery = q;
                 Fill();
             });
-        var bar = filter.Bar.Build(search).With(b => b.IsVisible = skills.Count > 0);
+        var bar = filter.Bar.Build(search, SearchHelp.Button()).With(b => b.IsVisible = skills.Count > 0);
         Fill();
         var add = AppActions.CanAddSkill(x, d) ? [Btn("Add skill", () => AppActions.AddSkill(x, d), true, "add")] : Array.Empty<Control>();
         return Section("sparkle", $"Skills · {skills.Count}", new StackPanel

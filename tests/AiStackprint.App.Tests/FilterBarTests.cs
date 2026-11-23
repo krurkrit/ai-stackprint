@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using Xunit;
 
@@ -75,6 +76,20 @@ public sealed class FilterBarTests
         Assert.True(Ui.FilterMenu(w, "Size").IsVisible);
         bar.Apply([.. _all.Where(t => t.Size == "S")], _all);   // the search leaves one size: nothing to choose
         Assert.False(Ui.FilterMenu(w, "Size").IsVisible);
+    }
+
+    [AvaloniaFact]
+    public void The_help_button_sits_after_the_search_and_opens_the_search_explanation()
+    {
+        var (bar, _, _) = Make();
+        var w = Ui.Show(bar.Build(new TextBox(), SearchHelp.Button()));
+        var help = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "How the search works");
+        help.Flyout!.ShowAt(help);
+        Dispatcher.UIThread.RunJobs();
+        var texts = Ui.Texts(((Flyout)help.Flyout).Content as Visual ?? help);
+        Assert.Contains("author:\"Lauren\"", texts);
+        Assert.Contains(texts, t => t.StartsWith("Every word you type must match", StringComparison.Ordinal));
+        help.Flyout.Hide();
     }
 
     [AvaloniaFact]
