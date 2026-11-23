@@ -51,11 +51,7 @@ internal static class Levels
         list.Children.Add(Txt("Settings follow this order: a higher level wins for the same key. Instruction files and skills are combined; when they conflict, the more specific one usually wins. Apps use their own words for levels (ADMIN, REPO, Workspace); hover a level to see it.",
             TextSize.Caption, false, Muted));
         var b = IconBtn("info", "What do the levels mean?", () => { });
-        b.Flyout = new Flyout
-        {
-            Content = list,
-            Placement = PlacementMode.BottomEdgeAlignedLeft
-        };
+        b.Flyout = InfoFlyout.Make(list, PlacementMode.BottomEdgeAlignedLeft);
         return b;
     }
 }

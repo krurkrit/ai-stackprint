@@ -38,11 +38,7 @@ internal static class SearchHelp
         list.Children.Add(Rows("Examples", _examples.Select(e => (e.Example, e.Means))));
         list.Children.Add(Txt("Quotes after a field match its whole value. The app and the level are chosen in their menus, not in the search.", TextSize.Caption, false, Muted));
         var b = IconBtn("info", "How the search works", () => { });
-        b.Flyout = new Flyout
-        {
-            Content = list,
-            Placement = PlacementMode.BottomEdgeAlignedRight
-        };
+        b.Flyout = InfoFlyout.Make(list, PlacementMode.BottomEdgeAlignedRight);
         return b;
     }
 

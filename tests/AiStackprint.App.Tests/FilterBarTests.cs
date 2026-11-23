@@ -89,6 +89,9 @@ public sealed class FilterBarTests
         var texts = Ui.Texts(((Flyout)help.Flyout).Content as Visual ?? help);
         Assert.Contains("author:\"Lauren\"", texts);
         Assert.Contains(texts, t => t.StartsWith("Every word you type must match", StringComparison.Ordinal));
+        var presenter = ((Visual)((Flyout)help.Flyout).Content!).GetVisualAncestors().OfType<FlyoutPresenter>().First();
+        help.TryFindResource(W.TopKey, help.ActualThemeVariant, out var top);
+        Assert.Equal(top, presenter.Background);   // the top bar's color, like the theme switch
         help.Flyout.Hide();
     }
 
