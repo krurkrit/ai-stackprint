@@ -21,7 +21,7 @@ internal partial class ItemBrowser
 {
     private const double MinPanel = 160, MaxPanel = 2000;   // bottom panel height limits
     /// <summary>How to search skills and plugins (<see cref="ItemSearch"/>), as the search box's tooltip.</summary>
-    internal const string SearchTip = "Words match separately; \"quotes\" match a phrase.\nname: desc: author: level: keyword: path: search one field (the app: the App menu), has:mcp (skills, commands, agents, hooks, mcp, lsp) what a plugin adds; author:\"Jane Doe\" matches the whole value.\nBest matches first: name, then keywords, author, description, path.";
+    internal const string SearchTip = "Words match separately; \"quotes\" match a phrase.\nname: desc: author: keyword: path: search one field (app and level: their menus), has:mcp (skills, commands, agents, hooks, mcp, lsp) what a plugin adds; author:\"Jane Doe\" matches the whole value.\nBest matches first: name, then keywords, author, description, path.";
     private static readonly TimeSpan _typing = TimeSpan.FromMilliseconds(150);   // search waits this long after the last key
     private readonly Ctx _x;
     private readonly string _kind;
@@ -64,7 +64,7 @@ internal partial class ItemBrowser
     public void Leave()
     {
         _wait.Stop();
-        var search = _search = SearchBox("Search, or author: level: keyword:");
+        var search = _search = SearchBox("Search, or author: keyword:");
         search.Text = _q;
         ToolTip.SetTip(search, SearchTip);
         // search after a short pause in typing; the text set from _q is no change, and an old box says nothing

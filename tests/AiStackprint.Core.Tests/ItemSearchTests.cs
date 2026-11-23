@@ -72,7 +72,7 @@ public class ItemSearchTests
         Assert.Equal(["deploy", "pdf-tools"], Find("by:jane"));
         Assert.Equal(["deploy"], Find("author:\"Jane\""));         // not "Jane Doe"
         Assert.Empty(Find("app:codex"));   // no app: field: the App menu filters by app
-        Assert.Equal(["deploy"], Find("level:project"));
+        Assert.Empty(Find("level:project"));   // no level: field: the Level menu filters by level
         Assert.Equal(["fmt@acme"], Find("tag:lint"));
         Assert.Equal(["fmt@acme"], Find("keyword:\"prettier\""));
         Assert.Equal(["my-pdf-export", "pdf", "pdf-tools"], Find("name:pdf"));

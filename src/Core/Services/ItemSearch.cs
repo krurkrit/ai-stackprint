@@ -122,7 +122,6 @@ public sealed class ItemSearch
             "name" => Has(e.Name),
             "desc" => Has(e.Desc),
             "author" => Has(e.Author),
-            "level" => Has(e.Level) || (e.LevelLabel != "" && Has(e.LevelLabel)),
             "keyword" => e.Keywords.Any(Has),
             "path" => Has(e.Path),
             "has" => e.Item.Provides.Any(k => Has(k) || Has(PluginParts.Name(k))),
@@ -152,8 +151,6 @@ public sealed class ItemSearch
         public string Desc => Item.Description;
         public string Path => Item.Path;
         public string Author { get; } = author;
-        public string Level => Item.Level;
-        public string LevelLabel => Item.LevelLabel ?? "";
         public IReadOnlyList<string> Keywords => Item.Keywords;
     }
 }

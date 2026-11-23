@@ -44,7 +44,7 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
   - Invoked by is a filter menu of Agent only, User only, Agent and User (all checked by default).
   - App category is also a filter.
   - The same filters, and the same search, appear on an app's Skills section.
-- Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, level, keyword or tag, path, has) matches one field (no app: field: the App menu filters by app); author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
+- Search on the Skills and Plugins pages: words match separately (all must match), "quotes" match a phrase, and field:value (name, desc, author, keyword or tag, path, has) matches one field (no app: or level: field: their menus filter by them); author:"Jane Doe" in quotes matches the whole value. Best matches first (name, then plugin keywords, author, description, path), matches highlighted. A dashboard author bar opens the list with author:"name", counting authors the same way as the chart (`ItemAuthor`).
 
 ## Project page
 - Shows the skill list with the Skills-page features.
