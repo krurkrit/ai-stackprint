@@ -7,7 +7,7 @@ using Avalonia.VisualTree;
 
 namespace AiStackprint.Ui;
 
-/// <summary>The pop-up of an ⓘ button (levels, search help): the top bar's color as background, like the theme switch beside it.</summary>
+/// <summary>The pop-up of an ⓘ button (levels, search help): the selected theme button's color as background (<see cref="W.SelectedSolid"/>, as it looks on the top bar).</summary>
 internal static class InfoFlyout
 {
     public static Flyout Make(Control content, PlacementMode placement)
@@ -17,7 +17,7 @@ internal static class InfoFlyout
             Content = content,
             Placement = placement
         };
-        flyout.Opened += (_, _) => content.FindAncestorOfType<FlyoutPresenter>()?.Themed(TemplatedControl.BackgroundProperty, W.TopKey);
+        flyout.Opened += (_, _) => content.FindAncestorOfType<FlyoutPresenter>()?.Themed(TemplatedControl.BackgroundProperty, W.SelectedSolid);
         return flyout;
     }
 }

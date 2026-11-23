@@ -45,11 +45,11 @@ internal static class Levels
             list.Children.Add(new StackPanel
             {
                 Spacing = Space.XXS,
-                Children = { head, Txt(where, TextSize.Small), Txt("Applies to: " + who, TextSize.Small, false, Muted), Txt(note, TextSize.Small, false, Muted) }
+                Children = { head, Txt(where, TextSize.Small), Txt("Applies to: " + who, TextSize.Small, false, Text), Txt(note, TextSize.Small, false, Text) }
             });
         }
         list.Children.Add(Txt("Settings follow this order: a higher level wins for the same key. Instruction files and skills are combined; when they conflict, the more specific one usually wins. Apps use their own words for levels (ADMIN, REPO, Workspace); hover a level to see it.",
-            TextSize.Caption, false, Muted));
+            TextSize.Caption, false, Text));
         var b = IconBtn("info", "What do the levels mean?", () => { });
         b.Flyout = InfoFlyout.Make(list, PlacementMode.BottomEdgeAlignedLeft);
         return b;

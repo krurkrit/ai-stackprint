@@ -31,6 +31,7 @@ internal static partial class Theme
             [W.BorderKey] = B(p.Border == null ? A(fg, p.DividerAlpha) : C(p.Border)),   // dark: a solid line
             [W.Subtle] = B(hover),
             [W.Selected] = B(A(primary, p.SelectedAlpha)),
+            [W.SelectedSolid] = B(Color.FromUInt32(Services.Contrast.Blend(A(primary, p.SelectedAlpha).ToUInt32(), C(p.Top).ToUInt32()))),   // the selected theme button as seen on the top bar, opaque: for a pop-up, which has nothing under it to show through
             [W.Accent] = B(primary),
             [W.OnAccent] = B(onPrimary),
             [W.Link] = B(custom ?? C(p.Link)),

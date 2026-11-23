@@ -13,7 +13,7 @@ internal static partial class W
 {
     // Resource keys (values in Theme)
     internal const string Background = "Ap.Background", Text = "Ap.Text", Muted = "Ap.Muted", Surface = "Ap.Surface", SideKey = "Ap.Side", MainKey = "Ap.Main", TopKey = "Ap.Top";
-    internal const string Subtle = "Ap.Hover", Selected = "Ap.Selected", BorderKey = "Ap.Divider";
+    internal const string Subtle = "Ap.Hover", Selected = "Ap.Selected", SelectedSolid = "Ap.SelectedSolid", BorderKey = "Ap.Divider";
     internal const string Accent = "Ap.Accent", OnAccent = "Ap.OnAccent", Link = "Ap.Link";
     internal const string ErrorKey = "Ap.Error", ErrorFill = "Ap.ErrorFill", ErrorHover = "Ap.ErrorHover", ErrorPressed = "Ap.ErrorPressed", OnError = "Ap.OnError", WarningKey = "Ap.Warning", SuccessKey = "Ap.Success";
     internal const string ChartIn = "Ap.ChartIn", ChartOut = "Ap.ChartOut", ChartWrite = "Ap.ChartWrite", ChartRead = "Ap.ChartRead";

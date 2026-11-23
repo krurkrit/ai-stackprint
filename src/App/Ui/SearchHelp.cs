@@ -36,7 +36,7 @@ internal static class SearchHelp
         list.Children.Add(Txt("Every word you type must match. Plain words look in the name, keywords, author, description and path; the best matches come first (name, then keywords, author, description, path). Put a word before a colon to search one field only.", TextSize.Small));
         list.Children.Add(Rows("One field", _fields.Select(f => (f.Field, f.What))));
         list.Children.Add(Rows("Examples", _examples.Select(e => (e.Example, e.Means))));
-        list.Children.Add(Txt("Quotes after a field match its whole value. The app and the level are chosen in their menus, not in the search.", TextSize.Caption, false, Muted));
+        list.Children.Add(Txt("Quotes after a field match its whole value. The app and the level are chosen in their menus, not in the search.", TextSize.Caption, false, Text));
         var b = IconBtn("info", "How the search works", () => { });
         b.Flyout = InfoFlyout.Make(list, PlacementMode.BottomEdgeAlignedRight);
         return b;
@@ -51,7 +51,7 @@ internal static class SearchHelp
             sp.Children.Add(new StackPanel
             {
                 Spacing = Space.XXS,
-                Children = { Mono(code, TextSize.Small), Txt(text, TextSize.Small, false, Muted) }
+                Children = { Mono(code, TextSize.Small), Txt(text, TextSize.Small, false, Text) }
             });
         }
 

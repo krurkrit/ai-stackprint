@@ -65,6 +65,35 @@ public class ThemeTests
         Assert.Equal(new CornerRadius(Radius.L), Get("OverlayCornerRadius"));
     }
 
+    /// <summary>The pop-up of an ⓘ button has the selected theme button's color: its text (full strength: the quieter muted gray is below 7:1 on it) reads at 7:1 on it, a custom accent too.</summary>
+    [AvaloniaTheory]
+    [InlineData(null)]
+    [InlineData("#6FA8FF")]
+    [InlineData("#FFD43B")]
+    public void The_info_pop_up_text_reads_at_7_to_1_on_its_background(string? accent)
+    {
+        var app = Application.Current!;
+        var s = SettingsStore.Defaults();
+        s.Light.Accent = accent;
+        s.Dark.Accent = accent;
+        Theme.Appearance(app, s);
+        try
+        {
+            foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
+            {
+                uint Get(string key) => app.Resources.TryGetResource(key, variant, out var v) && v is Avalonia.Media.ISolidColorBrush b ? b.Color.ToUInt32() : throw new KeyNotFoundException(key);
+                var bg = Get(W.SelectedSolid);
+                Assert.Equal(0xFFu, bg >> 24);   // opaque
+                var text = Get(W.Text);
+                Assert.True(Contrast.Ratio(text, bg) >= Contrast.Minimum, $"{variant} {accent}: {Contrast.Ratio(text, bg):0.00}:1");
+            }
+        }
+        finally
+        {
+            Theme.Appearance(app, SettingsStore.Defaults());
+        }
+    }
+
     /// <summary>WCAG 2.2 AAA (1.4.6): button text needs 7:1 in every state, hover and pressed too; the app's minimum is 7.1. Each state is a different color.</summary>
     [AvaloniaTheory]
     [InlineData(null)]
