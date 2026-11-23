@@ -27,8 +27,8 @@ internal partial class AppsView
             _q = "";
             _search.Text = "";
         });
-        _bar.Add("Status", _offStatus, a => [StatusName(a)], order: vs => vs.OrderBy(v => v == "Installed" ? 0 : 1));
         _bar.Add("Category", _offCats, a => [a.Category], Plural);
+        _bar.Add("Status", _offStatus, a => [StatusName(a)], order: vs => vs.OrderBy(v => v == "Installed" ? 0 : 1));
         _bar.GroupBy([("Category", ByCategory), ("Status", ByStatus)], _group, ByCategory);
         return _bar;
     }

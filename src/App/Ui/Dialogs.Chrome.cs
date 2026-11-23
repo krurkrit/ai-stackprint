@@ -20,7 +20,10 @@ internal static partial class Dialogs
     /// Makes <paramref name="w"/> a Fluent UI 2 dialog: no system frame, a floating card (rounded corners, a thin border, a deep soft shadow) with the title and a close button on top,
     /// the body, and the buttons at the bottom right. The card is dragged by its title, and Esc or the close button closes with <c>false</c>.
     /// </summary>
-    internal static void Chrome(Window w, string title, Control body, double card, params Button[] buttons)
+    internal static void Chrome(Window w, string title, Control body, double card, params Button[] buttons) => Chrome(w, false, title, body, card, buttons);
+
+    /// <param name="cancel">What Esc and the close button close the dialog with: <c>false</c> for a dialog that answers yes or no, <c>null</c> for one that answers with an object (a cast of <c>false</c> to it would throw).</param>
+    internal static void Chrome(Window w, object? cancel, string title, Control body, double card, params Button[] buttons)
     {
         w.Title = title;
         w.WindowDecorations = WindowDecorations.None;
@@ -32,7 +35,7 @@ internal static partial class Dialogs
         w.ShowInTaskbar = false;
         w.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-        var close = IconBtn("dismiss", "Close", () => w.Close(false), danger: true);
+        var close = IconBtn("dismiss", "Close", () => w.Close(cancel), danger: true);
         var header = new DockPanel { Background = Brushes.Transparent };
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
@@ -74,7 +77,7 @@ internal static partial class Dialogs
             if (e.Key == Key.Escape && !e.Handled)
             {
                 e.Handled = true;
-                w.Close(false);
+                w.Close(cancel);
             }
         };
     }

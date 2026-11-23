@@ -6,6 +6,8 @@ using AiStackprint.Services;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Layout;
 using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
@@ -13,7 +15,7 @@ using static AiStackprint.Ui.W;
 namespace AiStackprint.Ui;
 
 /// <summary>
-/// Logs page: apps on the left; for the selected app a summary, its log files (select, delete to Trash) and the viewer.
+/// Logs page: an App drop-down at the top right; for the selected app a summary, its log files (select, delete to Trash) and the viewer.
 /// The selected app's log folders are watched while the page is open: new, removed and renamed files update the list,
 /// and a file that grows gets its size and time updated in place.
 /// </summary>
@@ -66,25 +68,15 @@ internal partial class LogsView(Ctx x)
             _file ??= _files.FirstOrDefault();   // the files are already read (and kept current by the watcher): a click on a file does not read the folders again
         }
 
-        var apps = Table.Build([new Col("App", "*")], Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name)
-            .Select(d => new TableRow([AppName(d.Logo, d.Category, d.Name, Sizes.LogoS)], () => x.Go("Logs:" + d.Id), d.Id == _app)), "No app has log locations.");
-
         var pane = new ContentControl { Content = BuildRight(def, loading) };
 
-        var g = new Grid { ColumnDefinitions = new ColumnDefinitions($"{Widths.SideList},*") };
-        var left = new ScrollViewer
-        {
-            Margin = new Thickness(Space.Page, Space.XXXL, Space.L, Space.XXL),
-            Content = Card(apps)
-        };
+        var g = new Grid();
         var scroll = _scroll = new ScrollViewer { Content = pane };
         if (keep is { } at && !loading)
         {
             Dispatcher.UIThread.Post(() => scroll.Offset = at, DispatcherPriority.Loaded);   // after the first layout, when the height is known
         }
 
-        Grid.SetColumn(scroll, 1);
-        g.Children.Add(left);
         g.Children.Add(scroll);
         if (loading)
         {
@@ -112,8 +104,8 @@ internal partial class LogsView(Ctx x)
         var right = new StackPanel
         {
             Spacing = Space.XL,
-            Margin = new Thickness(Space.L, Space.XXXL, Space.Page, Space.XXXL),
-            Children = { head }
+            Margin = new Thickness(Space.Page, Space.XXXL, Space.Page, Space.XXXL),
+            Children = { Header(head) }
         };
         if (def != null)
         {
@@ -181,6 +173,38 @@ internal partial class LogsView(Ctx x)
         };
         right.Children.Add(_viewerHost);
         return right;
+    }
+
+    /// <summary>The title with the App drop-down at the top right (installed apps first); choosing an app opens its logs.</summary>
+    private Grid Header(Control head)
+    {
+        var apps = Apps.OrderByDescending(d => x.Info(d.Id)?.Installed == true).ThenBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        header.Children.Add(head);
+        if (apps.Count > 0)
+        {
+            var current = apps.FirstOrDefault(d => d.Id == _app);
+            var combo = new ComboBox
+            {
+                ItemsSource = apps,
+                SelectedItem = current,
+                MinWidth = Widths.Field,
+                VerticalAlignment = VerticalAlignment.Top,
+                ItemTemplate = new FuncDataTemplate<AppDefinition>((d, _) => d == null ? new Panel() : AppName(d.Logo, d.Category, d.Name, Sizes.LogoS))   // null while Avalonia recycles an item container
+            };
+            Avalonia.Automation.AutomationProperties.SetName(combo, "App");
+            combo.SelectionChanged += (_, _) =>
+            {
+                if (combo.SelectedItem is AppDefinition d && d.Id != _app)
+                {
+                    x.Go("Logs:" + d.Id);
+                }
+            };
+            Grid.SetColumn(combo, 1);
+            header.Children.Add(combo);
+        }
+
+        return header;
     }
 
     private ScrollViewer? _scroll;

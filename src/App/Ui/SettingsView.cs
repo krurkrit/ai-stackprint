@@ -71,7 +71,7 @@ internal class SettingsView(Ctx x)
             var origin = d.Origin == AppOrigin.Custom ? "Custom" : "Built-in";
             return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(AppsView.Cap(d.Category), TextSize.Small, false, Muted), Txt(origin, TextSize.Small, false, Muted), status, shown]);
         });
-        var table = Table.Build([new Col("App", "2*"), new Col("Category", "1*"), new Col("Source", "1*"), new Col("Status", "1*"), new Col("Visibility", "1*")], rows);
+        var table = Table.Build([Cols.Name("App"), Cols.Type("Category"), Cols.Type("Source"), Cols.Status(), Cols.Type("Visibility")], rows);
 
         return Section("eye_off", "App visibility", new StackPanel
         {

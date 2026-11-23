@@ -8,6 +8,7 @@ using AiStackprint.Services;
 using AiStackprint.Ui;
 
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -180,6 +181,24 @@ public sealed class ModelsViewTests : IDisposable
         Dispatcher.UIThread.RunJobs();
         Assert.Empty(state.ComparedModels);
         Assert.All(Slots(w), s => Assert.True(string.IsNullOrEmpty(s.Text)));
+    }
+
+    [AvaloniaFact]
+    public void Typing_in_a_slot_and_picking_from_the_list_with_the_keyboard_chooses_the_model()
+    {
+        var state = new UiState { ModelsTab = "Compare" };
+        var (w, _) = Open(null, state);
+        var box = Slots(w)[0];
+        box.Focus();
+        Dispatcher.UIThread.RunJobs();
+        w.KeyTextInput("gpt");
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(box.IsDropDownOpen);
+        w.KeyPressQwerty(Avalonia.Input.PhysicalKey.ArrowDown, Avalonia.Input.RawInputModifiers.None);
+        w.KeyPressQwerty(Avalonia.Input.PhysicalKey.Enter, Avalonia.Input.RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(["gpt-6"], state.ComparedModels);
+        Assert.Equal("gpt-6", box.Text);
     }
 
     [AvaloniaFact]

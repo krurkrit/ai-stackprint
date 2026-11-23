@@ -78,10 +78,10 @@ internal partial class AppsView(Ctx x)
     {
         // The menus' counts follow the search and the other menu; a value no app found has is not offered
         var found = x.ShownApps.Where(a => _q == "" || a.Name.Contains(_q, StringComparison.OrdinalIgnoreCase)).ToList();
-        var apps = Bar().Apply(found, [.. x.ShownApps]).OrderByDescending(a => a.Installed).ThenBy(a => a.Name).ToList();
+        var apps = Bar().Apply(found, [.. x.ShownApps]).OrderByDescending(a => a.Installed).ThenBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
         // A count column that is empty for every app is left out: less to read, and the rest fit. Decided over all apps, not the filtered ones, so the columns stay put while filtering
         var counts = Counts().Where(c => x.ShownApps.Any(a => c.Of(a) > 0)).ToList();
-        var cols = new[] { Cols.Name("App"), Cols.Type("Category"), Cols.Status() }.Concat(counts.Select(c => Cols.Count(c.Head))).ToArray();
+        var cols = new[] { Cols.Name("App"), Cols.Type("Category", HeaderHelp.Categories), Cols.Status() }.Concat(counts.Select(c => Cols.Count(c.Head))).ToArray();
         var table = Table.Scrollable(Table.Build(cols, Rows(apps, counts, cols.Length), "No apps match. Clear the search or filters."), Table.MinWidth(cols));
         // Expand all / Collapse all: icon buttons over the top right of the table, while it is grouped
         var all = new StackPanel
@@ -168,5 +168,5 @@ internal partial class AppsView(Ctx x)
     public static string Cap(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
 
     /// <summary>Category as a filter label: "Agents", "Editors"; names without a plural stay as they are.</summary>
-    private static string Plural(string c) => c switch { "shared" or "custom" => Cap(c), "chat" => "Chat apps", _ => Cap(c) + "s" };
+    internal static string Plural(string c) => c switch { "shared" or "custom" => Cap(c), "chat" => "Chat apps", _ => Cap(c) + "s" };
 }

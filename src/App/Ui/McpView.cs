@@ -78,7 +78,7 @@ internal class McpView(Ctx x)
             Txt(s.Name, TextSize.Body, true),
             s.Apps.Count == 1 ? DetailPanel.AppLink(x, s.Apps[0], s.Apps[0]) : Txt(AppName(s), TextSize.Small),
             Level(s.Level, s.Project != null ? $"{s.Level} · {Ctx.ProjectName(s.Project)}" : s.Level, s.LevelLabel),
-            Chip(s.Kind),
+            Txt(s.Kind, TextSize.Small),
             Mono(s.What, TextSize.Caption).With(t =>
             {
                 t.MaxLines = 3;

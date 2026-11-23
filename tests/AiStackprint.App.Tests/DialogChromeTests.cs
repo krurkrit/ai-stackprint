@@ -26,6 +26,29 @@ public sealed class DialogChromeTests
     }
 
     [AvaloniaFact]
+    public async Task Esc_and_the_close_button_close_the_Add_app_dialog_with_no_app_instead_of_throwing()
+    {
+        var owner = Ui.Show(new Panel());
+        foreach (var byEsc in new[] { true, false })
+        {
+            var task = new AddAppDialog().ShowDialog<AiStackprint.Models.AppDefinition?>(owner);
+            Dispatcher.UIThread.RunJobs();
+            var d = owner.OwnedWindows.Single();
+            if (byEsc)
+            {
+                d.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            }
+            else
+            {
+                Ui.Click(d.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) is "Close"));
+            }
+
+            Dispatcher.UIThread.RunJobs();
+            Assert.Null(await task);   // a cast of false to AppDefinition used to throw and close the app
+        }
+    }
+
+    [AvaloniaFact]
     public void A_dialog_is_a_floating_card_with_a_close_button_not_a_framed_window()
     {
         var d = Open();

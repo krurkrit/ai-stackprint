@@ -64,7 +64,7 @@ internal partial class ItemBrowser
         var cols = _kind == "Plugin"
             // minimums fit the narrowest window (900 px): Path gives way first
             ? new[] { Cols.Name("Plugin"), Cols.App(), Cols.Level(), Cols.Version(), Cols.Path(), Cols.Actions() }
-            : [Cols.Name(_kind == "Part" ? "Name" : "Skill"), Cols.App(), Cols.Level(), Cols.Type(_kind == "Part" ? "Type" : "Invoked by"), Cols.Path(), Cols.Actions()];
+            : [Cols.Name(_kind == "Part" ? "Name" : "Skill"), Cols.App(), Cols.Level(), _kind == "Part" ? Cols.Type() : Cols.Type("Invoked by", HeaderHelp.InvokedBy), Cols.Path(), Cols.Actions()];
         _table.Content = Table.Virtual(cols, _filter.RowMakers(shown, Row, cols.Length, Fill),
             _items.Count == 0 ? $"No {_kind switch { "Plugin" => "plugins", "Part" => "commands or agents", _ => "skills" }} found." : "Nothing matches. Clear the search or filters.");
     }

@@ -89,7 +89,7 @@ internal class HooksView(Ctx x)
             SourceCell.For(x, h.Plugin, h.Apps.FirstOrDefault() ?? "", h.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(h.File))
         ]));
-        _table.Content = TableSurface(Table.Build([Cols.Name("Event"), Cols.App(), Cols.Level(), Cols.Type("Matcher"),
+        _table.Content = TableSurface(Table.Build([Cols.Name("Event") with { Help = HeaderHelp.HookEvents },Cols.App(), Cols.Level(), Cols.Type("Matcher"),
             new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
             x.S.Hooks.Count == 0 ? "No hooks in the apps' settings or hook files or plugins." : "Nothing matches. Clear the search or filters."));
     }

@@ -42,7 +42,7 @@ internal static class AiFoldersSection
             Txt(f.Capped ? $"{f.Files}+" : f.Files.ToString(), TextSize.Small), Txt(LogViewer.Size(f.Bytes), TextSize.Small, false, Muted),
             IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(f.Path))
         ]));
-        var table = Table.Build([new Col("Folder", "1*"), new Col("Apps", "2*"), new Col("Inside", "3*"), new Col("Files", ".6*"), new Col("Size", ".8*"), new Col("", "40")], rows, "No AI folders in this project.");
+        var table = Table.Build([Cols.Name("Folder", "1*"), new Col("Apps", "2*"), new Col("Inside", "3*"), Cols.Count("Files"), Cols.Count("Size"), Cols.Action()], rows, "No AI folders in this project.");
 
         var parts = applying.Where(i => i.Kind is "Command" or "Agent").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ThenBy(i => i.Source, StringComparer.OrdinalIgnoreCase).ThenBy(i => Array.IndexOf(Levels.Order, i.Level)).ThenBy(i => i.Kind)
             .Select(i => new TableRow(

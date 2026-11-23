@@ -19,8 +19,8 @@ internal class AddAppDialog : Window
     private readonly TextBlock _refused = Txt("", TextSize.Small, false, ErrorKey).With(t => t.IsVisible = false);
     private readonly ComboBox _cat = new()
     {
-        ItemsSource = new[] { "orchestrator", "agent", "editor", "chat", "runtime", "custom" },
-        SelectedIndex = 0
+        ItemsSource = AppCategories.Order,   // the same kinds, in the same order, as the Category help on the Apps page
+        SelectedItem = "orchestrator"
     };
 
     public AddAppDialog()
@@ -52,7 +52,7 @@ internal class AddAppDialog : Window
                 Txt("The config folder is scanned (depth 4) for SKILL.md files at User level. Saved to apps.json; edit it for finer control.", TextSize.Caption, false, Muted)
             }
         };
-        Dialogs.Chrome(this, "Add an app to scan", body, Widths.DialogM, Btn("Cancel", () => Close(null)).With(b => b.IsCancel = true), ok);
+        Dialogs.Chrome(this, null, "Add an app to scan", body, Widths.DialogM, Btn("Cancel", () => Close(null)).With(b => b.IsCancel = true), ok);
     }
 
     private void Save()

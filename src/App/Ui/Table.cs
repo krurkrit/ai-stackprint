@@ -13,7 +13,8 @@ namespace AiStackprint.Ui;
 /// A column: header text, a Grid width ("2*", "120"), right alignment for numbers, and a minimum width for a star column
 /// (short values like an app name or version would otherwise break mid-word in a narrow window). Use star or pixel widths so rows line up.
 /// </summary>
-internal record Col(string Head, string Width, bool Right = false, double Min = 0);
+/// <param name="Help">Builds the content of the ⓘ pop-up after the header text (see <see cref="HeaderHelp"/>); null: no ⓘ.</param>
+internal record Col(string Head, string Width, bool Right = false, double Min = 0, Func<Control>? Help = null);
 
 /// <summary>
 /// Columns that appear on several pages. Order on every page: the main value (name), then from the biggest scope to the smallest (App, Level, Type),
@@ -25,8 +26,8 @@ internal static class Cols
 
     public static Col Name(string head = "Name", string width = "2*") => new(head, width, Min: 120);
     public static Col App(string head = "App") => new(head, Px(Widths.ColApp));
-    public static Col Level() => new("Level", Px(Widths.ColLevel));
-    public static Col Type(string head = "Type") => new(head, Px(Widths.ColType));
+    public static Col Level() => new("Level", Px(Widths.ColLevel), Help: Levels.Help);
+    public static Col Type(string head = "Type", Func<Control>? help = null) => new(head, Px(Widths.ColType), Help: help);
     public static Col Status() => new("Status", Px(Widths.ColStatus));
     public static Col Version() => new("Version", Px(Widths.ColVersion));
     public static Col Count(string head) => new(head, Px(Widths.ColCount), true);
@@ -105,18 +106,30 @@ internal static partial class Table
         };
         for (var c = 0; c < cols.Length; c++)
         {
-            head.Children.Add(Txt(cols[c].Head, TextSize.Caption, true, Muted).With(t =>
+            var text = Txt(cols[c].Head, TextSize.Caption, true, Muted).With(t =>
             {
-                Grid.SetColumn(t, c);
-                if (cols[c].Right)
-                {
-                    t.HorizontalAlignment = HorizontalAlignment.Right;
-                }
-
+                t.VerticalAlignment = VerticalAlignment.Center;
                 t.TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
                 t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis;   // one line; a squeezed column shows "Pa…", not a letter per line
                 ToolTip.SetTip(t, cols[c].Head == "" ? null : cols[c].Head);
-            }));
+            });
+            Control cell = text;
+            if (cols[c].Help is { } help)
+            {
+                // the header text, then a small ⓘ that opens the explanation of the column's values
+                var info = IconBtn("info", "What do the values mean?", () => { });
+                info.Padding = new Thickness(Space.XS);
+                info.Flyout = InfoFlyout.Make(help(), PlacementMode.BottomEdgeAlignedLeft);
+                cell = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Children = { text, info } };
+            }
+
+            Grid.SetColumn(cell, c);
+            if (cols[c].Right)
+            {
+                cell.HorizontalAlignment = HorizontalAlignment.Right;
+            }
+
+            head.Children.Add(cell);
         }
 
         return head;

@@ -8,6 +8,7 @@ using AiStackprint.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Threading;
 
 using static AiStackprint.Ui.W;
 
@@ -123,9 +124,10 @@ internal partial class ModelsView
                 SetSlot(i, k);
             }
         };
-        box.LostFocus += (_, _) =>
+        box.LostFocus += (_, _) => Dispatcher.UIThread.Post(() =>
         {
-            if (_syncingSlots)
+            // Clicking an item of the list moves the focus into the pop-up first: wait until the box is really left (the click has chosen its item by then)
+            if (_syncingSlots || box.IsDropDownOpen || box.IsKeyboardFocusWithin)
             {
                 return;
             }
@@ -144,7 +146,7 @@ internal partial class ModelsView
             _syncingSlots = true;
             box.Text = _slots[i] ?? "";   // text that is no model goes back to what the slot holds
             _syncingSlots = false;
-        };
+        }, DispatcherPriority.Background);
         var clear = IconBtn("dismiss", "Clear this slot", () =>
         {
             _syncingSlots = true;

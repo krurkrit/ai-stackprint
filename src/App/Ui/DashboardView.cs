@@ -37,6 +37,11 @@ internal static partial class DashboardView
             ColumnSpacing = Space.XL,
             RowSpacing = Space.XL
         };
+        Grid.SetIsSharedSizeScope(tiles, true);
+        foreach (var row in tiles.RowDefinitions)
+        {
+            row.SharedSizeGroup = "tiles";   // both rows as tall as the taller one: Plugins, Skills, Servers and Health match
+        }
         var cards = new[]
         {
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),

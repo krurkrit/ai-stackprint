@@ -32,26 +32,24 @@ internal static class Levels
     /// <summary>Small ⓘ button; click opens the levels explanation.</summary>
     public static Button InfoButton()
     {
-        var list = new StackPanel
-        {
-            Spacing = Space.L,
-            Width = Widths.DialogS
-        };
-        list.Children.Add(Title("Levels, highest priority first", TextSize.Subtitle));
-        foreach (var l in Order)
-        {
-            var (where, who, note) = Info[l];
-            var head = WithDot(LevelDot(l), l, TextSize.Body, true);
-            list.Children.Add(new StackPanel
-            {
-                Spacing = Space.XXS,
-                Children = { head, Txt(where, TextSize.Small), Txt("Applies to: " + who, TextSize.Small, false, Text), Txt(note, TextSize.Small, false, Text) }
-            });
-        }
-        list.Children.Add(Txt("Settings follow this order: a higher level wins for the same key. Instruction files and skills are combined; when they conflict, the more specific one usually wins. Apps use their own words for levels (ADMIN, REPO, Workspace); hover a level to see it.",
-            TextSize.Caption, false, Text));
         var b = IconBtn("info", "What do the levels mean?", () => { });
-        b.Flyout = InfoFlyout.Make(list, PlacementMode.BottomEdgeAlignedLeft);
+        b.Flyout = InfoFlyout.Make(Help(), PlacementMode.BottomEdgeAlignedLeft);
         return b;
+    }
+
+    private static readonly Dictionary<string, string> _short = new()
+    {
+        ["System"] = "Set by an administrator for the whole machine.",
+        ["Local"] = "In the project, not committed (git-ignored).",
+        ["Project"] = "In the repository, shared with the team.",
+        ["User"] = "In your home folder, for every project."
+    };
+
+    /// <summary>The levels explanation (the content of the ⓘ pop-up, also on the Level column header): one line each.</summary>
+    public static Control Help()
+    {
+        var list = HeaderHelp.Panel("Levels, highest priority first", Order.Select(l => (l, _short[l])));
+        list.Children.Add(Txt("A higher level wins for the same key.", TextSize.Caption, false, Text));
+        return list;
     }
 }

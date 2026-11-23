@@ -190,7 +190,7 @@ internal class AppDetailView(Ctx x)
             W.Row(IconBtn("folder_open", "Open folder", () => PathUtil.OpenFolder(s.Path)), IconBtn("copy", "Copy path", () => Toast.Copy(x.Owner, s.Path)),
                 SkillManager.CannotRemove(s) == null ? IconBtn("delete", "Remove skill", () => AppActions.RemoveSkill(x, s)) : new Panel())
         ], () => x.Open(s));
-        var cols = new[] { Cols.Name("Skill", "2.6*"), Cols.Level(), Cols.Type("Invoked by"), new Col("From", ".9*"), Cols.Actions() };
+        var cols = new[] { Cols.Name("Skill", "2.6*"), Cols.Level(), Cols.Type("Invoked by", HeaderHelp.InvokedBy), new Col("From", ".9*"), Cols.Actions() };
         var body = new ContentControl();
         void Fill()   // re-renders only the table, so the Usage card above is not recalculated and the tool bar keeps its focus and open menu
         {
