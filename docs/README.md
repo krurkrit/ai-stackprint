@@ -18,5 +18,6 @@ Read in this order for a task; each file is meant to be read alone.
 | `adding-apps.md` | you edit `default/apps.json` (schema) |
 | `releasing.md` | you cut a release or change packaging |
 | `plan-settings-models.md` | history of the settings and models work (reference only) |
+| `plan-plugin-updates.md` | plan, not started: checking plugins for updates and updating them, per app group |
 
 Keep these in step with the code: a new page, route or column kind updates `feature-map.md`, `conventions.md` and the file map in `architecture.md` in the same change.
