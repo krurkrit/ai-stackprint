@@ -8,6 +8,10 @@ using Avalonia;
 using Avalonia.Headless;
 
 [assembly: AvaloniaTestApplication(typeof(TestApp))]
+// One app for all tests. Per test, Avalonia resets its UI dispatcher between tests, and a worker thread still finishing the last test's work
+// (a scan, a log read, a limit refresh) that reads Dispatcher.UIThread in that moment creates it on itself: the next test then fails
+// with "a different thread owns it" (seen on Linux CI). The real app has one dispatcher from the start, so it never meets this.
+[assembly: AvaloniaTestIsolation(AvaloniaTestIsolationLevel.PerAssembly)]
 // One test at a time: UI tests are few and fast, and none waits on another class's app.
 // Every test that touches Avalonia (Theme too) must be [AvaloniaFact]/[AvaloniaTheory]: a plain test on a pool thread made Avalonia's
 // render loop belong to that thread, and the next UI test failed to start ("a different thread owns it").

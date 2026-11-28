@@ -5,6 +5,7 @@ Run everything: `dotnet test -v q --nologo`. Services: `dotnet test tests/AiStac
 ## Writing UI tests
 
 - UI tests run headless (Avalonia.Headless.XUnit, xUnit v3, Skia). Mark them `[AvaloniaFact]`/`[AvaloniaTheory]`, also a test that only touches Avalonia types such as `Theme`: a plain `[Fact]` runs on another thread and breaks the next UI test.
+- One app serves every UI test (`AvaloniaTestIsolation(PerAssembly)` in `TestApp.cs`; a fresh app per test let a worker thread of the last test create the UI dispatcher on itself, and the next test failed on Linux CI). So a test puts back what it changes (theme, settings, seams) in `Dispose`, and closes its windows.
 - `TestApp` starts the real app styles without a window or scan. Helpers in `Ui`: show a control, find texts and buttons, click, wait for background work (`Ui.WaitUntil`).
 - Pass `TestContext.Current.CancellationToken` where a method takes a token.
 - Dates in fake data are relative to now (`DateTime.UtcNow.AddHours(-1)`): a fixed date ages out of "last 7 days" views and the test starts failing on its own.
