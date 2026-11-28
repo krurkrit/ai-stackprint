@@ -1,6 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Globalization;
 using System.Text.Json;
 
 using AiStackprint.Models;
@@ -32,9 +33,10 @@ internal sealed class FakeHome : IDisposable
         Project = Path.Combine(Root, "work", "demo");
         Write("work/demo/AGENTS.md", "# Demo\nUse tabs.\n");
         Write("work/demo/.claude/skills/deploy/SKILL.md", "---\nname: deploy\ndescription: Deploy the demo\n---\nDeploy.\n");
+        var at = DateTime.UtcNow.AddHours(-1);   // relative: a fixed date falls out of the Usage card's 7 days
         Write(".claude/projects/-work-demo/session.jsonl", Lines(
-            Event("user", "2026-11-18T10:00:00Z", Msg("user", "Hello")),
-            Event("assistant", "2026-11-18T10:00:05Z", Msg("assistant", new object[] { Text("Hi there"), Use("t1", "Read", new { file_path = "a.txt" }) }, usage: new
+            Event("user", at.ToString("O", CultureInfo.InvariantCulture), Msg("user", "Hello")),
+            Event("assistant", at.AddSeconds(5).ToString("O", CultureInfo.InvariantCulture), Msg("assistant", new object[] { Text("Hi there"), Use("t1", "Read", new { file_path = "a.txt" }) }, usage: new
             {
                 input_tokens = 100,
                 output_tokens = 50,
