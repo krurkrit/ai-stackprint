@@ -40,7 +40,10 @@ Needs the .NET SDK and `vpk` (`dotnet tool install -g vpk --version 1.2.161`); o
 ```bash
 pwsh build/pack.ps1 -Runtime win-x64
 ```
-Output goes to `Releases/` (ignored by git). Each platform must be built on that platform.
+Output goes to `Releases/` (ignored by git). Each platform must be built on that platform. Without an installer (framework-dependent): `dotnet publish src/App -c Release -r <win-x64|linux-x64|osx-arm64> --self-contained false`.
+
+## Build setup
+.NET 10 (LTS), pinned in `global.json`. Package versions are set once in `Directory.Packages.props` (exact versions; projects list packages without versions); shared build settings in `Directory.Build.props`. `SonarAnalyzer.CSharp` is a build-only package; the rules turned off are listed with reasons in `.editorconfig`.
 
 ## Not signed yet
 - Windows: SmartScreen warns "unknown publisher" (More info › Run anyway). Fix: a code-signing certificate or Azure Trusted Signing, passed to `vpk pack` with `--signParams` or `--azureTrustedSignFile`.

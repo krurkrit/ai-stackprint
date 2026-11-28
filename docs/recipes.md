@@ -72,7 +72,7 @@ Rules first: `AGENTS.md` › Background running and Alerts; agreed look: `decisi
 
 ## Cheap-work habits for agents
 
-- Search by symbol or heading, then read only that range. Large files are listed in `AGENTS.md`.
+- Search by symbol or heading, then read only that range (`docs/README.md` gives each doc's size; `architecture.md`, `decisions.md` and `design-system.md` are searched, never read whole). Large data files are listed in `AGENTS.md`.
 - Edit with exact-string replacements; run the formatter once at the end.
 - Build the one project you changed while iterating (`dotnet build src/Core -v q -nologo`), the whole solution once before finishing. If `AiStackprint.exe` is running, the app project cannot overwrite its output: ask the user to close it.
 - Run only the affected tests while iterating (`--filter FullyQualifiedName~Part`), all tests before finishing.

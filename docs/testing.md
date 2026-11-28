@@ -1,6 +1,13 @@
 # Testing and code coverage
 
-Run everything: `dotnet test -v q --nologo`. Services: `dotnet test tests/AiStackprint.Core.Tests`. UI tests run headless (Avalonia.Headless.XUnit, Skia): see `AGENTS.md`.
+Run everything: `dotnet test -v q --nologo`. Services: `dotnet test tests/AiStackprint.Core.Tests`. One class or test: add `--filter FullyQualifiedName~Part`.
+
+## Writing UI tests
+
+- UI tests run headless (Avalonia.Headless.XUnit, xUnit v3, Skia). Mark them `[AvaloniaFact]`/`[AvaloniaTheory]`, also a test that only touches Avalonia types such as `Theme`: a plain `[Fact]` runs on another thread and breaks the next UI test.
+- `TestApp` starts the real app styles without a window or scan. Helpers in `Ui`: show a control, find texts and buttons, click, wait for background work (`Ui.WaitUntil`).
+- Pass `TestContext.Current.CancellationToken` where a method takes a token.
+- Dates in fake data are relative to now (`DateTime.UtcNow.AddHours(-1)`): a fixed date ages out of "last 7 days" views and the test starts failing on its own.
 
 ## Coverage
 
