@@ -1,11 +1,11 @@
 {
   "$schema": "./models.schema.json",
   "version": 1,
-  "updated": "2026-11-18",
+  "updated": "2026-11-22",
   "source": {
     "name": "LiteLLM model_prices_and_context_window.json",
     "url": "https://github.com/BerriAI/litellm",
-    "commit": "1b07f26794697f01b22232a21ad41608d0b39ce9",
+    "commit": "18fe30f31d0b94683efa3b494e8da920f6b02f47",
     "license": "MIT"
   },
   "models": {
@@ -94,7 +94,6 @@
       "price": { "input": 10, "output": 50, "cacheRead": 1, "cacheWrite": 12.5, "cacheWrite1h": 20 },
       "multipliers": { "us": 1.1 },
       "webSearch": 0.01,
-      "retires": "2026-06-09",
       "retiresSource": "https://platform.claude.com/docs/en/about-claude/model-deprecations",
       "source": "https://platform.claude.com/docs/en/about-claude/models/overview"
     },
@@ -269,6 +268,7 @@
       "maxOutput": 8192,
       "price": { "input": 0.28, "output": 0.42, "cacheRead": 0.028 },
       "retires": "2026-07-24",
+      "successor": "deepseek-v4-flash",
       "retiresSource": "https://api-docs.deepseek.com/updates",
       "source": "https://api-docs.deepseek.com/quick_start/pricing"
     },
@@ -297,6 +297,7 @@
       "maxOutput": 65536,
       "price": { "input": 0.28, "output": 0.42, "cacheRead": 0.028 },
       "retires": "2026-07-24",
+      "successor": "deepseek-v4-flash",
       "retiresSource": "https://api-docs.deepseek.com/updates",
       "source": "https://api-docs.deepseek.com/quick_start/pricing"
     },
@@ -634,6 +635,14 @@
       "webSearch": 0.014,
       "source": "https://aistudio.google.com/docs/pricing#gemini-4-hydrogen"
     },
+    "gemini-4-neon": {
+      "provider": "gemini",
+      "contextWindow": 1048576,
+      "maxOutput": 1048576,
+      "price": { "input": 3, "output": 15, "cacheRead": 0.15 },
+      "webSearch": 0.014,
+      "source": "https://aistudio.google.com/docs/pricing#gemini-4-neon"
+    },
     "gemini-exp-1114": {
       "provider": "gemini",
       "contextWindow": 1048576,
@@ -797,6 +806,7 @@
       "maxOutput": 4096,
       "price": { "input": 3, "output": 4 },
       "retires": "2026-10-23",
+      "successor": "gpt-6.1-terra",
       "retiresSource": "https://developers.openai.com/api/docs/deprecations"
     },
     "gpt-4": {
@@ -1210,6 +1220,7 @@
       "provider": "openai",
       "price": { "input": 12.5, "output": 75, "cacheRead": 1.25 },
       "retires": "2027-02-01",
+      "successor": "gpt-6-cyber",
       "retiresSource": "https://developers.openai.com/api/docs/deprecations",
       "source": "https://developers.openai.com/api/docs/pricing"
     },
@@ -1312,8 +1323,8 @@
       "provider": "openai",
       "contextWindow": 922000,
       "maxOutput": 128000,
-      "price": { "input": 15, "output": 75, "cacheRead": 1.5, "cacheWrite": 18.75 },
-      "above": [ { "tokens": 272000, "input": 30, "output": 112.5, "cacheRead": 3, "cacheWrite": 37.5 } ],
+      "price": { "input": 10, "output": 50, "cacheRead": 1, "cacheWrite": 12.5 },
+      "above": [ { "tokens": 272000, "input": 20, "output": 75, "cacheRead": 2, "cacheWrite": 25 } ],
       "multipliers": { "us": 1.1 },
       "source": "https://developers.openai.com/api/docs/pricing"
     },
@@ -1750,6 +1761,8 @@
       "maxOutput": 256000,
       "price": { "input": 1, "output": 2, "cacheRead": 0.2 },
       "above": [ { "tokens": 200000, "input": 2, "output": 4, "cacheRead": 0.4 } ],
+      "retires": "2026-11-19",
+      "retiresSource": "https://docs.x.ai/docs/release-notes",
       "source": "https://api.x.ai/v1/language-models"
     },
     "grok-build-latest": {
@@ -1793,6 +1806,8 @@
       "maxOutput": 131072,
       "price": { "input": 0, "output": 0 },
       "retires": "2026-09-30",
+      "successor": "labs-leanstral-1-5-1",
+      "retiresSource": "https://docs.mistral.ai/getting-started/models/models_overview",
       "source": "https://docs.mistral.ai/models/model-cards/leanstral-1-5"
     },
     "labs-leanstral-1-5-1": {
@@ -1861,14 +1876,14 @@
     },
     "ministral-3b-2512": {
       "provider": "mistral",
-      "contextWindow": 131072,
+      "contextWindow": 262144,
       "maxOutput": 131072,
       "price": { "input": 0.1, "output": 0.1, "cacheRead": 0.01 },
       "source": "https://docs.mistral.ai/models/ministral-3-3b-25-12"
     },
     "ministral-3b-latest": {
       "provider": "mistral",
-      "contextWindow": 131072,
+      "contextWindow": 262144,
       "maxOutput": 131072,
       "price": { "input": 0.1, "output": 0.1, "cacheRead": 0.01 },
       "source": "https://docs.mistral.ai/models/ministral-3-3b-25-12"
@@ -1914,6 +1929,8 @@
       "maxOutput": 262144,
       "price": { "input": 0.5, "output": 1.5, "cacheRead": 0.05 },
       "retires": "2027-04-30",
+      "successor": "mistral-large-4",
+      "retiresSource": "https://docs.mistral.ai/getting-started/models/models_overview",
       "source": "https://docs.mistral.ai/models/mistral-large-3-25-12"
     },
     "mistral-large-3": {
@@ -1939,10 +1956,10 @@
     },
     "mistral-large-latest": {
       "provider": "mistral",
-      "contextWindow": 262144,
-      "maxOutput": 262144,
-      "price": { "input": 0.5, "output": 1.5, "cacheRead": 0.05 },
-      "source": "https://docs.mistral.ai/models/mistral-large-3-25-12"
+      "contextWindow": 1048576,
+      "maxOutput": 1048576,
+      "price": { "input": 0.7, "output": 2.1, "cacheRead": 0.07 },
+      "source": "https://docs.mistral.ai/models/mistral-large-4-0"
     },
     "mistral-medium": {
       "provider": "mistral",
@@ -1971,6 +1988,8 @@
       "maxOutput": 262144,
       "price": { "input": 1.5, "output": 7.5, "cacheRead": 0.15 },
       "retires": "2027-04-30",
+      "successor": "mistral-large-4",
+      "retiresSource": "https://docs.mistral.ai/getting-started/models/models_overview",
       "source": "https://docs.mistral.ai/models/model-cards/mistral-medium-3-5-26-04"
     },
     "mistral-medium-3.5": {
@@ -2157,6 +2176,7 @@
       "maxOutput": 131072,
       "price": { "input": 1.4, "output": 4.4, "cacheRead": 0.14 },
       "retires": "2026-10-31",
+      "successor": "zai-glm-5-3",
       "retiresSource": "https://docs.mistral.ai/getting-started/models/models_overview",
       "source": "https://docs.mistral.ai/models/zai-glm-5-2"
     },
