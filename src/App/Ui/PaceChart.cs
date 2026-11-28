@@ -32,8 +32,11 @@ internal sealed class PaceChart : Control
     public static readonly string UseKey = W.ChartKey(1), ForecastKey = W.ChartKey(1);
     public const string PaceKey = W.Muted, ShortKey = W.WarningMark;
 
-    /// <summary>Dash patterns (in line widths) of the even pace, the short window's pace and the forecast; the legend draws the same.</summary>
-    public static readonly double[] PaceDash = [3, 2], ShortDash = [1, 1], ForecastDash = [0.5, 2];
+    /// <summary>Dash patterns (in line widths, so the pace dashes are the same length in pixels at 1 px) of the even pace, the short window's pace and the forecast; the legend draws the same.</summary>
+    public static readonly double[] PaceDash = [6, 4], ShortDash = [2, 2], ForecastDash = [0.5, 2];
+
+    /// <summary>The pace lines (weekly and short window) are guides: thin, under the 2 px lines of your use and its forecast.</summary>
+    public const double PaceWidth = Stroke.Thin;
 
     private readonly LimitPace _p;
     private double? _hover;
@@ -71,7 +74,10 @@ internal sealed class PaceChart : Control
 
     private double X(DateTime t) => Left + (t - _p.Start) / (_p.End - _p.Start) * (Bounds.Width - Left - Right);
     private DateTime T(double x) => _p.Start + (x - Left) / (Bounds.Width - Left - Right) * (_p.End - _p.Start);
-    private double Y(double pct) => Top + (1 - Math.Clamp(pct, 0, Top100) / Top100) * (Bounds.Height - Top - Bottom);
+    private double Y(double pct) => Unclamped(Math.Clamp(pct, 0, Top100));
+
+    /// <summary>The height of a percent past the plot too, for a line that keeps its slope and is clipped at the edges.</summary>
+    private double Unclamped(double pct) => Top + (1 - pct / Top100) * (Bounds.Height - Top - Bottom);
 
     private FormattedText Text(string s, string key, bool bold = false) =>
         new(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(Ui.Theme.Font, FontStyle.Normal, bold ? W.Emphasis : W.Body), W.Size(TextSize.Caption), Brush(key));
@@ -95,7 +101,7 @@ internal sealed class PaceChart : Control
 
         Ticks(c, bottom);
         var shortName = Short(c);
-        c.DrawLine(new Pen(Brush(PaceKey), Stroke.Medium, new DashStyle(PaceDash, 0)), new Point(X(_p.Start), Y(0)), new Point(X(_p.End), Y(100)));
+        c.DrawLine(new Pen(Brush(PaceKey), PaceWidth, new DashStyle(PaceDash, 0)), new Point(X(_p.Start), Y(0)), new Point(X(_p.End), Y(100)));
 
         // Forecast: from now at the recent pace, to the limit or the reset
         var end = _p.FullAt ?? _p.End;
@@ -179,12 +185,23 @@ internal sealed class PaceChart : Control
         return new Rect(at, new Size(name.Width, name.Height));
     }
 
-    /// <summary>The short window's pace line, over your use so it shows where both run together.</summary>
+    /// <summary>
+    /// The short window's pace line (its whole quota used by its reset), over your use so it shows where both run together. It runs on one window
+    /// before and one after the band at the same slope (three band widths in all), so it stands out from the band; it stops at the plot's edges.
+    /// </summary>
     private void ShortLine(DrawingContext c)
     {
-        if (_p.Short is { } s && s.Line(_p.Used) is { } line)
+        if (_p.Short is not { } s || s.Line(_p.Used) is not { } line)
         {
-            c.DrawLine(new Pen(Brush(ShortKey), Stroke.Medium, new DashStyle(ShortDash, 0)), new Point(X(s.Start), Y(line.From)), new Point(X(s.End), Y(line.To)));
+            return;
+        }
+
+        var rise = line.To - line.From;
+        var span = s.End - s.Start;
+        using (c.PushClip(new Rect(Left, Top, Bounds.Width - Left - Right, Y(0) - Top)))
+        {
+            c.DrawLine(new Pen(Brush(ShortKey), PaceWidth, new DashStyle(ShortDash, 0)),
+                new Point(X(s.Start - span), Unclamped(line.From - rise)), new Point(X(s.End + span), Unclamped(line.To + rise)));
         }
     }
 

@@ -62,10 +62,10 @@ internal static partial class LimitsView
         sp.Children.Add(row);
         var legend = new WrapPanel();
         legend.Children.Add(Key($"Your {p.Name.ToLowerInvariant()} use", PaceChart.UseKey, null));
-        legend.Children.Add(Key($"{p.Name} pace (100% at the reset)", PaceChart.PaceKey, PaceChart.PaceDash));
+        legend.Children.Add(Key($"{p.Name} pace (100% at the reset)", PaceChart.PaceKey, PaceChart.PaceDash, width: PaceChart.PaceWidth));
         if (p.Short is { Share: not null } withLine)
         {
-            legend.Children.Add(Key($"{withLine.Name} pace (current window)", PaceChart.ShortKey, PaceChart.ShortDash));
+            legend.Children.Add(Key($"{withLine.Name} pace (current window)", PaceChart.ShortKey, PaceChart.ShortDash, width: PaceChart.PaceWidth));
         }
 
         legend.Children.Add(Key("Forecast", PaceChart.ForecastKey, PaceChart.ForecastDash, round: true));
@@ -111,7 +111,7 @@ internal static partial class LimitsView
     }
 
     /// <summary>A legend entry: a short piece of the line as the chart draws it, then its name.</summary>
-    private static Control Key(string name, string key, double[]? dash, bool round = false)
+    private static Control Key(string name, string key, double[]? dash, bool round = false, double width = Stroke.Medium)
     {
         var swatch = new Avalonia.Controls.Shapes.Line
         {
@@ -119,7 +119,7 @@ internal static partial class LimitsView
             EndPoint = new Point(Sizes.LogoS, Sizes.Dot / 2),
             Width = Sizes.LogoS,
             Height = Sizes.Dot,
-            StrokeThickness = Stroke.Medium,
+            StrokeThickness = width,
             StrokeLineCap = round ? Avalonia.Media.PenLineCap.Round : Avalonia.Media.PenLineCap.Flat,
             StrokeDashArray = dash == null ? null : [.. dash],
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
