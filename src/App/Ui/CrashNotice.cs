@@ -34,7 +34,7 @@ internal static class CrashNotice
                 Spacing = Space.M,
                 Children =
                 {
-                    Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt("AI Stackprint closed unexpectedly last time", TextSize.Small, true)),
+                    Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark), Txt("AI Stackprint closed unexpectedly last time", TextSize.Small, true)),
                     Txt("Report opens a new GitHub issue in your browser with the error from crash.log (your home folder and user name removed). You can read and edit it before you submit; nothing is sent until you do.", TextSize.Caption, false, Muted),
                     Row(Btn("Report on GitHub", () =>
                     {

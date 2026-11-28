@@ -58,7 +58,7 @@ internal partial class LogViewer
             foreach (var e in errors)
             {
                 var step = e;
-                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => RevealStep(step), close));
+                list.Children.Add(MarkRow("warning", Txt(Preview(e), TextSize.Small).With(t => t.TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis), () => RevealStep(step, smooth: true), close));
             }
         }
 
@@ -120,8 +120,7 @@ internal partial class LogViewer
             Cursor = Hand,
             Background = Avalonia.Media.Brushes.Transparent
         };
-        border.PointerEntered += (_, _) => border.Themed(Border.BackgroundProperty, Subtle);
-        border.PointerExited += (_, _) => border.Background = Avalonia.Media.Brushes.Transparent;
+        border.Hover();
         border.PointerReleased += (_, _) =>
         {
             close();
@@ -135,7 +134,7 @@ internal partial class LogViewer
     /// <summary>Scrolls to the step that holds a place (a line of the session file, or of a sub-agent's file) when it is among the steps shown.</summary>
     private void GoToStepLine(string? source, long line)
     {
-        if (_readable?.Index.Find(source, line) is { Count: > 0 } && _readable.RevealAt(source, line, FadeSeconds))
+        if (_readable?.Index.Find(source, line) is { Count: > 0 } && _readable.RevealAt(source, line, FadeSeconds, smooth: true))
         {
             return;
         }

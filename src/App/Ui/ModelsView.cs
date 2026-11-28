@@ -156,7 +156,7 @@ internal partial class ModelsView(Ctx x, ModelEdits? edits = null, Action<UiStat
                 : new Control())
         ], () => Edit(r, null), r.Key == _selected))).ToList();   // a row's controls are made when it comes near the screen (Table.Virtual)
         _table.Content = TableSurface(Table.Virtual([new Col("Name", "2*", Min: 120), new Col("Provider", "1*", Min: 64), new Col("Context", "1*", true), new Col("Max output", "1*", true),
-            new Col("Input", "1*", true), new Col("Output", "1*", true), new Col("Cache read", "1*", true), new Col("Cache write", "1*", true), new Col("Retires", "1.2*", true), new Col("", "112")],
+            new Col("Input", "1*", true), new Col("Output", "1*", true), new Col("Cache read", "1*", true), new Col("Cache write", "1*", true), new Col("Retires", "1.2*", true), Cols.Actions()],
             rows, "Nothing matches. Clear the search or filters."));
     }
 

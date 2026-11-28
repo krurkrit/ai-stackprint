@@ -64,6 +64,13 @@ internal partial class MainWindow
             return;
         }
 
+        if (_projectRows.TryGetValue(p, out var shown))
+        {
+            await Motion.Remove(shown);   // the menu item closes up before the menu is built again
+        }
+
+        _projectRows.Remove(p);
+
         _s.Projects.Remove(p);
         _s.ProjectAdded.Remove(p);
         SaveProjects();
@@ -105,8 +112,17 @@ internal partial class MainWindow
         Scan();
     }
 
-    /// <summary>A project in the menu; a missing folder is greyed, a click picks its new location and a bin removes it from the list.</summary>
+    private readonly Dictionary<string, Control> _projectRows = [];
+
+    /// <summary>A project in the menu (kept by folder, so removing it can close it up); a missing folder is greyed, a click picks its new location and a bin removes it from the list.</summary>
     private Control ProjectRow(string p)
+    {
+        var made = MakeProjectRow(p);
+        _projectRows[p] = made;
+        return made;
+    }
+
+    private Control MakeProjectRow(string p)
     {
         if (Directory.Exists(p))
         {

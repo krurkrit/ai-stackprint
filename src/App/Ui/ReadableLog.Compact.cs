@@ -41,7 +41,7 @@ internal partial class ReadableLog
             VerticalAlignment = VerticalAlignment.Center
         };
         var time = Txt(e.Time?.ToString("HH:mm:ss") ?? "", TextSize.Caption, false, Muted).With(t => t.VerticalAlignment = VerticalAlignment.Center);
-        var name = Row(Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key), L(who, true, key).With(t => t.TextTrimming = TextTrimming.CharacterEllipsis));
+        var name = Row(Icon(icon, IconSize.S).Themed(TextElement.ForegroundProperty, key == ErrorKey ? ErrorMark : key), L(who, true, key).With(t => t.TextTrimming = TextTrimming.CharacterEllipsis));
         var line = OneLine(e);
         var text = Txt(line, TextSize.Body, false, e.IsError ? ErrorKey : e.Role is "user" or "assistant" ? Text : Muted).With(t =>
         {
@@ -78,8 +78,7 @@ internal partial class ReadableLog
             right.Children.Insert(0, mark);
         }
 
-        row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
-        row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
+        row.Hover();
         row.PointerReleased += (_, a) =>
         {
             if (a.InitialPressMouseButton == Avalonia.Input.MouseButton.Left)

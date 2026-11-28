@@ -32,6 +32,9 @@ internal static partial class Theme
     /// <summary>Gap between the top edge of an input and its first line of text (and between its last line and the bottom edge).</summary>
     public static double InputGap { get; private set; } = 8;
 
+    /// <summary>The top and bottom padding inside a text or number box: the gap less the border.</summary>
+    public static double InputPad => InputGap - InputBorder;
+
     /// <summary>Line height of the UI font at <paramref name="size"/>, as text boxes and labels lay it out.</summary>
     public static double LineHeight(double size) =>
         new TextLayout("Ag", new Typeface(Font), size, null).Height;
@@ -69,6 +72,18 @@ internal static partial class Theme
         styles.Add(new Style(x => x.OfType<FlyoutPresenter>().Class(FilterMenu.PresenterClass))
         {
             Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(Space.XS)) }
+        });
+        // An ⓘ pop-up: only its dialog card shows (with room for the card's shadow), not the presenter's own fill, border and padding
+        styles.Add(new Style(x => x.OfType<FlyoutPresenter>().Class(InfoFlyout.PresenterClass))
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(0)),
+                new Setter(Layoutable.MaxWidthProperty, double.PositiveInfinity),
+                new Setter(Layoutable.MaxHeightProperty, double.PositiveInfinity)
+            }
         });
         if (_inputStyles != null)
         {

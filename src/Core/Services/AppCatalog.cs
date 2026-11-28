@@ -136,8 +136,72 @@ public static class AppCatalog
         try
         {
             var data = _format.Read(file, Path.Combine(Path.GetDirectoryName(Path.GetFullPath(file))!, "backups"));
+            if (data?["apps"] is JsonArray apps)
+            {
+                Rename(apps);
+            }
+
             return data?["apps"]?.Deserialize<List<AppDefinition>>(_opt) ?? [];
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { return []; }
+    }
+
+    /// <summary>
+    /// Apps saved by earlier 0.x versions: "roots" and "projectRoots" become "skills" (a project folder at Project level unless it says Local),
+    /// and "parts" become "commands" or "agents" by their "kind". Saved with the new names the next time the file is written.
+    /// </summary>
+    internal static void Rename(JsonArray apps)
+    {
+        foreach (var app in apps.OfType<JsonObject>())
+        {
+            Move(app, "roots", "skills", null);
+            Move(app, "projectRoots", "skills", i =>
+            {
+                if (!Scanner.InProject((string?)i["level"] ?? ""))
+                {
+                    i["level"] = "Project";
+                }
+            });
+            if (app["parts"] is JsonArray parts)
+            {
+                foreach (var part in parts.OfType<JsonObject>().ToList())
+                {
+                    var agent = (string?)part["kind"] == "agent";
+                    part.Remove("kind");
+                    parts.Remove(part);
+                    List(app, agent ? "agents" : "commands").Add(part);
+                }
+
+                app.Remove("parts");
+            }
+        }
+
+        static void Move(JsonObject app, string from, string to, Action<JsonObject>? fix)
+        {
+            if (app[from] is not JsonArray old)
+            {
+                return;
+            }
+
+            foreach (var item in old.OfType<JsonObject>().ToList())
+            {
+                old.Remove(item);
+                fix?.Invoke(item);
+                List(app, to).Add(item);
+            }
+
+            app.Remove(from);
+        }
+
+        static JsonArray List(JsonObject app, string key)
+        {
+            if (app[key] is not JsonArray list)
+            {
+                list = [];
+                app[key] = list;
+            }
+
+            return list;
+        }
     }
 }

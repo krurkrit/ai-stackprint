@@ -78,7 +78,7 @@ internal partial class MainWindow
             pages.Add(("App", "App:" + app.Id));
         }
 
-        pages.AddRange([("Plugins", "Plugin"), ("Skills", "Skill"), ("Commands & Agents", "Part"), ("Servers", "Mcp"), ("Hooks", "Hooks"), ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health")]);
+        pages.AddRange([("Plugins", "Plugin"), ("Skills", "Skill"), ("Commands", "Command"), ("Agents", "Agent"), ("Servers", "Mcp"), ("Hooks", "Hooks"), ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health")]);
         if (_s.Projects.Count > 0)
         {
             pages.Add(("Project", "Project:" + _s.Projects[0]));

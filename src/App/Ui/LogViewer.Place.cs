@@ -45,14 +45,15 @@ internal partial class LogViewer
     }
 
     /// <summary>Goes to a step the app already has (a search result among the steps, an error): by its place in its file, like every other way to a step.</summary>
-    private void RevealStep(LogEntry e)
+    /// <param name="smooth">Glide there when near (a bookmark); search results jump.</param>
+    private void RevealStep(LogEntry e, bool smooth = false)
     {
-        if (e.Line > 0 && _readable?.RevealAt(e.Source, e.Line, FadeSeconds) == true)
+        if (e.Line > 0 && _readable?.RevealAt(e.Source, e.Line, FadeSeconds, smooth) == true)
         {
             return;
         }
 
-        _readable?.Reveal(e, FadeSeconds);
+        _readable?.Reveal(e, FadeSeconds, smooth);
     }
 
     /// <summary>Goes to the step that holds a place in the session file (<paramref name="source"/> null) or in a sub-agent's file; the first step when the place is older than the steps shown.</summary>

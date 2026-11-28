@@ -55,7 +55,7 @@ internal static partial class Dialogs
         } : Txt(text);
         if (warn)
         {
-            var icon = Icon("warning", IconSize.M).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey).With(i => i.VerticalAlignment = VerticalAlignment.Top);
+            var icon = Icon("warning", IconSize.M).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark).With(i => i.VerticalAlignment = VerticalAlignment.Top);
             DockPanel.SetDock(icon, Dock.Left);
             icon.Margin = new Thickness(0, 0, Space.L, 0);
             body = new DockPanel { Children = { icon, body } };

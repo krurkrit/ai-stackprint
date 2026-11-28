@@ -80,16 +80,15 @@ public sealed class SkillManagerTests : IDisposable
     {
         var d = new AppDefinition
         {
-            Roots = { new ScanRoot
+            Skills = { new SkillSource
             {
                 Path = "/sys/skills",
                 Level = "System"
-            }, new ScanRoot
+            }, new SkillSource
             {
                 Path = "/u/flat",
                 Layout = "flat-md"
-            }, new ScanRoot { Path = "/u/skills" } },
-            ProjectRoots = { new ScanRoot
+            }, new SkillSource { Path = "/u/skills" }, new SkillSource
             {
                 Path = ".app/skills",
                 Level = "Project"

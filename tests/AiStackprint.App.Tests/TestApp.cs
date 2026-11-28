@@ -21,6 +21,9 @@ namespace AiStackprint.App.Tests;
 /// </summary>
 public static class TestApp
 {
-    public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<AiStackprintApp>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        Motion.Disabled = true;   // no animations: tests stay fast and screenshots show the finished state
+        return AppBuilder.Configure<AiStackprintApp>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+    }
 }

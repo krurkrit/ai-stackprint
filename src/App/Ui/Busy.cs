@@ -70,7 +70,7 @@ internal static class Busy
         catch (OperationCanceledException) { }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or HttpRequestException or System.Text.Json.JsonException)
         {
-            host.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt(e.Message, TextSize.Small, false, Muted),
+            host.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark), Txt(e.Message, TextSize.Small, false, Muted),
                 Btn("Retry", () => Into(host, label, work, show, ct), false, "arrow_sync"));
         }
     }

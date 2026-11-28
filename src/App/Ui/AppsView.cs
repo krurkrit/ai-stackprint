@@ -135,7 +135,7 @@ internal partial class AppsView(Ctx x)
             var first = g.First();
             var name = ByCat ? Plural(first.Category) + (ByStat ? " · " + StatusName(first) : "") : StatusName(first);
             var cells = new Control[cols];
-            cells[0] = W.Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted),
+            cells[0] = W.Row(Motion.Chevron(Icon("chevron_down", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), "apps:" + key, open),
                 ByCat ? Icon(Icons.ForCategory(first.Category), IconSize.S) : new Panel(), Title(name, TextSize.Body),
                 Txt(ByStat ? $"{g.Count()}" : $"{g.Count(a => a.Installed)}", TextSize.Small, false, Muted));   // how many are here, not how many the app could know
             Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
@@ -147,13 +147,15 @@ internal partial class AppsView(Ctx x)
             yield return new TableRow(cells, () =>
             {
                 if (!_collapsed.Remove(key)) { _collapsed.Add(key); }
+                Motion.Turn("apps:" + key);
                 Fill();
             });
             if (open)
             {
+                var opened = Motion.Turned("apps:" + key);   // its rows fade in as the group opens
                 foreach (var a in g)
                 {
-                    yield return Row(a);
+                    yield return opened ? Row(a) with { Enter = true } : Row(a);
                 }
             }
         }

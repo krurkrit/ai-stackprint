@@ -183,6 +183,15 @@ public class CodexLimits : ILimitProvider
         return new(null, [.. latest.Select(s => new LimitWindow(s.Name, s.ResetsAt < DateTime.Now ? 0 : s.UsedPercent, s.ResetsAt))], latest.Max(s => s.Time), null, true);
     }
 
+    /// <summary>Every rate_limits reading in the sessions of the last <see cref="LimitHistory.Keep"/> days, one reading per time it was written.</summary>
+    public IReadOnlyList<LimitReading> HistoryFromLogs(AppDefinition d, IReadOnlyList<string> projects)
+    {
+        var since = DateTime.Now - LimitHistory.Keep;
+        var files = LogReader.Find(d, projects).Where(f => LogParsers.Find(f.Format) != null && File.GetLastWriteTime(f.Path) >= since).Take(200);
+        return [.. files.SelectMany(f => LogParsers.Find(f.Format)!.Limits(LogReader.Utf8Lines(f.Path, 2 << 20))).Where(s => s.Time >= since)
+            .GroupBy(s => s.Time).Select(g => new LimitReading(g.Key, [.. g.DistinctBy(s => s.Name).OrderBy(s => s.WindowMinutes).Select(s => new LimitWindow(s.Name, s.UsedPercent, s.ResetsAt))])).OrderBy(r => r.At)];
+    }
+
     public async Task<LimitSnapshot> Fetch(HttpClient http, Credential c, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, "https://chatgpt.com/backend-api/wham/usage");

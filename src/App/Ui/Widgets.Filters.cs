@@ -69,8 +69,7 @@ internal sealed class FilterMenu : Button
                     CornerRadius = new CornerRadius(Radius.M),
                     Background = Avalonia.Media.Brushes.Transparent
                 };
-                row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, W.Subtle);
-                row.PointerExited += (_, _) => row.Background = Avalonia.Media.Brushes.Transparent;
+                row.Hover();
                 list.Children.Add(row);
             }
         };
@@ -163,15 +162,18 @@ internal static partial class W
     }
 
     /// <summary>Toggles in one rounded group (like the theme switch): each one is on or off on its own; one that is on is filled with the selection color. The same height as an input.</summary>
-    public static Control Toggles(IEnumerable<(string Label, string Value)> opts, ISet<string> on, Action<string> toggle) => Segmented(opts, on.Contains, toggle);
+    public static Control Toggles(IEnumerable<(string Label, string Value)> opts, ISet<string> on, Action<string> toggle) => Segmented(opts, on.Contains, toggle, false);
 
     /// <summary>One choice among a few as one rounded group (like the theme switch): the chosen one is filled with the selection color. The same height as an input.</summary>
-    public static Control Segmented(IEnumerable<(string Label, string Value)> opts, string current, Action<string> pick) => Segmented(opts, v => v == current, pick);
+    public static Control Segmented(IEnumerable<(string Label, string Value)> opts, string current, Action<string> pick) => Segmented(opts, v => v == current, pick, true);
 
-    private static Border Segmented(IEnumerable<(string Label, string Value)> opts, Func<string, bool> isOn, Action<string> pick)
+    /// <param name="glide">One choice: the fill glides to the new one (<see cref="Motion.Glide"/>). Toggles, where several can be on, do not.</param>
+    private static Border Segmented(IEnumerable<(string Label, string Value)> opts, Func<string, bool> isOn, Action<string> pick, bool glide)
     {
         var group = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS };
-        foreach (var (label, value) in opts)
+        var all = opts.ToList();
+        var name = "segmented:" + string.Join("|", all.Select(o => o.Value));
+        foreach (var (label, value) in all)
         {
             var on = isOn(value);
             var b = new Button
@@ -186,6 +188,10 @@ internal static partial class W
             if (on)
             {
                 b.Themed(Button.BackgroundProperty, Selected).Themed(Button.ForegroundProperty, Accent);
+                if (glide)
+                {
+                    Motion.Glide(b, name, value);
+                }
             }
 
             AccentHover(b);   // under the pointer: like a side menu item

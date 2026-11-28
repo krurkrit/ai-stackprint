@@ -60,6 +60,8 @@ internal static class DayBars
             Grid.SetColumn(col, i);
             grid.Children.Add(col);
         }
+        // the columns grow up the first time these numbers show; the day labels stay still
+        Motion.Grow([.. grid.Children.OfType<Grid>().Select(c => c.Children[0])], grid, "days:" + string.Join(",", keys) + ":" + string.Join(",", bars.Select(b => $"{b.Day}={string.Join("+", b.Parts)}")), up: true);
         return grid;
     }
 }

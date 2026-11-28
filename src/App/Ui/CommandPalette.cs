@@ -25,7 +25,7 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
     private List<Entry> _all = [], _shown = [];
     private int _pick;
     private bool _wired;
-    public bool IsOpen => layer.Children.Count > 0;
+    public bool IsOpen => layer.Children.Any(c => c.IsHitTestVisible);   // one still fading out no longer counts
 
     public void Open()
     {
@@ -71,17 +71,35 @@ internal class CommandPalette(Ctx x, Panel layer, Action<string> go)
         var dim = new Border { Child = card }.Themed(Border.BackgroundProperty, ScrimKey);
         dim.PointerPressed += (_, _) => Close();
         layer.Children.Add(dim);
+        Motion.Enter(dim, Duration.Fast);
+        Motion.Enter(card, Duration.Fast, scale: ZoomFrom);
         _box.Focus();
     }
 
-    public void Close() => layer.Children.Clear();
+    private const double ZoomFrom = .96;
+
+    /// <summary>Fades the palette out, then takes it away; clicks go through it while it fades.</summary>
+    public void Close()
+    {
+        foreach (var dim in layer.Children.Where(c => c.IsHitTestVisible).ToList())
+        {
+            dim.IsHitTestVisible = false;
+            Fire.Forget(GoneAsync(dim));
+        }
+    }
+
+    private async Task GoneAsync(Control dim)
+    {
+        await Motion.Leave(dim, Duration.Faster);
+        layer.Children.Remove(dim);
+    }
 
     private List<Entry> Entries()
     {
         var e = new List<Entry>
         {
             new("board", "Dashboard", "Page", () => go("Dashboard")), new("apps", "Apps", "Page", () => go("Apps")),
-            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")), new("bot", "Commands & Agents", "Page", () => go("Part")), new("server", "Servers", "Page", () => go("Mcp")), new("flash", "Hooks", "Page", () => go("Hooks")), new("data_pie", "Usage", "Page", () => go("Usage")), new("brain_circuit", "Models", "Page", () => go("Models")),
+            new("puzzle_piece", "Plugins", "Page", () => go("Plugin")), new("sparkle", "Skills", "Page", () => go("Skill")), new("prompt", "Commands", "Page", () => go("Command")), new("bot", "Agents", "Page", () => go("Agent")), new("server", "Servers", "Page", () => go("Mcp")), new("flash", "Hooks", "Page", () => go("Hooks")), new("data_pie", "Usage", "Page", () => go("Usage")), new("brain_circuit", "Models", "Page", () => go("Models")),
             new("document_text", "Logs", "Page", () => go("Logs")), new("heart_pulse", "Health", "Page", () => go("Health")), new("settings", "Settings", "Page", () => go("Settings")),
             new("scan_text", "Rescan", "Action", x.Rescan), new("folder_add", "Add project folder", "Action", x.AddProject), new("add", "Add app", "Action", x.AddApp),
         };

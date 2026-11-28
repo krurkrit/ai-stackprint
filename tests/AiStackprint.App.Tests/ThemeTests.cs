@@ -15,32 +15,100 @@ namespace AiStackprint.App.Tests;
 /// <summary>Theme colors meet WCAG contrast (needs the app: Theme uses Avalonia colors, so the tests run on the headless UI thread like the others; a plain test on another thread made Avalonia's render loop belong to that thread, and the next UI test failed to start).</summary>
 public class ThemeTests
 {
+    /// <summary>WCAG 2.2 AAA (1.4.6): status text reads at 7:1 (the app's minimum 7.1) on the card and the main area; dark danger text is the exception.</summary>
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Status_colors_read_on_both_backgrounds(bool dark)
+    public void Status_text_reads_at_7_to_1_on_both_backgrounds(bool dark)
     {
         var (error, warning, success, background, main) = Theme.Status(dark);
-        foreach (var c in new[] { error, warning, success })
+        // Dark danger text is the pure red of its mark by choice (Theme.States): it only has to show as a mark does, at 3:1
+        foreach (var (c, least) in new[] { (error, dark ? 3 : Contrast.Minimum), (warning, Contrast.Minimum), (success, Contrast.Minimum) })
         {
             foreach (var bg in new[] { background, main })
             {
-                Assert.True(Contrast.Ratio(c.ToUInt32(), bg.ToUInt32()) >= 4.5, $"{c} on {bg}");
+                var ratio = Contrast.Ratio(c.ToUInt32(), bg.ToUInt32());
+                Assert.True(ratio >= least, $"{c} on {bg}: {ratio:0.00}:1");
             }
         }
     }
 
+    /// <summary>WCAG 1.4.11: status icons, bars and dots need 3:1 on the card.</summary>
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
-    public void Chart_colors_show_on_the_card(bool dark)
+    public void Status_marks_show_on_the_card(bool dark)
     {
         var card = Theme.Status(dark).Background.ToUInt32();
-        var marks = Theme.Series(dark).Concat(Enumerable.Range(0, 4).Select(i => Theme.LevelDefault(dark, i)));
-        foreach (var c in marks)
+        var (error, warning, success) = Theme.Marks(dark);
+        foreach (var c in new[] { error, warning, success })
         {
-            Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");   // WCAG 1.4.11: chart marks need 3:1
+            Assert.True(Contrast.Ratio(c.ToUInt32(), card) >= 3, $"{c} on the card");
         }
+    }
+
+    /// <summary>Text, muted text and links read at 7.1:1 on every surface and tint text sits on: hover, selected, text selection, a new log line.</summary>
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Text_muted_text_and_links_read_at_7_to_1_on_every_surface_and_tint(bool dark)
+    {
+        var (text, muted, link) = Theme.Inks(dark);
+        foreach (var bg in Theme.TextBackgrounds(dark))
+        {
+            foreach (var (name, ink) in new[] { ("text", text), ("muted", muted) })
+            {
+                var ratio = Contrast.Ratio(ink.ToUInt32(), bg.ToUInt32());
+                Assert.True(ratio >= Contrast.Minimum, $"{name} {ink} on {bg}: {ratio:0.00}:1");
+            }
+        }
+
+        var (_, _, _, card, main) = Theme.Status(dark);
+        foreach (var bg in new[] { card, main })
+        {
+            Assert.True(Contrast.Ratio(link.ToUInt32(), bg.ToUInt32()) >= Contrast.Minimum, $"link {link} on {bg}");
+        }
+    }
+
+    /// <summary>The chart palette: 8 colors per theme, each hex the sRGB color of its OKLCH (as rounded), all different, all marks at 3:1 on the card.</summary>
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_chart_colors_match_their_oklch_and_show_on_the_card(bool dark)
+    {
+        var card = Theme.Status(dark).Background.ToUInt32();
+        var palette = dark ? Theme.DarkChart : Theme.LightChart;
+        Assert.Equal(W.ChartSlots, palette.Length);
+        Assert.Equal(palette.Length, palette.Select(p => p.Hex).Distinct().Count());
+        foreach (var p in palette)
+        {
+            var (l, c, h) = Oklch.From(Theme.ParseHex(p.Hex)!.Value.ToUInt32());
+            Assert.Equal(p.Lightness, l, .005);
+            Assert.Equal(p.Chroma, c, .0015);
+            Assert.True(Math.Abs(p.Hue - h) <= 1, $"{p.Hex}: hue {h:F1} against {p.Hue}");
+            Assert.True(Contrast.Ratio(Theme.ParseHex(p.Hex)!.Value.ToUInt32(), card) >= 3, $"{p.Hex} on the card");
+        }
+    }
+
+    /// <summary>A color follows the thing, not its rank: token series, categories and levels each keep their slot; past the last slot is "Other" in gray.</summary>
+    [AvaloniaTheory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    public void Every_series_keeps_its_own_chart_slot(string theme)
+    {
+        var settings = SettingsStore.Defaults();
+        settings.Theme = theme;
+        Theme.Appearance(Application.Current!, settings);
+        var variant = theme == "Dark" ? ThemeVariant.Dark : ThemeVariant.Light;
+        object? Get(string key) => Application.Current!.TryGetResource(key, variant, out var v) ? v : null;
+        Assert.Equal(Get(W.ChartKey(1)), Get(W.ChartIn));
+        Assert.Equal(Get(W.ChartKey(4)), Get(W.ChartRead));
+        Assert.All(Theme.Categories.Select((c, i) => (c, i)), t => Assert.Equal(Get(W.ChartKey(t.i + 1)), Get(W.CategoryKey(t.c))));
+        Assert.All(Theme.LevelNames.Select((l, i) => (l, i)), t => Assert.Equal(Get(W.ChartKey(t.i + 1)), Get(W.LevelKey(t.l))));
+        Assert.Equal(W.Muted, W.ChartKey(W.ChartSlots + 1));
+        Assert.Equal(W.Muted, W.CategoryKey("something new"));
+        Assert.Equal((W.Muted, W.ChartKey(3)), (W.AgentKey(0), W.AgentKey(3)));
+        Theme.Appearance(Application.Current!, SettingsStore.Defaults());
     }
 
     [AvaloniaTheory]

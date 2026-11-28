@@ -151,7 +151,7 @@ public static partial class PluginManifests
         var skills = Path.Combine(folder, "skills");
         if (Directory.Exists(skills))
         {
-            Scanner.Tagged(rows, () => Scanner.ReadRoot(skills, new ScanRoot
+            Scanner.Tagged(rows, () => Scanner.ReadRoot(skills, new SkillSource
             {
                 Level = ctx.Level,
                 Depth = 4

@@ -126,7 +126,7 @@ internal partial class ContextSection(Ctx x)
 
         foreach (var f in r.Findings)
         {
-            sp.Children.Add(Row(Icon(f.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, f.Warning ? WarningKey : Muted), Txt(f.Text, TextSize.Small)));
+            sp.Children.Add(Row(Icon(f.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, f.Warning ? WarningMark : Muted), Txt(f.Text, TextSize.Small)));
         }
 
         if (r.Files.Count == 0)
@@ -199,7 +199,7 @@ internal partial class ContextSection(Ctx x)
             Height = Sizes.BarThin,
             ColumnDefinitions = new ColumnDefinitions($"{Math.Max(Math.Min(pct, 100), 0.01)}*,{Math.Max(100 - pct, 0.01)}*")
         };
-        g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct > 100 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
+        g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct > 100 ? ErrorMark : pct >= 75 ? WarningMark : Accent));
         g.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
         return new StackPanel
         {

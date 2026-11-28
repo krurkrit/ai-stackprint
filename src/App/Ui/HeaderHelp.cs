@@ -10,15 +10,14 @@ namespace AiStackprint.Ui;
 /// <summary>The explanations behind the ⓘ on table column headers (<see cref="Col.Help"/>); the levels one is <see cref="Levels.Help"/>. Short: a name and one line each.</summary>
 internal static class HeaderHelp
 {
-    /// <summary>A title and a name with one line under it per item.</summary>
-    internal static StackPanel Panel(string title, IEnumerable<(string Head, string Body)> items)
+    /// <summary>A name with one line under it per item, under <paramref name="title"/> (the pop-up's title).</summary>
+    internal static InfoPanel Panel(string title, IEnumerable<(string Head, string Body)> items)
     {
-        var list = new StackPanel
+        var list = new InfoPanel(title)
         {
             Spacing = Space.M,
             Width = Widths.DialogS
         };
-        list.Children.Add(Title(title, TextSize.Subtitle));
         foreach (var (head, body) in items)
         {
             list.Children.Add(new StackPanel
@@ -40,7 +39,4 @@ internal static class HeaderHelp
         ("User only", "Only you start it, with a slash command."),
         ("Agent and User", "Either of you can start it.")
     ]);
-
-    /// <summary>The order hooks run in, as a diagram (the Event column of the Hooks page).</summary>
-    public static Control HookEvents() => new HookFlow();
 }

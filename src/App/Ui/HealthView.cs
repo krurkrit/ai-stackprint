@@ -40,14 +40,14 @@ internal class HealthView(Ctx x)
         var shown = issues.Where(i => _all || i.Finding.Warning).ToList();
         if (shown.Count == 0)
         {
-            page.Add(Card(Row(Icon("info", IconSize.M).Themed(TextElement.ForegroundProperty, SuccessKey), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", TextSize.Body))));
+            page.Add(Card(Row(Icon("info", IconSize.M).Themed(TextElement.ForegroundProperty, SuccessMark), Txt(issues.Count == 0 ? "Nothing to report." : $"No warnings. {info:N0} guidelines: choose All to see them.", TextSize.Body))));
         }
 
         foreach (var g in shown.GroupBy(i => i.Area))
         {
             var rows = g.OrderByDescending(i => i.Finding.Warning).ThenBy(i => i.Subject, StringComparer.OrdinalIgnoreCase).Select(i => new TableRow(
             [
-                Icon(i.Finding.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningKey : Muted),
+                Icon(i.Finding.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningMark : Muted),
                 Txt(i.Subject, TextSize.Body, true), i.App == "" ? new Panel() : DetailPanel.AppLink(x, i.App, i.App), Txt(i.Finding.Text, TextSize.Small)
             ], i.Item is { } it ? () => x.Open(it) : i.Project is { } p ? () => x.Go("Project:" + p) : null));
             page.Add(Section(g.Key switch { "Skills" => "sparkle", "Projects" => "folder", "Safety" => "eye_off", "Config files" => "settings", "Models" => "brain_circuit", _ => "puzzle_piece" }, $"{g.Key} · {g.Count():N0}",

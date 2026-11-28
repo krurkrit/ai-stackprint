@@ -105,8 +105,8 @@ internal class LogSummaryCard
 
         if (s.Errors + s.Warnings > 0 || s.Files > s.Sessions)
         {
-            Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorKey : null);
-            Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningKey : null);
+            Add(ReadableLog.Plural(s.Errors, "error line"), s.Errors > 0 ? ErrorMark : null);
+            Add(ReadableLog.Plural(s.Warnings, "warning line"), s.Warnings > 0 ? WarningMark : null);
         }
         if (s.TextCapped)
         {

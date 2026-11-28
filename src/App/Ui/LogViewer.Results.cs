@@ -116,8 +116,7 @@ internal partial class LogViewer
                 }) }
             }
         };
-        b.PointerEntered += (_, _) => b.Themed(Border.BackgroundProperty, Subtle);
-        b.PointerExited += (_, _) => b.Background = Avalonia.Media.Brushes.Transparent;
+        b.Hover();
         b.PointerReleased += (_, _) => Go(index);
         return b;
     }

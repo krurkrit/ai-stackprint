@@ -51,7 +51,7 @@ internal partial class ModelsView
         };
         foreach (var (s, i) in r.Scores.Select((s, i) => (s, i)))
         {
-            var color = RadarChart.SeriesKeys[_picked.IndexOf(s.Key) % RadarChart.SeriesKeys.Length];
+            var color = ChartKey(_picked.IndexOf(s.Key) + 1);
             var dot = new Border
             {
                 Width = Sizes.Dot,
@@ -73,7 +73,7 @@ internal partial class ModelsView
         {
             Orientation = Avalonia.Layout.Orientation.Horizontal,
             Spacing = Space.XXL,
-            Children = { RadarChart.Build(BenchmarkCompare.Axes, r.Scores, [.. r.Scores.Select(s => RadarChart.SeriesKeys[_picked.IndexOf(s.Key) % RadarChart.SeriesKeys.Length])], BenchmarkText), legend }
+            Children = { RadarChart.Build(BenchmarkCompare.Axes, r.Scores, [.. r.Scores.Select(s => ChartKey(_picked.IndexOf(s.Key) + 1))], BenchmarkText), legend }
         };
         return Section("data_pie", "Benchmarks", body);
     }

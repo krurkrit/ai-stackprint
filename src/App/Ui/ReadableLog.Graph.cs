@@ -51,7 +51,7 @@ internal partial class ReadableLog
         for (var i = 0; i < graph.Agents.Length; i++)
         {
             var agent = i;
-            var key = i == 0 ? Muted : CategoryKey(Theme.Categories[(i - 1) % Theme.Categories.Length]);
+            var key = AgentKey(i);
             var chip = new FilterChip(WithDot(Dot(key), graph.Agents[i], TextSize.Caption, true), "Show or hide this agent's steps", on =>
             {
                 if (on)

@@ -191,7 +191,7 @@ internal partial class ModelsView
                 Width = Sizes.Dot,
                 Height = Sizes.Dot,
                 CornerRadius = new CornerRadius(Radius.Pill)
-            }.Themed(Border.BackgroundProperty, RadarChart.SeriesKeys[i]);
+            }.Themed(Border.BackgroundProperty, ChartKey(i + 1));
             legend.Children.Add(Row(dot, Txt(models[i].Key, TextSize.Body, true), Txt(models[i].Provider, TextSize.Small, false, Muted)));
         }
 
@@ -201,7 +201,7 @@ internal partial class ModelsView
         {
             Orientation = Orientation.Horizontal,
             Spacing = Space.XXL,
-            Children = { RadarChart.Build(ModelCompare.Axes, scores, [.. RadarChart.SeriesKeys.Take(models.Count)], RawText), legend }
+            Children = { RadarChart.Build(ModelCompare.Axes, scores, [.. Enumerable.Range(1, models.Count).Select(ChartKey)], RawText), legend }
         };
         _results.Content = new StackPanel
         {

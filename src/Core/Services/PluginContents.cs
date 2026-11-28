@@ -35,20 +35,19 @@ public static class PluginContents
 
         var named = Named(m.File);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (field, kind, pattern) in new[] { ("commands", "command", "*.md;*.toml"), ("agents", "agent", "*.md") })
+        foreach (var (field, kind, pattern) in new[] { ("commands", "Command", "*.md;*.toml"), ("agents", "Agent", "*.md") })
         {
             foreach (var at in Places(folder, field, named))
             {
                 var dir = Directory.Exists(at) ? at : Path.GetDirectoryName(at)!;
                 var source = new PartSource
                 {
-                    Kind = kind,
                     Level = owner.Level,
                     Depth = 3,
                     Pattern = Directory.Exists(at) ? pattern : Path.GetFileName(at)
                 };
                 var start = rows.Count;
-                Scanner.Tagged(rows, () => Scanner.ReadParts(dir, source, owner.Source, rows),
+                Scanner.Tagged(rows, () => Scanner.ReadParts(dir, source, kind, owner.Source, rows),
                     i => i with
                     {
                         App = owner.App.Id,

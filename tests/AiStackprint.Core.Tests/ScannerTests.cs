@@ -27,7 +27,7 @@ public sealed class ScannerTests : IDisposable
         Skill(root, "manual", "disable-model-invocation: true\n");
         Skill(root, "auto", "user-invocable: false\n");
         var rows = new List<Item>();
-        Scanner.ReadRoot(root, new ScanRoot(), "App", rows);
+        Scanner.ReadRoot(root, new SkillSource(), "App", rows);
         var by = rows.ToDictionary(r => r.Name, SkillMatch.Label);
         Assert.Equal("Agent and User", by["both"]);
         Assert.Equal("User only", by["manual"]);
@@ -48,7 +48,7 @@ public sealed class ScannerTests : IDisposable
         {
             Id = "app",
             Name = "App",
-            ProjectRoots = { new ScanRoot
+            Skills = { new SkillSource
             {
                 Path = ".app/skills",
                 Level = "Project",
@@ -91,7 +91,7 @@ public sealed class ScannerTests : IDisposable
         {
             Id = "codex",
             Name = "Codex",
-            Roots = { new ScanRoot { Path = home }, new ScanRoot
+            Skills = { new SkillSource { Path = home }, new SkillSource
             {
                 Path = Path.Combine(home, ".system"),
                 Bundled = true
@@ -121,12 +121,12 @@ public sealed class ScannerTests : IDisposable
         {
             Id = "app",
             Name = "App",
-            Roots = { new ScanRoot { Path = Path.Combine(user, "flat"), Level = "User", Layout = "flat-md" }, new ScanRoot { Path = Path.Combine(user, "none"), Level = "User" } },
+            Skills = { new SkillSource { Path = Path.Combine(user, "flat"), Level = "User", Layout = "flat-md" }, new SkillSource { Path = Path.Combine(user, "none"), Level = "User" } },
             PluginFormat = "claude",
             PluginManifest = Path.Combine(user, "no-manifest.json"),
             Plugins = { new PluginSource { Format = "opencode-files", Path = Path.Combine(user, "plugins") }, new PluginSource { Format = "opencode-files", Path = ".app/plugins", Level = "Project" } },
             Configs = { new ConfigFile { Path = Path.Combine(user, "RULES.md"), Level = "User" }, new ConfigFile { Path = Path.Combine(user, "MISSING.md"), Level = "User" } },
-            Parts = { new PartSource { Path = Path.Combine(user, "commands") } }
+            Commands = { new PartSource { Path = Path.Combine(user, "commands") } }
         };
         var items = Scanner.Collect([d], [proj]).Items;
         Assert.Contains(items, i => i.Kind == "Skill" && i.Name == "tidy");

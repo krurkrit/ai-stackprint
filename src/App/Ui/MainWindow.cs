@@ -22,7 +22,7 @@ internal partial class MainWindow : Window
     private readonly Border _side;
     private readonly ContentControl _body = new();
     private readonly Ctx _x;
-    private readonly LibraryView _skills, _plugins, _parts;
+    private readonly LibraryView _skills, _plugins, _commands, _agents;
     private readonly AppsView _apps;
     private readonly HealthView _health;
     private readonly McpView _mcp;
@@ -69,7 +69,8 @@ internal partial class MainWindow : Window
         };
         _skills = new LibraryView(_x, "Skill");
         _plugins = new LibraryView(_x, "Plugin");
-        _parts = new LibraryView(_x, "Part");
+        _commands = new LibraryView(_x, "Command");
+        _agents = new LibraryView(_x, "Agent");
         _apps = new AppsView(_x);
         _detail = new AppDetailView(_x);
         _project = new ProjectView(_x, RemoveProject, RelocateProject);

@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
@@ -31,21 +30,22 @@ internal static class Toast
             BorderThickness = new Thickness(Stroke.Thin),
             Padding = new Thickness(Space.XL, Space.L),
             HorizontalAlignment = HorizontalAlignment.Right,
-            Child = Row(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, TextSize.Small)),
-            Transitions = [new DoubleTransition
-            {
-                Property = Visual.OpacityProperty,
-                Duration = TimeSpan.FromMilliseconds(400)
-            }]
+            Child = Row(Icon(icon, IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Accent), Txt(text, TextSize.Small))
         }.Themed(Border.BackgroundProperty, Surface).Themed(Border.BorderBrushProperty, BorderKey);
         Host.Children.Add(t);
+        Motion.Enter(t, Duration.Normal, Space.M);   // rises a little as it fades in
         while (Host.Children.Count(c => c.Tag is not Pinned) > 3)
         {
             Host.Children.Remove(Host.Children.First(c => c.Tag is not Pinned));
         }
 
-        DispatcherTimer.RunOnce(() => t.Opacity = 0, TimeSpan.FromSeconds(seconds));
-        DispatcherTimer.RunOnce(() => Host?.Children.Remove(t), TimeSpan.FromSeconds(seconds + 0.6));
+        DispatcherTimer.RunOnce(() => Fire.Forget(GoneAsync(t)), TimeSpan.FromSeconds(seconds));
+    }
+
+    private static async Task GoneAsync(Control t)
+    {
+        await Motion.Leave(t, Duration.Fast);
+        Host?.Children.Remove(t);
     }
 
     private const string Pinned = "pinned";

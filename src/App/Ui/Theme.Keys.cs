@@ -27,33 +27,31 @@ internal static partial class Theme
             [W.SideKey] = B(C(p.Side)),
             [W.MainKey] = B(C(p.Main)),
             [W.TopKey] = B(C(p.Top)),
-            [W.Muted] = B(A(fg, p.MutedAlpha)),
+            [W.Muted] = B(C(p.Muted)),
             [W.BorderKey] = B(p.Border == null ? A(fg, p.DividerAlpha) : C(p.Border)),   // dark: a solid line
             [W.Subtle] = B(hover),
             [W.Selected] = B(A(primary, p.SelectedAlpha)),
             [W.SelectedSolid] = B(Color.FromUInt32(Services.Contrast.Blend(A(primary, p.SelectedAlpha).ToUInt32(), C(p.Top).ToUInt32()))),   // the selected theme button as seen on the top bar, opaque: for a pop-up, which has nothing under it to show through
             [W.Accent] = B(primary),
             [W.OnAccent] = B(onPrimary),
-            [W.Link] = B(custom ?? C(p.Link)),
+            [W.Link] = B(custom == null ? C(p.Link) : LinkFor(custom.Value, p)),
             [W.SelectionKey] = B(selection),
             ["TextControlSelectionHighlightColor"] = B(selection),
-            [W.ErrorKey] = B(Status(p == _dark).Error),
-            [W.ErrorFill] = B(C(Error)),
+            // Status: text at 7.1:1 (ErrorKey, WarningKey, SuccessKey, SuccessText for "Installed"), marks for icons, bars and dots at 3:1
+            [W.ErrorKey] = B(C(p.States.DangerText)),
+            [W.WarningKey] = B(C(p.States.WarningText)),
+            [W.SuccessKey] = B(C(p.States.SuccessText)),
+            [W.SuccessText] = B(C(p.States.SuccessText)),
+            [W.ErrorMark] = B(C(p.States.DangerMark)),
+            [W.WarningMark] = B(C(p.States.WarningMark)),
+            [W.SuccessMark] = B(C(p.States.SuccessMark)),
+            [W.ErrorFill] = B(C(DangerFill)),
             [W.OnError] = B(Colors.White),
-            [W.ErrorHover] = B(Shade(C(Error), Colors.White, .15)),
-            [W.ErrorPressed] = B(Shade(C(Error), Colors.White, .28)),
-            [W.WarningKey] = B(Status(p == _dark).Warning),
-            [W.SuccessKey] = B(Status(p == _dark).Success),
-            // The "Installed" status: plain green text, no pill (dark theme #6CCB5F, light theme the darker green)
-            [W.SuccessText] = B(Status(p == _dark).Success),
-            // Chart series: four hues that differ in both themes (accent, then orange or light blue, green, gray)
-            [W.ChartIn] = B(primary),   // first series follows the accent
-            [W.ChartOut] = B(Series(p == _dark)[1]),
-            [W.ChartWrite] = B(Series(p == _dark)[2]),
-            [W.ChartRead] = B(Series(p == _dark)[3]),
+            [W.ErrorHover] = B(Shade(C(DangerFill), Colors.White, .15)),
+            [W.ErrorPressed] = B(Shade(C(DangerFill), Colors.White, .28)),
             ["ButtonBackgroundPointerOver"] = B(hover),
             // New log lines/steps, fading out: amber fill behind the text and a solid ring (light: orange, dark: yellow)
-            [W.HighlightKey] = B(A(C(Warning), p == _dark ? .26 : .42)),
+            [W.HighlightKey] = B(A(C(Warning), p.HighlightAlpha)),
             [W.HighlightRingKey] = B(C(p == _dark ? Warning : OrangeAccent)),
             [W.ScrimKey] = B(A(Colors.Black, p == _dark ? .5 : .35)),   // behind the search overlay
         };
@@ -71,14 +69,27 @@ internal static partial class Theme
             d["AccentFillColor" + name + "Brush"] = B(A(primary, alpha));
         }
 
+        // Charts: the 8 series colors, W.ChartKey(1) to (8). The token series, categories and levels each keep their own slot, so a color always means the same thing.
+        var chart = p == _dark ? DarkChart : LightChart;
+        for (var i = 0; i < chart.Length; i++)
+        {
+            d[W.ChartKey(i + 1)] = B(C(chart[i].Hex));
+        }
+
+        string[] series = [W.ChartIn, W.ChartOut, W.ChartWrite, W.ChartRead];
+        for (var i = 0; i < series.Length; i++)
+        {
+            d[series[i]] = d[W.ChartKey(i + 1)];
+        }
+
         for (var i = 0; i < Categories.Length; i++)
         {
-            d[W.CategoryKey(Categories[i])] = B(C((p == _dark ? _darkCategory : _lightCategory)[i]));
+            d[W.CategoryKey(Categories[i])] = d[W.ChartKey(i + 1)];
         }
 
         for (var i = 0; i < LevelNames.Length; i++)
         {
-            d[W.LevelKey(LevelNames[i])] = B(ParseHex(o.Levels?.ElementAtOrDefault(i)) ?? LevelDefault(p == _dark, i, primary));
+            d[W.LevelKey(LevelNames[i])] = ParseHex(o.Levels?.ElementAtOrDefault(i)) is { } level ? B(level) : d[W.ChartKey(i + 1)];
         }
         // Inputs sit on cards: card background and the divider color as border (cards themselves have no border)
         foreach (var k in new[] { "TextControlBackground", "TextControlBackgroundPointerOver", "TextControlBackgroundFocused", "ComboBoxBackground" })
@@ -155,7 +166,7 @@ internal static partial class Theme
         {
             Accent = C(p.Primary),
             RegionColor = bg,
-            ErrorText = C(Error),
+            ErrorText = C(p.States.DangerText),
             AltHigh = bg,
             AltMediumHigh = A(bg, .8),
             AltMedium = A(bg, .6),
@@ -172,15 +183,46 @@ internal static partial class Theme
         };
     }
 
-    /// <summary>Status colors for text, icons and bars on a theme (each at least 4.5:1 on the card and main backgrounds).</summary>
-    public static (Color Error, Color Warning, Color Success, Color Background, Color Main) Status(bool dark) => dark
-        ? (C(ErrorDark), C(Warning), C(SuccessDark), C(DarkCard), C(DarkMain))
-        : (C(Error), C(OrangeLight), C(Success), C(White), C(LightMain));
+    /// <summary>Status text colors on a theme (each at least 7.1:1 on the card and main backgrounds), with those two backgrounds.</summary>
+    public static (Color Error, Color Warning, Color Success, Color Background, Color Main) Status(bool dark)
+    {
+        var p = dark ? _dark : _light;
+        return (C(p.States.DangerText), C(p.States.WarningText), C(p.States.SuccessText), C(p.Bg), C(p.Main));
+    }
 
-    /// <summary>Chart series after the accent: [0] is the default accent, then output, cache write, cache read. Dark output is blue because the dark accent is orange.</summary>
-    public static Color[] Series(bool dark) => dark
-        ? [C(OrangeAccent), C(BlueDark), C("#6CCB5F"), C("#9AA0A6")]
-        : [C(BlueLight), C("#D1590E"), C(Success), C("#7A8087")];
+    /// <summary>Status marks (icons, bars, dots) on a theme: at least 3:1 on the card.</summary>
+    public static (Color Error, Color Warning, Color Success) Marks(bool dark)
+    {
+        var s = (dark ? _dark : _light).States;
+        return (C(s.DangerMark), C(s.WarningMark), C(s.SuccessMark));
+    }
+
+    /// <summary>
+    /// Every surface and tint text sits on in a theme: card, main, side, top, a hovered and a selected row on the card and the side,
+    /// the selected theme button on the top bar, selected text and a new log line.
+    /// </summary>
+    public static Color[] TextBackgrounds(bool dark)
+    {
+        var p = dark ? _dark : _light;
+        static Color On(Color top, Color under) => Color.FromUInt32(Services.Contrast.Blend(top.ToUInt32(), under.ToUInt32()));
+        Color hover = A(C(p.Fg), p.HoverAlpha), selected = A(C(p.Primary), p.SelectedAlpha);
+        return [C(p.Bg), C(p.Main), C(p.Side), C(p.Top), On(hover, C(p.Bg)), On(hover, C(p.Side)), On(selected, C(p.Bg)), On(selected, C(p.Side)), On(selected, C(p.Top)),
+            On(A(C(p.Selection), p.SelectionAlpha), C(p.Bg)), On(A(C(Warning), p.HighlightAlpha), C(p.Bg))];
+    }
+
+    /// <summary>Text, muted text and link of a theme (the defaults).</summary>
+    public static (Color Text, Color Muted, Color Link) Inks(bool dark)
+    {
+        var p = dark ? _dark : _light;
+        return (C(p.Fg), C(p.Muted), C(p.Link));
+    }
+
+    /// <summary>A custom accent as link text: moved away from the background just enough to read at 7.1:1 on the card and the main area.</summary>
+    private static Color LinkFor(Color accent, Palette p)
+    {
+        var c = Services.Contrast.AtLeast(accent.ToUInt32(), C(p.Bg).ToUInt32(), Services.Contrast.Minimum);
+        return Color.FromUInt32(Services.Contrast.AtLeast(c, C(p.Main).ToUInt32(), Services.Contrast.Minimum));
+    }
 
     /// <summary>Accent fill for hover/pressed: the accent moved away from its text color.</summary>
     public static Color Shade(Color accent, Color text, double amount) =>

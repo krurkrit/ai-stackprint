@@ -7,7 +7,7 @@ namespace AiStackprint.Services;
 
 public static partial class Scanner
 {
-    public static void ReadRoot(string path, ScanRoot r, string source, List<Item> rows)
+    public static void ReadRoot(string path, SkillSource r, string source, List<Item> rows)
     {
         if (!Directory.Exists(path))
         {

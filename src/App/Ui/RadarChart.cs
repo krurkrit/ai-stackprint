@@ -15,13 +15,12 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// Radar chart for the Models comparison: one polygon per model over six axes, each axis a percent from the worst to the best of all models (<see cref="ModelCompare"/>).
-/// The raw value and the percent show in a tooltip on each corner. Each model has its own chart series color (<see cref="SeriesKeys"/>).
+/// The raw value and the percent show in a tooltip on each corner. Each model has its own chart series color (chart slots 1 to 4, in the order picked).
 /// </summary>
 internal static class RadarChart
 {
     private const double Width = 440, Height = 300, Radius = 112, LabelWidth = 120, LabelGap = 8, Dot = 5, FillOpacity = 0.14;
     private const int Rings = 4;
-    public static readonly string[] SeriesKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
 
     /// <param name="axes">The axes: their labels.</param>
     /// <param name="colors">The resource key of each model's color, parallel to <paramref name="scores"/>.</param>

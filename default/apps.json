@@ -6,14 +6,12 @@
     {
       "id": "claude-code", "context": "claude", "limits": "claude", "name": "Claude Code", "category": "agent", "logo": "claudecode",
       "detect": ["~/.claude"],
-      "roots": [
+      "skills": [
         {"path": "~/.claude/skills", "level": "User"},
         {"path": "%ProgramData%/ClaudeCode/.claude/skills", "level": "System", "os": "windows", "label": "Managed"},
         {"path": "%ProgramData%/ClaudeCode/skills", "level": "System", "os": "windows", "label": "Managed"},
         {"path": "/Library/Application Support/ClaudeCode/skills", "level": "System", "os": "macos", "label": "Managed"},
-        {"path": "/etc/claude-code/skills", "level": "System", "os": "linux", "label": "Managed"}
-      ],
-      "projectRoots": [
+        {"path": "/etc/claude-code/skills", "level": "System", "os": "linux", "label": "Managed"},
         {"path": ".claude/skills", "level": "Project", "nested": true}
       ],
       "configs": [
@@ -33,11 +31,13 @@
         {"path": ".mcp.json", "level": "Project", "kind": "mcp"},
         {"path": "~/.claude.json", "level": "User", "kind": "mcp", "label": "User and local MCP", "appWritten": true}
       ],
-      "parts": [
-        {"path": "~/.claude/commands", "kind": "command"},
-        {"path": "~/.claude/agents", "kind": "agent"},
-        {"path": ".claude/commands", "level": "Project", "kind": "command"},
-        {"path": ".claude/agents", "level": "Project", "kind": "agent"}
+      "commands": [
+        {"path": "~/.claude/commands"},
+        {"path": ".claude/commands", "level": "Project"}
+      ],
+      "agents": [
+        {"path": "~/.claude/agents"},
+        {"path": ".claude/agents", "level": "Project"}
       ],
       "pluginFormat": "claude",
       "pluginManifest": "~/.claude/plugins/installed_plugins.json",
@@ -50,12 +50,10 @@
     {
       "id": "opencode", "context": "opencode", "name": "OpenCode", "category": "agent", "logo": "opencode",
       "detect": ["~/.config/opencode", "~/.opencode"],
-      "roots": [
+      "skills": [
         {"path": "~/.config/opencode/skill", "level": "User"},
         {"path": "~/.config/opencode/skills", "level": "User"},
-        {"path": "~/.opencode/skill", "level": "User"}
-      ],
-      "projectRoots": [
+        {"path": "~/.opencode/skill", "level": "User"},
         {"path": ".opencode/skill", "level": "Project"},
         {"path": ".opencode/skills", "level": "Project"}
       ],
@@ -65,15 +63,17 @@
         {"path": "~/.config/opencode/opencode.json", "level": "User", "kind": "settings"},
         {"path": "opencode.json", "level": "Project", "kind": "settings"}
       ],
-      "parts": [
-        {"path": "~/.config/opencode/commands", "kind": "command"},
-        {"path": "~/.config/opencode/command", "kind": "command"},
-        {"path": "~/.config/opencode/agents", "kind": "agent"},
-        {"path": "~/.config/opencode/agent", "kind": "agent"},
-        {"path": ".opencode/commands", "level": "Project", "kind": "command"},
-        {"path": ".opencode/command", "level": "Project", "kind": "command"},
-        {"path": ".opencode/agents", "level": "Project", "kind": "agent"},
-        {"path": ".opencode/agent", "level": "Project", "kind": "agent"}
+      "commands": [
+        {"path": "~/.config/opencode/commands"},
+        {"path": "~/.config/opencode/command"},
+        {"path": ".opencode/commands", "level": "Project"},
+        {"path": ".opencode/command", "level": "Project"}
+      ],
+      "agents": [
+        {"path": "~/.config/opencode/agents"},
+        {"path": "~/.config/opencode/agent"},
+        {"path": ".opencode/agents", "level": "Project"},
+        {"path": ".opencode/agent", "level": "Project"}
       ],
       "plugins": [
         {"format": "opencode-files", "path": "~/.config/opencode/plugins"},
@@ -95,7 +95,7 @@
     {
       "id": "codex-cli", "context": "codex", "limits": "codex", "name": "Codex CLI", "category": "agent", "logo": "codex",
       "detect": ["~/.codex"],
-      "roots": [
+      "skills": [
         {"path": "~/.codex/skills/.system", "level": "User", "label": "SYSTEM (bundled)", "bundled": true},
         {"path": "~/.codex/skills", "level": "User", "label": "USER (legacy folder)"},
         {"path": "/etc/codex/skills", "level": "System", "label": "ADMIN", "os": "linux"},
@@ -106,8 +106,8 @@
         {"path": "AGENTS.md", "level": "Project", "kind": "instructions", "nested": true, "label": "REPO"},
         {"path": "~/.codex/config.toml", "level": "User", "kind": "settings"}
       ],
-      "parts": [
-        {"path": "~/.codex/prompts", "kind": "command", "depth": 0, "label": "Prompts"}
+      "commands": [
+        {"path": "~/.codex/prompts", "depth": 0, "label": "Prompts"}
       ],
       "plugins": [
         {"format": "codex", "path": "~/.codex/config.toml"}
@@ -121,10 +121,8 @@
     {
       "id": "cursor", "context": "cursor", "limits": "cursor", "name": "Cursor", "category": "editor", "logo": "cursor",
       "detect": ["~/.cursor"],
-      "roots": [
-        {"path": "~/.cursor/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.cursor/skills", "level": "User", "label": "Global"},
         {"path": ".cursor/skills", "level": "Project", "label": "Workspace"}
       ],
       "configs": [
@@ -137,9 +135,9 @@
         {"path": ".cursorignore", "level": "Project", "kind": "ignore", "label": "Workspace"},
         {"path": ".cursorindexingignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
       ],
-      "parts": [
-        {"path": "~/.cursor/commands", "kind": "command", "label": "Global"},
-        {"path": ".cursor/commands", "level": "Project", "kind": "command", "label": "Workspace"}
+      "commands": [
+        {"path": "~/.cursor/commands", "label": "Global"},
+        {"path": ".cursor/commands", "level": "Project", "label": "Workspace"}
       ],
       "plugins": [
         {"format": "folders", "path": "~/.cursor/plugins", "depth": 4, "manifests": [".cursor-plugin/plugin.json", ".claude-plugin/plugin.json"]},
@@ -155,10 +153,8 @@
     {
       "id": "gemini-cli", "context": "gemini", "limits": "gemini", "name": "Gemini CLI", "category": "agent", "logo": "geminicli",
       "detect": ["~/.gemini"],
-      "roots": [
-        {"path": "~/.gemini/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.gemini/skills", "level": "User"},
         {"path": ".gemini/skills", "level": "Project"}
       ],
       "configs": [
@@ -168,9 +164,9 @@
         {"path": ".gemini/settings.json", "level": "Project", "kind": "settings", "label": "Workspace"},
         {"path": ".geminiignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
       ],
-      "parts": [
-        {"path": "~/.gemini/commands", "kind": "command", "pattern": "*.toml"},
-        {"path": ".gemini/commands", "level": "Project", "kind": "command", "pattern": "*.toml", "label": "Workspace"}
+      "commands": [
+        {"path": "~/.gemini/commands", "pattern": "*.toml"},
+        {"path": ".gemini/commands", "level": "Project", "pattern": "*.toml", "label": "Workspace"}
       ],
       "plugins": [
         {"format": "folders", "path": "~/.gemini/extensions", "depth": 1, "manifests": ["gemini-extension.json"], "label": "Extensions"},
@@ -184,12 +180,10 @@
     {
       "id": "antigravity-cli", "name": "Antigravity CLI", "category": "agent", "logo": "antigravity",
       "detect": ["~/.gemini/antigravity-cli", "~/.gemini/config", "%APPDATA%/Antigravity/bin"],
-      "roots": [
+      "skills": [
         {"path": "~/.gemini/config/skills", "level": "User", "label": "Global"},
         {"path": "~/.gemini/antigravity-cli/skills", "level": "User", "label": "Global"},
-        {"path": "~/.gemini/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+        {"path": "~/.gemini/skills", "level": "User", "label": "Global"},
         {"path": ".agents/skills", "level": "Project", "label": "Workspace"}
       ],
       "configs": [
@@ -211,10 +205,8 @@
     {
       "id": "windsurf", "context": "windsurf", "name": "Windsurf", "category": "editor", "logo": "windsurf",
       "detect": ["~/.codeium/windsurf"],
-      "roots": [
-        {"path": "~/.codeium/windsurf/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.codeium/windsurf/skills", "level": "User", "label": "Global"},
         {"path": ".windsurf/skills", "level": "Project", "label": "Workspace"}
       ],
       "configs": [
@@ -224,9 +216,9 @@
         {"path": "~/.codeium/windsurf/mcp_config.json", "level": "User", "kind": "mcp", "label": "Global"},
         {"path": ".codeiumignore", "level": "Project", "kind": "ignore", "label": "Workspace"}
       ],
-      "parts": [
-        {"path": "~/.codeium/windsurf/global_workflows", "kind": "command", "label": "Global workflows"},
-        {"path": ".windsurf/workflows", "level": "Project", "kind": "command", "label": "Workflows"}
+      "commands": [
+        {"path": "~/.codeium/windsurf/global_workflows", "label": "Global workflows"},
+        {"path": ".windsurf/workflows", "level": "Project", "label": "Workflows"}
       ],
       "plugins": [
         {"format": "vscode", "path": "~/.windsurf/extensions", "label": "Extensions"}
@@ -241,10 +233,8 @@
     {
       "id": "github-copilot", "context": "copilot", "limits": "copilot", "name": "GitHub Copilot", "category": "agent", "logo": "githubcopilot",
       "detect": ["~/.copilot"],
-      "roots": [
-        {"path": "~/.copilot/skills", "level": "User", "label": "Personal"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.copilot/skills", "level": "User", "label": "Personal"},
         {"path": ".github/skills", "level": "Project", "label": "Repository"}
       ],
       "configs": [
@@ -259,11 +249,13 @@
         {"path": "~/Library/Application Support/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "macos", "label": "VS Code"},
         {"path": "~/.config/Code/User/mcp.json", "level": "User", "kind": "mcp", "os": "linux", "label": "VS Code"}
       ],
-      "parts": [
-        {"path": "~/.copilot/agents", "kind": "agent", "label": "Copilot CLI"},
-        {"path": ".github/prompts", "level": "Project", "kind": "command", "pattern": "*.prompt.md", "label": "Prompts"},
-        {"path": ".github/agents", "level": "Project", "kind": "agent", "label": "Repository"},
-        {"path": ".github/chatmodes", "level": "Project", "kind": "agent", "pattern": "*.chatmode.md", "label": "Chat modes (legacy)"}
+      "commands": [
+        {"path": ".github/prompts", "level": "Project", "pattern": "*.prompt.md", "label": "Prompts"}
+      ],
+      "agents": [
+        {"path": "~/.copilot/agents", "label": "Copilot CLI"},
+        {"path": ".github/agents", "level": "Project", "label": "Repository"},
+        {"path": ".github/chatmodes", "level": "Project", "pattern": "*.chatmode.md", "label": "Chat modes (legacy)"}
       ],
       "plugins": [
         {"format": "folders", "path": "~/.copilot/state/installed-plugins", "manifests": ["plugin.json", ".plugin/plugin.json", ".github/plugin/plugin.json", ".claude-plugin/plugin.json"]},
@@ -277,7 +269,7 @@
     {
       "id": "amp", "name": "Amp", "category": "agent", "logo": "amp",
       "detect": ["~/.config/amp"],
-      "roots": [
+      "skills": [
         {"path": "~/.config/agents/skills", "level": "User"}
       ],
       "logs": [
@@ -288,10 +280,8 @@
     {
       "id": "goose", "name": "Goose", "category": "agent", "logo": "goose",
       "detect": ["~/.config/goose", "%APPDATA%/Block/goose"],
-      "roots": [
-        {"path": "~/.config/goose/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.config/goose/skills", "level": "User"},
         {"path": ".goose/skills", "level": "Project"}
       ],
       "configs": [
@@ -318,10 +308,8 @@
     {
       "id": "qwen-code", "context": "qwen", "name": "Qwen Code", "category": "agent", "logo": "qwen",
       "detect": ["~/.qwen"],
-      "roots": [
-        {"path": "~/.qwen/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.qwen/skills", "level": "User"},
         {"path": ".qwen/skills", "level": "Project"}
       ],
       "configs": [
@@ -330,11 +318,13 @@
         {"path": "~/.qwen/settings.json", "level": "User", "kind": "settings"},
         {"path": ".qwen/settings.json", "level": "Project", "kind": "settings"}
       ],
-      "parts": [
-        {"path": "~/.qwen/commands", "kind": "command", "pattern": "*.md;*.toml"},
-        {"path": "~/.qwen/agents", "kind": "agent"},
-        {"path": ".qwen/commands", "level": "Project", "kind": "command", "pattern": "*.md;*.toml"},
-        {"path": ".qwen/agents", "level": "Project", "kind": "agent"}
+      "commands": [
+        {"path": "~/.qwen/commands", "pattern": "*.md;*.toml"},
+        {"path": ".qwen/commands", "level": "Project", "pattern": "*.md;*.toml"}
+      ],
+      "agents": [
+        {"path": "~/.qwen/agents"},
+        {"path": ".qwen/agents", "level": "Project"}
       ],
       "plugins": [
         {"format": "folders", "path": "~/.qwen/extensions", "depth": 1, "manifests": ["qwen-extension.json", "gemini-extension.json"], "label": "Extensions"},
@@ -348,14 +338,16 @@
     {
       "id": "factory-droid", "name": "Factory Droid", "category": "agent", "logo": "factorydroid",
       "detect": ["~/.factory"],
-      "roots": [
+      "skills": [
         {"path": "~/.factory/skills", "level": "User"}
       ],
-      "parts": [
-        {"path": "~/.factory/commands", "kind": "command"},
-        {"path": "~/.factory/droids", "kind": "agent", "label": "Droids"},
-        {"path": ".factory/commands", "level": "Project", "kind": "command"},
-        {"path": ".factory/droids", "level": "Project", "kind": "agent", "label": "Droids"}
+      "commands": [
+        {"path": "~/.factory/commands"},
+        {"path": ".factory/commands", "level": "Project"}
+      ],
+      "agents": [
+        {"path": "~/.factory/droids", "label": "Droids"},
+        {"path": ".factory/droids", "level": "Project", "label": "Droids"}
       ],
       "plugins": [
         {"format": "enabled-list", "path": "~/.factory/settings.json"},
@@ -369,10 +361,8 @@
     {
       "id": "mistral-vibe", "name": "Mistral Vibe", "category": "agent", "logo": "mistral",
       "detect": ["%VIBE_HOME%", "~/.vibe"],
-      "roots": [
-        {"path": "~/.vibe/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.vibe/skills", "level": "User"},
         {"path": ".vibe/skills", "level": "Project"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ. Log paths are best-effort."
@@ -380,10 +370,8 @@
     {
       "id": "crush", "name": "Crush", "category": "agent", "logo": "crush",
       "detect": ["~/.config/crush"],
-      "roots": [
-        {"path": "~/.config/crush/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.config/crush/skills", "level": "User"},
         {"path": ".crush/skills", "level": "Project"}
       ],
       "logs": [
@@ -394,10 +382,8 @@
     {
       "id": "openhands", "name": "OpenHands", "category": "agent", "logo": "openhands",
       "detect": ["~/.openhands"],
-      "roots": [
-        {"path": "~/.openhands/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.openhands/skills", "level": "User"},
         {"path": ".openhands/skills", "level": "Project"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ."
@@ -405,10 +391,8 @@
     {
       "id": "augment", "name": "Augment Code", "category": "agent", "logo": "augment",
       "detect": ["~/.augment"],
-      "roots": [
-        {"path": "~/.augment/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.augment/skills", "level": "User"},
         {"path": ".augment/skills", "level": "Project"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ."
@@ -424,10 +408,8 @@
     {
       "id": "roo-code", "name": "Roo Code", "category": "agent", "logo": "roocode",
       "detect": ["~/.roo"],
-      "roots": [
-        {"path": "~/.roo/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.roo/skills", "level": "User"},
         {"path": ".roo/skills", "level": "Project"}
       ],
       "configs": [
@@ -440,7 +422,7 @@
     {
       "id": "kilo-code", "name": "Kilo Code", "category": "agent", "logo": "kilocode",
       "detect": ["~/.kilo", "~/.kilocode"],
-      "roots": [
+      "skills": [
         {"path": "~/.kilo/skills", "level": "User"}
       ],
       "notes": "Skill paths are best-effort. Project skills in .agents/skills are listed under Shared agents."
@@ -448,10 +430,8 @@
     {
       "id": "continue", "name": "Continue", "category": "agent", "logo": "continue",
       "detect": ["~/.continue"],
-      "roots": [
-        {"path": "~/.continue/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.continue/skills", "level": "User"},
         {"path": ".continue/skills", "level": "Project"}
       ],
       "configs": [
@@ -467,10 +447,8 @@
     {
       "id": "junie", "name": "Junie", "category": "agent", "logo": "junie",
       "detect": ["~/.junie"],
-      "roots": [
-        {"path": "~/.junie/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.junie/skills", "level": "User"},
         {"path": ".junie/skills", "level": "Project"}
       ],
       "configs": [
@@ -481,10 +459,8 @@
     {
       "id": "devin", "name": "Devin for Terminal", "category": "agent", "logo": "devin",
       "detect": ["~/.config/devin"],
-      "roots": [
-        {"path": "~/.config/devin/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.config/devin/skills", "level": "User"},
         {"path": ".devin/skills", "level": "Project"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ."
@@ -492,10 +468,8 @@
     {
       "id": "hermes-agent", "name": "Hermes Agent", "category": "agent", "logo": "hermesagent",
       "detect": ["%HERMES_HOME%", "~/.hermes"],
-      "roots": [
-        {"path": "~/.hermes/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.hermes/skills", "level": "User"},
         {"path": ".hermes/skills", "level": "Project"}
       ],
       "plugins": [
@@ -509,7 +483,7 @@
     {
       "id": "openclaw", "name": "OpenClaw", "category": "agent", "logo": "openclaw",
       "detect": ["~/.openclaw", "~/.clawdbot", "~/.moltbot"],
-      "roots": [
+      "skills": [
         {"path": "~/.openclaw/skills", "level": "User"},
         {"path": "~/.clawdbot/skills", "level": "User"},
         {"path": "~/.moltbot/skills", "level": "User"}
@@ -527,21 +501,57 @@
     {
       "id": "codebuddy", "name": "CodeBuddy", "category": "agent", "logo": "codebuddy",
       "detect": ["~/.codebuddy"],
-      "roots": [
-        {"path": "~/.codebuddy/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.codebuddy/skills", "level": "User"},
         {"path": ".codebuddy/skills", "level": "Project"}
       ],
       "notes": "Skill paths are best-effort; edit apps.json if yours differ."
     },
     {
-      "id": "kiro", "context": "kiro", "name": "Kiro", "category": "editor", "logo": "kiro",
-      "detect": ["~/.kiro"],
-      "roots": [
-        {"path": "~/.kiro/skills", "level": "User", "label": "Global"}
+      "id": "aider", "name": "Aider", "category": "agent", "logo": "aider",
+      "detect": ["~/.aider"],
+      "configs": [
+        {"path": "~/.aider.conf.yml", "level": "User", "kind": "settings", "label": "Home"},
+        {"path": ".aider.conf.yml", "level": "Project", "kind": "settings", "label": "Git root"},
+        {"path": "~/.aider.model.settings.yml", "level": "User", "kind": "settings", "label": "Model settings"},
+        {"path": ".aider.model.settings.yml", "level": "Project", "kind": "settings", "label": "Model settings"},
+        {"path": "~/.aider.model.metadata.json", "level": "User", "kind": "settings", "label": "Model metadata"},
+        {"path": ".aider.model.metadata.json", "level": "Project", "kind": "settings", "label": "Model metadata"},
+        {"path": "CONVENTIONS.md", "level": "Project", "kind": "instructions", "label": "Conventions"},
+        {"path": ".aiderignore", "level": "Project", "kind": "ignore"}
       ],
-      "projectRoots": [
+      "logs": [
+        {"path": ".aider.chat.history.md", "level": "Project", "label": "Chat history"},
+        {"path": ".aider.input.history", "level": "Project", "label": "Input history"}
+      ],
+      "notes": "No skills, MCP, hooks or plugins. .aider.conf.yml is read from the home folder, the git root and the current folder (later ones win). CONVENTIONS.md is a convention: Aider reads it only when passed with --read or listed under read: in .aider.conf.yml. The ~/.aider detect folder is best-effort."
+    },
+    {
+      "id": "kimi-code", "name": "Kimi Code CLI", "category": "agent", "logo": "kimi",
+      "detect": ["%KIMI_CODE_HOME%", "~/.kimi-code", "~/.kimi"],
+      "skills": [
+        {"path": "~/.kimi-code/skills", "level": "User"},
+        {"path": ".kimi-code/skills", "level": "Project"}
+      ],
+      "configs": [
+        {"path": "~/.kimi-code/AGENTS.md", "level": "User", "kind": "instructions"},
+        {"path": "AGENTS.md", "level": "Project", "kind": "instructions"},
+        {"path": "~/.kimi-code/config.toml", "level": "User", "kind": "settings"},
+        {"path": "~/.kimi-code/tui.toml", "level": "User", "kind": "settings", "label": "Terminal UI"},
+        {"path": "~/.kimi-code/mcp.json", "level": "User", "kind": "mcp"},
+        {"path": ".kimi-code/mcp.json", "level": "Project", "kind": "mcp"}
+      ],
+      "logs": [
+        {"path": "~/.kimi-code/logs", "label": "Logs", "format": "text-log"},
+        {"path": "~/.kimi-code/sessions", "pattern": "kimi-code.log", "depth": 4, "label": "Sessions", "format": "text-log"}
+      ],
+      "notes": "Moonshot AI's terminal agent. Paths follow the Kimi Code CLI docs (data root ~/.kimi-code, or KIMI_CODE_HOME; paths below assume the default). Project skills in .agents/skills and ~/.agents/skills are listed under Shared agents. ~/.kimi is the older Kimi CLI folder, used only for detection. Plugins in ~/.kimi-code/plugins are not listed yet."
+    },
+    {
+      "id": "kiro","context": "kiro", "name": "Kiro", "category": "editor", "logo": "kiro",
+      "detect": ["~/.kiro"],
+      "skills": [
+        {"path": "~/.kiro/skills", "level": "User", "label": "Global"},
         {"path": ".kiro/skills", "level": "Project", "label": "Workspace"}
       ],
       "configs": [
@@ -564,11 +574,9 @@
     {
       "id": "antigravity", "name": "Antigravity", "category": "editor", "logo": "antigravity",
       "detect": ["~/.gemini/antigravity"],
-      "roots": [
+      "skills": [
         {"path": "~/.gemini/antigravity/skills", "level": "User", "label": "Global"},
-        {"path": "~/.gemini/config/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+        {"path": "~/.gemini/config/skills", "level": "User", "label": "Global"},
         {"path": ".agent/skills", "level": "Project", "label": "Workspace"}
       ],
       "plugins": [
@@ -584,10 +592,8 @@
     {
       "id": "trae", "name": "Trae", "category": "editor", "logo": "trae",
       "detect": ["~/.trae"],
-      "roots": [
-        {"path": "~/.trae/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.trae/skills", "level": "User", "label": "Global"},
         {"path": ".trae/skills", "level": "Project", "label": "Workspace"}
       ],
       "plugins": [
@@ -603,10 +609,8 @@
     {
       "id": "qoder", "name": "Qoder", "category": "editor", "logo": "qoder",
       "detect": ["~/.qoder"],
-      "roots": [
-        {"path": "~/.qoder/skills", "level": "User", "label": "Global"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.qoder/skills", "level": "User", "label": "Global"},
         {"path": ".qoder/skills", "level": "Project", "label": "Workspace"}
       ],
       "plugins": [
@@ -648,10 +652,8 @@
     {
       "id": "shared-agents", "name": "Shared agents", "category": "shared",
       "detect": ["~/.agents"],
-      "roots": [
-        {"path": "~/.agents/skills", "level": "User"}
-      ],
-      "projectRoots": [
+      "skills": [
+        {"path": "~/.agents/skills", "level": "User"},
         {"path": ".agents/skills", "level": "Project", "nested": true}
       ],
       "notes": "Cross-tool skills folder used by several agents and skill installers."
@@ -664,7 +666,7 @@
     {
       "id": "orca", "name": "Orca", "category": "orchestrator", "logo": "orca",
       "detect": ["~/.orca", "%APPDATA%/orca", "~/Library/Application Support/orca", "~/.config/orca"],
-      "projectRoots": [
+      "skills": [
         {"path": ".orca/skills", "level": "Project", "layout": "flat-md"}
       ],
       "logs": [
@@ -673,6 +675,21 @@
         {"path": "~/.config/orca/logs", "label": "Logs", "os": "linux", "format": "text-log"}
       ],
       "notes": "Orchestrator. Per-repo skills are Markdown files in .orca/skills. Detect paths are best-effort; edit apps.json if yours differ. Log paths on macOS and Linux are best-effort."
+    },
+    {
+      "id": "vibe-kanban", "name": "Vibe Kanban", "category": "orchestrator", "logo": "vibekanban",
+      "detect": ["%APPDATA%/bloop/vibe-kanban", "~/Library/Application Support/ai.bloop.vibe-kanban", "~/.local/share/vibe-kanban"],
+      "notes": "Orchestrator. Runs the coding agents already listed (Claude Code, Codex, Gemini CLI and others) in git worktrees; its own state is a database in its data folder. The Windows data folder is documented; the macOS and Linux ones are best-effort."
+    },
+    {
+      "id": "nimbalyst", "name": "Nimbalyst", "category": "orchestrator", "logo": "nimbalyst",
+      "detect": ["%APPDATA%/Nimbalyst", "~/Library/Application Support/Nimbalyst", "~/.config/Nimbalyst"],
+      "logs": [
+        {"path": "%APPDATA%/Nimbalyst/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Nimbalyst/logs", "label": "Logs", "os": "macos", "format": "text-log"},
+        {"path": "~/.config/Nimbalyst/logs", "label": "Logs", "os": "linux", "format": "text-log"}
+      ],
+      "notes": "Orchestrator and visual workspace (successor of Crystal). Runs Claude Code, Codex and OpenCode sessions in git worktrees; its sessions live in a database in its data folder. Data folder and logs/main.log follow Nimbalyst's docs. Per-project files go to .nimbalyst (assets)."
     },
     {
       "id": "claude-desktop", "name": "Claude Desktop", "category": "chat", "logo": "claude",
@@ -690,6 +707,16 @@
         {"path": "~/Library/Logs/Claude", "label": "Logs", "os": "macos", "format": "text-log"}
       ],
       "notes": "No skills folder. Detect and config file paths are best-effort. Extensions (MCP bundles) path is best-effort."
+    },
+    {
+      "id": "cherry-studio", "name": "Cherry Studio", "category": "chat", "logo": "cherrystudio",
+      "detect": ["%APPDATA%/CherryStudio", "~/Library/Application Support/CherryStudio", "~/Library/Application Support/CherryStudioDev", "~/.config/CherryStudio"],
+      "logs": [
+        {"path": "%APPDATA%/CherryStudio/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/CherryStudio/logs", "label": "Logs", "os": "macos", "format": "text-log"},
+        {"path": "~/.config/CherryStudio/logs", "label": "Logs", "os": "linux", "format": "text-log"}
+      ],
+      "notes": "Data folders follow Cherry Studio's storage docs (the docs name the macOS folder CherryStudioDev; both are detected). MCP servers and assistants are kept in the app's internal storage, not in files. Log paths are best-effort."
     },
     {
       "id": "ollama", "name": "Ollama", "category": "runtime", "logo": "ollama",
@@ -711,6 +738,46 @@
       "id": "hugging-face", "name": "Hugging Face", "category": "runtime", "logo": "huggingface",
       "detect": ["%HF_HOME%", "~/.cache/huggingface"],
       "notes": "Detection only (model cache)."
+    },
+    {
+      "id": "jan", "name": "Jan", "category": "runtime",
+      "detect": ["%APPDATA%/Jan", "~/Library/Application Support/Jan", "~/.local/share/Jan", "~/jan"],
+      "skills": [
+        {"path": "%APPDATA%/Jan/data/agent-workspace/skills", "level": "User", "os": "windows"},
+        {"path": "~/Library/Application Support/Jan/data/agent-workspace/skills", "level": "User", "os": "macos"},
+        {"path": "~/.local/share/Jan/data/agent-workspace/skills", "level": "User", "os": "linux"}
+      ],
+      "configs": [
+        {"path": "%APPDATA%/Jan/data/mcp_config.json", "level": "User", "kind": "mcp", "os": "windows"},
+        {"path": "~/Library/Application Support/Jan/data/mcp_config.json", "level": "User", "kind": "mcp", "os": "macos"},
+        {"path": "~/.local/share/Jan/data/mcp_config.json", "level": "User", "kind": "mcp", "os": "linux"}
+      ],
+      "logs": [
+        {"path": "%APPDATA%/Jan/data/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/Jan/data/logs", "label": "Logs", "os": "macos", "format": "text-log"},
+        {"path": "~/.local/share/Jan/data/logs", "label": "Logs", "os": "linux", "format": "text-log"}
+      ],
+      "notes": "Paths follow Jan's data folder docs (default location; it can be moved in Settings › General). ~/jan is the older data folder, used only for detection. The mcp_config.json location and the agent-workspace skills layout are best-effort."
+    },
+    {
+      "id": "anythingllm", "name": "AnythingLLM", "category": "runtime", "logo": "anythingllm",
+      "detect": ["%APPDATA%/anythingllm-desktop", "~/Library/Application Support/anythingllm-desktop", "~/.config/anythingllm-desktop"],
+      "configs": [
+        {"path": "%APPDATA%/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json", "level": "User", "kind": "mcp", "os": "windows"},
+        {"path": "~/Library/Application Support/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json", "level": "User", "kind": "mcp", "os": "macos"},
+        {"path": "~/.config/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json", "level": "User", "kind": "mcp", "os": "linux"}
+      ],
+      "plugins": [
+        {"format": "folders", "path": "%APPDATA%/anythingllm-desktop/storage/plugins/agent-skills", "os": "windows", "depth": 1, "manifests": ["plugin.json"], "label": "Agent skills"},
+        {"format": "folders", "path": "~/Library/Application Support/anythingllm-desktop/storage/plugins/agent-skills", "os": "macos", "depth": 1, "manifests": ["plugin.json"], "label": "Agent skills"},
+        {"format": "folders", "path": "~/.config/anythingllm-desktop/storage/plugins/agent-skills", "os": "linux", "depth": 1, "manifests": ["plugin.json"], "label": "Agent skills"}
+      ],
+      "logs": [
+        {"path": "%APPDATA%/anythingllm-desktop/storage/logs", "label": "Logs", "os": "windows", "format": "text-log"},
+        {"path": "~/Library/Application Support/anythingllm-desktop/storage/logs", "label": "Logs", "os": "macos", "format": "text-log"},
+        {"path": "~/.config/anythingllm-desktop/storage/logs", "label": "Logs", "os": "linux", "format": "text-log"}
+      ],
+      "notes": "Desktop app. Storage paths follow AnythingLLM's storage docs. Custom agent skills are folders with a plugin.json, listed as plugins. The Docker version keeps its storage in a container volume and is not detected."
     }
   ]
 }

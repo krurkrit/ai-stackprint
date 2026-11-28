@@ -65,7 +65,7 @@ internal partial class ReadableLog
 
         if (s.Entries.Count(e => e.IsError) is > 0 and var failed)
         {
-            w.Children.Add(Chip(Plural(failed, "failed result"), ErrorKey).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.M)));
+            w.Children.Add(Chip(Plural(failed, "failed result"), ErrorMark).With(c => c.Margin = new Thickness(0, 0, Space.M, Space.M)));
         }
 
         if (PeakContext(s) is { } peak)

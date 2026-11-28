@@ -31,6 +31,8 @@ public interface ILimitProvider
     Task<LimitSnapshot> Fetch(HttpClient http, Credential c, CancellationToken ct);
     /// <summary>Limits the app wrote in its own logs (no network); null when it writes none.</summary>
     LimitSnapshot? FromLogs(AppDefinition d, IReadOnlyList<string> projects) => null;
+    /// <summary>Every reading the app wrote in its own logs, for the pace chart (no network); empty when it writes none.</summary>
+    IReadOnlyList<LimitReading> HistoryFromLogs(AppDefinition d, IReadOnlyList<string> projects) => [];
 }
 
 /// <summary>An HTTP reply that is not a success; 401/403 mean the saved sign-in is no longer accepted.</summary>
@@ -44,13 +46,16 @@ public class LimitHttpException(HttpStatusCode code, TimeSpan? retryAfter) : Htt
 /// between calls the last reading is shown. Network calls only for apps the user turned on in Settings. Tokens stay in memory and are never logged.
 /// Never refreshes a token or writes to a credential file: an expired token waits for the app itself to sign in again.
 /// </summary>
-public sealed class LimitsService(Func<Settings> settings)
+public sealed class LimitsService(Func<Settings> settings, LimitHistory? history = null)
 {
+    /// <summary>Every reading kept for the pace chart (<see cref="LimitPacing"/>).</summary>
+    public LimitHistory History { get; } = history ?? new LimitHistory();
+
     /// <summary>The HTTP client this feature uses. Tests give it one that answers from a function, so no request leaves the machine.</summary>
     internal static HttpClient Http { get; set; } = new() { Timeout = TimeSpan.FromSeconds(10) };
     public static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(1);
 
-    private sealed class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running; }
+    private sealed class Entry { public LimitStatus Status = new(LimitState.Off, null, null, null, false); public DateTime Fetched, RetryAfter, CredStamp; public bool Running, LogHistory; }
     private readonly Dictionary<string, Entry> _cache = [];
     private readonly Lock _lock = new();
 
@@ -115,7 +120,15 @@ public sealed class LimitsService(Func<Settings> settings)
         LimitStatus next;
         DateTime retry = default;
         LimitSnapshot? logs = null;
-        try { logs = p.FromLogs(d, projects); }
+        try
+        {
+            logs = p.FromLogs(d, projects);
+            if (!e.LogHistory)
+            {
+                e.LogHistory = true;   // the app's older readings, once a run; new ones come with each refresh
+                History.Add(d.Id, p.HistoryFromLogs(d, projects), DateTime.Now);
+            }
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or FormatException or System.Text.Json.JsonException) { }   // no reading from the log
         try
         {
@@ -176,6 +189,11 @@ public sealed class LimitsService(Func<Settings> settings)
             e.Status = next;
             e.RetryAfter = retry;
         }
+        if (next.State == LimitState.Ok && next.Data is { Windows.Count: > 0 } data)
+        {
+            History.Add(d.Id, new LimitReading(data.FetchedAt, data.Windows), DateTime.Now);
+        }
+
         Updated?.Invoke(d.Id);
     }
 

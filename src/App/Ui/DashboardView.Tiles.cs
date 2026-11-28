@@ -64,8 +64,7 @@ internal static partial class DashboardView
         }
 
         row.Cursor = Hand;
-        row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
-        row.PointerExited += (_, _) => row.Background = Brushes.Transparent;
+        row.Hover();
         row.PointerReleased += (_, _) => open();
         return row;
     }
@@ -88,7 +87,7 @@ internal static partial class DashboardView
         {
             var rows = c.Changes.OrderBy(ch => ch.What).ThenBy(ch => ch.Name, StringComparer.OrdinalIgnoreCase).Take(12).Select(ch => new TableRow(
             [
-                Chip(ch.What, ch.What switch { "Added" => SuccessKey, "Removed" => ErrorKey, _ => WarningKey }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
+                Chip(ch.What, ch.What switch { "Added" => SuccessMark, "Removed" => ErrorMark, _ => WarningMark }), Txt(ch.Kind == "Config" ? "Config file" : ch.Kind, TextSize.Small, false, Muted),
                 Txt(ch.Name, TextSize.Small, true), Txt(x.S.Def(ch.App)?.Name ?? ch.App, TextSize.Small, false, Muted), Txt(ch.Detail ?? "", TextSize.Caption, false, Muted)
             ], ch.What == "Removed" ? null : ch.Kind is "MCP server" or "LSP server" ? () => x.Go("Mcp") : ch.Kind == "Hook" ? () => x.Go("Hooks") : () => { if (x.S.Items.FirstOrDefault(i => i.Path == ch.Path && i.Name == ch.Name) is { } it) { x.Open(it); } }));
             body = new StackPanel
@@ -164,8 +163,12 @@ internal static partial class DashboardView
             {
                 t.FontFeatures = _tabular;
                 t.HorizontalAlignment = HorizontalAlignment.Right;
+                if (long.TryParse(big, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out var n))
+                {
+                    Motion.CountUp(t, "tile:" + title, n);   // counts up the first time, and from the old number when it changed
+                }
             }),
-                new Border { Child = grid }, legend }
+                new Border { Child = Motion.Grow(grid, $"tile:{title}:{string.Join(",", segs.Select(s => s.n))}") }, legend }
         });
         card.Cursor = Hand;
         card.PointerReleased += (_, _) => open();

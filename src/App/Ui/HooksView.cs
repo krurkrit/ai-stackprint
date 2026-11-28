@@ -43,7 +43,7 @@ internal class HooksView(Ctx x)
         });
         _bar.Add("App", _offApps, h => h.Apps, x.AppName, vs => vs.OrderBy(x.AppName, StringComparer.OrdinalIgnoreCase));
         _bar.Add("Level", _offLevels, h => [h.Level], order: vs => Levels.Order.Where(vs.Contains));
-        _bar.Add("Event", _offEvents, h => [h.Event]);
+        _bar.Add("Event", _offEvents, h => [h.EventLabel]);
         _bar.Add("Status", _offStatus, h => [h.Warn ? "Warning" : "OK"], order: vs => vs.OrderByDescending(v => v == "OK"));
         return _bar;
     }
@@ -72,10 +72,10 @@ internal class HooksView(Ctx x)
         var words = _query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var searched = x.S.Hooks.Where(h => words.All(w => Text(h).Contains(w, StringComparison.OrdinalIgnoreCase))).ToList();
         var shown = Bar().Apply(searched, x.S.Hooks)
-            .OrderBy(h => h.Event, StringComparer.OrdinalIgnoreCase).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(h => Levels.Rank(h.Level)).ToList();
+            .OrderBy(h => h.EventLabel, StringComparer.OrdinalIgnoreCase).ThenBy(AppName, StringComparer.OrdinalIgnoreCase).ThenBy(h => Levels.Rank(h.Level)).ToList();
         var rows = shown.Select(h => new TableRow(
         [
-            Txt(h.Event, TextSize.Body, true),
+            Txt(h.EventLabel, TextSize.Body, true),
             h.Apps.Count == 1 ? DetailPanel.AppLink(x, h.Apps[0], h.Apps[0]) : Txt(AppName(h), TextSize.Small),
             Level(h.Level, h.Project != null ? $"{h.Level} · {Ctx.ProjectName(h.Project)}" : h.Level, h.LevelLabel),
             h.Matcher is { Length: > 0 } m && m != "*" ? Mono(m, TextSize.Caption) : Txt("Every", TextSize.Caption, false, Muted),
@@ -89,7 +89,7 @@ internal class HooksView(Ctx x)
             SourceCell.For(x, h.Plugin, h.Apps.FirstOrDefault() ?? "", h.File),
             IconBtn("open", "Open file", () => PathUtil.OpenFile(h.File))
         ]));
-        _table.Content = TableSurface(Table.Build([Cols.Name("Event") with { Help = HeaderHelp.HookEvents },Cols.App(), Cols.Level(), Cols.Type("Matcher"),
+        _table.Content = TableSurface(Table.Build([Cols.Name("Event") with { HelpOpen = () => _ = Dialogs.HookEvents(x.Owner, x.S.Hooks) },Cols.App(), Cols.Level(), Cols.Type("Matcher"),
             new Col("Runs", "2.4*"), new Col("Note", "1.5*"), new Col("Source", "2*"), Cols.Action()], rows,
             x.S.Hooks.Count == 0 ? "No hooks in the apps' settings or hook files or plugins." : "Nothing matches. Clear the search or filters."));
     }

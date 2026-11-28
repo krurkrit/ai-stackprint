@@ -20,8 +20,8 @@ public static class AiFolders
         var uses = new Dictionary<string, SortedSet<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var d in defs)
         {
-            var paths = d.ProjectRoots.Select(r => r.Path).Concat(d.Configs.Where(c => Scanner.InProject(c.Level)).Select(c => c.Path))
-                .Concat(d.Parts.Where(p => Scanner.InProject(p.Level)).Select(p => p.Path)).Concat(d.Plugins.Where(p => Scanner.InProject(p.Level)).Select(p => p.Path));
+            var paths = d.Skills.Where(r => Scanner.InProject(r.Level)).Select(r => r.Path).Concat(d.Configs.Where(c => Scanner.InProject(c.Level)).Select(c => c.Path))
+                .Concat(Scanner.Parts(d).Where(p => Scanner.InProject(p.Source.Level)).Select(p => p.Source.Path)).Concat(d.Plugins.Where(p => Scanner.InProject(p.Level)).Select(p => p.Path));
             foreach (var p in paths)
             {
                 var slash = p.IndexOf('/');

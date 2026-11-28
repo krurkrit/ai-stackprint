@@ -132,10 +132,15 @@ internal static partial class LimitsView
             {
                 sp.Children.Add(Txt(s.Note, TextSize.Caption, false, Muted));
             }
+
+            if (!compact && Pace(x, d, s) is { } pace)
+            {
+                sp.Children.Add(pace);
+            }
         }
         if (st.Message != null && st.State != LimitState.Ok)
         {
-            sp.Children.Add(Row(Icon(st.State is LimitState.Off ? "info" : "warning", IconSize.S).Themed(TextElement.ForegroundProperty, st.State is LimitState.Off ? Muted : WarningKey), Txt(st.Message, TextSize.Caption, false, Muted)));
+            sp.Children.Add(Row(Icon(st.State is LimitState.Off ? "info" : "warning", IconSize.S).Themed(TextElement.ForegroundProperty, st.State is LimitState.Off ? Muted : WarningMark), Txt(st.Message, TextSize.Caption, false, Muted)));
         }
 
         if (x.Limits.Fetched(d.Id) is { } at)
@@ -157,7 +162,7 @@ internal static partial class LimitsView
             Height = compact ? 6 : 8,
             ColumnDefinitions = new ColumnDefinitions($"{Math.Max(pct, 0.01)}*,{Math.Max(100 - pct, 0.01)}*")
         };
-        bar.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent));
+        bar.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorMark : pct >= 75 ? WarningMark : Accent));
         bar.Children.Add(new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle).With(b => Grid.SetColumn(b, 1)));
         var text = $"{w.UsedPercent:0.#}% used" + (w.ResetsAt is { } r ? $" · resets {Reset(r)}" : "");
         if (prev?.Windows.FirstOrDefault(p => p.Name == w.Name) is { } before && LimitsService.FullAt(before, prev.FetchedAt, w, now.FetchedAt) is { } full)

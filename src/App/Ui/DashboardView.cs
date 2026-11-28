@@ -47,7 +47,7 @@ internal static partial class DashboardView
             Tile("puzzle_piece", "Plugins", Count(x, "Plugin").ToString("N0"), () => x.Go("Plugin"), ByLevel(x, "Plugin")),
             Tile("sparkle", "Skills", Count(x, "Skill").ToString("N0"), () => x.Go("Skill"), ByInvoked(x)),
             Tile("server", "Servers", s.Mcp.Count.ToString("N0"), () => x.Go("Mcp"), [.. Levels.Order.Select(l => (l, s.Mcp.Count(m => m.Level == l), LevelKey(l)))]),
-            s.HealthReady ? Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningKey), ("Guidelines", all.Count - warn, ChartRead)) : HealthPending(x)
+            s.HealthReady ? Tile("heart_pulse", "Health", warn.ToString("N0"), () => x.Go("Health"), ("Warnings", warn, WarningMark), ("Guidelines", all.Count - warn, ChartKey(1))) : HealthPending(x)
         };
         var radar = Categories(apps, () => x.Go("Apps"));
         Grid.SetRowSpan(radar, 2);
@@ -91,6 +91,7 @@ internal static partial class DashboardView
         }
 
         var inst = cats.Sum(g => g.Count());
+        // Each category keeps its own color (its slot), whatever the others: largest first, like the legend reads
         var pie = new PieChart("categories", [.. cats.Select(g => ((double)g.Count(), CategoryKey(g.Key), $"{AppsView.Cap(g.Key)}: {g.Count()}"))], inst, inst == 1 ? "app" : "apps");
         var legend = new StackPanel
         {
@@ -109,7 +110,7 @@ internal static partial class DashboardView
             };
             row.PointerEntered += (_, _) => pie.Highlight(key);   // the legend row points at its slice
             row.PointerExited += (_, _) => pie.Highlight(null);
-            row.Children.Add(Dot(CategoryKey(g.Key)));
+            row.Children.Add(Dot(key));
             row.Children.Add(Txt(AppsView.Cap(g.Key), TextSize.Small, true).With(t => Grid.SetColumn(t, 1)));
             row.Children.Add(Txt(n.ToString("N0"), TextSize.Small, false, Muted).With(t => Grid.SetColumn(t, 2)));
             legend.Children.Add(row);
@@ -146,7 +147,7 @@ internal static partial class DashboardView
     private static (string, int, string)[] ByInvoked(Ctx x)
     {
         var skills = x.S.Items.Where(i => i.Kind == "Skill").ToList();
-        return [.. new[] { ("Agent only", ChartIn), ("User only", ChartOut), ("Agent and User", ChartRead) }.Select(t => (t.Item1, skills.Count(i => SkillMatch.Label(i) == t.Item1), t.Item2))];
+        return [.. new[] { ("Agent only", ChartKey(1)), ("User only", ChartKey(2)), ("Agent and User", ChartKey(3)) }.Select(t => (t.Item1, skills.Count(i => SkillMatch.Label(i) == t.Item1), t.Item2))];
     }
 
     /// <summary>One bar per app, stacked by level (highest first); click opens the list for that app.</summary>
@@ -195,11 +196,11 @@ internal static partial class DashboardView
         var sp = new StackPanel { Spacing = Space.M };
         foreach (var (name, skills, plugins, other) in top)
         {
-            sp.Children.Add(Bar(Txt(name, TextSize.Small, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(skills, ChartIn), (plugins, ChartOut)], skills + plugins, max,
+            sp.Children.Add(Bar(Txt(name, TextSize.Small, true).With(b => b.TextTrimming = TextTrimming.CharacterEllipsis), [(skills, ChartKey(1)), (plugins, ChartKey(2))], skills + plugins, max,
                 other ? null : () => x.Browse(skills >= plugins ? "Skill" : "Plugin", null, $"author:\"{name}\""), $"{name}\nSkills: {skills}\nPlugins: {plugins}"));
         }
 
-        sp.Children.Add(Row(DotText("Skills", ChartIn), DotText("Plugins", ChartOut)).With(r => r.Margin = new Thickness(0, Space.XS, 0, 0)));
+        sp.Children.Add(Row(DotText("Skills", ChartKey(1)), DotText("Plugins", ChartKey(2))).With(r => r.Margin = new Thickness(0, Space.XS, 0, 0)));
         return sp;
     }
 }

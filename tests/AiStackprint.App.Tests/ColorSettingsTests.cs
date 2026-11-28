@@ -4,6 +4,7 @@
 using AiStackprint.Services;
 using AiStackprint.Ui;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -25,6 +26,22 @@ public sealed class ColorSettingsTests
         Assert.NotEmpty(boxes);
         Assert.All(boxes, b => Assert.Matches("^#[0-9A-F]{6}$", b.Text ?? ""));
         Assert.Equal(0, saved);   // showing the default writes nothing
+        Assert.All(boxes, b => Assert.Equal("Pick a color", ToolTip.GetTip(Assert.IsType<Button>(b.InnerLeftContent))));   // [■ #RRGGBB]: the swatch is inside the box
+    }
+
+    [AvaloniaFact]
+    public void A_swatch_keeps_its_color_under_the_pointer()
+    {
+        var window = Ui.Show(ColorSettings.Build(SettingsStore.Defaults(), change => change()));
+        var swatch = window.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Pick a color");
+        var color = Assert.IsType<Avalonia.Media.SolidColorBrush>(swatch.Background).Color;
+        Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        var at = swatch.TranslatePoint(new Avalonia.Point(swatch.Bounds.Width / 2, swatch.Bounds.Height / 2), window) ?? default;
+        Avalonia.Headless.HeadlessWindowExtensions.MouseMove(window, at);
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Assert.True(swatch.IsPointerOver);
+        var fill = swatch.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>().First(p => p.Name == "PART_ContentPresenter");
+        Assert.Equal(color, Assert.IsType<Avalonia.Media.SolidColorBrush>(fill.Background).Color);   // not the hover gray
     }
 
     [AvaloniaFact]
@@ -43,4 +60,17 @@ public sealed class ColorSettingsTests
         Assert.Equal(0, saved);
     }
 
+    [AvaloniaFact]
+    public void Opacity_shows_as_a_percent_and_reads_typed_text_with_or_without_the_percent()
+    {
+        var window = Ui.Show(ColorSettings.Build(SettingsStore.Defaults(), change => change()));
+        var opacity = window.GetVisualDescendants().OfType<NumericUpDown>().First(n => n.IsEffectivelyVisible);
+        var text = opacity.GetVisualDescendants().OfType<TextBox>().First();
+
+        Assert.Matches("^[0-9]{1,3}%$", text.Text ?? "");   // not empty
+        Assert.Equal(opacity.Value + "%", text.Text);
+        Assert.Equal("60%", opacity.TextConverter!.ConvertBack(60m, typeof(string), null, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(40m, opacity.TextConverter.Convert("40%", typeof(decimal?), null, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(40m, opacity.TextConverter.Convert(" 40 ", typeof(decimal?), null, System.Globalization.CultureInfo.InvariantCulture));
+    }
 }

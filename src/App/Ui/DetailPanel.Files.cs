@@ -15,14 +15,22 @@ internal partial class DetailPanel
 {
     private DockPanel Content()
     {
-        var tabs = Pills([("Content", "Content"), ("Files", "Files")], _tab, v =>
+        // Tabs, as on the Models page; they hold no content (the panel below is rebuilt for the chosen one), so only the tab strip shows
+        var tabs = new TabControl
         {
-            _tab = v;
-            Render();
-        });
+            ItemsSource = new[] { new TabItem { Header = "Content" }, new TabItem { Header = "Files" } },
+            SelectedIndex = _tab == "Files" ? 1 : 0
+        };
+        tabs.SelectionChanged += (_, e) =>
+        {
+            var v = tabs.SelectedIndex == 1 ? "Files" : "Content";
+            if (e.Source == tabs && v != _tab)
+            {
+                _tab = v;
+                Render();
+            }
+        };
         var bar = new DockPanel { Margin = new Thickness(0, 0, 0, Space.L) };
-        DockPanel.SetDock(tabs, Dock.Right);
-        bar.Children.Add(tabs);
         var crumbs = new List<Control>();
         if (_back.Count > 0 && _tab == "Content")
         {
@@ -62,6 +70,8 @@ internal partial class DetailPanel
         }
 
         var dock = new DockPanel();
+        DockPanel.SetDock(tabs, Dock.Top);
+        dock.Children.Add(tabs);
         DockPanel.SetDock(bar, Dock.Top);
         dock.Children.Add(bar);
         dock.Children.Add(scrolls ? new ScrollViewer

@@ -151,4 +151,29 @@ public sealed class SettingsFlowsTests : IDisposable
         Assert.DoesNotContain("Back to app", Ui.Texts(w));
         w.Close();
     }
+
+    [AvaloniaFact]
+    public void A_number_steps_with_minus_and_plus_and_the_page_stays_where_it_was_scrolled()
+    {
+        var w = new MainWindow { Height = 600 };
+        w.Show();
+        Settle(w);
+        Press(w, "Settings");
+        ScrollViewer Page() => w.GetVisualDescendants().OfType<ScrollViewer>().Where(v => v.IsEffectivelyVisible).MaxBy(v => v.Extent.Height)!;
+        Assert.True(Page().Extent.Height > Page().Viewport.Height + 300);
+        Page().Offset = new Avalonia.Vector(0, 300);
+        Dispatcher.UIThread.RunJobs();
+
+        var size = w.GetVisualDescendants().OfType<NumericUpDown>().First(n => n.IsEnabled);
+        var before = size.Value;
+        Ui.Click(size.GetVisualDescendants().OfType<Button>().Single(b => ToolTip.GetTip(b) as string == "Increase"));   // a change rebuilds the page
+        Settle(w);
+        Assert.Equal(300, Page().Offset.Y);   // not back at the top
+        var again = w.GetVisualDescendants().OfType<NumericUpDown>().First(n => n.IsEnabled);
+        Assert.Equal(before + again.Increment, again.Value);
+        Ui.Click(again.GetVisualDescendants().OfType<Button>().Single(b => ToolTip.GetTip(b) as string == "Decrease"));
+        Settle(w);
+        Assert.Equal(before, w.GetVisualDescendants().OfType<NumericUpDown>().First(n => n.IsEnabled).Value);
+        w.Close();
+    }
 }

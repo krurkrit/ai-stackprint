@@ -44,7 +44,7 @@ internal sealed class AgentGraphCell : Control
 
     private IBrush Brush(string key) => this.TryFindResource(key, ActualThemeVariant, out var b) && b is IBrush brush ? brush : Brushes.Gray;
 
-    private static string AgentKey(int agent) => W.CategoryKey(Ui.Theme.Categories[(agent - 1) % Ui.Theme.Categories.Length]);
+    private static string AgentKey(int agent) => W.AgentKey(agent);
 
     public override void Render(DrawingContext context)
     {
@@ -75,7 +75,7 @@ internal sealed class AgentGraphCell : Control
 
         var owner = _row.Owner;
         // few colors: gray for most steps, blue for you, red for an error, a sub-agent's own color on its branch; a bookmarked step has a ring in the accent
-        var fill = _kind == "error" ? Brush(W.ErrorKey) : owner.Agent > 0 ? Brush(AgentKey(owner.Agent)) : Brush(_kind == "user" ? W.Accent : W.Muted);
+        var fill = _kind == "error" ? Brush(W.ErrorMark) : owner.Agent > 0 ? Brush(AgentKey(owner.Agent)) : Brush(_kind == "user" ? W.Accent : W.Muted);
         var r = _kind == "error" || owner.Agent == 0 && _kind == "user" ? Sizes.GraphNode + 1 : Sizes.GraphNode;   // you and errors: one larger; every other step the same
         var pos = new Point(X(owner.Lane), y);
         if (_marked())

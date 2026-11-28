@@ -99,7 +99,7 @@ internal static partial class UpdateView
         catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException or OperationCanceledException)
         {
             var why = e is OperationCanceledException ? "GitHub did not answer in time." : e.Message;
-            result.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey),
+            result.Content = Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark),
                 Txt("Could not check: " + why, TextSize.Small, false, Muted), Btn("Retry", () => CheckNow(x, result), false, "arrow_sync"));
         }
     }

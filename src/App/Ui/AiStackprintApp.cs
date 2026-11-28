@@ -13,6 +13,7 @@ public class AiStackprintApp : Application
         Styles.Add(Theme.Fluent());   // Fluent controls with the app's palette; variant follows the OS (ThemeVariant.Default)
         Styles.Add(Theme.Controls());   // Fluent 2 control templates; our accent and palette stay
         Styles.Add(CodeView.EditorStyles());
+        Motion.Install();   // pop-ups fade and slide in
         Theme.Appearance(this, Services.SettingsStore.Defaults());   // defaults until MainWindow loads settings.json
     }
 
@@ -20,6 +21,7 @@ public class AiStackprintApp : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d)
         {
+            Motion.Disabled = d.Args?.Contains("--no-animations") == true;   // with --perf: measure without motion, to compare with a run that has it
             d.MainWindow = new MainWindow { PerfRun = d.Args?.Contains("--perf") == true };   // --perf: measure every page, log it and close
         }
 

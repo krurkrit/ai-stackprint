@@ -84,7 +84,7 @@ internal static partial class Dialogs
                     state.Text = "→ " + p;
                 }
             }, false, "folder_open");
-            body.Children.Add(Line("warning", WarningKey, Txt($"Project not found here: {missing}", TextSize.Small), locate, state));
+            body.Children.Add(Line("warning", WarningMark, Txt($"Project not found here: {missing}", TextSize.Small), locate, state));
         }
 
         foreach (var n in plan.Notes)

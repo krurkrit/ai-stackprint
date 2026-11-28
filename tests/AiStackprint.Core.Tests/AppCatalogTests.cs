@@ -70,6 +70,39 @@ public sealed class AppCatalogTests : IDisposable
     }
 
     [Fact]
+    public void Apps_saved_with_the_old_field_names_keep_their_skills_commands_and_agents()
+    {
+        System.IO.File.WriteAllText(File, """
+            {"version": 1, "apps": [{"id": "custom.old", "name": "Old", "detect": ["~/.old"],
+              "roots": [{"path": "~/.old/skills", "level": "User"}],
+              "projectRoots": [{"path": ".old/skills"}, {"path": ".old/local", "level": "Local"}],
+              "parts": [{"path": ".old/commands", "level": "Project"}, {"path": "~/.old/agents", "kind": "agent"}]}]}
+            """);
+        var d = Assert.Single(AppCatalog.Read(File).Defs, d => d.Id == "custom.old");
+        Assert.Equal(["~/.old/skills:User", ".old/skills:Project", ".old/local:Local"], d.Skills.Select(s => s.Path + ":" + s.Level));
+        Assert.Equal(".old/commands", Assert.Single(d.Commands).Path);
+        Assert.Equal("~/.old/agents", Assert.Single(d.Agents).Path);
+
+        AppCatalog.SaveUser(App("other", "Other"), File);   // written again: with the new names only
+        var saved = System.IO.File.ReadAllText(File);
+        Assert.Contains("\"skills\"", saved, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"roots\"", saved, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"parts\"", saved, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Built_in_apps_use_only_the_current_field_names()
+    {
+        using var s = typeof(AppCatalog).Assembly.GetManifestResourceStream("default/apps.json")!;
+        var apps = JsonNode.Parse(s, documentOptions: new() { CommentHandling = System.Text.Json.JsonCommentHandling.Skip })!["apps"]!.AsArray();
+        Assert.All(apps.OfType<JsonObject>(), a =>
+        {
+            Assert.False(a.ContainsKey("roots") || a.ContainsKey("projectRoots") || a.ContainsKey("parts"), $"{a["id"]}: use skills, commands and agents");
+            Assert.All(new[] { "commands", "agents" }.SelectMany(k => a[k]?.AsArray() ?? []), p => Assert.Null(p!["kind"]));
+        });
+    }
+
+    [Fact]
     public void Saving_the_same_app_again_replaces_it()
     {
         AppCatalog.SaveUser(App("x", "X one"), File);

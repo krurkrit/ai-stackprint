@@ -17,6 +17,10 @@ public static partial class Scanner
     /// <summary>Levels whose paths are relative to a project folder.</summary>
     public static bool InProject(string level) => level is "Project" or "Local";
 
+    /// <summary>The app's command and agent folders, each with the kind of item it holds ("Command" or "Agent").</summary>
+    public static IEnumerable<(PartSource Source, string Kind)> Parts(AppDefinition d) =>
+        d.Commands.Select(s => (s, "Command")).Concat(d.Agents.Select(s => (s, "Agent")));
+
     public static ScanResult Collect(IEnumerable<AppDefinition> defs, IEnumerable<string> projects)
     {
         var projectList = projects.ToList();
@@ -36,7 +40,7 @@ public static partial class Scanner
         }
 
         // Bundled roots first, so a skill found again by a broader root keeps its bundled flag after de-duplication
-        foreach (var r in d.Roots.Where(r => PathUtil.OsMatches(r.Os)).OrderByDescending(r => r.Bundled))
+        foreach (var r in d.Skills.Where(r => !InProject(r.Level) && PathUtil.OsMatches(r.Os)).OrderByDescending(r => r.Bundled))
         {
             Tagged(rows, () => ReadRoot(PathUtil.Expand(r.Path), r, d.Name, rows), i => i with
             {
@@ -61,14 +65,14 @@ public static partial class Scanner
             AddConfig(rows, d, c, PathUtil.Expand(c.Path), null);
         }
 
-        foreach (var s in d.Parts.Where(s => !InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+        foreach (var (s, kind) in Parts(d).Where(s => !InProject(s.Source.Level) && PathUtil.OsMatches(s.Source.Os)))
         {
-            Tagged(rows, () => ReadParts(PathUtil.Expand(s.Path), s, d.Name, rows), i => i with { App = d.Id });
+            Tagged(rows, () => ReadParts(PathUtil.Expand(s.Path), s, kind, d.Name, rows), i => i with { App = d.Id });
         }
 
         foreach (var p in projectList)
         {
-            foreach (var r in d.ProjectRoots.Where(r => PathUtil.OsMatches(r.Os)))
+            foreach (var r in d.Skills.Where(r => InProject(r.Level) && PathUtil.OsMatches(r.Os)))
             {
                 foreach (var path in Candidates(p, r.Path, r.Nested))
                 {
@@ -94,9 +98,9 @@ public static partial class Scanner
                 }
             }
 
-            foreach (var s in d.Parts.Where(s => InProject(s.Level) && PathUtil.OsMatches(s.Os)))
+            foreach (var (s, kind) in Parts(d).Where(s => InProject(s.Source.Level) && PathUtil.OsMatches(s.Source.Os)))
             {
-                Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, d.Name, rows), i => i with
+                Tagged(rows, () => ReadParts(Path.Combine(p, s.Path.Replace('/', Path.DirectorySeparatorChar)), s, kind, d.Name, rows), i => i with
                 {
                     App = d.Id,
                     Project = p

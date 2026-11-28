@@ -26,7 +26,7 @@ public sealed class ScannerPartsTests : IDisposable
         Write("c/review.md", "---\ndescription: Review <b>code</b>\n---\nbody");
         Write("c/team/ship.md", "no front matter");
         var rows = new List<Item>();
-        Scanner.ReadParts(Path.Combine(_tmp, "c"), new PartSource(), "App", rows);
+        Scanner.ReadParts(Path.Combine(_tmp, "c"), new PartSource(), "Command", "App", rows);
         var by = rows.ToDictionary(r => r.Name);
         Assert.Equal(["review", "team:ship"], by.Keys.Order());
         Assert.All(rows, r => Assert.Equal("Command", r.Kind));
@@ -39,8 +39,8 @@ public sealed class ScannerPartsTests : IDisposable
         Write("g/fix.toml", "description = \"Fix it\"\nprompt = \"x\"\n");
         Write("p/a.prompt.md", "---\ndescription: A\n---\n");
         var rows = new List<Item>();
-        Scanner.ReadParts(Path.Combine(_tmp, "g"), new PartSource { Pattern = "*.toml" }, "App", rows);
-        Scanner.ReadParts(Path.Combine(_tmp, "p"), new PartSource { Pattern = "*.prompt.md" }, "App", rows);
+        Scanner.ReadParts(Path.Combine(_tmp, "g"), new PartSource { Pattern = "*.toml" }, "Command", "App", rows);
+        Scanner.ReadParts(Path.Combine(_tmp, "p"), new PartSource { Pattern = "*.prompt.md" }, "Command", "App", rows);
         Assert.Equal("Fix it", rows.Single(r => r.Name == "fix").Description);
         Assert.Contains(rows, r => r.Name == "a");
     }
@@ -53,11 +53,10 @@ public sealed class ScannerPartsTests : IDisposable
         {
             Id = "app",
             Name = "App",
-            Parts = { new PartSource
+            Agents = { new PartSource
             {
                 Path = ".app/agents",
-                Level = "Project",
-                Kind = "agent"
+                Level = "Project"
             } }
         };
         var repo = Path.Combine(_tmp, "repo");
@@ -71,7 +70,7 @@ public sealed class ScannerPartsTests : IDisposable
     public void Missing_folders_give_nothing()
     {
         var rows = new List<Item>();
-        Scanner.ReadParts(Path.Combine(_tmp, "none"), new PartSource(), "App", rows);
+        Scanner.ReadParts(Path.Combine(_tmp, "none"), new PartSource(), "Command", "App", rows);
         Assert.Empty(rows);
     }
 }

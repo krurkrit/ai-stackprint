@@ -98,7 +98,7 @@ internal static class BenchmarksSection
                     var r = await Fetch(x);
                     result.Content = r.Ok
                         ? Txt(r.Message, TextSize.Small, false, Muted)
-                        : Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt(r.Message, TextSize.Small, false, Muted));
+                        : Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark), Txt(r.Message, TextSize.Small, false, Muted));
                 }, false, "arrow_sync"), result),
                 Txt(last, TextSize.Small, false, Muted)
             }

@@ -53,7 +53,7 @@ internal partial class DetailPanel
         {
             if (Has(key))
             {
-                parts.Children.Add(Chip(label, WarningKey).With(c => ToolTip.SetTip(c, tip)));
+                parts.Children.Add(Chip(label, WarningMark).With(c => ToolTip.SetTip(c, tip)));
             }
         }
 
@@ -79,7 +79,7 @@ internal partial class DetailPanel
                 ColumnSpacing = Space.M,
                 Children =
             {
-                Icon(x.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, x.Warning ? WarningKey : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
+                Icon(x.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, x.Warning ? WarningMark : Muted).With(i => i.VerticalAlignment = VerticalAlignment.Top),
                 Txt(x.Text, TextSize.Small).With(t => Grid.SetColumn(t, 1))
             }
             });

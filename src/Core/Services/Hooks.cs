@@ -28,6 +28,8 @@ public sealed record Hook(string Event, string? Matcher, string What, string Typ
     public bool Warn { get; init; }
     /// <summary>SHA-256 of its definition as written: a change means the command or its matcher changed. The text itself is not kept.</summary>
     public string Fingerprint { get; init; } = "";
+    /// <summary>The event as shown and filtered: first letter capital, so "stop" and "Stop" (apps differ) are one event.</summary>
+    public string EventLabel => Event.Length == 0 ? Event : char.ToUpperInvariant(Event[0]) + Event[1..];
     public string Name => Matcher is { Length: > 0 } m && m != "*" ? $"{Event} · {m}" : Event;
 }
 

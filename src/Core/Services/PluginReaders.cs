@@ -76,7 +76,7 @@ internal class ClaudePluginReader : IPluginReader
                     });
                     if (dir != "")
                     {
-                        Scanner.Tagged(rows, () => Scanner.ReadRoot(dir, new ScanRoot
+                        Scanner.Tagged(rows, () => Scanner.ReadRoot(dir, new SkillSource
                         {
                             Level = level,
                             Depth = 6

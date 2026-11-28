@@ -49,7 +49,7 @@ internal partial class MainWindow
             Spacing = Space.XXS,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(mac ? MacButtons - Space.M : 0, 0, 0, 0),   // macOS draws its window buttons on the left (the bar's own padding is the rest)
-            Children = { menu, Txt("AI Stackprint", TextSize.Body).With(t =>
+            Children = { menu, Txt("AI Stackprint", TextSize.Body, true).With(t =>
             {
                 t.VerticalAlignment = VerticalAlignment.Center;
                 t.Margin = new Thickness(Space.S, 0, Space.L, 0);
@@ -160,6 +160,7 @@ internal partial class MainWindow
             if (on)
             {
                 b.Themed(BackgroundProperty, Selected).Themed(ForegroundProperty, Accent);
+                Motion.Glide(b, "theme", mode);
             }
 
             Avalonia.Automation.AutomationProperties.SetName(b, tip + (on ? " (on)" : ""));

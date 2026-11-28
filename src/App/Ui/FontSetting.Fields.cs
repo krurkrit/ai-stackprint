@@ -29,7 +29,7 @@ internal sealed partial class FontSetting
         var span = Math.Max(l.Max!.Value - l.Min!.Value, step);
         var adjust = mode == FontMode.Adjust;
         var shown = adjust ? _set.Number(_key, FontProp.Size) ?? 0 : _set.Resolve(_key).Size;
-        var box = Number(adjust ? -span : l.Min.Value, adjust ? span : l.Max.Value, step, shown, adjust ? "+0.##;-0.##;0" : "0.##", Widths.FontSize);
+        var box = Number(adjust ? -span : l.Min.Value, adjust ? span : l.Max.Value, step, shown, adjust ? "+0.##;-0.##;0" : "0.##", adjust ? "+00" : "00");
         box.IsEnabled = mode != FontMode.Link;
         Tip(box, FontProp.Size);
         Commit(box, v =>
@@ -51,7 +51,7 @@ internal sealed partial class FontSetting
             var all = _set.Weights(_key);
             var span = Math.Max(all[^1] - all[0], 100);
             var step = l.Step is > 0 ? l.Step.Value : 100;
-            var box = Number(-span, span, step, _set.Number(_key, FontProp.Weight) ?? 0, "+0;-0;0", Widths.FontWeight);
+            var box = Number(-span, span, step, _set.Number(_key, FontProp.Weight) ?? 0, "+0;-0;0", "+000");
             Tip(box, FontProp.Weight);
             Commit(box, v =>
             {
@@ -82,17 +82,14 @@ internal sealed partial class FontSetting
         return combo;
     }
 
-    private static NumericUpDown Number(double min, double max, double step, double value, string format, double width) => new()
+    private static NumericUpDown Number(double min, double max, double step, double value, string format, string widest) => W.Stepper(new()
     {
         Minimum = (decimal)min,
         Maximum = (decimal)max,
         Increment = (decimal)step,
         FormatString = format,
         Value = (decimal)Math.Clamp(value, min, max),
-        Width = width,
-        ShowButtonSpinner = false,   // the box is too narrow for the arrows; the keyboard arrows and typing work
-        MinWidth = 0
-    };
+    }, widest);
 
     /// <summary>Takes the typed number when the value changes and puts back what the rules made of it (clamped and snapped).</summary>
     private static void Commit(NumericUpDown box, Func<double, double> apply)

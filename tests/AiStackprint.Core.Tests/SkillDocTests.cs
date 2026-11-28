@@ -121,7 +121,7 @@ public sealed class SkillDocTests : IDisposable
         Write("skills/one/SKILL.md", "---\nname: one\ndescription: d\nmetadata:\n  author: meta-author\n---\n");
         Write("skills/two/SKILL.md", "---\nname: two\nauthor: top\n\n---\n");
         var rows = new List<Item>();
-        Scanner.ReadRoot(Path.Combine(_tmp, "skills"), new ScanRoot(), "App", rows);
+        Scanner.ReadRoot(Path.Combine(_tmp, "skills"), new SkillSource(), "App", rows);
         Assert.Equal("meta-author", rows.Single(r => r.Name == "one").Author);
         Assert.Equal("top", rows.Single(r => r.Name == "two").Author);
     }

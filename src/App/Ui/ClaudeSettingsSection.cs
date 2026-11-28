@@ -32,7 +32,7 @@ internal class ClaudeSettingsSection(Ctx x)
 
         var rules = _info.Rules.Select(r => new TableRow(
         [
-            Mono(r.Rule, TextSize.Small), Txt(r.Level, TextSize.Small), Chip(r.Effect, r.Effect == "deny" ? ErrorKey : r.Effect == "ask" ? WarningKey : Accent),
+            Mono(r.Rule, TextSize.Small), Txt(r.Level, TextSize.Small), Chip(r.Effect, r.Effect == "deny" ? ErrorMark : r.Effect == "ask" ? WarningMark : Accent),
             Txt(r.Note ?? "", TextSize.Caption, false, r.Note?.StartsWith("Never", StringComparison.Ordinal) == true ? WarningKey : Muted), IconBtn("open", "Open file", () => PathUtil.OpenFile(r.File))
         ]));
         var settings = _info.Settings.Select(s => new TableRow(

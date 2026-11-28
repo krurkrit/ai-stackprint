@@ -106,9 +106,9 @@ internal static class Widths
     internal const double DialogS = 380;
     internal const double DialogM = 520;
     internal const double DialogL = 640;
+    internal const double DialogXL = 760;   // a diagram that must show whole (the hook events)
     internal const double FontParent = 128;  // font setting control: parent drop-down (with its chain icon)
     internal const double FontFamily = 156; // family drop-down
-    internal const double FontSize = 68;     // size number
     internal const double FontWeight = 160;  // weight drop-down, "Normal (400)"
     internal const double Field = 220;       // a drop-down or text box in a settings row
     internal const double FieldM = 160;      // a drop-down in a filter row
@@ -126,21 +126,32 @@ internal static class Widths
     internal const double TitleSearch = 280; // the search box in the middle of the title bar
     internal const double Text = 460;        // longest line of a message
     internal const double ColApp = 150;      // table columns that hold the same kind of value are the same width on every page (see Cols)
-    internal const double ColLevel = 110;
+    internal const double ColLevel = 64;     // "Project" (the longest level) and the header's ⓘ
     internal const double ColType = 120;
     internal const double ColVersion = 100;
     internal const double ColStatus = 92;    // "Installed" in its pill / "Not found"
     internal const double ColCount = 80;
-    internal const double ColAction = 40;    // one icon button
-    internal const double ColActions = 112;  // three icon buttons
+    internal const double ColAction = 32;    // one icon button (16 icon + 2 × 8 padding), right-aligned: the row's right padding equals its left
+    internal const double ColActions = 96;   // three icon buttons, no gap
 }
 
 /// <summary>Heights of scrolling viewers (code, text, lists).</summary>
 internal static class Heights
 {
     internal const double LogRow = 30;       // one line of a conversation (and where the graph's dot sits)
+    internal const double Chart = 240;       // a line chart inside a card (the limit pace chart)
     internal const double List = 260;        // a short list inside a card
     internal const double ViewerS = 320;     // command output, small editors
     internal const double Viewer = 420;      // code and text viewers inside a card
     internal const double ViewerL = 520;     // the log viewer, the command palette, images
+}
+
+/// <summary>How long a motion takes, in milliseconds (the Fluent UI 2 durations). Enter with an ease-out, leave with an ease-in, move with an ease in-out (<see cref="Motion"/>).</summary>
+internal static class Duration
+{
+    internal const int Faster = 100;   // hover, press; a pop-up closing
+    internal const int Fast = 150;     // pop-ups, menus and drop-downs opening; the command palette; a dialog or toast closing
+    internal const int Normal = 200;   // dialogs, toasts and the detail panel opening
+    internal const int Gentle = 250;   // larger moves
+    internal const int Slow = 400;     // charts growing
 }

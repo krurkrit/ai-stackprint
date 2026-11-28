@@ -86,13 +86,19 @@ public sealed class FilterBarTests
         var help = w.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "How the search works");
         help.Flyout!.ShowAt(help);
         Dispatcher.UIThread.RunJobs();
-        var texts = Ui.Texts(((Flyout)help.Flyout).Content as Visual ?? help);
+        var card = (Border)((Flyout)help.Flyout).Content!;
+        var texts = Ui.Texts(card);
+        Assert.Equal("Search", texts[0]);   // a dialog's title row
         Assert.Contains("author:\"Lauren\"", texts);
         Assert.Contains(texts, t => t.StartsWith("Every word you type must match", StringComparison.Ordinal));
-        var presenter = ((Visual)((Flyout)help.Flyout).Content!).GetVisualAncestors().OfType<FlyoutPresenter>().First();
-        help.TryFindResource(W.SelectedSolid, help.ActualThemeVariant, out var selected);
-        Assert.Equal(selected, presenter.Background);   // the selected theme button's color
-        help.Flyout.Hide();
+        var presenter = card.GetVisualAncestors().OfType<FlyoutPresenter>().First();
+        Assert.Equal(Avalonia.Media.Brushes.Transparent, presenter.Background);   // only the card shows
+        help.TryFindResource(W.Surface, help.ActualThemeVariant, out var surface);
+        Assert.Equal(surface, card.Background);   // the dialog card: surface, border, shadow
+        Assert.Equal(Theme.DialogShadow(help.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark), card.BoxShadow);
+        Ui.Click(card.GetVisualDescendants().OfType<Button>().First(b => ToolTip.GetTip(b) as string == "Close"));
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(help.Flyout.IsOpen);
     }
 
     [AvaloniaFact]

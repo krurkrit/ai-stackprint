@@ -26,8 +26,8 @@ public record AppInfo(string Id, string Name, string Category, string? Logo, boo
 
 public record ScanResult(List<Item> Items, List<AppInfo> Apps);
 
-/// <summary>A folder to scan. Layout: "skill-folders" (…/name/SKILL.md) or "flat-md" (*.md files).</summary>
-public class ScanRoot
+/// <summary>A skills folder. Layout: "skill-folders" (…/name/SKILL.md) or "flat-md" (*.md files). Project and Local paths are relative to a project folder.</summary>
+public class SkillSource
 {
     public string Path { get; set; } = "";
     public string Level { get; set; } = "User";      // Project | Local | User | System
@@ -35,7 +35,7 @@ public class ScanRoot
     public int Depth { get; set; } = 4;
     public string? Os { get; set; }                  // windows | macos | linux; null = all
     public string? Label { get; set; }               // the app's own word for this level
-    public bool Nested { get; set; }                 // Project roots: also look in sub-folders (monorepos)
+    public bool Nested { get; set; }                 // Project folders: also look in sub-folders (monorepos)
     public bool Bundled { get; set; }                // skills here ship with the app; read-only
 }
 
@@ -51,12 +51,14 @@ public class ConfigFile
     public bool AppWritten { get; set; }               // the app rewrites it on its own (state, counters): edits are not listed as changes
 }
 
-/// <summary>A folder of command or agent files (one file each: .claude/commands, .github/prompts, .gemini/commands …). Project paths are relative to a project folder.</summary>
+/// <summary>
+/// A folder of command or agent files, one file each (.claude/commands, .github/prompts, .gemini/commands …); an app lists them under
+/// <c>commands</c> or <c>agents</c>. Project paths are relative to a project folder.
+/// </summary>
 public class PartSource
 {
     public string Path { get; set; } = "";
     public string Level { get; set; } = "User";
-    public string Kind { get; set; } = "command";       // command | agent
     public string Pattern { get; set; } = "*.md";       // file name patterns, separated by ;
     public int Depth { get; set; } = 2;                 // sub-folders read below Path (their names prefix the command: team:review)
     public string? Os { get; set; }
@@ -110,10 +112,10 @@ public class AppDefinition
     public string Category { get; set; } = "agent";  // agent | orchestrator | editor | chat | runtime | shared | custom
     public string? Logo { get; set; }                         // key in Assets/logos.json; null = category icon
     public List<string> Detect { get; set; } = [];        // any existing folder => installed
-    public List<ScanRoot> Roots { get; set; } = [];        // user/system-level locations
-    public List<ScanRoot> ProjectRoots { get; set; } = []; // paths relative to a project folder
+    public List<SkillSource> Skills { get; set; } = [];       // skills folders; Project and Local paths are relative to a project folder
     public List<ConfigFile> Configs { get; set; } = [];
-    public List<PartSource> Parts { get; set; } = [];      // command and agent folders
+    public List<PartSource> Commands { get; set; } = [];     // command (saved prompt) folders
+    public List<PartSource> Agents { get; set; } = [];       // agent (sub-agent) folders
     public string? PluginFormat { get; set; }                 // key of an IPluginReader
     public string? PluginManifest { get; set; }
     public PluginCommands? PluginCommands { get; set; }
@@ -142,6 +144,7 @@ public class Settings
     public Dictionary<string, FontRule> Fonts { get; set; } = [];
     public bool LogLineNumbers { get; set; }
     public int FadeSeconds { get; set; }
+    public bool Animations { get; set; }
     public int VirtualListRows { get; set; }
     public int LimitsRefreshMinutes { get; set; }
     public List<string> LimitsEnabled { get; set; } = [];

@@ -16,8 +16,25 @@ namespace AiStackprint.Ui;
 /// </summary>
 internal class UsageView(Ctx x)
 {
-    private const int TopApps = 4;   // apps with their own color in the chart; the rest are "Other"
-    private static readonly string[] _keys = [ChartIn, ChartOut, ChartWrite, ChartRead, Muted];   // the four chart series (the first is the accent), then gray for "Other": each app its own color
+    // App id → its chart slot: taken the first time the app shows (largest first) and kept, so changing the period never repaints an app
+    private readonly Dictionary<string, int> _slots = [];
+
+    /// <summary>The chart color of each app: its own slot, or "Other" (muted gray) once all <see cref="ChartSlots"/> are taken.</summary>
+    internal string[] Keys(IEnumerable<string> appIds)
+    {
+        var keys = new List<string>();
+        foreach (var id in appIds)
+        {
+            if (!_slots.TryGetValue(id, out var slot) && _slots.Count < ChartSlots)
+            {
+                slot = _slots[id] = _slots.Count + 1;
+            }
+
+            keys.Add(ChartKey(slot == 0 ? ChartSlots + 1 : slot));
+        }
+
+        return [.. keys];
+    }
 
     private int _days = 7;
     private object? _scan;
@@ -91,23 +108,25 @@ internal class UsageView(Ctx x)
 
         Tile("Sessions", apps.Sum(a => a.Result.Sessions).ToString("N0"));
 
-        var shown = Math.Min(apps.Count, TopApps + 1);
+        var keys = Keys(apps.Select(a => a.App.Id));
+        var own = Enumerable.Range(0, apps.Count).Where(i => keys[i] != Muted).ToList();   // apps with a color of their own; the rest are "Other"
+        string[] series = [.. own.Select(i => keys[i]), .. own.Count < apps.Count ? [Muted] : Array.Empty<string>()];
         var legend = new WrapPanel();
-        for (var i = 0; i < shown; i++)
+        foreach (var (name, key) in own.Select(i => (apps[i].App.Name, keys[i])).Append(("Other", Muted)).Take(series.Length))
         {
-            legend.Children.Add(DotText(i < TopApps ? apps[i].App.Name : "Other", _keys[i]).With(s => s.Margin = new Thickness(0, 0, Space.XL, 0)));
+            legend.Children.Add(DotText(name, key).With(s => s.Margin = new Thickness(0, 0, Space.XL, 0)));
         }
 
         var bars = new List<(DateOnly Day, double[] Parts, string Tip)>();
         var today = DateOnly.FromDateTime(DateTime.Today);
         for (var d = today.AddDays(1 - _days); d <= today; d = d.AddDays(1))
         {
-            var parts = new double[shown];
+            var parts = new double[series.Length];
             var lines = new List<string>();
             for (var i = 0; i < apps.Count; i++)
             {
                 var t = apps[i].Result.Buckets.Where(b => b.Day == d).Sum(b => b.Input + b.Output + b.CacheWrite);
-                parts[Math.Min(i, TopApps)] += t;
+                parts[own.IndexOf(i) is >= 0 and var k ? k : own.Count] += t;
                 if (t > 0)
                 {
                     lines.Add($"{apps[i].App.Name} {UsageCard.Fmt(t)}");
@@ -117,7 +136,7 @@ internal class UsageView(Ctx x)
             bars.Add((d, parts, d.ToString("yyyy-MM-dd") + (lines.Count > 0 ? "\n" + string.Join("\n", lines) : "\nNo usage")));
         }
 
-        var chart = bars.Max(b => b.Parts.Sum()) > 0 ? DayBars.Build(bars, _keys[..shown]) : Txt("No tokens in this period.", TextSize.Small, false, Muted);
+        var chart = bars.Max(b => b.Parts.Sum()) > 0 ? DayBars.Build(bars, series) : Txt("No tokens in this period.", TextSize.Small, false, Muted);
 
         var appRows = apps.Select(a => new TableRow(
         [

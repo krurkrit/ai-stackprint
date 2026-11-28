@@ -71,7 +71,7 @@ internal static class ColorSettings
     {
         if (which >= 3)
         {
-            return Theme.LevelDefault(dark, which - 3, Theme.Defaults(dark).Accent);
+            return Theme.LevelDefault(dark, which - 3);
         }
 
         var d = Theme.Defaults(dark);
@@ -80,7 +80,7 @@ internal static class ColorSettings
 
     private static string Hex(Color c) => c.A == 255 ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
 
-    /// <summary>[swatch: opens the picker][#RRGGBB][opacity %][↺] plus a contrast note. Opacity is its own 0–100% setting; the stored value is #RRGGBB or #AARRGGBB.</summary>
+    /// <summary>[■ #RRGGBB] (the swatch inside the box opens the picker)[−  opacity %  +][↺] plus a contrast note. Opacity is its own 0–100% setting; the stored value is #RRGGBB or #AARRGGBB.</summary>
     private static StackPanel Editor(string? value, Color fallback, bool dark, int which, Action<string?> set)
     {
         var current = Theme.ParseHex(value) ?? fallback;
@@ -88,18 +88,18 @@ internal static class ColorSettings
         {
             Text = Rgb(current),   // the default shows as real text too, so it can be selected and copied
             PlaceholderText = Rgb(fallback),
-            Width = Widths.FieldS,
+            MinWidth = 0,   // as wide as the swatch and the 7 characters of #RRGGBB, with the same gap at both ends
+            Padding = new Thickness(Space.S, Theme.InputPad, Space.S, Theme.InputPad),
             FontFamily = Theme.Mono
         };
-        var opacity = new NumericUpDown
+        var opacity = W.Stepper(new NumericUpDown
         {
             Minimum = 0,
             Maximum = 100,
             Increment = 5,
-            FormatString = "0",
-            Width = Widths.FieldS,
+            TextConverter = Percent.Instance,   // shown as 100%; typed with or without the %
             Value = (decimal)Math.Round(current.A / 255.0 * 100)
-        };
+        }, "100%");
         ToolTip.SetTip(opacity, "Opacity, 0 to 100 %");
         var defaultPct = (int)Math.Round(fallback.A / 255.0 * 100);
 
@@ -167,7 +167,7 @@ internal static class ColorSettings
                 Padding = new Thickness(0),
                 Background = new SolidColorBrush(sc),
                 CornerRadius = new CornerRadius(Radius.M)
-            };
+            }.KeepFill();
             ToolTip.SetTip(sw, $"{name} {Rgb(sc)}");
             sw.Click += (_, _) => view.Color = sc;
             swatches.Children.Add(sw);
@@ -180,23 +180,28 @@ internal static class ColorSettings
         };   // committed on close: each change rebuilds the page, which would close the picker
         var preview = new Button
         {
-            Width = Sizes.CompactControl,
-            Height = Sizes.CompactControl,
+            Width = IconSize.M,
+            Height = IconSize.M,
+            MinHeight = 0,
+            MinWidth = 0,
+            Margin = new Thickness(Space.S, 0, 0, 0),   // the box's padding is around the text only: the swatch takes its own gap
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             Padding = new Thickness(0),
             CornerRadius = new CornerRadius(Radius.M),
             BorderThickness = new Thickness(Stroke.Thin),
             Background = new SolidColorBrush(current),
             Flyout = flyout
         }
-            .Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey);
+            .Themed(Avalonia.Controls.Primitives.TemplatedControl.BorderBrushProperty, BorderKey).KeepFill();   // shows the color, hovered or not
         ToolTip.SetTip(preview, "Pick a color");
+        box.InnerLeftContent = preview;   // [■ #RRGGBB]
         var reset = IconBtn("arrow_reset", "Reset to default", () => set(null));
         reset.IsEnabled = value != null;
 
         var sp = new StackPanel
         {
             Spacing = Space.XS,
-            Children = { Row(preview, box, opacity, Txt("%", TextSize.Small, false, Muted), reset) }
+            Children = { Row(box, opacity, reset) }
         };
         if (Note(current, dark, which) is { } note)
         {
@@ -221,5 +226,25 @@ internal static class ColorSettings
         return ratio >= Services.Contrast.Minimum ? null
             : which == 0 ? $"Contrast {ratio:0.0}:1 — buttons use a deeper shade of it to reach 7.1:1"   // Theme.Keys moves the button fill (Contrast.AtLeast)
             : $"Contrast {ratio:0.0}:1 — below the 7.1:1 minimum";
+    }
+
+    /// <summary>
+    /// The opacity box's text: a whole number and %, read back with or without the %. NumericUpDown calls Convert for text to number and
+    /// ConvertBack for number to text, so both go by what they are given.
+    /// </summary>
+    private sealed class Percent : Avalonia.Data.Converters.IValueConverter
+    {
+        public static readonly Percent Instance = new();
+
+        public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) => Either(value, culture);
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) => Either(value, culture);
+
+        private static object? Either(object? value, System.Globalization.CultureInfo culture) => value switch
+        {
+            decimal d => Math.Round(d).ToString("0", culture) + "%",
+            string t => decimal.TryParse(t.Trim().TrimEnd('%').Trim(), System.Globalization.NumberStyles.Number, culture, out var n) ? n : null,
+            _ => null
+        };
     }
 }

@@ -31,7 +31,7 @@ internal static partial class DashboardView
             var n = plugins.Count(i => i.Provides.Contains(p.Key));
             if (n > 0)
             {
-                sp.Children.Add(Bar(Txt(p.Label, TextSize.Small, true), [(n, ChartOut)], n, plugins.Count, () => x.Browse("Plugin", null, "has:" + p.Key),
+                sp.Children.Add(Bar(Txt(p.Label, TextSize.Small, true), [(n, ChartKey(1))], n, plugins.Count, () => x.Browse("Plugin", null, "has:" + p.Key),
                     $"{n} of {plugins.Count} plugins add {p.Label.ToLowerInvariant()}"));
             }
         }
@@ -72,8 +72,7 @@ internal static partial class DashboardView
         var chip = (Border)Chip(n > 1 ? $"{word} · {n}" : word);
         chip.Cursor = Hand;
         ToolTip.SetTip(chip, $"{n} {(n == 1 ? "plugin" : "plugins")}: show {(n == 1 ? "it" : "them")}");
-        chip.PointerEntered += (_, _) => chip.Themed(Border.BackgroundProperty, SelectionKey);
-        chip.PointerExited += (_, _) => chip.Themed(Border.BackgroundProperty, Subtle);
+        chip.Hover(SelectionKey, Subtle);
         chip.PointerReleased += (_, _) => open();
         return chip;
     }

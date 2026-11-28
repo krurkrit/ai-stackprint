@@ -16,6 +16,7 @@ internal static partial class W
     internal const string Subtle = "Ap.Hover", Selected = "Ap.Selected", SelectedSolid = "Ap.SelectedSolid", BorderKey = "Ap.Divider";
     internal const string Accent = "Ap.Accent", OnAccent = "Ap.OnAccent", Link = "Ap.Link";
     internal const string ErrorKey = "Ap.Error", ErrorFill = "Ap.ErrorFill", ErrorHover = "Ap.ErrorHover", ErrorPressed = "Ap.ErrorPressed", OnError = "Ap.OnError", WarningKey = "Ap.Warning", SuccessKey = "Ap.Success";
+    internal const string ErrorMark = "Ap.ErrorMark", WarningMark = "Ap.WarningMark", SuccessMark = "Ap.SuccessMark";   // status icons, bars and dots (3:1); the keys above are status text (7.1:1)
     internal const string ChartIn = "Ap.ChartIn", ChartOut = "Ap.ChartOut", ChartWrite = "Ap.ChartWrite", ChartRead = "Ap.ChartRead";
     internal const string SuccessText = "Ap.SuccessText", SelectionKey = "Ap.Selection", HighlightKey = "Ap.Highlight", HighlightRingKey = "Ap.HighlightRing", ScrimKey = "Ap.Scrim";
 
@@ -52,10 +53,21 @@ internal static partial class W
         t.FontFeatures = FontFeatureCollection.Parse("tnum");
     }
     public static double Size(double px) => Math.Round(px * Scale, 1);
-    /// <summary>Chart color of an app category; unknown categories reuse the palette by a stable hash of the name.</summary>
-    public static string CategoryKey(string category) =>
-        "Ap.Cat." + (Array.IndexOf(Theme.Categories, category) >= 0 ? category : Theme.Categories[category.Aggregate(0, (h, ch) => (h * 31 + ch) & 0x7fffffff) % Theme.Categories.Length]);
+    /// <summary>Chart color of an app category (its slot in <see cref="Theme.Categories"/>); an unknown category is "Other", in muted gray.</summary>
+    public static string CategoryKey(string category) => Array.IndexOf(Theme.Categories, category) >= 0 ? "Ap.Cat." + category : Muted;
     public static string LevelKey(string level) => "Ap.Level." + level;
+
+    /// <summary>Series colors in a chart (<see cref="Theme.LightChart"/>): past these, series are "Other".</summary>
+    public const int ChartSlots = 8;
+
+    /// <summary>
+    /// Chart color of series <paramref name="slot"/> (1 to <see cref="ChartSlots"/>), given by the thing the series is, never by its rank, so a filter
+    /// does not repaint it; past the last slot the muted gray of "Other".
+    /// </summary>
+    public static string ChartKey(int slot) => slot is >= 1 and <= ChartSlots ? $"Ap.Chart.{slot}" : Muted;
+
+    /// <summary>A branch in the log graph: Main in muted gray, sub-agent n in chart slot n, past the last slot gray too (each has its name on its chip).</summary>
+    public static string AgentKey(int agent) => agent == 0 ? Muted : ChartKey(agent);
 
     public static T Themed<T>(this T c, AvaloniaProperty p, string key) where T : Control
     {

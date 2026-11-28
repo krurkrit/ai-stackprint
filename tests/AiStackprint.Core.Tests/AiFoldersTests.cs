@@ -24,7 +24,7 @@ public sealed class AiFoldersTests : IDisposable
         {
             Id = "app",
             Name = "App",
-            Parts = { new PartSource
+            Commands = { new PartSource
             {
                 Path = ".app/commands",
                 Level = "Project"
@@ -39,7 +39,7 @@ public sealed class AiFoldersTests : IDisposable
         {
             Id = "o",
             Name = "Other",
-            ProjectRoots = { new ScanRoot
+            Skills = { new SkillSource
             {
                 Path = ".missing/skills",
                 Level = "Project"

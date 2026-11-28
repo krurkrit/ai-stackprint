@@ -22,9 +22,21 @@ internal static partial class Theme
     private const string White = "#F8F9FA", Black = "#34383C", DarkCard = "#262626";
     private const string BlueLight = "#1450A0", BlueDark = "#74A8F4", OrangeLight = "#8A3F00", OrangeDark = "#FFB066", OrangeAccent = "#FD7E14";
     private const string AccentTextDark = "#141517", Error = "#A52834", Warning = "#FFC107", Success = "#0F7B0F";
-    // Status colors used as text, icons and bars must read on each theme's background: light warning is a brown,
-    // dark error and success are lighter tints. Fills behind white text (danger buttons, Close hover) keep Error.
-    private const string ErrorDark = "#F28B95", SuccessDark = "#6CCB5F";
+    // Text and muted text: the strongest step, and the faintest gray that still reads at 7.1:1 on every surface, hover and selection
+    private const string Ink = "#13161A", MutedLight = "#40454A", MutedDark = "#BEC3C9", LinkLight = "#004190";
+    // Fills behind white text (danger buttons, Close hover): 7.1:1 at rest; their hover and pressed shades only go darker
+    private const string DangerFill = "#96000D";
+
+    /// <summary>
+    /// Status colors by formula: fixed hues (danger 27°, warning 80°, success 145° in OKLCH). Text: the most vivid step that reads at 7.1:1 on the card,
+    /// the main area, a hovered and a selected row. Marks (icons, bars, dots): 3:1 is enough, so they may be brighter: dark danger is pure red.
+    /// Dark danger text is that pure red too, by choice: a strong red cannot reach 7:1 on the dark card, so it reads at 3.7:1 (below AA) and
+    /// always comes with an icon or words that say what is wrong.
+    /// </summary>
+    private sealed record States(string DangerText, string WarningText, string SuccessText, string DangerMark, string WarningMark, string SuccessMark);
+
+    private static readonly States _lightStates = new("#9D010E", "#654702", "#025915", "#9D010E", "#B17E00", "#019D2A");
+    private static readonly States _darkStates = new("#FD0105", "#FAB72A", "#58DD64", "#FD0105", "#FAB72A", "#58DD64");
 
     /// <summary>Swatches offered in Appearance › Colors.</summary>
     public static readonly (string Name, string Hex)[] Swatches =
@@ -41,17 +53,18 @@ internal static partial class Theme
     public static FontWeight MonoWeight { get; private set; } = FontWeight.Normal;
 
     // Areas: top bar, sidebar, main area, and cards/lists/bottom panel/text boxes (Surface = Bg)
-    private const string LightSide = "#DEE2E6", LightMain = "#E9ECEF", DarkSide = "#1C1C1C", DarkMain = "#181818", DarkTop = "#202020", DarkBorder = "#343434";
+    // Main and side are small OKLCH lightness steps below the card, so muted text keeps 7.1:1 on all of them
+    private const string LightSide = "#E8EAEC", LightMain = "#EFF1F3", DarkSide = "#1E1F20", DarkMain = "#1A1C1D", DarkTop = "#202123", DarkBorder = "#343434";
 
-    /// <summary>Default level colors (System, Local, Project, User) for the dashboard bars.</summary>
-    public static readonly string[] LightLevels = ["#7048E8", "#D6336C", "#2F9E44", "#1098AD"], DarkLevels = ["#9775FA", "#F06595", "#51CF66", "#3BC9DB"];
     public static readonly string[] LevelNames = ["System", "Local", "Project", "User"];
 
-    private sealed record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link,
-        double MutedAlpha, double DividerAlpha, double HoverAlpha, double SelectedAlpha, string[] Levels, string Selection, double SelectionAlpha, string Side, string Main, string Top, string? Border = null);
+    // Tints (hover, selected, text selection, new-line highlight): the strongest that keep text and muted text at 7.1:1 on them
+    private sealed record Palette(string Bg, string Fg, string Surface, string Primary, string OnPrimary, string Link, string Muted,
+        double DividerAlpha, double HoverAlpha, double SelectedAlpha, string Selection, double SelectionAlpha, double HighlightAlpha,
+        string Side, string Main, string Top, States States, string? Border = null);
 
-    private static readonly Palette _light = new(White, Black, White, BlueLight, White, BlueLight, .76, .16, .08, .12, LightLevels, BlueLight, .25, LightSide, LightMain, LightMain);   // selection 25%: text keeps >= 7.1:1
-    private static readonly Palette _dark = new(DarkCard, White, DarkCard, OrangeAccent, AccentTextDark, OrangeDark, .72, .24, .10, .14, DarkLevels, BlueDark, .35, DarkSide, DarkMain, DarkTop, DarkBorder);
+    private static readonly Palette _light = new(White, Ink, White, BlueLight, White, LinkLight, MutedLight, .16, .05, .08, BlueLight, .16, .50, LightSide, LightMain, LightMain, _lightStates);
+    private static readonly Palette _dark = new(DarkCard, White, DarkCard, OrangeAccent, AccentTextDark, OrangeDark, MutedDark, .24, .06, .10, BlueDark, .10, .08, DarkSide, DarkMain, DarkTop, _darkStates, DarkBorder);
 
     // Made with each theme: a palette belongs to one application (headless tests start one per test)
     private static ColorPaletteResources _lightFluent = FluentPalette(_light), _darkFluent = FluentPalette(_dark);
@@ -87,20 +100,33 @@ internal static partial class Theme
     /// <summary>The two text colors an accent button can use; the app picks whichever reads better.</summary>
     public static (Color Light, Color Dark) AccentTexts => (C(White), C(AccentTextDark));
 
-    /// <summary>App category colors for charts (Okabe-Ito based, checked against the card color of each theme: every slice is at least 3:1 and none look alike for color-blind viewers).</summary>
+    /// <summary>App categories, each with the chart slot of its place here (1 to 7), whatever the chart shows.</summary>
     public static readonly string[] Categories = ["agent", "chat", "editor", "orchestrator", "runtime", "shared", "custom"];
-    private static readonly string[] _lightCategory = ["#1F6FB5", "#D1590E", "#178A5B", "#8E4A9E", "#9A7400", "#5F6B76", "#C2306E"];
-    private static readonly string[] _darkCategory = ["#5AA9F0", "#FF8C42", "#4CC38A", "#C58BE0", "#E8B923", "#9AA5B1", "#F06595"];
 
-    private static readonly double[] _levelAlpha = [1, .85, .72, .62];   // faintest still >= 3:1 on the card (chart marks)
+    /// <summary>A chart color: the exact hex, and its OKLCH rounded (L to .01, C to .001, H to 1°); ThemeTests keeps the two in step.</summary>
+    public sealed record ChartColor(string Hex, double Lightness, double Chroma, double Hue);
 
-    /// <summary>Default level color: the accent, fainter for each level after System (opaque, blended onto the card color so stacked bars stay solid).</summary>
-    public static Color LevelDefault(bool dark, int i, Color? accent = null)
-    {
-        var p = dark ? _dark : _light;
-        var a = accent ?? C(p.Primary);
-        return Color.FromUInt32(Services.Contrast.Blend(A(a, _levelAlpha[i]).ToUInt32(), C(p.Bg).ToUInt32()));
-    }
+    /// <summary>
+    /// The chart palette: 8 series colors per theme (light on #F8F9FA, dark on #262626). Slot N is series N: a chart takes them in order and never
+    /// reorders or cycles them; past 8 series the rest are "Other" in muted gray, never a new hue. Light slot 5 is 3.1:1 on the card: never text.
+    /// </summary>
+    public static readonly ChartColor[] LightChart =
+    [
+        new("#1958BB", .48, .169, 260), new("#994403", .49, .131, 49), new("#056A3E", .46, .109, 156), new("#7C4096", .48, .144, 315),
+        new("#BC8302", .65, .135, 78), new("#058292", .56, .095, 210), new("#C02658", .53, .190, 8), new("#747D00", .56, .127, 115)
+    ];
+
+    public static readonly ChartColor[] DarkChart =
+    [
+        new("#F7791A", .71, .180, 50), new("#42ACFF", .72, .154, 246), new("#42DC9A", .80, .159, 160), new("#C888E3", .72, .144, 315),
+        new("#F8C739", .85, .158, 88), new("#45C5CE", .76, .110, 202), new("#FC647B", .70, .186, 14), new("#ADBE5A", .77, .127, 118)
+    ];
+
+    /// <summary>The color of chart slot <paramref name="slot"/> (1 to 8) in a theme.</summary>
+    public static Color Chart(bool dark, int slot) => C((dark ? DarkChart : LightChart)[slot - 1].Hex);
+
+    /// <summary>Default level color (System, Local, Project, User): chart slots 1 to 4.</summary>
+    public static Color LevelDefault(bool dark, int i) => Chart(dark, i + 1);
 
     /// <summary>Default colors shown as placeholders in Appearance: (accent, hover, selection) for a theme.</summary>
     public static (Color Accent, Color Hover, Color Selection, Color Background, Color Text) Defaults(bool dark)
@@ -112,6 +138,7 @@ internal static partial class Theme
     /// <summary>Applies the Appearance settings: theme, fonts, sizes, weights and color overrides. Views read sizes and weights from <see cref="W"/>.</summary>
     public static void Appearance(Application app, Settings s)
     {
+        Motion.Enabled = s.Animations;
         app.RequestedThemeVariant = s.Theme switch { "Light" => ThemeVariant.Light, "Dark" => ThemeVariant.Dark, _ => ThemeVariant.Default };
         var f = new FontRuleSet(s.Fonts);
         ResolvedFont body = f.Resolve(FontRoles.Body), head = f.Resolve(FontRoles.Heading), log = f.Resolve(FontRoles.Log);
@@ -141,22 +168,12 @@ internal static partial class Theme
         app.Resources.ThemeDictionaries[ThemeVariant.Dark] = Keys(_dark, s.Dark, _darkFluent);
     }
 
-    /// <summary>The shadow of a dialog card (Fluent UI 2 elevation 64: a soft close shadow and a deep wide one); stronger on the dark theme.</summary>
-    public static Avalonia.Media.BoxShadows DialogShadow(bool dark) => new(
-        new Avalonia.Media.BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = 0,
-            Blur = 8,
-            Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x66 : (byte)0x33, 0, 0, 0)
-        },
-        [new Avalonia.Media.BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = 32,
-            Blur = 64,
-            Color = Avalonia.Media.Color.FromArgb(dark ? (byte)0x80 : (byte)0x3D, 0, 0, 0)
-        }]);
+    /// <summary>
+    /// The shadow of a dialog card: Fluent UI 2 elevation 16, the same as a pop-up. A dialog is its own transparent window with
+    /// <see cref="Sizes.ShadowRoom"/> around the card, and the whole shadow must fit in it: elevation 64 (32 down, 64 blur) was cut off at
+    /// the window's edge and showed as hard bands on the left, right and bottom.
+    /// </summary>
+    public static Avalonia.Media.BoxShadows DialogShadow(bool dark) => PopupShadow(dark);
 
     /// <summary>The shadow of a pop-up that floats over the page (Fluent UI 2 elevation 16): the command palette and toasts.</summary>
     public static Avalonia.Media.BoxShadows PopupShadow(bool dark) => new(

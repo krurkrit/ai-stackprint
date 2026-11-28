@@ -6,7 +6,7 @@ namespace AiStackprint.Ui;
 /// <summary>The kinds of app, in one order, for the Category help (Apps page) and the Add an app dialog, so both list the same ones.</summary>
 internal static class AppCategories
 {
-    public static readonly string[] Order = ["agent", "editor", "chat", "orchestrator", "runtime", "shared", "custom"];
+    public static readonly string[] Order = ["agent", "chat", "custom", "editor", "orchestrator", "runtime", "shared"];   // A to Z, like the Category menu on the Apps page
 
     /// <summary>One short line per category.</summary>
     public static readonly Dictionary<string, string> About = new()

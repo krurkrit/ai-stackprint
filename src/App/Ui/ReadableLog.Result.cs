@@ -21,7 +21,7 @@ internal partial class ReadableLog
             {
                 BorderThickness = new Thickness(Stroke.Medium, 0, 0, 0),
                 Child = card
-            }.Themed(Border.BorderBrushProperty, ErrorKey)
+            }.Themed(Border.BorderBrushProperty, ErrorMark)
             : card;
     }
 }

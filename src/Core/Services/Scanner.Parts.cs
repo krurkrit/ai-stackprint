@@ -17,7 +17,8 @@ public static partial class Scanner
     /// ending (.prompt.md, .agent.md, .md, .toml); sub-folders prefix it (team/review.md is team:review). The description and an agent's name
     /// come from the front matter, or description = "…" in a .toml file.
     /// </summary>
-    public static void ReadParts(string path, PartSource s, string source, List<Item> rows)
+    /// <param name="kind">"Command" or "Agent": the kind of every row.</param>
+    public static void ReadParts(string path, PartSource s, string kind, string source, List<Item> rows)
     {
         if (!Directory.Exists(path))
         {
@@ -35,13 +36,13 @@ public static partial class Scanner
         {
             foreach (var f in Directory.EnumerateFiles(path, "*", options).Where(f => patterns.Any(p => FileSystemName.MatchesSimpleExpression(p, Path.GetFileName(f)))))
             {
-                rows.Add(ReadPart(path, f, s, source));
+                rows.Add(ReadPart(path, f, s, kind, source));
             }
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
-    private static Item ReadPart(string root, string file, PartSource s, string source)
+    private static Item ReadPart(string root, string file, PartSource s, string kind, string source)
     {
         var rel = Path.GetRelativePath(root, file).Replace('\\', '/');
         var ending = _partEndings.FirstOrDefault(e => rel.EndsWith(e, StringComparison.OrdinalIgnoreCase)) ?? Path.GetExtension(rel);
@@ -55,13 +56,13 @@ public static partial class Scanner
         {
             var doc = SkillDoc.Parse(ContextBudget.ReadText(file));
             desc = doc.Get("description");
-            if (s.Kind == "agent" && doc.Get("name") is { Length: > 0 } n)
+            if (kind == "Agent" && doc.Get("name") is { Length: > 0 } n)
             {
                 name = n;
             }
         }
 
-        return new Item(s.Kind == "agent" ? "Agent" : "Command", name, MarkdownLite.Plain(desc), source, s.Level, file) { LevelLabel = s.Label };
+        return new Item(kind, name, MarkdownLite.Plain(desc), source, s.Level, file) { LevelLabel = s.Label };
     }
 
     [GeneratedRegex(@"(?m)^\s*description\s*=\s*([""'])(.*?)\1\s*$")] private static partial Regex TomlDescription();

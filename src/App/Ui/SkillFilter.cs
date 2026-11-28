@@ -18,11 +18,11 @@ internal sealed class SkillFilter
 {
     private const string ByInvoked = "invoked", ByFrom = "from";
     private static readonly string[] _invokedValues = ["Agent only", "User only", "Agent and User"];
-    private readonly HashSet<string> _offApps = [], _offLevels = [], _offTypes = [], _offInvoked = [], _offFrom = [];   // unchecked values; empty = all
+    private readonly HashSet<string> _offApps = [], _offLevels = [], _offInvoked = [], _offFrom = [];   // unchecked values; empty = all
     private readonly HashSet<string> _group = [], _collapsed = [];
     private readonly bool _skill;
 
-    /// <param name="kind">"Skill", "Plugin" or "Part" (commands and agents).</param>
+    /// <param name="kind">"Skill", "Plugin", "Command" or "Agent".</param>
     /// <param name="appName">An app's name from its id, for an App filter; null: no App filter (the list is one app's).</param>
     /// <param name="search">The search text now.</param>
     /// <param name="changed">Re-runs the list.</param>
@@ -41,11 +41,6 @@ internal sealed class SkillFilter
         }
 
         Bar.Add("Level", _offLevels, i => [i.Level], order: vs => Levels.Order.Where(vs.Contains));   // highest priority first
-        if (kind == "Part")
-        {
-            Bar.Add("Type", _offTypes, i => [i.Kind], v => v + "s");   // Commands, Agents
-        }
-
         if (_skill)
         {
             Bar.Add("Invoked by", _offInvoked, i => [SkillMatch.Label(i)], order: vs => _invokedValues.Where(vs.Contains));
@@ -108,7 +103,7 @@ internal sealed class SkillFilter
             res.Add(() =>
             {
                 var cells = new Control[cols];
-                cells[0] = Row(Icon(open ? "chevron_down" : "chevron_right", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), Title(key, TextSize.Body), Txt(count.ToString("N0"), TextSize.Small, false, Muted));
+                cells[0] = Row(Motion.Chevron(Icon("chevron_down", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, Muted), "skills:" + key, open), Title(key, TextSize.Body), Txt(count.ToString("N0"), TextSize.Small, false, Muted));
                 Grid.SetColumnSpan(cells[0], cols);   // the group title runs across the table
                 for (var c = 1; c < cols; c++)
                 {
@@ -118,12 +113,13 @@ internal sealed class SkillFilter
                 return new TableRow(cells, () =>
                 {
                     if (!_collapsed.Remove(key)) { _collapsed.Add(key); }
+                    Motion.Turn("skills:" + key);
                     changed();
                 });
             });
             if (open)
             {
-                res.AddRange(g.Select(i => (Func<TableRow>)(() => row(i))));
+                res.AddRange(g.Select(i => (Func<TableRow>)(() => Motion.Turned("skills:" + key) ? row(i) with { Enter = true } : row(i))));   // its rows fade in as the group opens
             }
         }
 

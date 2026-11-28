@@ -61,7 +61,7 @@ public sealed class MainWindowTests : IDisposable
         Assert.Contains("Dashboard", seen);
         foreach (var (label, title) in new[]
         {
-            ("Apps", "Apps"), ("Plugins", "Plugins"), ("Skills", "Skills"), ("Commands & Agents", "Commands & Agents"), ("Servers", "Servers"), ("Hooks", "Hooks"),
+            ("Apps", "Apps"), ("Plugins", "Plugins"), ("Skills", "Skills"), ("Commands", "Commands"), ("Agents", "Agents"), ("Servers", "Servers"), ("Hooks", "Hooks"),
             ("Usage", "Usage"), ("Models", "Models"), ("Logs", "Logs"), ("Health", "Health"), ("Settings", "Appearance"), ("Back to app", "Health"), ("Dashboard", "Dashboard"),
         })
         {
@@ -150,7 +150,16 @@ public sealed class MainWindowTests : IDisposable
 
         Palette(w, "pdf-tools");
         Assert.Contains("PDF tools", Ui.Texts(w));
-        Press(w, "Files", "Source", "Content");
+        TabControl Tabs() => w.GetVisualDescendants().OfType<TabControl>().First(t => t.Items.OfType<TabItem>().Any(i => i.Header as string == "Files"));
+        Assert.Equal(0, Tabs().SelectedIndex);   // Content | Files are tabs, not pills
+        Tabs().SelectedIndex = 1;
+        Settle(w);
+        Assert.Equal(1, Tabs().SelectedIndex);
+        Assert.Contains("SKILL.md", Ui.Texts(w));   // the Files tab lists the folder
+        Tabs().SelectedIndex = 0;
+        Settle(w);
+        Assert.Equal(0, Tabs().SelectedIndex);
+        Press(w, "Source", "Content");
 
         Palette(w, "demo");
         Press(w, "By file", "By app");

@@ -70,7 +70,7 @@ public sealed class MarkdownHtmlTests : IDisposable
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "SKILL.md"), "---\nname: pdf\ndescription: >\n  Reads <b>PDF</b> files.\n  Use for **forms**.\nlicense: MIT\n---\nbody\n");
         var rows = new List<Item>();
-        Scanner.ReadRoot(Path.Combine(_tmp, "skills"), new ScanRoot(), "App", rows);
+        Scanner.ReadRoot(Path.Combine(_tmp, "skills"), new SkillSource(), "App", rows);
         Assert.Equal("Reads PDF files. Use for forms.", rows.Single().Description);
     }
 }

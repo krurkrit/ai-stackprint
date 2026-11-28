@@ -59,4 +59,4 @@ One setting, `fonts` (`Settings.Fonts`), holds every font setting by key: `body`
 
 ## Wording in text
 
-Page and nav names: Dashboard, Apps, Plugins, Skills, Commands & Agents, Servers, Hooks, Usage, Models, Logs, Health, Settings. Pair order is "Plugins and skills" (never "Skills and plugins"). See `conventions.md`.
+Page and nav names: Dashboard, Apps, Plugins, Skills, Commands, Agents, Servers, Hooks, Usage, Models, Logs, Health, Settings. Pair order is "Plugins and skills" (never "Skills and plugins"). See `conventions.md`.

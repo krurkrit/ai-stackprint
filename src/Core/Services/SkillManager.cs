@@ -18,13 +18,13 @@ public static class SkillManager
     {
         if (level == "Project")
         {
-            return project == null ? null : d.ProjectRoots.Where(Fits)
+            return project == null ? null : d.Skills.Where(r => Scanner.InProject(r.Level) && Fits(r))
                 .Select(r => Path.Combine(project, r.Path.Replace('/', Path.DirectorySeparatorChar))).FirstOrDefault();
         }
 
-        return level == "User" ? d.Roots.Where(r => r.Level == "User" && Fits(r)).Select(r => PathUtil.Expand(r.Path)).FirstOrDefault() : null;
+        return level == "User" ? d.Skills.Where(r => r.Level == "User" && Fits(r)).Select(r => PathUtil.Expand(r.Path)).FirstOrDefault() : null;
 
-        static bool Fits(ScanRoot r) => r.Layout == "skill-folders" && !r.Bundled && PathUtil.OsMatches(r.Os);
+        static bool Fits(SkillSource r) => r.Layout == "skill-folders" && !r.Bundled && PathUtil.OsMatches(r.Os);
     }
 
     /// <summary>Copies <paramref name="source"/> (a folder containing SKILL.md) to targetRoot/name. Returns the new folder.</summary>

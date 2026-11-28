@@ -30,7 +30,7 @@ internal static partial class UpdateView
                     status.Content = ModelDataStatus(x);
                     result.Content = r.Ok
                         ? Txt(r.Message, TextSize.Small, false, Muted)
-                        : Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningKey), Txt(r.Message, TextSize.Small, false, Muted));
+                        : Row(Icon("warning", IconSize.S).Themed(Avalonia.Controls.Documents.TextElement.ForegroundProperty, WarningMark), Txt(r.Message, TextSize.Small, false, Muted));
                 }, false, "arrow_sync"), result)
             }
         };

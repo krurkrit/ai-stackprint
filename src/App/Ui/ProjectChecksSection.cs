@@ -60,7 +60,7 @@ internal class ProjectChecksSection(Ctx x)
         {
             var rows = issues.Select(i => new TableRow(
             [
-                Icon(i.Finding.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningKey : Muted),
+                Icon(i.Finding.Warning ? "warning" : "info", IconSize.S).Themed(TextElement.ForegroundProperty, i.Finding.Warning ? WarningMark : Muted),
                 Txt(i.Finding.Text, TextSize.Small), Txt(string.Join(", ", i.Apps.Select(a => x.S.Def(a)?.Name ?? a)), TextSize.Small, false, Muted),
                 i.File is { } f ? IconBtn("open", "Open file", () => PathUtil.OpenFile(f)) : new Panel()
             ]));

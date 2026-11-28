@@ -13,7 +13,7 @@ namespace AiStackprint.Ui;
 internal partial class UsageCard
 {
     /// <summary>Per-day bars, stacked by token type (or one bar of cost). At most the last 90 days; gaps are empty days.</summary>
-    private static readonly string[] _costKeys = [Accent], _tokenKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
+    private static readonly string[] _costKeys = [ChartKey(1)], _tokenKeys = [ChartIn, ChartOut, ChartWrite, ChartRead];
     private static readonly string[] _costNames = ["Estimated cost"], _tokenNames = ["Input", "Output", "Cache write", "Cache read"];
 
     private Control Chart(List<UsageBucket> b, bool cost, bool priced, bool reads, bool writes, out Control legend)
@@ -77,7 +77,7 @@ internal partial class UsageCard
             };
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(pct, 0.001), GridUnitType.Star));
             bar.ColumnDefinitions.Add(new ColumnDefinition(Math.Max(100 - pct, 0.001), GridUnitType.Star));
-            var fill = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorKey : pct >= 75 ? WarningKey : Accent);
+            var fill = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, pct >= 90 ? ErrorMark : pct >= 75 ? WarningMark : Accent);
             var rest = new Border { CornerRadius = new CornerRadius(Radius.S) }.Themed(Border.BackgroundProperty, Subtle);
             Grid.SetColumn(rest, 1);
             bar.Children.Add(fill);

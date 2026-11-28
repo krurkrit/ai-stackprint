@@ -113,7 +113,7 @@ internal partial class ItemBrowser
     }
 
     /// <param name="top">Page header and any sections above the list.</param>
-    /// <param name="items">The rows in scope (this kind only; "Part" = commands and agents).</param>
+    /// <param name="items">The rows in scope (this kind only).</param>
     public Control Build(IEnumerable<Control> top, List<Item> items)
     {
         _items = items;

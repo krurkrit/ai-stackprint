@@ -54,6 +54,7 @@ internal partial class MainWindow
         {
             b.Themed(BackgroundProperty, Surface).Themed(ForegroundProperty, Accent);
             b.CornerRadius = new CornerRadius(Radius.L);
+            Motion.Glide(b, "nav", text);   // the fill glides from the last page's item
         }
         HoverStyle(b);
         if (!full)
@@ -74,7 +75,7 @@ internal partial class MainWindow
 
     private Button Go(string icon, string text, string view) => NavBtn(icon, text, () => Go(view), _view == view || _view.StartsWith(view == "Apps" ? "App:" : view + ":"));
 
-    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Part (commands and agents), Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings (opens Settings:&lt;page&gt;), About. Kept in the back/forward history.</summary>
+    /// <summary>Views: Dashboard, Apps, App:&lt;id&gt;, Plugin, Skill, Command, Agent, Mcp, Usage, Models, Models:&lt;name&gt;, Logs, Logs:&lt;id&gt;, Project:&lt;path&gt;, Health, Settings (opens Settings:&lt;page&gt;), About. Kept in the back/forward history.</summary>
     private void Go(string view)
     {
         if (view == "Settings")
@@ -121,11 +122,13 @@ internal partial class MainWindow
     /// <summary>Skills or Plugins page filtered to an app and/or a search text.</summary>
     private void Browse(string kind, string? app, string? query)
     {
-        (kind switch { "Plugin" => _plugins, "Part" => _parts, _ => _skills }).Filter(app, query);
+        Library(kind).Filter(app, query);
         Go(kind);
     }
 
-    /// <summary>Opens a skill or plugin on its page with the panel showing it.</summary>
+    private LibraryView Library(string kind) => kind switch { "Plugin" => _plugins, "Command" => _commands, "Agent" => _agents, _ => _skills };
+
+    /// <summary>Opens a skill, plugin, command or agent on its page with the panel showing it.</summary>
     private void OpenItem(Item i)
     {
         if (i.Kind == "Plugin")
@@ -140,8 +143,8 @@ internal partial class MainWindow
         }
         else if (i.Kind is "Command" or "Agent")
         {
-            _parts.Select(i);
-            Go("Part");
+            Library(i.Kind).Select(i);
+            Go(i.Kind);
         }
         else
         {
@@ -170,7 +173,8 @@ internal partial class MainWindow
         nav.Children.Add(Go("apps", "Apps", "Apps"));
         nav.Children.Add(Go("puzzle_piece", "Plugins", "Plugin"));
         nav.Children.Add(Go("sparkle", "Skills", "Skill"));
-        nav.Children.Add(Go("bot", "Commands & Agents", "Part"));
+        nav.Children.Add(Go("prompt", "Commands", "Command"));
+        nav.Children.Add(Go("bot", "Agents", "Agent"));
         nav.Children.Add(Go("server", "Servers", "Mcp"));
         nav.Children.Add(Go("flash", "Hooks", "Hooks"));
         nav.Children.Add(Go("data_pie", "Usage", "Usage"));

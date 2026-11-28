@@ -51,12 +51,14 @@ internal partial class MainWindow
             _logs.Release();   // the Logs page keeps no file text, controls or watcher once it is closed
         }
 
-        if (_shownView != _view)
+        var samePage = _shownView == _view;
+        if (!samePage)
         {
             Leave(_shownView);
             _shownView = _view;
         }
 
+        var scrolled = samePage && _body.Content is Avalonia.Controls.ScrollViewer old ? old.Offset : (Vector?)null;
         _body.Content = _view switch
         {
             "Dashboard" => DashboardView.Build(_x),
@@ -64,7 +66,8 @@ internal partial class MainWindow
             _ when InSettings(_view) => _settings.Build(SettingsPage()),
             "Plugin" => _plugins.Build(),
             "Skill" => _skills.Build(),
-            "Part" => _parts.Build(),
+            "Command" => _commands.Build(),
+            "Agent" => _agents.Build(),
             "Health" => _health.Build(),
             "Mcp" => _mcp.Build(),
             "Hooks" => _hooks.Build(),
@@ -77,6 +80,16 @@ internal partial class MainWindow
             _ when _view.StartsWith("Project:") => _project.Build(_view[8..]),
             _ => DashboardView.Build(_x)
         };
+        if (scrolled is { } at && _body.Content is Avalonia.Controls.ScrollViewer page)
+        {
+            KeepScroll(page, at);
+        }
+
+        if (!samePage && !_firstShow && _body.Content is Avalonia.Controls.Control shown)
+        {
+            Motion.Enter(shown, Duration.Normal);   // another page fades in (no slide: moving a whole page makes its lists work out their rows each frame); the same page rebuilt stays still
+        }
+
         if (_firstShow)
         {
             _firstShow = false;
@@ -90,6 +103,21 @@ internal partial class MainWindow
     }
 
     private string _shownView = "";
+
+    /// <summary>
+    /// The same page built again (a setting changed, a rescan) opens where it was scrolled, not at the top. The offset is set once the new
+    /// page is laid out: before that its height is 0 and the offset would be cut to 0.
+    /// </summary>
+    private static void KeepScroll(Avalonia.Controls.ScrollViewer page, Vector at)
+    {
+        void Laid(object? s, EventArgs e)
+        {
+            page.LayoutUpdated -= Laid;
+            page.Offset = at;
+        }
+
+        page.LayoutUpdated += Laid;
+    }
 
     /// <summary>
     /// Another page opens: the view that was shown lets go of the controls it keeps, which would otherwise keep its whole page in memory.
@@ -108,8 +136,11 @@ internal partial class MainWindow
             case "Skill":
                 _skills.Leave();
                 break;
-            case "Part":
-                _parts.Leave();
+            case "Command":
+                _commands.Leave();
+                break;
+            case "Agent":
+                _agents.Leave();
                 break;
             case "Mcp":
                 _mcp.Leave();

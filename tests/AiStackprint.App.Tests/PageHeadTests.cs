@@ -1,6 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using AiStackprint.Models;
 using AiStackprint.Ui;
 
 using Avalonia;
@@ -47,11 +48,15 @@ public sealed class PageHeadTests
     }
 
     [AvaloniaFact]
-    public void The_usage_chart_gives_each_app_its_own_color()
+    public void The_usage_chart_gives_each_app_its_own_color_and_keeps_it_when_the_period_changes()
     {
-        var keys = typeof(UsageView).GetField("_keys", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!.GetValue(null) as string[];
-        Assert.NotNull(keys);
-        Assert.Equal(keys.Length, keys.Distinct().Count());
-        Assert.DoesNotContain(W.Accent, keys);   // the accent is the first series already: ChartIn
+        var view = new UsageView(new Ctx(new AppState(), new Window(), _ => { }, () => { }));
+        var week = view.Keys(["claude-code", "codex-cli"]);
+        Assert.Equal([W.ChartKey(1), W.ChartKey(2)], week);
+        var month = view.Keys(["codex-cli", "opencode", "claude-code"]);   // a new order and a new app: the first two keep theirs
+        Assert.Equal([W.ChartKey(2), W.ChartKey(3), W.ChartKey(1)], month);
+        var many = view.Keys([.. Enumerable.Range(0, 10).Select(i => "app" + i)]);
+        Assert.Equal(W.ChartSlots - 3, many.Count(k => k != W.Muted));   // the slots left, then "Other"
+        Assert.Equal(W.Muted, many[^1]);
     }
 }

@@ -14,7 +14,8 @@ namespace AiStackprint.Ui;
 /// (short values like an app name or version would otherwise break mid-word in a narrow window). Use star or pixel widths so rows line up.
 /// </summary>
 /// <param name="Help">Builds the content of the ⓘ pop-up after the header text (see <see cref="HeaderHelp"/>); null: no ⓘ.</param>
-internal record Col(string Head, string Width, bool Right = false, double Min = 0, Func<Control>? Help = null);
+/// <param name="HelpOpen">Instead of a pop-up, the ⓘ opens something bigger (a dialog) by itself; wins over <paramref name="Help"/>.</param>
+internal record Col(string Head, string Width, bool Right = false, double Min = 0, Func<Control>? Help = null, Action? HelpOpen = null);
 
 /// <summary>
 /// Columns that appear on several pages. Order on every page: the main value (name), then from the biggest scope to the smallest (App, Level, Type),
@@ -32,12 +33,16 @@ internal static class Cols
     public static Col Version() => new("Version", Px(Widths.ColVersion));
     public static Col Count(string head) => new(head, Px(Widths.ColCount), true);
     public static Col Path() => new("Path", "3*");
-    public static Col Action() => new("", Px(Widths.ColAction));
-    public static Col Actions() => new("", Px(Widths.ColActions));
+    public static Col Action() => new("", Px(Widths.ColAction), true);
+    public static Col Actions() => new("", Px(Widths.ColActions), true);
+
+    /// <summary>Whether <paramref name="c"/> holds icon buttons: its cell is packed to the right edge with no gap, so the row's right padding equals its left.</summary>
+    public static bool IsButtons(Col c) => c.Head == "" && (c.Width == Action().Width || c.Width == Actions().Width);
 }
 
 /// <summary>A row: one control per column, optional click handler, and whether it is the current selection.</summary>
-internal record TableRow(Control[] Cells, Action? Click = null, bool Selected = false);
+/// <param name="Enter">The row was just shown (its group opened): it fades in.</param>
+internal record TableRow(Control[] Cells, Action? Click = null, bool Selected = false, bool Enter = false);
 
 /// <summary>Flat list with column headers, row dividers, hover and selection. Replaces the old expandable tree.</summary>
 internal static partial class Table
@@ -114,7 +119,13 @@ internal static partial class Table
                 ToolTip.SetTip(t, cols[c].Head == "" ? null : cols[c].Head);
             });
             Control cell = text;
-            if (cols[c].Help is { } help)
+            if (cols[c].HelpOpen is { } open)
+            {
+                var info = IconBtn("info", "What do the values mean?", open);
+                info.Padding = new Thickness(Space.XS);
+                cell = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.XXS, Children = { text, info } };
+            }
+            else if (cols[c].Help is { } help)
             {
                 // the header text, then a small ⓘ that opens the explanation of the column's values
                 var info = IconBtn("info", "What do the values mean?", () => { });
@@ -148,7 +159,13 @@ internal static partial class Table
             r.Cells[c].VerticalAlignment = VerticalAlignment.Center;
             if (c < cols.Length && cols[c].Right)
             {
-                r.Cells[c].HorizontalAlignment = HorizontalAlignment.Right;
+                // a Grid cell lays out its own left and right buttons: it fills the column
+                r.Cells[c].HorizontalAlignment = r.Cells[c] is Grid ? HorizontalAlignment.Stretch : HorizontalAlignment.Right;
+            }
+
+            if (c < cols.Length && Cols.IsButtons(cols[c]) && r.Cells[c] is StackPanel buttons)
+            {
+                buttons.Spacing = 0;
             }
 
             if (c < cols.Length && cols[c].Width.EndsWith('*'))
@@ -184,10 +201,14 @@ internal static partial class Table
             row.Cursor = Hand;
             if (!r.Selected)
             {
-                row.PointerEntered += (_, _) => row.Themed(Border.BackgroundProperty, Subtle);
-                row.PointerExited += (_, _) => row.Background = Avalonia.Media.Brushes.Transparent;
+                row.Hover();
             }
             row.PointerReleased += (_, e) => { if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left) { click(); } };
+        }
+
+        if (r.Enter)
+        {
+            Motion.Enter(divider, Duration.Fast, -Space.XS);
         }
 
         return divider;

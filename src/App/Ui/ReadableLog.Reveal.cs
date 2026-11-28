@@ -23,7 +23,8 @@ internal partial class ReadableLog
     /// Goes to the step that holds a place in a file: <paramref name="source"/> is a sub-agent's file, null the session file. A reply that spans lines holds them all; steps that
     /// start on the same line are all tinted. False when no shown step starts at or before the line.
     /// </summary>
-    public bool RevealAt(string? source, long line, double fade)
+    /// <param name="smooth">Glide to it when it is near (a bookmark clicked); search results and the rest jump there, since the steps passed on the way would be built.</param>
+    public bool RevealAt(string? source, long line, double fade, bool smooth = false)
     {
         var found = Index.Find(source, line);
         if (found.Count == 0)
@@ -31,7 +32,7 @@ internal partial class ReadableLog
             return false;
         }
 
-        Reveal(found[0], fade);
+        Reveal(found[0], fade, smooth);
         Flash(found.Skip(1), fade);
         return true;
     }
@@ -40,7 +41,8 @@ internal partial class ReadableLog
     public void Reveal(LogEntry e) => Reveal(e, 0);
 
     /// <param name="fade">More than 0: the step is tinted and the tint fades out over this many seconds (where a search result or bookmark is).</param>
-    public void Reveal(LogEntry e, double fade)
+    /// <param name="smooth">See <see cref="RevealAt"/>.</param>
+    public void Reveal(LogEntry e, double fade, bool smooth = false)
     {
         var i = Steps.IndexOf(e);
         if (i >= 0 && (i < _lo || i >= _hi))
@@ -58,7 +60,7 @@ internal partial class ReadableLog
             x.IsExpanded = true;
         }
 
-        Dispatcher.UIThread.Post(c.BringIntoView, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(smooth ? () => Motion.ScrollIntoView(c) : c.BringIntoView, DispatcherPriority.Background);   // smooth: a near step glides into view, a far one is jumped to
         Flash([e], fade);
     }
 

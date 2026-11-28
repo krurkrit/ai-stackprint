@@ -132,6 +132,8 @@ public sealed class LimitProviderIoTests : IDisposable
             Name = "Codex CLI"
         };
         Assert.Null(new CodexLimits().FromLogs(def, []));
+        Assert.Empty(new CodexLimits().HistoryFromLogs(def, []));
+        Assert.Empty(((ILimitProvider)new ClaudeLimits()).HistoryFromLogs(def, []));   // the default: no readings in logs
     }
 
     [Fact]

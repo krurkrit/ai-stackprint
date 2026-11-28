@@ -32,13 +32,13 @@ public sealed class RevealTests
         Assert.Contains("Loading it…", Ui.Texts(w));
         gate.Set();
         Ui.WaitUntil(() => Ui.Texts(w).Contains("done"));
-        Assert.NotEmpty(((Control)host.Content!).Transitions!);   // the result carries the fade
+        Assert.Equal(1, ((Control)host.Content!).Opacity);   // tests run without motion: shown at once (MotionTests covers the fade)
     }
 
     [AvaloniaFact]
-    public void Fade_starts_transparent()
+    public void Fade_without_animations_shows_at_once()
     {
-        Assert.Equal(0, Reveal.Fade(new Border()).Opacity);
+        Assert.Equal(1, Reveal.Fade(new Border()).Opacity);
     }
 
     [AvaloniaFact]

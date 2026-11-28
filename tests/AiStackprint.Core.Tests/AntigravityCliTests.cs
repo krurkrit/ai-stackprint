@@ -18,8 +18,8 @@ public sealed class AntigravityCliTests
         Assert.Contains("~/.gemini/config", d.Detect);   // where the CLI keeps mcp_config.json, plugins and projects
         Assert.Contains("%APPDATA%/Antigravity/bin", d.Detect);   // the agy launcher the Antigravity app installs on Windows
         Assert.All(d.Detect, p => Assert.False(p.EndsWith(".cmd", StringComparison.Ordinal) || p.EndsWith(".exe", StringComparison.Ordinal), $"{p}: detection looks for folders"));
-        Assert.Contains(d.Roots, r => r.Path == "~/.gemini/config/skills");
-        Assert.Contains(d.ProjectRoots, r => r.Path == ".agents/skills");
+        Assert.Contains(d.Skills, r => r.Path == "~/.gemini/config/skills" && r.Level == "User");
+        Assert.Contains(d.Skills, r => r.Path == ".agents/skills" && r.Level == "Project");
         Assert.Contains(d.Configs, c => c.Path == "~/.gemini/config/mcp_config.json" && c.Kind == "mcp");
         Assert.Contains(d.Logs, l => l.Pattern == "transcript.jsonl");
         Assert.Contains(d.Configs, c => c.Path == "~/.gemini/config/hooks.json" && c.Kind == "hooks");

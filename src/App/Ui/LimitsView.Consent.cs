@@ -58,15 +58,14 @@ internal static partial class LimitsView
     public static Control Settings(Ctx x)
     {
         var st = x.S.Settings;
-        var every = new NumericUpDown
+        var every = W.Stepper(new NumericUpDown
         {
             Minimum = 1,
             Maximum = 60,
             Increment = 1,
             FormatString = "0",
-            MinWidth = Widths.FieldS,
             Value = Math.Clamp(st.LimitsRefreshMinutes, 1, 60)
-        };
+        }, "00");
         every.ValueChanged += (_, e) =>
         {
             if (e.NewValue is { } v)

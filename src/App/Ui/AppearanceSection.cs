@@ -18,18 +18,17 @@ internal static class AppearanceSection
     /// <summary>The installed font names, read once: listing the system fonts takes a moment and the list does not change while the app runs.</summary>
     private static readonly Lazy<List<string>> _installed = new(() => [.. FontManager.Current.SystemFonts.Select(f => f.Name).Distinct().Order(StringComparer.OrdinalIgnoreCase)]);
 
-    /// <summary>Typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
+    /// <summary>[−  size  +]: typed whole-number size, so one digit at a time works; the value is checked when the box is left or Enter is pressed.</summary>
     private static NumericUpDown SizeBox(double value, int min, int max, Action<double> set)
     {
-        var box = new NumericUpDown
+        var box = Stepper(new NumericUpDown
         {
             Minimum = min,
             Maximum = max,
             Increment = 1,
             FormatString = "0",
-            MinWidth = Widths.FieldS,
             Value = (decimal)Math.Clamp(Math.Round(value), min, max)
-        };
+        }, "00");
         box.ValueChanged += (_, e) =>
         {
             if (e.NewValue is not { } v)
@@ -120,6 +119,20 @@ internal static class AppearanceSection
             SettingsStore.Save(st);
         }), "Seconds new lines, steps and search results stay highlighted while they fade (1 to 60)");
 
+        Group("Motion");
+        var motion = new ToggleSwitch
+        {
+            IsChecked = st.Animations,
+            OnContent = "On",
+            OffContent = "Off"
+        };
+        motion.IsCheckedChanged += (_, _) =>
+        {
+            st.Animations = Motion.Enabled = motion.IsChecked == true;
+            SettingsStore.Save(st);
+        };
+        Add("Animations", motion, "Pages, pop-ups, dialogs, panels, charts and selection move softly; off shows changes at once");
+
         var preview = new Border
         {
             CornerRadius = new CornerRadius(Radius.M),
@@ -142,6 +155,7 @@ internal static class AppearanceSection
             foreach (var (k, v) in d.Fonts) { st.Fonts[k] = v; }
             controls.ForEach(c => c.Refresh());
             st.LogLineNumbers = d.LogLineNumbers;
+            st.Animations = d.Animations;
             st.Light = new();
             st.Dark = new();
         }), false, "arrow_reset");
