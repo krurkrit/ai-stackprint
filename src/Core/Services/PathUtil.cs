@@ -29,6 +29,12 @@ public static class PathUtil
         return p.Replace('/', Path.DirectorySeparatorChar);
     }
 
+    /// <summary>
+    /// What a folder listing skips: hidden and system entries on Windows, system ones only on Linux and macOS. There .NET counts every
+    /// name that starts with a dot as hidden, and those are the AI files (.claude-plugin, .mcp.json, .cursorignore, .github).
+    /// </summary>
+    public static readonly FileAttributes Skipped = OperatingSystem.IsWindows() ? FileAttributes.Hidden | FileAttributes.System : FileAttributes.System;
+
     private static readonly AsyncLocal<string?> _osOverride = new();
 
     /// <summary>The operating system as the app definitions name it: windows, macos or linux. Tests set another to run the other branches.</summary>

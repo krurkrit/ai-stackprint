@@ -32,7 +32,8 @@ public static class PluginParts
     {
         RecurseSubdirectories = true,
         MaxRecursionDepth = 2,
-        IgnoreInaccessible = true
+        IgnoreInaccessible = true,
+        AttributesToSkip = PathUtil.Skipped   // .mcp.json and .lsp.json are dotfiles: hidden on Linux and macOS
     };
 
     public static string Name(string key) => All.FirstOrDefault(p => p.Key == key)?.Label ?? key;

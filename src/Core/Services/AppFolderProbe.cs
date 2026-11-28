@@ -62,16 +62,17 @@ public static class AppFolderProbe
         try
         {
             var entries = Directory.EnumerateFileSystemEntries(path).Select(System.IO.Path.GetFileName).OfType<string>().ToList();
+            // Names match in any case; the checks use the name on disk, as Linux file names are case-sensitive (Commands/ is not commands/)
             foreach (var (kind, names) in _folders)
             {
-                found.AddRange(names.Where(n => entries.Exists(e => string.Equals(e, n, StringComparison.OrdinalIgnoreCase)) && Directory.Exists(System.IO.Path.Combine(path, n)))
-                    .Select(n => new FoundPart(kind, Actual(entries, n), true)));
+                found.AddRange(names.Select(n => OnDisk(entries, n)).OfType<string>().Where(n => Directory.Exists(System.IO.Path.Combine(path, n)))
+                    .Select(n => new FoundPart(kind, n, true)));
             }
 
             foreach (var (kind, names) in _files)
             {
-                found.AddRange(names.Where(n => File.Exists(System.IO.Path.Combine(path, n)) && entries.Exists(e => string.Equals(e, n, StringComparison.OrdinalIgnoreCase)))
-                    .Select(n => new FoundPart(kind, Actual(entries, n), false)));
+                found.AddRange(names.Select(n => OnDisk(entries, n)).OfType<string>().Where(n => File.Exists(System.IO.Path.Combine(path, n)))
+                    .Select(n => new FoundPart(kind, n, false)));
             }
 
             if (!found.Exists(f => f.Kind == "skills") && HasSkill(path))
@@ -161,7 +162,7 @@ public static class AppFolderProbe
     }
 
     /// <summary>The entry's name as it is on disk (case).</summary>
-    private static string Actual(List<string> entries, string name) => entries.First(e => string.Equals(e, name, StringComparison.OrdinalIgnoreCase));
+    private static string? OnDisk(List<string> entries, string name) => entries.Find(e => string.Equals(e, name, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The home folder written as ~, so apps.json reads the same on another machine.</summary>
     private static string Tilde(string path)

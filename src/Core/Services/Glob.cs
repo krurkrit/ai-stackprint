@@ -117,8 +117,7 @@ public static class ProjectFiles
         ".git", ".hg", ".svn", ".vs", ".idea", "node_modules", "bin", "obj", "dist", "build", "target", "venv", ".venv", "__pycache__", ".next", ".nuxt", ".gradle", ".turbo",
     };
 
-    // Hidden files are skipped on Windows only: on Linux and macOS every dotfile (.cursorignore, .github) counts as hidden, and those are the project's AI files
-    private static readonly FileAttributes _skipped = OperatingSystem.IsWindows() ? FileAttributes.Hidden | FileAttributes.System : FileAttributes.System;
+    private static readonly FileAttributes _skipped = PathUtil.Skipped;
 
     private static readonly TimeSpan _keep = TimeSpan.FromSeconds(30);
     private static readonly Dictionary<(string, int), (DateTime At, Lazy<(List<string> Files, bool Complete)> Listing)> _recent = [];

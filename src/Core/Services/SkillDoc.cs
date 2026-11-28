@@ -171,7 +171,7 @@ public partial record SkillDoc(IReadOnlyDictionary<string, string> Front, string
             RecurseSubdirectories = true,
             MaxRecursionDepth = 5,
             IgnoreInaccessible = true,
-            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
+            AttributesToSkip = PathUtil.Skipped   // dot folders are left out below, except the plugin's own
         };
         foreach (var f in new DirectoryInfo(root).EnumerateFiles("*", opt))
         {

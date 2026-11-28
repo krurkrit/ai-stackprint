@@ -78,6 +78,16 @@ internal static class ColorSettings
         return which switch { 0 => d.Accent, 1 => d.Hover, _ => d.Selection };
     }
 
+    /// <summary>
+    /// Border, gap, swatch, gap, the widest #RRGGBB, gap, border. Measured in the font in use: where no monospace font is installed
+    /// (a Linux without one) the fallback is proportional, and the box would change width with the code.
+    /// </summary>
+    private static double CodeBoxWidth()
+    {
+        var digit = "0123456789ABCDEF".Max(c => W.TextWidth(c.ToString(), Theme.Mono));
+        return Math.Ceiling(2 * Stroke.Thin + 3 * Space.S + IconSize.M + W.TextWidth("#", Theme.Mono) + 6 * digit);
+    }
+
     private static string Hex(Color c) => c.A == 255 ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
 
     /// <summary>[■ #RRGGBB] (the swatch inside the box opens the picker)[−  opacity %  +][↺] plus a contrast note. Opacity is its own 0–100% setting; the stored value is #RRGGBB or #AARRGGBB.</summary>
@@ -88,7 +98,8 @@ internal static class ColorSettings
         {
             Text = Rgb(current),   // the default shows as real text too, so it can be selected and copied
             PlaceholderText = Rgb(fallback),
-            MinWidth = 0,   // as wide as the swatch and the 7 characters of #RRGGBB, with the same gap at both ends
+            MinWidth = 0,
+            Width = CodeBoxWidth(),   // the swatch and any #RRGGBB, with the same gap at both ends
             Padding = new Thickness(Space.S, Theme.InputPad, Space.S, Theme.InputPad),
             FontFamily = Theme.Mono
         };
