@@ -24,7 +24,10 @@ internal sealed class LimitsTimer
     public LimitsTimer(LimitsService limits, Func<IEnumerable<AppDefinition>> apps, Func<IReadOnlyList<string>> projects, Func<bool> paused)
     {
         (_limits, _apps, _projects, _paused) = (limits, apps, projects, paused);
-        _limits.Updated += id => Dispatcher.UIThread.Post(() => Changed?.Invoke(id));
+        // Updated comes on a worker thread: post to the dispatcher taken here, on the UI thread. Reading Dispatcher.UIThread on a worker
+        // can create the UI dispatcher on that thread when there is none at that moment (between headless tests), and the next UI test fails.
+        var ui = Dispatcher.UIThread;
+        _limits.Updated += id => ui.Post(() => Changed?.Invoke(id));
         _timer = new DispatcherTimer(Tick, DispatcherPriority.Background, (_, _) => Request());
         _timer.Start();
     }

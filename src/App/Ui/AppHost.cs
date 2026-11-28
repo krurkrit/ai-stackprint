@@ -30,6 +30,9 @@ internal sealed partial class AppHost
     public LimitsTimer Timer { get; }
     public bool Quitting { get; private set; }
 
+    /// <summary>The pipe a second start talks to; tests give each host its own, so they never meet a running copy of the app.</summary>
+    internal string Pipe { get; set; } = SingleInstance.PipeName;
+
     /// <summary>The main window, once it was opened.</summary>
     public MainWindow? Main => _main;
     public TrayHost? Tray => _tray;
@@ -63,7 +66,8 @@ internal sealed partial class AppHost
     {
         if (!_perf)
         {
-            _ = SingleInstance.Listen(SingleInstance.PipeName, m => Dispatcher.UIThread.Post(() => Message(m)), _stop.Token);
+            var ui = Dispatcher.UIThread;   // messages come on a worker thread: see LimitsTimer
+            _ = SingleInstance.Listen(Pipe, m => ui.Post(() => Message(m)), _stop.Token);
         }
 
         Apply();

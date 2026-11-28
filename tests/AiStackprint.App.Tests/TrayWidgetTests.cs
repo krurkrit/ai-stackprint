@@ -24,6 +24,7 @@ public sealed partial class TrayWidgetTests : IDisposable
     private readonly FakeNotifier _notes = new();
     private readonly ILoginItem _realLogin = LoginItem.Current;
     private readonly INotifier _realNotifier = Notifier.Current;
+    private readonly List<AppHost> _hosts = [];
 
     public TrayWidgetTests()
     {
@@ -33,6 +34,11 @@ public sealed partial class TrayWidgetTests : IDisposable
 
     public void Dispose()
     {
+        foreach (var h in _hosts)
+        {
+            h.Quit();   // stops its timers and pipe listener, so nothing of this test runs into the next one
+        }
+
         LoginItem.Current = _realLogin;
         Notifier.Current = _realNotifier;
         Application.Current!.RequestedThemeVariant = ThemeVariant.Default;
@@ -43,7 +49,8 @@ public sealed partial class TrayWidgetTests : IDisposable
     /// <summary>A host with live limits on for Claude Code and Codex and the readings of the mockup (Thursday 08:42 is "now" only in the texts' shape).</summary>
     private AppHost Host(bool tray = true, Action<Models.Settings>? set = null)
     {
-        var h = new AppHost(_life, tray ? ["--tray"] : []);
+        var h = new AppHost(_life, tray ? ["--tray"] : []) { Pipe = "AiStackprint-test-" + Guid.NewGuid().ToString("N")[..8] };
+        _hosts.Add(h);
         h.S.Settings.LimitsEnabled = ["claude-code", "codex-cli"];
         h.S.Settings.TrayEnabled = tray;
         set?.Invoke(h.S.Settings);

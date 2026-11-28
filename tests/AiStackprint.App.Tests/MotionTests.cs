@@ -198,8 +198,8 @@ public sealed class MotionTests : IDisposable
     {
         var data = "test:" + Guid.NewGuid();
         var bar = Motion.Grow(new Border { Width = 100, Height = 10 }, data);
+        Assert.Equal(0, ((Avalonia.Media.ScaleTransform)bar.RenderTransform!).ScaleX);   // from nothing, at the left (before the first frame: showing it may already play one)
         var w = Ui.Show(bar);
-        Assert.Equal(0, ((Avalonia.Media.ScaleTransform)bar.RenderTransform!).ScaleX);   // from nothing, at the left
         Play(Duration.Slow + 100);
         Assert.Null(bar.RenderTransform);
         Assert.Null(Motion.Grow(new Border(), data).RenderTransform);   // the same numbers again: still
