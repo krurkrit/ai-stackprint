@@ -1,6 +1,7 @@
 // Copyright (c) AI Stackprint contributors.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using AiStackprint.Models;
 using AiStackprint.Services;
 
 using Avalonia.Controls;
@@ -13,12 +14,14 @@ namespace AiStackprint.Ui;
 /// <summary>Project folders: kept in projects.json; a folder that no longer exists is greyed in the menu, to relocate (click) or remove (bin).</summary>
 internal partial class MainWindow
 {
-    private void LoadProjects()
+    private void LoadProjects() => LoadProjects(_s);
+
+    internal static void LoadProjects(AppState s)
     {
         foreach (var p in ProjectStore.Load())
         {
-            _s.Projects.Add(p.Path);
-            _s.ProjectAdded[p.Path] = p.Added;
+            s.Projects.Add(p.Path);
+            s.ProjectAdded[p.Path] = p.Added;
         }
     }
 

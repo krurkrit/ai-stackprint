@@ -5,7 +5,7 @@ Read in this order for a task; each file is meant to be read alone.
 | File | Read it when |
 |---|---|
 | `feature-map.md` | you need to find where a feature lives (page, Core service, UI file, data, tests), or want the layer diagram |
-| `recipes.md` | you are about to add an app, page, list, column, setting, service, icon, or change model data |
+| `recipes.md` | you are about to add an app, page, list, column, setting, service, icon, alert or widget option, or change model data |
 | `conventions.md` | you build or change a list, card, label or page name (column order, widths, sorting, wording) |
 | `design-system.md` | you need a size, spacing, radius, icon or component token |
 | `typography.md` | you write or change any text (helpers, weights, fonts, number style, overflow) |
@@ -20,5 +20,6 @@ Read in this order for a task; each file is meant to be read alone.
 | `plan-settings-models.md` | history of the settings and models work (reference only) |
 | `plan-languages.md` | plan, not started: a UI in more than one language (mechanism, which languages, phases) |
 | `plan-plugin-updates.md` | plan, not started: checking plugins for updates and updating them, per app group |
+| `plan-tray-widget.md` | plan, built (history; for changes read `recipes.md` › Tray, widget or alerts): tray, usage widget and limit alerts; how the build differs and what is left to verify; mockups in `mockups/tray-*.png` |
 
 Keep these in step with the code: a new page, route or column kind updates `feature-map.md`, `conventions.md` and the file map in `architecture.md` in the same change.

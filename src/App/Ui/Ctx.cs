@@ -32,6 +32,8 @@ internal class Ctx(AppState s, Window owner, Action<string> go, Action rescan)
     public Func<bool>? Escape { get; set; }
     /// <summary>Live usage limits, shared by the dashboard and app pages.</summary>
     public LimitsService Limits { get; init; } = null!;
+    /// <summary>The running app (tray, widget, alerts); null for a window of its own (tests).</summary>
+    public AppHost? Host { get; init; }
 
     public AppInfo? Info(string appId) => S.Apps.FirstOrDefault(a => a.Id == appId);
     private List<Item>? _countsFor;

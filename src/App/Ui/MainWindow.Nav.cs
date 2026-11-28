@@ -2,9 +2,9 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using AiStackprint.Services;
+
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Threading;
 
 namespace AiStackprint.Ui;
 
@@ -99,31 +99,25 @@ internal partial class MainWindow
         }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
     }
 
+    private LimitsTimer _limitsTimer = null!;
+
     /// <summary>
-    /// Asks for limits of the shown, installed apps that have a provider; the service decides whether a call is due (refresh interval, at most once a minute).
-    /// Paused while the window is minimized.
+    /// Limits are asked for by the app's <see cref="LimitsTimer"/> (<see cref="AppHost"/>), with or without this window. A window with no host (tests) has its own,
+    /// paused while it is minimized or before the first scan.
     /// </summary>
     private void Limits()
     {
-        _x.Limits.Updated += _ => Dispatcher.UIThread.Post(() => LimitsChanged?.Invoke());
-        var timer = new DispatcherTimer(TimeSpan.FromSeconds(20), DispatcherPriority.Background, (_, _) => RequestLimits());
-        timer.Start();
+        _limitsTimer = _host?.Timer ?? new LimitsTimer(_x.Limits, () => LimitsTimer.Apps(_s, _x.Limits.Enabled), () => _s.Projects,
+            () => WindowState == WindowState.Minimized || !_scanned);
+        _limitsTimer.Changed += OnLimits;
+        Closed += (_, _) => _limitsTimer.Changed -= OnLimits;
         Opened += (_, _) => RequestLimits();
     }
+
+    private static void OnLimits(string appId) => LimitsChanged?.Invoke();
 
     /// <summary>Raised on the UI thread when any app's limits change; the page showing them refreshes its card.</summary>
     public static event Action? LimitsChanged;
 
-    private void RequestLimits()
-    {
-        if (WindowState == WindowState.Minimized || !_scanned)
-        {
-            return;
-        }
-
-        foreach (var d in _s.Defs.Where(d => d.Limits != null && _x.Info(d.Id)?.Installed == true))
-        {
-            _x.Limits.Request(d, _s.Projects);
-        }
-    }
+    private void RequestLimits() => _limitsTimer.Request();
 }

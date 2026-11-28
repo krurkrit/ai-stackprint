@@ -87,6 +87,12 @@ Weights come from Appearance (`W.Body`, `W.Emphasis`, `W.Heading`); never set a 
 | `Widths.Dialog*` | 380 / 520 / 640 / 760 | dialog widths (760: the hook events diagram) |
 | `Heights.List` / `ViewerS` / `Viewer` / `ViewerL` | 260 / 320 / 420 / 520 | scrolling lists and viewers |
 | `Heights.Chart` | 240 | a line chart inside a card (the limit pace chart) |
+| `Sizes.BarWidget` | 6 | the usage widget's bars (round ends) |
+| `Sizes.WidgetButton` | 24 | the widget's gear and × |
+| `Sizes.PaceMark` / `PaceMarkRise` | 2 / 3 | the even-pace mark across a widget bar, and how far it runs above and below it |
+| `Sizes.ScreenEdge` / `NoticeRing` | 10 / 14 | the tray notice and alert pop-ups: from the work area's edges; their ring |
+| `Widths.Widget` / `WidgetLabel` / `WidgetPercent` / `WidgetIndent` | 280 / 52 / 34 / 60 | the widget (and its settings and alert pop-ups), its name and percent columns, the line under a row |
+| `Widths.Notice` / `SubOption` | 258 / 22 | the "Still running in the tray" notice; a check box under another |
 
 ### Motion (`Duration`, ms)
 | Token | ms | Use |
@@ -144,7 +150,7 @@ Rules:
 - Text always uses the text tokens, never a series color. Light slot 5 is only 3.1:1 on the card.
 - What `dataviz`'s palette validator says about it: neighbours stay ≥ 19 ΔE apart for normal vision. For color-blind readers the closest pairs are light 2/3 (6.6, protan) and dark 7/8 (7.6, deutan), so legends and labels matter there. The validator's own bands also flag light slot 6 (chroma .095) and dark slots for their lightness.
 
-**Limit pace chart** (`PaceChart`, `LimitsView.Pace`): three stat cards (label, figure in `Title` size, one line with a mark: success dot, info icon or warning icon) on the hover tint, a legend that draws each line's style, then the chart (680 × 300 proportions, 240 to 360 tall). Your use: chart slot 1, solid; its forecast: slot 1, dotted; the weekly even pace: muted gray, dashed, like the "Now" line (a guide, not a series); the 5-hour pace: warning mark, finely dotted, with its window as a band of the same color (by choice: the limit you hit first; the one series in a status color), and the "Limit" point in it too; "Reset" at the end of the weekly pace line (100 % at the right end): above it, under the 5-hour name, or under the line when the "Limit" time is there. A card's success dot sits in a box as tall as an icon, so it lines up with the first line of text. Every series also has a legend or a label, so color is never the only cue.
+**Limit pace chart** (`PaceChart`, `LimitsView.Pace`): three stat cards (label, figure in `Title` size, one line with a mark: success dot, info icon or warning icon) on the hover tint, a legend that draws each line's style, then the chart (680 × 300 proportions, 240 to 360 tall). Your use: chart slot 1, solid; its forecast: slot 1, dotted; the weekly even pace: muted gray, dashed, 1 px (both pace lines are thin guides), like the "Now" line (a guide, not a series); the 5-hour pace: warning mark, finely dotted, running one window before and one after its band at the same slope (three band widths, clipped at the plot) so it stands out, with its window as a band of the same color (by choice: the limit you hit first; the one series in a status color), and the "Limit" point in it too; "Reset" at the end of the weekly pace line (100 % at the right end): above it, under the 5-hour name, or under the line when the "Limit" time is there. A card's success dot sits in a box as tall as an icon, so it lines up with the first line of text. Every series also has a legend or a label, so color is never the only cue.
 
 ## Components
 
@@ -166,6 +172,8 @@ Built in `W` (`Widgets*.cs`); use these instead of building the same thing again
 - **Chips and status** (`W.Chip`, `W.Status`): `Caption` text, `Radius.Pill`.
 - **Dots** (`W.Dot`, `W.DotText`): `Sizes.Dot`, sitting on the text baseline.
 - **Charts**: bars use `Sizes.Bar` and `Radius.S`; series colors are the chart palette (`W.ChartKey`, see Color above); status colors are never series. The donut (`PieChart`) animates in once and when its values change.
+
+**Usage widget** (`UsageWidget`, docs/mockups/tray-widget.png): a card of the surface color whose background alone takes `widgetOpacity` (text, bars, icons and the 1 px border stay solid; opaque under the pointer, over `Duration.Fast`), `Radius.L`, padding 10 / 12 / 12. Header: `Usage limits · now HH:mm` in caption, muted; gear and × at `IconSize.XS` in 24 px buttons. One block per app (name in Emphasis small, plan or `as of HH:mm` muted on the right; a 1 px line between blocks, 10 above and below), one row per window: 52 px name (small, muted), the bar, 34 px percent (Emphasis small, right). The bar: track `Subtle`, fill `Accent` (bars never change color), a 2 px mark in the text color at 55 % where an even pace would be. The line under it (caption, under the bar) is muted, or the warning text color with a warning icon when the limit comes before the reset. The tray notice and our alert pop-up use the same card (`TrayNotice.Card`): the ring and "AI Stackprint" in caption, the title in Emphasis, the text muted, the accent button first.
 
 ## Loading icons
 - One icon everywhere: `DotsLoader`, a ring of dots with a bright head running round and a fading tail, all in the accent color (`Busy.Spinner(size, key)` takes another color key, e.g. on-accent for a spinner on an accent button).

@@ -18,7 +18,8 @@ internal partial class MainWindow : Window
 {
     private const double StartWidth = 1280, StartHeight = 820, MinimumWidth = 900;
     private const double OpenWidth = 240, ClosedWidth = 64;
-    private readonly AppState _s = new();
+    private readonly AppState _s;
+    private readonly AppHost? _host;
     private readonly Border _side;
     private readonly ContentControl _body = new();
     private readonly Ctx _x;
@@ -37,8 +38,14 @@ internal partial class MainWindow : Window
     private bool _navOpen = true, _wasLogs, _scanning, _scanned;
     private readonly Border _frame = null!;
 
-    public MainWindow()
+    /// <summary>A window with its own settings and limits (tests).</summary>
+    public MainWindow() : this(null) { }
+
+    /// <summary>The app's window: settings, projects and live limits are the <paramref name="host"/>'s, so they outlive the window while the app runs in the tray.</summary>
+    internal MainWindow(AppHost? host)
     {
+        _host = host;
+        _s = host?.S ?? new AppState();
         Title = "AI Stackprint";
         Width = StartWidth;
         Height = StartHeight;
@@ -51,10 +58,14 @@ internal partial class MainWindow : Window
             }
         }
 
-        _s.Settings = SettingsStore.Load();   // first: it hands values older versions kept there to state.json
+        if (host == null)
+        {
+            _s.Settings = SettingsStore.Load();   // first: it hands values older versions kept there to state.json
+            _s.State = StateStore.Load();
+            LoadProjects();
+        }
+
         Table.VirtualFrom = _s.Settings.VirtualListRows;
-        _s.State = StateStore.Load();
-        LoadProjects();
         Ui.Theme.Appearance(Application.Current!, _s.Settings);
         _x = new Ctx(_s, this, Go, Scan)
         {
@@ -65,7 +76,8 @@ internal partial class MainWindow : Window
             Refresh = Refresh,
             Open = OpenItem,
             Browse = Browse,
-            Limits = new LimitsService(() => _s.Settings)
+            Limits = host?.Limits ?? new LimitsService(() => _s.Settings),
+            Host = host
         };
         _skills = new LibraryView(_x, "Skill");
         _plugins = new LibraryView(_x, "Plugin");
@@ -145,8 +157,14 @@ internal partial class MainWindow : Window
         // Right-click on any text copies it (the selection, or the whole block): also for text in buttons and clickable rows, where a drag cannot select (one shared menu, no per-block cost)
         AddHandler(PointerReleasedEvent, CopyMenu, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         ActualThemeVariantChanged += (_, _) => RefreshNav();   // OS theme change or sun/moon click
+        Tray();
         Opened += (_, _) =>
         {
+            if (_perfOpened != 0)
+            {
+                return;   // shown again from the tray: the scan already ran
+            }
+
             _perfOpened = System.Diagnostics.Stopwatch.GetTimestamp();
             _s.Use(AppCatalog.Read());
             Scan();

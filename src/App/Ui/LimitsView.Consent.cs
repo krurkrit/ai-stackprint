@@ -54,7 +54,7 @@ internal static partial class LimitsView
         x.Refresh();
     }
 
-    /// <summary>Settings › Usage limits: refresh interval and one switch per app.</summary>
+    /// <summary>Settings › Usage limits: refresh interval and one switch per app; then the tray and widget, and the alerts.</summary>
     public static Control Settings(Ctx x)
     {
         var st = x.S.Settings;
@@ -98,7 +98,7 @@ internal static partial class LimitsView
             };
             return new TableRow([AppName(d.Logo, d.Category, d.Name), Txt(LimitProviders.Find(d.Limits)!.Host, TextSize.Small, false, Muted), sw]);
         });
-        return Section("data_pie", "Usage limits", new StackPanel
+        var limits = Section("data_pie", "Usage limits", new StackPanel
         {
             Spacing = Space.L,
             Children =
@@ -108,5 +108,6 @@ internal static partial class LimitsView
             Table.Build([new Col("App", "2*"), new Col("Asks", "1.4*"), new Col("Live limits", "1*")], rows)
         }
         });
+        return new StackPanel { Spacing = Space.XL, Children = { limits, TrayCard(x), AlertsCard(x) } };
     }
 }

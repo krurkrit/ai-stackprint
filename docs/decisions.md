@@ -81,6 +81,14 @@ Decisions agreed with the owner. Read before UI work. Rules in `AGENTS.md` win o
 ## Export to AGENTS.md
 - A button on the project page combines the loaded instruction files into one AGENTS.md. It always shows the text first; replacing an existing AGENTS.md needs the confirm and makes a backup. The sources stay as they are: edit them and export again.
 
+## Tray, widget and alerts
+- One app, one exe, one process: the tray, the background checks, the widget and the main window live in `AiStackprint.exe`; the widget reads the readings in memory. A second start hands over to the running copy.
+- Opt-in: nothing runs in the background until "Keep running in the tray" is on (Settings › Usage limits). Then × hides the window (a one-time notice says so) and Quit is in the tray menu; a left click on the tray icon opens the window, a right click the menu (on macOS a click opens the menu).
+- Tray menu, in order: the usage line of the most-used app (muted, not clickable), Open AI Stackprint, Show widget (a check), Pause alerts for 1 hour (then "Resume alerts (paused until HH:mm)"), Settings, Quit AI Stackprint. Windows' tray menu cannot make the first item bold, so it is simply first.
+- The widget follows the main app's colors: bars, ring, buttons, check boxes, switches and the slider use the accent; text, card and border are the app's. Its gear opens its settings (which apps and windows, background opacity 30–100 %, Always on top, Show at login); the same settings are in Settings › Usage limits.
+- The line under a widget row: a short window filling before its reset: `Full about HH:mm · resets HH:mm` (warns); otherwise `Resets HH:mm`. The long window running out before its reset: `Limit ddd HH:mm · resets ddd HH:mm` (warns); more than 10 % left: `N% left at the reset · ddd HH:mm`; otherwise `Lasts to the reset · ddd HH:mm`. Other windows: `Resets ddd HH:mm`, or nothing. A failed reading keeps the last one, with `as of HH:mm` and the status message.
+- Alerts (system notifications; each kind with its own switch and threshold): the short window crossing 80, then 95 % upward (Open, Pause alerts for 1 hour); the long window running out 12 h or more before its reset (once a day; Open); the long window resetting (`You used N% last week`); 24 h before the reset with more than 25 % left (Open). Each at most once; a pause skips them, it does not queue them.
+
 ## Usage page
 - A "Usage" page in the menu after MCP servers: cost and tokens across all apps for 7 or 30 days, with the same figures and caveats as an app's Usage card (estimates unless the app logs its own cost).
 

@@ -12,11 +12,11 @@ namespace AiStackprint.Ui;
 
 /// <summary>
 /// <c>AiStackprint --perf</c>: after the first scan, opens every page in turn and records how long it took to build, how long until no loading icon
-/// was left, the CPU time used and the memory after it, then the largest session (<c>.PerfLogs</c>) and the peak memory; appends the rows to perf.log, writes perf-report.txt (this run next to the one before) and closes.
+/// was left, the CPU time used and the memory after it, then the largest session (<c>.PerfLogs</c>), the peak memory and the memory with only the tray left; appends the rows to perf.log, writes perf-report.txt (this run next to the one before) and closes.
 /// </summary>
 internal partial class MainWindow
 {
-    private const int PerfTimeoutMs = 60_000, PerfPollMs = 25;
+    private const int PerfTimeoutMs = 60_000, PerfPollMs = 25, PerfTrayMs = 5_000;   // the tray measure waits for the memory trim (2 s after the page closed) and settles
 
     /// <summary>Started with --perf.</summary>
     public bool PerfRun { get; init; }
@@ -59,6 +59,7 @@ internal partial class MainWindow
 
         await PerfLargestSession(at, version, rows);
         rows.Add(PerfPeak(at, version));
+        await PerfTray(at, version, rows);
         try
         {
             PerfLog.Append(rows);
@@ -67,6 +68,18 @@ internal partial class MainWindow
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Debug.WriteLine("perf.log not written: " + e.Message); }   // a measuring run only: nothing on screen to tell
 
         Close();
+    }
+
+    /// <summary>
+    /// The memory used while running only in the tray: the window is hidden as × does with the tray on (its page dropped, memory given back),
+    /// then measured once the trim has run. Goal: under 80 MB working set.
+    /// </summary>
+    private async Task PerfTray(DateTime at, string version, List<PerfRow> rows)
+    {
+        ToTray();
+        await Task.Delay(PerfTrayMs);
+        var s = PerfLog.Sample(live: true);
+        rows.Add(new PerfRow(at, version, "Tray only", 0, 0, 0, s.HeapMb, s.WorkingSetMb));
     }
 
     /// <summary>Every page, with the first installed app and the first project; Logs twice (opening it, then again with its files known); the dashboard last.</summary>

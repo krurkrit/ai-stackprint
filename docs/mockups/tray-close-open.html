@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+body{margin:0;font-family:Inter,"Noto Sans","Segoe UI",sans-serif;display:flex}
+.th{padding:24px 28px;width:336px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+.cap{font-size:11px;margin:0}
+.desk{border-radius:10px;height:300px;position:relative;overflow:hidden}
+.bar{position:absolute;left:0;right:0;bottom:0;height:40px;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 12px;font-size:11px}
+.menu{position:absolute;right:24px;bottom:46px;width:238px;border-radius:8px;padding:4px;font-size:12px;box-sizing:border-box}
+.it{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:5px}
+.sep{height:1px;margin:4px 6px}
+svg.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.toast{position:absolute;right:10px;bottom:50px;width:258px;border-radius:8px;padding:12px;font-size:12px;line-height:1.4;box-sizing:border-box}
+.win{position:absolute;left:14px;top:14px;width:250px;height:150px;border-radius:8px;overflow:hidden}
+.tb{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 0 0 10px;font-size:11px}
+.cl{width:40px;height:28px;display:flex;align-items:center;justify-content:center}
+.btn{font-size:11px;padding:5px 10px;border-radius:5px;display:inline-block}
+.note{position:absolute;font-size:11px;padding:3px 7px;border-radius:5px}
+</style></head><body><script>
+const T={
+light:{bg:"#EFF1F3",card:"#F8F9FA",top:"#EFF1F3",text:"#13161A",muted:"#40454A",line:"rgba(19,22,26,.16)",track:"rgba(19,22,26,.12)",acc:"#1450A0",onAcc:"#F8F9FA",hover:"rgba(19,22,26,.05)",sel:"rgba(20,80,160,.08)",wall:"linear-gradient(135deg,#9DB6D6 0 45%,#C9B79C 45% 70%,#7FA38A 70%)",task:"rgba(243,243,243,.92)",taskText:"#13161A",danger:"#96000D"},
+dark:{bg:"#1A1C1D",card:"#262626",top:"#202123",text:"#F8F9FA",muted:"#BEC3C9",line:"#343434",track:"rgba(248,249,250,.14)",acc:"#FD7E14",onAcc:"#141517",hover:"rgba(248,249,250,.06)",sel:"rgba(253,126,20,.10)",wall:"linear-gradient(135deg,#2E3B52 0 45%,#5A4632 45% 70%,#2F4A3A 70%)",task:"rgba(32,32,32,.92)",taskText:"#F8F9FA",danger:"#96000D"}};
+const I={
+open:'<path d="M4 5h16v14H4zM4 9h16"/>',
+widget:'<path d="M4 6h16M4 12h10M4 18h13"/>',
+pause:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0M3 3l18 18"/>',
+gear:'<path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.4 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-3 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4a1.7 1.7 0 0 0 2.5-1.1z"/><circle cx="12" cy="12" r="3"/>',
+quit:'<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/>',
+check:'<path d="M5 12l5 5L20 7"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',wifi:'<path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/>',vol:'<path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7"/>'};
+const ic=(n,c)=>`<svg class="i" viewBox="0 0 24 24" style="color:${c}">${I[n]}</svg>`;
+function ring(t,p,size){const r=6,C=2*Math.PI*r;return `<svg width="${size}" height="${size}" viewBox="0 0 16 16"><circle cx="8" cy="8" r="${r}" fill="none" stroke="${t.track}" stroke-width="3"/><circle cx="8" cy="8" r="${r}" fill="none" stroke="${t.acc}" stroke-width="3" stroke-dasharray="${(C*p/100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 8 8)"/></svg>`}
+function taskbar(t,hot){return `<div class="bar" style="background:${t.task};color:${t.taskText}"><span style="display:flex;align-items:center;padding:4px;border-radius:4px;${hot?`background:${t.hover};outline:1px solid ${t.line}`:''}">${ring(t,75,18)}</span>${ic('wifi',t.taskText)}${ic('vol',t.taskText)}<span style="text-align:right;line-height:1.2">08:42<br>28/11/2026</span></div>`}
+function menu(t){const it=(n,s,o={})=>`<div class="it" style="color:${o.c||t.text};${o.hl?`background:${t.hover}`:''}">${ic(n,o.c||t.muted)}<span style="flex:1;${o.b?'font-weight:500':''}">${s}</span>${o.r?`<span style="color:${t.muted};font-size:11px">${o.r}</span>`:''}</div>`;
+return `<div class="menu" style="background:${t.card};border:1px solid ${t.line}">
+<div style="padding:6px 10px 4px;font-size:11px;color:${t.muted}">Claude Code · 5-hour 75%, weekly 66%</div><div class="sep" style="background:${t.line}"></div>
+${it('open','Open AI Stackprint',{b:true,hl:true})}${it('widget','Show widget',{r:'On'})}${it('pause','Pause alerts for 1 hour')}${it('gear','Settings')}
+<div class="sep" style="background:${t.line}"></div>${it('quit','Quit AI Stackprint')}</div>`}
+function win(t){return `<div class="win" style="background:${t.card};border:1px solid ${t.line}"><div class="tb" style="background:${t.top};color:${t.text}"><span style="font-weight:500">AI Stackprint</span><span style="display:flex"><span class="cl" style="color:${t.muted}">–</span><span class="cl" style="color:${t.muted}">▢</span><span class="cl" style="background:${t.danger};color:#fff">${ic('x','#fff')}</span></span></div><div style="padding:10px;font-size:11px;color:${t.muted}">Main window…</div></div>`}
+function toast(t){return `<div class="toast" style="background:${t.card};border:1px solid ${t.line};color:${t.text}"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:11px;color:${t.muted}">${ring(t,75,14)} AI Stackprint</div>
+<p style="margin:0;font-weight:500">Still running in the tray</p><p style="margin:2px 0 10px;color:${t.muted}">Usage is still checked and alerts still come. Click the tray icon to open the window; Quit is in its menu.</p>
+<div style="display:flex;gap:6px"><span class="btn" style="background:${t.acc};color:${t.onAcc}">Got it</span><span class="btn" style="border:1px solid ${t.line}">Quit now</span></div></div>`}
+let h="";for(const k of ["light","dark"]){const t=T[k];
+h+=`<div class="th" style="background:${t.bg}">
+<p class="cap" style="color:${t.muted}">${k=="light"?"Light":"Dark"} · 1. Close the window (×): it goes to the tray. The first time, this notice says so.</p>
+<div class="desk" style="background:${t.wall}">${win(t)}${toast(t)}${taskbar(t,false)}</div>
+<p class="cap" style="color:${t.muted};margin-top:8px">2. Open it again: click the tray icon. Right-click for the menu; Quit is at the bottom.</p>
+<div class="desk" style="background:${t.wall}">${menu(t)}${taskbar(t,true)}</div></div>`}
+document.body.innerHTML=h;
+</script></body></html>

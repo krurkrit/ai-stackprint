@@ -128,36 +128,6 @@ public class AppDefinition
     [JsonIgnore] public AppOrigin Origin { get; set; }
 }
 
-/// <summary>
-/// User preferences. The defaults and what each one means are in default/settings.json (built in), not here: get a default set from
-/// <see cref="Services.SettingsStore.Defaults"/>, not with <c>new</c>. Keys this version does not know are kept (<see cref="Extra"/>).
-/// </summary>
-public class Settings
-{
-    [System.Text.Json.Serialization.JsonConstructor]
-    internal Settings() { }
-
-    public List<string> HiddenApps { get; set; } = [];
-    public bool HideNotInstalled { get; set; }
-    public string Theme { get; set; } = "";
-    /// <summary>Font settings by key (<see cref="Services.FontRoles"/>): family, size and weight of each, and how they link to each other. Work with them through <see cref="Services.FontRuleSet"/>.</summary>
-    public Dictionary<string, FontRule> Fonts { get; set; } = [];
-    public bool LogLineNumbers { get; set; }
-    public int FadeSeconds { get; set; }
-    public bool Animations { get; set; }
-    public int VirtualListRows { get; set; }
-    public int LimitsRefreshMinutes { get; set; }
-    public List<string> LimitsEnabled { get; set; } = [];
-    public bool CheckUpdates { get; set; }
-    public bool BenchmarksEnabled { get; set; }
-    public ThemeColors Light { get; set; } = new();
-    public ThemeColors Dark { get; set; } = new();
-
-    /// <summary>Keys of a newer version (or ones this version dropped): read and written back unchanged.</summary>
-    [System.Text.Json.Serialization.JsonExtensionData]
-    public Dictionary<string, System.Text.Json.JsonElement>? Extra { get; set; }
-}
-
 /// <summary>What the app remembers on this machine (state.json): not a preference, never exported.</summary>
 /// <summary>A step of a log file you starred or wrote a note on (the file and the step's line in it).</summary>
 public class Bookmark
@@ -184,16 +154,21 @@ public class UiState
     public List<string> ComparedModels { get; set; } = [];   // models in the Compare tab's slots of the Models page, in slot order
     public List<Bookmark> Bookmarks { get; set; } = [];     // steps starred or noted in the log viewer: machine-only, never exported
     public string ModelsTab { get; set; } = "Catalog";      // the tab the Models page was left on: Catalog or Compare
+    public WidgetPlace? WidgetPosition { get; set; }        // where the usage widget was left, and the screen it was on
+    public bool TrayNoticeShown { get; set; }                // the "Still running in the tray" notice was shown once
+    public Dictionary<string, DateTime> AlertsSent { get; set; } = [];   // alert key → when it was sent (UTC): each alert fires at most once
+    public DateTime? AlertsPausedUntil { get; set; }        // "Pause alerts for 1 hour" (UTC)
 }
 
-/// <summary>Color overrides for one theme as hex (#RRGGBB or #AARRGGBB); null = the app default.</summary>
-public class ThemeColors
+/// <summary>The usage widget's top-left corner and the work area of the screen it was on, in pixels (put back inside that screen on start).</summary>
+public class WidgetPlace
 {
-    public string? Accent { get; set; }
-    public string? Hover { get; set; }
-    public string? Selection { get; set; }
-    /// <summary>Dashboard level colors in the order System, Local, Project, User; null or empty entries use the defaults.</summary>
-    public string?[]? Levels { get; set; }
+    public int X { get; set; }
+    public int Y { get; set; }
+    public int ScreenX { get; set; }
+    public int ScreenY { get; set; }
+    public int ScreenWidth { get; set; }
+    public int ScreenHeight { get; set; }
 }
 
 public class AppState

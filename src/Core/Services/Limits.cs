@@ -74,6 +74,17 @@ public sealed class LimitsService(Func<Settings> settings, LimitHistory? history
         }
     }
 
+    /// <summary>Tests: sets an app's status as if a refresh had just returned it (no call is due for a minute), and raises <see cref="Updated"/>.</summary>
+    internal void Seed(string appId, LimitStatus status)
+    {
+        lock (_lock)
+        {
+            _cache[appId] = new Entry { Status = status, Fetched = DateTime.UtcNow };
+        }
+
+        Updated?.Invoke(appId);
+    }
+
     /// <summary>When the last reading was taken; null before the first.</summary>
     public DateTime? Fetched(string appId)
     {

@@ -75,6 +75,12 @@ internal static class Sizes
     internal const double RadioDot = 8;      // the dot inside a selected radio button (the control default, 12, is large and bright in a 20 px ring)
     internal const double Bar = 10;          // bar charts and progress bars
     internal const double BarThin = 8;       // progress bars inside dense rows
+    internal const double BarWidget = 6;     // the usage widget's bars (round ends: radius half of this)
+    internal const double WidgetButton = 24; // the widget's gear and close buttons
+    internal const double PaceMark = 2;      // the even-pace mark across a widget bar
+    internal const double PaceMarkRise = 3;  // how far the pace mark runs above and below the bar
+    internal const double ScreenEdge = 10;   // the tray notice and alert pop-ups: from the edges of the work area
+    internal const double NoticeRing = 14;   // the ring beside "AI Stackprint" on the notice and alerts
     internal const double Loader = 56;       // the big loading icon (DotsLoader) of a page that is still loading
     internal const double StarMin = 48;      // the least a star column counts for when a table works out its narrowest width
     internal const double IconTile = 32;     // tinted square behind a card or row icon
@@ -133,6 +139,12 @@ internal static class Widths
     internal const double ColCount = 80;
     internal const double ColAction = 32;    // one icon button (16 icon + 2 × 8 padding), right-aligned: the row's right padding equals its left
     internal const double ColActions = 96;   // three icon buttons, no gap
+    internal const double Widget = 280;      // the usage widget, its settings pop-up and the alert pop-up
+    internal const double WidgetLabel = 52;  // window name column of a widget row ("5-hour")
+    internal const double WidgetPercent = 34;   // percent column of a widget row
+    internal const double WidgetIndent = 60;    // the line under a widget row starts under the bar (label + gap)
+    internal const double Notice = 258;      // the "Still running in the tray" notice
+    internal const double SubOption = 22;    // indent of a check box under another (a window under its app)
 }
 
 /// <summary>Heights of scrolling viewers (code, text, lists).</summary>

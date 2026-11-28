@@ -11,6 +11,7 @@
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <TieredPGO>false</TieredPGO>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>   <!-- Windows toast notifications call WinRT through COM function pointers (Notifier.Windows.cs): no 25 MB Windows SDK projection -->
     <!-- A publish for one platform (installers, -r <rid>) ships machine code: the window opens about 0.8 s sooner, about 8 MB more download (docs/architecture.md, Performance) -->
     <PublishReadyToRun Condition="'$(RuntimeIdentifier)' != ''">true</PublishReadyToRun>
   </PropertyGroup>

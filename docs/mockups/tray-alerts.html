@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+body{margin:0;font-family:Inter,"Noto Sans","Segoe UI",sans-serif;display:flex}
+.th{padding:24px 28px;width:336px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+.cap{font-size:11px;margin:0}
+.toast{border-radius:8px;padding:12px;font-size:12px;line-height:1.4;box-sizing:border-box;width:280px}
+.btn{font-size:11px;padding:5px 10px;border-radius:5px;display:inline-block}
+</style></head><body><script>
+const T={
+light:{bg:"#EFF1F3",card:"#F8F9FA",text:"#13161A",muted:"#40454A",line:"rgba(19,22,26,.16)",track:"rgba(19,22,26,.12)",acc:"#1450A0",onAcc:"#F8F9FA"},
+dark:{bg:"#1A1C1D",card:"#262626",text:"#F8F9FA",muted:"#BEC3C9",line:"#343434",track:"rgba(248,249,250,.14)",acc:"#FD7E14",onAcc:"#141517"}};
+function ring(t,p){const r=6,C=2*Math.PI*r;return `<svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="${r}" fill="none" stroke="${t.track}" stroke-width="3"/><circle cx="8" cy="8" r="${r}" fill="none" stroke="${t.acc}" stroke-width="3" stroke-dasharray="${(C*p/100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 8 8)"/></svg>`}
+function toast(t,title,body,btns){return `<div class="toast" style="background:${t.card};border:1px solid ${t.line};color:${t.text}"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:11px;color:${t.muted}">${ring(t,75)} AI Stackprint<span style="margin-left:auto">now</span></div>
+<p style="margin:0;font-weight:500">${title}</p><p style="margin:2px 0 0;color:${t.muted}">${body}</p>${btns?`<div style="display:flex;gap:6px;margin-top:10px">${btns.map((b,i)=>`<span class="btn" style="${i==0?`background:${t.acc};color:${t.onAcc}`:`border:1px solid ${t.line}`}">${b}</span>`).join('')}</div>`:''}</div>`}
+let h="";for(const k of ["light","dark"]){const t=T[k];
+h+=`<div class="th" style="background:${t.bg}"><p class="cap" style="color:${t.muted}">${k=="light"?"Light":"Dark"} · the four alerts</p>
+${toast(t,"Claude Code: 5-hour limit at 80%","Full about 09:35 at this pace. It resets at 10:40.",["Open","Pause alerts for 1 hour"])}
+${toast(t,"Claude Code: weekly limit runs out early","At this pace it's reached Sun 01:40, 2 d 15 h before the reset. Slow to 10% a day to last.",["Open"])}
+${toast(t,"Claude Code: weekly limit reset","You used 94% last week. Next reset Tue 22:00.")}
+${toast(t,"Codex: 39% left before the reset","It resets Tue 17:40. You can use about 24% a day.",["Open"])}</div>`}
+document.body.innerHTML=h;
+</script></body></html>

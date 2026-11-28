@@ -1,0 +1,61 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+body{margin:0;font-family:Inter,"Noto Sans","Segoe UI",sans-serif;display:flex}
+.th{padding:28px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;width:336px;box-sizing:border-box}
+.cap{font-size:11px;margin:0}
+.wg{border-radius:10px;padding:10px 12px 12px;width:280px;font-size:12px;line-height:1.35;box-sizing:border-box}
+.row{display:grid;grid-template-columns:52px 1fr 34px;align-items:center;gap:8px;margin-top:8px}
+.tr{position:relative;height:6px;border-radius:3px}
+.fl{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.tk{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;opacity:.55}
+.sub{font-size:11px;margin:3px 0 0 60px;display:flex;align-items:center;gap:3px}
+svg.i{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.set{font-size:12px;line-height:1.35}
+.set .h{font-weight:500;margin:0 0 8px}
+.set .lab{font-size:11px;margin:10px 0 4px}
+.opt{display:flex;align-items:center;gap:8px;margin:5px 0}
+.box{width:14px;height:14px;border-radius:3px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:none}
+.sw{width:28px;height:16px;border-radius:8px;position:relative;flex:none}
+.sw i{position:absolute;top:3px;width:10px;height:10px;border-radius:5px}
+.wall{border-radius:10px;padding:18px;box-sizing:border-box;width:280px;position:relative;overflow:hidden}
+</style></head><body><script>
+const T={
+light:{bg:"#EFF1F3",card:"#F8F9FA",cardRgb:"248,249,250",text:"#13161A",muted:"#40454A",line:"rgba(19,22,26,.16)",track:"rgba(19,22,26,.09)",use:"#1958BB",warn:"#B17E00",warnT:"#654702",err:"#9D010E",tick:"#13161A",acc:"#1450A0",onAcc:"#F8F9FA"},
+dark:{bg:"#1A1C1D",card:"#262626",cardRgb:"38,38,38",text:"#F8F9FA",muted:"#BEC3C9",line:"#343434",track:"rgba(248,249,250,.12)",use:"#F7791A",warn:"#FAB72A",warnT:"#FAB72A",err:"#FD0105",tick:"#F8F9FA",acc:"#FD7E14",onAcc:"#141517"}};
+const warnIcon='<svg class="i" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+const gear='<svg class="i" viewBox="0 0 24 24"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.4 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-3 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4a1.7 1.7 0 0 0 2.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>';
+const x='<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const tick='<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12l5 5L20 7"/></svg>';
+function bar(t,u,p){const c=t.acc;
+return `<div class="tr" style="background:${t.track}"><div class="fl" style="width:${u}%;background:${c}"></div><div class="tk" style="left:calc(${p}% - 1px);background:${t.tick}"></div></div>`}
+function row(t,l,u,p,s,w){return `<div class="row"><span style="color:${t.muted}">${l}</span>${bar(t,u,p)}<span style="text-align:right;font-weight:500;color:${t.text}">${u}%</span></div><div class="sub" style="color:${w?t.warnT:t.muted}">${w?warnIcon:''}${s}</div>`}
+function app(t,n,plan,rows,first){return `<div style="${first?'':'border-top:1px solid '+t.line+';margin-top:10px;padding-top:10px'}"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:500;color:${t.text}">${n}</span><span style="font-size:11px;color:${t.muted}">${plan}</span></div>${rows}</div>`}
+function widget(t,alpha){return `<div class="wg" style="background:rgba(${t.cardRgb},${alpha});border:1px solid ${t.line}">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;color:${t.muted};font-size:11px"><span>Usage limits · now 08:42</span><span style="display:flex;gap:8px">${gear}${x}</span></div>
+${app(t,"Claude Code","Max",row(t,"5-hour",75,60,"Full about 09:35 · resets 10:40",true)+row(t,"Weekly",66,52,"Limit Sun 01:40 · resets Tue 22:00",true),true)}
+${app(t,"Codex","Plus",row(t,"Weekly",21,52,"39% left at the reset · Tue 17:40",false),false)}</div>`}
+function box(t,on){return `<span class="box" style="${on?`background:${t.acc};color:${t.onAcc}`:`border:1.5px solid ${t.muted}`}">${on?tick:''}</span>`}
+function sw(t,on){return `<span class="sw" style="background:${on?t.acc:t.line}"><i style="${on?'right:3px':'left:3px'};background:${on?t.onAcc:t.card}"></i></span>`}
+function settings(t){const o=(on,s,d)=>`<div class="opt">${box(t,on)}<span style="color:${t.text}">${s}</span>${d?`<span style="color:${t.muted};font-size:11px;margin-left:auto">${d}</span>`:''}</div>`;
+return `<div class="wg set" style="background:${t.card};border:1px solid ${t.line};color:${t.text}">
+<p class="h">Widget settings</p>
+<p class="lab" style="color:${t.muted};margin-top:0">Show</p>
+${o(true,"Claude Code","5-hour, Weekly")}
+<div style="margin-left:22px">${o(true,"5-hour")}${o(true,"Weekly")}${o(false,"Weekly · Sonnet")}</div>
+${o(true,"Codex","Weekly")}
+<div style="margin-left:22px">${o(false,"5-hour")}${o(true,"Weekly")}</div>
+${o(false,"GitHub Copilot","Premium requests")}
+<p class="lab" style="color:${t.muted}">Background opacity</p>
+<div style="display:flex;align-items:center;gap:10px"><div class="tr" style="flex:1;background:${t.line};height:4px"><div class="fl" style="width:70%;background:${t.acc}"></div><span style="position:absolute;left:calc(70% - 7px);top:-5px;width:14px;height:14px;border-radius:7px;background:${t.acc};border:2px solid ${t.card};box-sizing:border-box"></span></div><span style="width:34px;text-align:right">70%</span></div>
+<p style="color:${t.muted};font-size:11px;margin:4px 0 0">Text stays solid; under the pointer the widget is opaque.</p>
+<div class="opt" style="margin-top:10px;justify-content:space-between"><span>Always on top</span>${sw(t,true)}</div>
+<div class="opt" style="justify-content:space-between"><span>Show at login</span>${sw(t,true)}</div></div>`}
+const wallLight="background:#9DB6D6;background-image:linear-gradient(135deg,#9DB6D6 0 45%,#C9B79C 45% 70%,#7FA38A 70%)";
+const wallDark="background:#2E3B52;background-image:linear-gradient(135deg,#2E3B52 0 45%,#5A4632 45% 70%,#2F4A3A 70%)";
+let h="";for(const k of ["light","dark"]){const t=T[k],w=k=="light"?wallLight:wallDark;
+h+=`<div class="th" style="background:${t.bg}"><p class="cap" style="color:${t.muted}">${k=="light"?"Light":"Dark"} · over the desktop at 70% opacity</p>
+<div class="wall" style="${w};padding:0;width:280px">${widget(t,.7)}</div>
+<p class="cap" style="color:${t.muted};margin-top:6px">The gear opens</p>${settings(t)}</div>`}
+document.body.innerHTML=h;
+</script></body></html>

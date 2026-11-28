@@ -14,17 +14,22 @@ public class AiStackprintApp : Application
         Styles.Add(Theme.Controls());   // Fluent 2 control templates; our accent and palette stay
         Styles.Add(CodeView.EditorStyles());
         Motion.Install();   // pop-ups fade and slide in
-        Theme.Appearance(this, Services.SettingsStore.Defaults());   // defaults until MainWindow loads settings.json
+        Theme.Appearance(this, Services.SettingsStore.Defaults());   // defaults until AppHost loads settings.json
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d)
         {
-            Motion.Disabled = d.Args?.Contains("--no-animations") == true;   // with --perf: measure without motion, to compare with a run that has it
-            d.MainWindow = new MainWindow { PerfRun = d.Args?.Contains("--perf") == true };   // --perf: measure every page, log it and close
+            var args = d.Args ?? [];
+            Motion.Disabled = args.Contains("--no-animations");   // with --perf: measure without motion, to compare with a run that has it
+            Host = new AppHost(new DesktopLifetime(d), args);   // --perf: measure every page, log it and close; --tray: start in the tray (the login entry)
+            Host.Start(args);
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    /// <summary>The running app; null under the test platform (no desktop lifetime).</summary>
+    internal static AppHost? Host { get; private set; }
 }

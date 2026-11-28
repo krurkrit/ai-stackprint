@@ -60,6 +60,16 @@ Never edit `default/models.json`. Change `tools/ModelData` (`Generator`, `Checks
 
 Push tag `v<major>.<minor>.<patch>`; the version comes only from the tag (MinVer). `release.yml` builds all three platforms with Velopack and publishes notes from git-cliff, which reads Conventional Commit titles. See `releasing.md`.
 
+## Tray, widget or alerts
+
+Rules first: `AGENTS.md` › Background running and Alerts; agreed look: `decisions.md` › Tray, widget and alerts.
+- Widget rows, texts and which windows show: `WidgetRows` (Core, pure; test in `WidgetRowsTests`). Drawing only: `UsageWidget.Rows`.
+- A new alert kind: an `AlertKind` value and its check in `LimitAlerts.Check` (one key per window and hour, so it is sent once), its setting (see Add a setting), its switch in `LimitsView.Tray` › Alerts card; test in `LimitAlertsTests`. Toast XML: `Notifier.Windows.Xml`.
+- A tray menu item: `TrayHost` menu, as an `Act` command (tests run it through `Command.Execute`).
+- A widget option: the setting, then both places that show it: the gear pop-up (`UsageWidget.Settings` → `TraySettings.Widget`) and Settings › Usage limits › Tray and widget (`LimitsView.Tray`).
+- App-level state (window open or not, timer, tray): `AppHost`; the window only reads it through `Ctx.Host`.
+- Tests: `TrayWidgetTests` (`Host()` builds an `AppHost` with seeded readings; fakes in `.Fakes.cs` replace login, notifications and the lifetime). `AppHost` applies the settings' theme in its constructor: set `RequestedThemeVariant` after `Host()`. Run `--filter FullyQualifiedName~TrayWidget` (about 5 s); screenshots with `STACKPRINT_SHOTS=<folder>`.
+
 ## Cheap-work habits for agents
 
 - Search by symbol or heading, then read only that range. Large files are listed in `AGENTS.md`.

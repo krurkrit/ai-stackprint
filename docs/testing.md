@@ -25,6 +25,7 @@ Nothing in a test may read this machine's home folder, open a program or reach t
 | Cursor's database | `CursorLimits.DbOverride` | point it at a temp SQLite file |
 | Running a plugin's CLI | `PluginManager.Run` runs a program from PATH | run `dotnet --version` |
 | The whole window | `new MainWindow()` on a `FakeHome` | drive it: side menu buttons, Ctrl+K, F5, `Ui.ClickText` for a row |
+| The tray, widget and alerts | `new AppHost(IAppLifetime, args)` (a fake lifetime records Shutdown), `LoginItem.Current` (Run key, LaunchAgents, autostart), `Notifier.Current` (toasts and their HKCU entries), `LimitsService.Seed` (a reading as if a refresh returned it) | see `TrayWidgetTests`: the menu's commands run as clicks; `SingleInstance` on a pipe of its own name |
 
 Restore a replaced seam in `Dispose` (UI tests run one at a time).
 

@@ -29,6 +29,22 @@
   // Network (each is off until you turn it on)
   "limitsEnabled": [],               // app ids whose saved sign-in may be used to ask for live limits
   "limitsRefreshMinutes": 1,         // at most one call per app per this many minutes (at least 1)
+
+  // Tray, widget and alerts (Settings › Usage limits)
+  "trayEnabled": false,              // keep running in the tray: limit checks, the widget and alerts go on with the window closed
+  "closeToTray": true,               // with the tray on: × on the main window hides it instead of quitting
+  "startAtLogin": false,             // start in the tray at login (writes the platform's login entry while on)
+  "widgetEnabled": false,            // show the usage widget
+  "widgetAtLogin": true,             // show the widget when started at login
+  "widgetOnTop": true,               // the widget stays above other windows
+  "widgetOpacity": 100,              // the widget card's background opacity, 30 to 100 percent (text, bars and border stay solid)
+  "widgetShow": {},                  // app id → limit windows the widget shows; an app missing shows all its windows, an empty list none
+  "alertsEnabled": true,             // system notifications about limits (while the tray is on or the window is open)
+  "alertShortAt": [80, 95],          // short-window (5-hour) percents that alert, crossed upward; [] = off
+  "alertEarlyHours": 12,             // "runs out early" when the long window fills this many hours or more before its reset; 0 = off
+  "alertReset": true,                // alert when a long (weekly) window resets
+  "alertLeftHours": 24,              // "usage left": this many hours before the long window's reset; 0 = off
+  "alertLeftPercent": 25,            // ...when more than this percent would be left at the reset
   "checkUpdates": false,             // ask GitHub for the latest release and the model data at most once a day
   "benchmarksEnabled": false         // download benchmark scores from artificialanalysis.ai with your API key (kept in state.json) at most once a day
 }
