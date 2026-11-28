@@ -25,12 +25,22 @@ public class InputLayoutTests
     {
         try
         {
-            foreach (var size in new[] { 12d, 14d, 18d })
+            // The default (Inter where installed) and Segoe UI, what Windows without Inter shows: its lines are taller, and at 18 px an input is 36 px
+            foreach (var family in new string?[] { null, "Segoe UI" })
             {
-                var settings = SettingsStore.Defaults();
-                new AiStackprint.Services.FontRuleSet(settings.Fonts).SetNumber("body", AiStackprint.Services.FontProp.Size, size);
-                Theme.Appearance(Application.Current!, settings);
-                Check(size);
+                foreach (var size in new[] { 12d, 14d, 18d })
+                {
+                    var settings = SettingsStore.Defaults();
+                    var fonts = new AiStackprint.Services.FontRuleSet(settings.Fonts);
+                    fonts.SetNumber("body", AiStackprint.Services.FontProp.Size, size);
+                    if (family != null)
+                    {
+                        fonts.SetName("body", family);
+                    }
+
+                    Theme.Appearance(Application.Current!, settings);
+                    Check(size);
+                }
             }
         }
         finally
@@ -67,16 +77,17 @@ public class InputLayoutTests
         };
         var wrapped = new CheckBox
         {
-            Content = new TextBlock
-            {
-                Text = "A long label that wraps onto several lines",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
-            },
+            Content = Wrapping(),
+            Width = 90
+        };
+        var wrappedRadio = new RadioButton
+        {
+            Content = Wrapping(),
             Width = 90
         };
         var panel = new StackPanel { Width = 300 };
         panel.Children.AddRange(one);
-        panel.Children.AddRange([area, tallArea, wrapped]);
+        panel.Children.AddRange([area, tallArea, wrapped, wrappedRadio]);
         Ui.Show(panel);
 
         var h = Theme.InputHeight;
@@ -99,12 +110,22 @@ public class InputLayoutTests
 
         Assert.Equal(gap, Gaps(tallArea).Top);   // a fixed-height text area starts at the same line, not in the middle
 
-        // The check box stays level with the first line of a wrapped label.
-        var box = Glyph(wrapped);
-        var label = Text(wrapped);
-        var lineHeight = label.Bounds.Height / Lines(label);
-        Assert.Equal(Top(box, wrapped) + box.Bounds.Height / 2, Top(label, wrapped) + lineHeight / 2, 1.0);   // FluentAvalonia's box is a little larger: within 1 px of level
+        // The check box and the radio circle stay level with the first line of a wrapped label.
+        foreach (var c in new Control[] { wrapped, wrappedRadio })
+        {
+            var box = Glyph(c);
+            var label = Text(c);
+            var mid = Top(box, c) + box.Bounds.Height / 2;
+            var first = Top(label, c) + label.Bounds.Height / Lines(label) / 2;
+            Assert.True(Math.Abs(mid - first) <= 1, $"{Theme.Font} {size}px {c.GetType().Name}: box middle {mid}, first line middle {first}");   // FluentAvalonia's box is a little larger: within 1 px of level
+        }
     }
+
+    private static TextBlock Wrapping() => new()
+    {
+        Text = "A long label that wraps onto several lines",
+        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+    };
 
     [AvaloniaFact]
     public void A_date_picker_has_the_height_and_text_position_of_a_text_box_and_a_focused_input_has_one_line_on_every_side()

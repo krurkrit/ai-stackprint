@@ -32,6 +32,7 @@ jobs:
   pack:
     needs: notes
     strategy:
+      fail-fast: false   # each platform finishes its tests, so one run shows every failure; publish still needs all three
       matrix:
         include:
           - { os: windows-latest, rid: win-x64, channel: win }

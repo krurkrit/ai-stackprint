@@ -114,10 +114,24 @@ internal static partial class Theme
                     };
                 }
             });
+            TemplatedControl.TemplateAppliedEvent.AddClassHandler<CheckBox>((_, e) => GlyphCell(e, "NormalRectangle", "CheckBoxMinHeight"));
+            TemplatedControl.TemplateAppliedEvent.AddClassHandler<RadioButton>((_, e) => GlyphCell(e, "OuterEllipse", "RadioButtonMinHeight"));
         }
 
         _inputStyles = styles;
         app.Styles.Add(styles);
+    }
+
+    /// <summary>
+    /// The box (or circle) sits in the middle of a cell the template makes 32 px tall, a value a style cannot change. An input is taller at
+    /// some fonts and sizes (Segoe UI at 18 px: 36), and then the box sat above a label's first line. The cell follows the input height.
+    /// </summary>
+    private static void GlyphCell(TemplateAppliedEventArgs e, string part, string heightKey)
+    {
+        if (e.NameScope.Find<Control>(part)?.GetVisualParent() is Grid cell)
+        {
+            cell.Bind(Layoutable.HeightProperty, cell.GetResourceObservable(heightKey));
+        }
     }
 
     private static Style Style<T>(Thickness padding, VerticalAlignment content) where T : TemplatedControl => new(x => x.OfType<T>())
